@@ -342,19 +342,41 @@ export type {
 // CANVAS
 // ========================================
 
-export { Canvas, CanvasContent, useCanvasContext } from "./Canvas";
+export {
+  Canvas,
+  CanvasContent,
+  CanvasGridLayer,
+  CanvasHorizontalRuler,
+  CanvasVerticalRuler,
+  CanvasRulerCorner,
+  CanvasGuide,
+  CanvasGuides,
+  CanvasCheckerboard,
+  useCanvasContext,
+} from "./Canvas";
 export {
   DEFAULT_VIEWPORT,
   DEFAULT_CONSTRAINTS,
   DEFAULT_GESTURE_CONFIG,
+  DEFAULT_GRID_CONFIG,
+  DEFAULT_RULER_CONFIG,
 } from "./Canvas";
 export type {
   CanvasProps,
   CanvasContentProps,
+  CanvasGridLayerProps,
+  CanvasHorizontalRulerProps,
+  CanvasVerticalRulerProps,
+  CanvasRulerCornerProps,
+  CanvasGuideProps,
+  CanvasGuidesProps,
+  CanvasCheckerboardProps,
   ViewportState,
   ViewportConstraints,
   PanTrigger,
   GestureConfig,
   CanvasContextValue,
   Point,
+  GridLayerConfig,
+  RulerConfig,
 } from "./Canvas";

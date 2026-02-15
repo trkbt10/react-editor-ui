@@ -232,3 +232,19 @@ export const COLOR_LOG_SUCCESS = "var(--rei-color-log-success, #16a34a)";
 
 export const COLOR_TOOLTIP_BG = "var(--rei-tooltip-bg, #1f2937)";
 export const COLOR_TOOLTIP_TEXT = "var(--rei-tooltip-color, #ffffff)";
+
+// ========================================
+// CANVAS
+// ========================================
+
+export const COLOR_CANVAS_RULER_BG = "var(--rei-canvas-ruler-bg, #2d2d2d)";
+export const COLOR_CANVAS_RULER_TEXT = "var(--rei-canvas-ruler-text, #9ca3af)";
+export const COLOR_CANVAS_RULER_TICK = "var(--rei-canvas-ruler-tick, #6b7280)";
+export const COLOR_CANVAS_RULER_INDICATOR = "var(--rei-canvas-ruler-indicator, #ef4444)";
+export const COLOR_CANVAS_GRID_MAJOR = "var(--rei-canvas-grid-major, rgba(255, 255, 255, 0.1))";
+export const COLOR_CANVAS_GRID_MINOR = "var(--rei-canvas-grid-minor, rgba(255, 255, 255, 0.04))";
+export const COLOR_CANVAS_GRID_ORIGIN = "var(--rei-canvas-grid-origin, rgba(59, 130, 246, 0.6))";
+export const COLOR_CANVAS_GUIDE = "var(--rei-canvas-guide, rgba(59, 130, 246, 0.8))";
+export const COLOR_CANVAS_CHECKER_LIGHT = "var(--rei-canvas-checker-light, #3a3a3a)";
+export const COLOR_CANVAS_CHECKER_DARK = "var(--rei-canvas-checker-dark, #2d2d2d)";
+export const SIZE_CANVAS_RULER = "var(--rei-canvas-ruler-size, 20px)";

@@ -9,12 +9,16 @@ export type {
   GestureConfig,
   CanvasProps,
   CanvasContentProps,
+  GridLayerConfig,
+  RulerConfig,
 } from "./types";
 
 export {
   DEFAULT_VIEWPORT,
   DEFAULT_CONSTRAINTS,
   DEFAULT_GESTURE_CONFIG,
+  DEFAULT_GRID_CONFIG,
+  DEFAULT_RULER_CONFIG,
 } from "./types";
 
 export type { CanvasContextValue, Point } from "./CanvasContext";

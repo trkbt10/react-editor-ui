@@ -52,6 +52,30 @@ export type GestureConfig = {
 };
 
 /**
+ * Grid layer configuration
+ */
+export type GridLayerConfig = {
+  /** Minor grid size in canvas units */
+  readonly minorSize: number;
+  /** Major grid size in canvas units (typically 5x or 10x minor) */
+  readonly majorSize: number;
+  /** Show origin lines (X=0, Y=0) */
+  readonly showOrigin: boolean;
+};
+
+/**
+ * Ruler configuration
+ */
+export type RulerConfig = {
+  /** Ruler size in pixels */
+  readonly size: number;
+  /** Tick interval in canvas units */
+  readonly tickInterval: number;
+  /** Label interval in canvas units (typically 5x or 10x tick) */
+  readonly labelInterval: number;
+};
+
+/**
  * Canvas component props
  */
 export type CanvasProps = {
@@ -79,6 +103,9 @@ export type CanvasProps = {
   showGrid?: boolean;
   /** Grid size in canvas units */
   gridSize?: number;
+
+  /** SVG layers to render (grid, guides, etc.) */
+  svgLayers?: ReactNode;
 
   /** Additional class name */
   className?: string;
@@ -122,4 +149,16 @@ export const DEFAULT_GESTURE_CONFIG: GestureConfig = {
   panEnabled: true,
   wheelZoomFactor: 0.1,
   panTriggers: ["middle", "alt", "space", "touch"],
+};
+
+export const DEFAULT_GRID_CONFIG: GridLayerConfig = {
+  minorSize: 10,
+  majorSize: 100,
+  showOrigin: true,
+};
+
+export const DEFAULT_RULER_CONFIG: RulerConfig = {
+  size: 20,
+  tickInterval: 10,
+  labelInterval: 100,
 };

@@ -11,73 +11,13 @@
  */
 
 import { useRef, useMemo, type ReactNode, type CSSProperties } from "react";
-import { COLOR_SURFACE, COLOR_BORDER, COLOR_TEXT_MUTED } from "../../constants/styles";
+import { COLOR_SURFACE, COLOR_BORDER } from "../../constants/styles";
 import { CanvasContext, type CanvasContextValue, type Point } from "./core/CanvasContext";
 import { useGestures } from "./core/useGestures";
-import type { CanvasProps, ViewportState } from "./core/types";
+import type { CanvasProps } from "./core/types";
 import { DEFAULT_CONSTRAINTS, DEFAULT_GESTURE_CONFIG } from "./core/types";
+import { CanvasGridLayer } from "./CanvasGridLayer";
 
-/**
- * Grid pattern component for canvas background
- */
-type CanvasGridProps = {
-  gridSize: number;
-  viewport: ViewportState;
-  width: number;
-  height: number;
-};
-
-function CanvasGrid({ gridSize, viewport, width, height }: CanvasGridProps): ReactNode {
-  // Calculate viewBox dimensions
-  const viewWidth = width / viewport.scale;
-  const viewHeight = height / viewport.scale;
-
-  // Calculate grid lines based on viewport
-  const startX = Math.floor(viewport.x / gridSize) * gridSize;
-  const startY = Math.floor(viewport.y / gridSize) * gridSize;
-  const endX = viewport.x + viewWidth;
-  const endY = viewport.y + viewHeight;
-
-  const verticalLines: ReactNode[] = [];
-  const horizontalLines: ReactNode[] = [];
-
-  for (let x = startX; x <= endX; x += gridSize) {
-    verticalLines.push(
-      <line
-        key={`v-${x}`}
-        x1={x}
-        y1={viewport.y}
-        x2={x}
-        y2={viewport.y + viewHeight}
-        stroke={COLOR_TEXT_MUTED}
-        strokeWidth={1 / viewport.scale}
-        opacity={0.3}
-      />,
-    );
-  }
-
-  for (let y = startY; y <= endY; y += gridSize) {
-    horizontalLines.push(
-      <line
-        key={`h-${y}`}
-        x1={viewport.x}
-        y1={y}
-        x2={viewport.x + viewWidth}
-        y2={y}
-        stroke={COLOR_TEXT_MUTED}
-        strokeWidth={1 / viewport.scale}
-        opacity={0.3}
-      />,
-    );
-  }
-
-  return (
-    <g>
-      {verticalLines}
-      {horizontalLines}
-    </g>
-  );
-}
 
 /**
  * Canvas component for pan/zoom interactions
@@ -93,6 +33,7 @@ export function Canvas({
   background,
   showGrid = false,
   gridSize = 10,
+  svgLayers,
   className,
   style,
   "aria-label": ariaLabel = "Canvas",
@@ -219,9 +160,10 @@ export function Canvas({
       <CanvasContext.Provider value={contextValue}>
         {/* Background SVG layer */}
         <svg style={svgStyle} viewBox={viewBox} data-testid="canvas-svg">
-          {showGrid && (
-            <CanvasGrid gridSize={gridSize} viewport={viewport} width={width} height={height} />
-          )}
+          {/* Legacy showGrid prop support */}
+          {showGrid && <CanvasGridLayer minorSize={gridSize} majorSize={gridSize * 10} />}
+          {/* Custom SVG layers */}
+          {svgLayers}
         </svg>
 
         {/* HTML Content layer */}

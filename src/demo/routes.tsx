@@ -82,7 +82,7 @@ import {
   CanvasHorizontalRuler,
   CanvasVerticalRuler,
   CanvasRulerCorner,
-  CanvasCrosshair,
+  CanvasGuides,
   CanvasCheckerboard,
 } from "../components";
 import type { ViewportState } from "../components";
@@ -3104,22 +3104,12 @@ function TextEditorDemo() {
 
 function CanvasDemo() {
   const [viewport, setViewport] = useState<ViewportState>({ x: -50, y: -150, scale: 1 });
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
 
-  // Handle mouse move for crosshair and ruler indicators
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const screenX = e.clientX - rect.left;
-    const screenY = e.clientY - rect.top;
-    // Convert screen coordinates to canvas coordinates
-    const canvasX = screenX / viewport.scale + viewport.x;
-    const canvasY = screenY / viewport.scale + viewport.y;
-    setMousePos({ x: canvasX, y: canvasY });
-  };
-
-  const handleMouseLeave = () => {
-    setMousePos(null);
-  };
+  // Fixed guide positions (like dragging from ruler in Figma)
+  const guides = [
+    { orientation: "horizontal" as const, position: -134 },
+    { orientation: "vertical" as const, position: 50 },
+  ];
 
   return (
     <div style={demoContainerStyle}>
@@ -3196,41 +3186,33 @@ function CanvasDemo() {
       </div>
 
       <div style={demoSectionStyle}>
-        <h3>With Rulers, Crosshair, and Checkerboard (Figma-style)</h3>
+        <h3>With Rulers, Guides, and Checkerboard (Figma-style)</h3>
         <p style={{ color: "var(--rei-color-text-muted)", marginBottom: 12 }}>
-          Complete canvas with rulers showing mouse position, crosshair guides, and checkerboard background.
+          Complete canvas with rulers, fixed guide lines, and checkerboard background.
+          Guides are drawn at fixed positions (Y=-134, X=50).
         </p>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {/* Horizontal ruler row */}
           <div style={{ display: "flex" }}>
             <CanvasRulerCorner size={20} />
-            <CanvasHorizontalRuler
-              viewport={viewport}
-              width={600}
-              indicatorPosition={mousePos?.x}
-            />
+            <CanvasHorizontalRuler viewport={viewport} width={600} />
           </div>
           {/* Canvas row with vertical ruler */}
           <div style={{ display: "flex" }}>
-            <CanvasVerticalRuler
+            <CanvasVerticalRuler viewport={viewport} height={400} />
+            <Canvas
               viewport={viewport}
+              onViewportChange={setViewport}
+              width={600}
               height={400}
-              indicatorPosition={mousePos?.y}
-            />
-            <div onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-              <Canvas
-                viewport={viewport}
-                onViewportChange={setViewport}
-                width={600}
-                height={400}
-                svgLayers={
-                  <>
-                    <CanvasCheckerboard size={8} />
-                    <CanvasGridLayer minorSize={10} majorSize={100} showOrigin />
-                    {mousePos && <CanvasCrosshair x={mousePos.x} y={mousePos.y} />}
-                  </>
-                }
-              >
+              svgLayers={
+                <>
+                  <CanvasCheckerboard size={8} />
+                  <CanvasGridLayer minorSize={10} majorSize={100} showOrigin />
+                  <CanvasGuides guides={guides} />
+                </>
+              }
+            >
                 <CanvasContent x={100} y={100}>
                   <div
                     style={{
@@ -3260,8 +3242,7 @@ function CanvasDemo() {
                     title="Origin (0, 0)"
                   />
                 </CanvasContent>
-              </Canvas>
-            </div>
+            </Canvas>
           </div>
         </div>
       </div>
