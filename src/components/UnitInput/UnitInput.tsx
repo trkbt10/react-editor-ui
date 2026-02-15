@@ -1,8 +1,16 @@
 /**
- * @file UnitInput component - Numeric input with unit support, wheel interaction, and auto value
+ * @file UnitInput component - Figma-style numeric input with unit support
+ *
+ * Features:
+ * - Displays only the number, with unit as a separate clickable suffix
+ * - Mouse wheel to adjust value (when focused)
+ * - Arrow keys to adjust value (Shift for larger steps)
+ * - Click unit to cycle through available units
+ * - Type with unit (e.g., "10%") to change both value and unit
+ * - Supports "Auto" value
  */
 
-import { useState, useRef, useCallback, type CSSProperties, type WheelEvent, type KeyboardEvent } from "react";
+import { useState, useRef, useCallback, useEffect, type CSSProperties, type WheelEvent, type KeyboardEvent } from "react";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
@@ -16,13 +24,11 @@ import {
   DURATION_FAST,
   EASING_DEFAULT,
   SIZE_FONT_SM,
-  SIZE_FONT_MD,
   SIZE_HEIGHT_SM,
   SIZE_HEIGHT_MD,
   SIZE_HEIGHT_LG,
+  SPACE_XS,
   SPACE_SM,
-  SPACE_MD,
-  SPACE_LG,
 } from "../../constants/styles";
 
 export type UnitOption = {
@@ -47,19 +53,22 @@ export type UnitInputProps = {
 };
 
 const sizeMap = {
-  sm: { height: SIZE_HEIGHT_SM, fontSize: SIZE_FONT_SM, paddingX: SPACE_SM },
-  md: { height: SIZE_HEIGHT_MD, fontSize: SIZE_FONT_MD, paddingX: SPACE_MD },
-  lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_MD, paddingX: SPACE_LG },
+  sm: { height: SIZE_HEIGHT_SM, fontSize: SIZE_FONT_SM },
+  md: { height: SIZE_HEIGHT_MD, fontSize: SIZE_FONT_SM },
+  lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_SM },
 };
 
 const defaultUnits: UnitOption[] = [
   { value: "px", label: "px" },
-  { value: "%", label: "%" },
-  { value: "em", label: "em" },
-  { value: "rem", label: "rem" },
 ];
 
-function parseValue(value: string): { num: number | null; unit: string; isAuto: boolean } {
+type ParsedValue = {
+  num: number | null;
+  unit: string;
+  isAuto: boolean;
+};
+
+function parseValue(value: string, defaultUnit: string): ParsedValue {
   const trimmed = value.trim().toLowerCase();
 
   if (trimmed === "auto") {
@@ -69,22 +78,28 @@ function parseValue(value: string): { num: number | null; unit: string; isAuto: 
   const match = trimmed.match(/^(-?[\d.]+)\s*([a-z%]*)$/i);
   if (match) {
     const num = parseFloat(match[1]);
-    const unit = match[2] || "px";
+    const unit = match[2] || defaultUnit;
     return { num: isNaN(num) ? null : num, unit, isAuto: false };
   }
 
-  return { num: null, unit: "", isAuto: false };
+  return { num: null, unit: defaultUnit, isAuto: false };
 }
 
-function formatValue(num: number | null, unit: string, isAuto: boolean): string {
+function formatNumber(num: number): string {
+  if (Number.isInteger(num)) {
+    return num.toString();
+  }
+  return num.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function formatFullValue(num: number | null, unit: string, isAuto: boolean): string {
   if (isAuto) {
     return "Auto";
   }
   if (num === null) {
     return "";
   }
-  const formatted = Number.isInteger(num) ? num.toString() : num.toFixed(2).replace(/\.?0+$/, "");
-  return `${formatted}${unit}`;
+  return `${formatNumber(num)}${unit}`;
 }
 
 function clampValue(value: number, min?: number, max?: number): number {
@@ -122,49 +137,114 @@ export function UnitInput({
   className,
 }: UnitInputProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
   const [isUnitHovered, setIsUnitHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const skipBlurCommitRef = useRef(false);
   const sizeConfig = sizeMap[size];
 
-  const parsed = parseValue(value);
-  const currentUnit = parsed.unit || (units[0]?.value ?? "px");
+  const defaultUnit = units[0]?.value ?? "px";
+  const parsed = parseValue(value, defaultUnit);
+  const currentUnit = parsed.unit || defaultUnit;
   const currentUnitIndex = findUnitIndex(units, currentUnit);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
+  // Sync edit value when value changes externally (not during manual typing)
+  useEffect(() => {
+    if (!isEditing) {
+      if (parsed.isAuto) {
+        setEditValue("Auto");
+      } else if (parsed.num !== null) {
+        setEditValue(formatNumber(parsed.num));
+      } else {
+        setEditValue("");
+      }
+    }
+  }, [value, isEditing, parsed.isAuto, parsed.num]);
 
-      if (allowAuto && newValue.toLowerCase() === "auto") {
+  const commitValue = useCallback(
+    (inputValue: string) => {
+      const trimmed = inputValue.trim();
+
+      if (allowAuto && trimmed.toLowerCase() === "auto") {
         onChange("Auto");
         return;
       }
 
-      const newParsed = parseValue(newValue);
+      const newParsed = parseValue(trimmed, currentUnit);
       if (newParsed.num !== null) {
-        const unit = newParsed.unit || currentUnit;
-        onChange(formatValue(newParsed.num, unit, false));
-      } else {
-        onChange(newValue);
+        const clampedValue = clampValue(newParsed.num, min, max);
+        onChange(formatFullValue(clampedValue, newParsed.unit, false));
+      } else if (trimmed === "") {
+        onChange(formatFullValue(0, currentUnit, false));
       }
     },
-    [onChange, currentUnit, allowAuto],
+    [onChange, currentUnit, allowAuto, min, max],
   );
 
-  const adjustValue = useCallback(
-    (delta: number) => {
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+    setIsEditing(true);
+    // Select all text on focus
+    setTimeout(() => {
+      inputRef.current?.select();
+    }, 0);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+    setIsEditing(false);
+    if (skipBlurCommitRef.current) {
+      skipBlurCommitRef.current = false;
+      return;
+    }
+    commitValue(editValue);
+  }, [editValue, commitValue]);
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEditValue(e.target.value);
+    },
+    [],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
       if (disabled) return;
 
-      if (parsed.isAuto || parsed.num === null) {
-        const defaultValue = 0;
-        const newValue = clampValue(defaultValue + delta, min, max);
-        onChange(formatValue(newValue, currentUnit, false));
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commitValue(editValue);
+        setIsEditing(false);
+        inputRef.current?.blur();
         return;
       }
 
-      const newValue = clampValue(parsed.num + delta, min, max);
-      onChange(formatValue(newValue, currentUnit, false));
+      if (e.key === "Escape") {
+        e.preventDefault();
+        skipBlurCommitRef.current = true;
+        setIsEditing(false);
+        inputRef.current?.blur();
+        return;
+      }
+
+      const actualStep = e.shiftKey ? shiftStep : step;
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const currentNum = parsed.isAuto ? 0 : (parsed.num ?? 0);
+        const newValue = clampValue(currentNum + actualStep, min, max);
+        setEditValue(formatNumber(newValue));
+        onChange(formatFullValue(newValue, currentUnit, false));
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const currentNum = parsed.isAuto ? 0 : (parsed.num ?? 0);
+        const newValue = clampValue(currentNum - actualStep, min, max);
+        setEditValue(formatNumber(newValue));
+        onChange(formatFullValue(newValue, currentUnit, false));
+      }
     },
-    [disabled, parsed, currentUnit, min, max, onChange],
+    [disabled, editValue, commitValue, parsed, step, shiftStep, min, max, currentUnit, onChange],
   );
 
   const handleWheel = useCallback(
@@ -174,26 +254,12 @@ export function UnitInput({
       e.preventDefault();
       const actualStep = e.shiftKey ? shiftStep : step;
       const delta = e.deltaY < 0 ? actualStep : -actualStep;
-      adjustValue(delta);
+      const currentNum = parsed.isAuto ? 0 : (parsed.num ?? 0);
+      const newValue = clampValue(currentNum + delta, min, max);
+      setEditValue(formatNumber(newValue));
+      onChange(formatFullValue(newValue, currentUnit, false));
     },
-    [disabled, isFocused, step, shiftStep, adjustValue],
-  );
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (disabled) return;
-
-      const actualStep = e.shiftKey ? shiftStep : step;
-
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        adjustValue(actualStep);
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        adjustValue(-actualStep);
-      }
-    },
-    [disabled, step, shiftStep, adjustValue],
+    [disabled, isFocused, step, shiftStep, parsed, min, max, currentUnit, onChange],
   );
 
   const cycleUnit = useCallback(() => {
@@ -203,7 +269,7 @@ export function UnitInput({
 
     if (parsed.isAuto) {
       const nextUnit = units[0]?.value ?? "px";
-      onChange(formatValue(0, nextUnit, false));
+      onChange(formatFullValue(0, nextUnit, false));
       return;
     }
 
@@ -215,7 +281,7 @@ export function UnitInput({
     if (nextOption.value === "auto") {
       onChange("Auto");
     } else {
-      onChange(formatValue(parsed.num, nextOption.value, false));
+      onChange(formatFullValue(parsed.num, nextOption.value, false));
     }
   }, [disabled, allowAuto, units, parsed, currentUnitIndex, onChange]);
 
@@ -238,33 +304,40 @@ export function UnitInput({
     flex: 1,
     minWidth: 0,
     height: "100%",
-    padding: `0 ${sizeConfig.paddingX}`,
+    padding: `0 ${SPACE_SM}`,
     border: "none",
     backgroundColor: "transparent",
     color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
     fontSize: sizeConfig.fontSize,
     outline: "none",
     boxSizing: "border-box",
+    textAlign: "left",
   };
 
-  const unitButtonStyle: CSSProperties = {
+  const unitStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     height: "100%",
-    padding: `0 ${SPACE_SM}`,
-    border: "none",
-    borderLeft: `1px solid ${COLOR_INPUT_BORDER}`,
-    backgroundColor: isUnitHovered && !disabled ? COLOR_HOVER : "transparent",
-    color: COLOR_TEXT_MUTED,
+    padding: `0 ${SPACE_XS} 0 0`,
+    color: isUnitHovered && !disabled ? COLOR_TEXT : COLOR_TEXT_MUTED,
     fontSize: sizeConfig.fontSize,
     cursor: disabled ? "not-allowed" : "pointer",
     userSelect: "none",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    minWidth: 32,
+    transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
+    flexShrink: 0,
+    minWidth: 20,
   };
 
-  const displayUnit = parsed.isAuto ? "Auto" : units[currentUnitIndex]?.label ?? currentUnit;
+  const getDisplayUnit = () => {
+    if (parsed.isAuto) {
+      return "";
+    }
+    return units[currentUnitIndex]?.label ?? currentUnit;
+  };
+
+  const displayUnit = getDisplayUnit();
+  const showUnitButton = !parsed.isAuto && units.length > 0;
 
   return (
     <div
@@ -276,29 +349,31 @@ export function UnitInput({
       <input
         ref={inputRef}
         type="text"
-        value={value}
+        value={isEditing ? editValue : (parsed.isAuto ? "Auto" : (parsed.num !== null ? formatNumber(parsed.num) : ""))}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
         aria-label={ariaLabel}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         style={inputStyle}
         data-testid="unit-input-field"
       />
-      <button
-        type="button"
-        onClick={cycleUnit}
-        onPointerEnter={() => setIsUnitHovered(true)}
-        onPointerLeave={() => setIsUnitHovered(false)}
-        disabled={disabled}
-        style={unitButtonStyle}
-        aria-label={`Current unit: ${displayUnit}. Click to change unit.`}
-        data-testid="unit-input-unit-button"
-      >
-        {displayUnit}
-      </button>
+      {showUnitButton && (
+        <span
+          onClick={cycleUnit}
+          onPointerEnter={() => setIsUnitHovered(true)}
+          onPointerLeave={() => setIsUnitHovered(false)}
+          style={unitStyle}
+          role="button"
+          tabIndex={disabled ? -1 : 0}
+          aria-label={`Unit: ${displayUnit}. Click to change.`}
+          data-testid="unit-input-unit-button"
+        >
+          {displayUnit}
+        </span>
+      )}
     </div>
   );
 }

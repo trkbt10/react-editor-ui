@@ -300,6 +300,12 @@ function UnitInputDemo() {
           <UnitInput
             value={width}
             onChange={setWidth}
+            units={[
+              { value: "px", label: "px" },
+              { value: "%", label: "%" },
+              { value: "em", label: "em" },
+              { value: "rem", label: "rem" },
+            ]}
             aria-label="Width"
           />
         </div>
@@ -314,6 +320,12 @@ function UnitInputDemo() {
           <UnitInput
             value={height}
             onChange={setHeight}
+            units={[
+              { value: "px", label: "px" },
+              { value: "%", label: "%" },
+              { value: "em", label: "em" },
+              { value: "rem", label: "rem" },
+            ]}
             allowAuto
             aria-label="Height"
           />

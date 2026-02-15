@@ -70,7 +70,9 @@ describe("TypographyPanel", () => {
     render(<TypographyPanel settings={defaultSettings} onChange={handleChange} />);
 
     const fontSizeInput = screen.getByLabelText("Font size");
+    fireEvent.focus(fontSizeInput);
     fireEvent.change(fontSizeInput, { target: { value: "32px" } });
+    fireEvent.blur(fontSizeInput);
 
     expect(capturedSettings).toEqual({
       ...defaultSettings,
