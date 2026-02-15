@@ -32,6 +32,7 @@ export default defineConfig({
     lib: {
       entry: {
         index: resolve(__dirname, "src/index.tsx"),
+        "themes/index": resolve(__dirname, "src/themes/index.ts"),
       },
     },
     rollupOptions: {

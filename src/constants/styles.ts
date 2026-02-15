@@ -2,7 +2,10 @@
  * @file Style constants for react-editor-ui components
  *
  * All style values are defined here with CSS variable fallbacks.
- * Users can override these via CSS variables (--rei-*).
+ * Users can override these via CSS variables (--rei-*) or ThemeProvider.
+ *
+ * DEFAULT: Light theme (white-based)
+ * Use ThemeProvider to switch to dark or other themes.
  *
  * All CSS variables use the unified prefix: --rei- (react-editor-ui)
  *
@@ -11,6 +14,12 @@
  * :root {
  *   --rei-color-primary: #ff0000;
  * }
+ *
+ * @example
+ * // Or use ThemeProvider:
+ * <ThemeProvider theme="dark">
+ *   <App />
+ * </ThemeProvider>
  */
 
 // ========================================
@@ -30,41 +39,41 @@ export const CSS_VAR_PREFIX = "rei";
 /**
  * Primary colors - used for interactive elements
  */
-export const COLOR_PRIMARY = "var(--rei-color-primary, #2196f3)";
-export const COLOR_PRIMARY_HOVER = "var(--rei-color-primary-hover, #1976d2)";
-export const COLOR_PRIMARY_ACTIVE = "var(--rei-color-primary-active, #1565c0)";
+export const COLOR_PRIMARY = "var(--rei-color-primary, #2563eb)";
+export const COLOR_PRIMARY_HOVER = "var(--rei-color-primary-hover, #1d4ed8)";
+export const COLOR_PRIMARY_ACTIVE = "var(--rei-color-primary-active, #1e40af)";
 
 /**
- * Surface colors - backgrounds
+ * Surface colors - backgrounds (Light theme default)
  */
-export const COLOR_SURFACE = "var(--rei-color-surface, #1e1f24)";
-export const COLOR_SURFACE_RAISED = "var(--rei-color-surface-raised, #2b2d35)";
-export const COLOR_SURFACE_OVERLAY = "var(--rei-color-surface-overlay, #3a3d47)";
+export const COLOR_SURFACE = "var(--rei-color-surface, #ffffff)";
+export const COLOR_SURFACE_RAISED = "var(--rei-color-surface-raised, #f9fafb)";
+export const COLOR_SURFACE_OVERLAY = "var(--rei-color-surface-overlay, #f3f4f6)";
 
 /**
- * Text colors
+ * Text colors (Light theme default)
  */
-export const COLOR_TEXT = "var(--rei-color-text, #e4e6eb)";
-export const COLOR_TEXT_MUTED = "var(--rei-color-text-muted, #9ca3af)";
-export const COLOR_TEXT_DISABLED = "var(--rei-color-text-disabled, #6b7280)";
+export const COLOR_TEXT = "var(--rei-color-text, #111827)";
+export const COLOR_TEXT_MUTED = "var(--rei-color-text-muted, #6b7280)";
+export const COLOR_TEXT_DISABLED = "var(--rei-color-text-disabled, #9ca3af)";
 
 /**
- * Border colors
+ * Border colors (Light theme default)
  */
-export const COLOR_BORDER = "var(--rei-color-border, rgba(255, 255, 255, 0.1))";
-export const COLOR_BORDER_FOCUS = "var(--rei-color-border-focus, #2196f3)";
+export const COLOR_BORDER = "var(--rei-color-border, #e5e7eb)";
+export const COLOR_BORDER_FOCUS = "var(--rei-color-border-focus, #2563eb)";
 
 /**
  * State colors
  */
-export const COLOR_SUCCESS = "var(--rei-color-success, #22c55e)";
-export const COLOR_WARNING = "var(--rei-color-warning, #f59e0b)";
-export const COLOR_ERROR = "var(--rei-color-error, #ef4444)";
+export const COLOR_SUCCESS = "var(--rei-color-success, #16a34a)";
+export const COLOR_WARNING = "var(--rei-color-warning, #d97706)";
+export const COLOR_ERROR = "var(--rei-color-error, #dc2626)";
 
 /**
  * Backdrop / overlay
  */
-export const COLOR_BACKDROP = "var(--rei-color-backdrop, rgba(0, 0, 0, 0.5))";
+export const COLOR_BACKDROP = "var(--rei-color-backdrop, rgba(0, 0, 0, 0.4))";
 
 // ========================================
 // SPACING
@@ -113,12 +122,12 @@ export const RADIUS_LG = "var(--rei-radius-lg, 8px)";
 export const RADIUS_FULL = "var(--rei-radius-full, 9999px)";
 
 // ========================================
-// SHADOWS
+// SHADOWS (Light theme default)
 // ========================================
 
-export const SHADOW_SM = "var(--rei-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.2))";
-export const SHADOW_MD = "var(--rei-shadow-md, 0 4px 8px rgba(0, 0, 0, 0.25))";
-export const SHADOW_LG = "var(--rei-shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.3))";
+export const SHADOW_SM = "var(--rei-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05))";
+export const SHADOW_MD = "var(--rei-shadow-md, 0 4px 6px rgba(0, 0, 0, 0.07))";
+export const SHADOW_LG = "var(--rei-shadow-lg, 0 10px 15px rgba(0, 0, 0, 0.1))";
 
 // ========================================
 // Z-INDEX
@@ -141,3 +150,68 @@ export const DURATION_SLOW = "var(--rei-duration-slow, 300ms)";
 export const EASING_DEFAULT = "var(--rei-easing-default, cubic-bezier(0.4, 0, 0.2, 1))";
 export const EASING_IN = "var(--rei-easing-in, cubic-bezier(0.4, 0, 1, 1))";
 export const EASING_OUT = "var(--rei-easing-out, cubic-bezier(0, 0, 0.2, 1))";
+
+// ========================================
+// INTERACTIVE STATES (Light theme default)
+// ========================================
+
+export const COLOR_HOVER = "var(--rei-color-hover, rgba(0, 0, 0, 0.04))";
+export const COLOR_ACTIVE = "var(--rei-color-active, rgba(0, 0, 0, 0.08))";
+export const COLOR_SELECTED = "var(--rei-color-selected, rgba(37, 99, 235, 0.1))";
+export const COLOR_FOCUS_RING = "var(--rei-color-focus-ring, rgba(37, 99, 235, 0.4))";
+
+// ========================================
+// ICON COLORS (Light theme default)
+// ========================================
+
+export const COLOR_ICON = "var(--rei-color-icon, #6b7280)";
+export const COLOR_ICON_HOVER = "var(--rei-color-icon-hover, #374151)";
+export const COLOR_ICON_ACTIVE = "var(--rei-color-icon-active, #2563eb)";
+
+// ========================================
+// COMPONENT-SPECIFIC SIZES
+// ========================================
+
+export const SIZE_TOOLBAR_HEIGHT = "var(--rei-size-toolbar-height, 36px)";
+export const SIZE_TABBAR_HEIGHT = "var(--rei-size-tabbar-height, 32px)";
+export const SIZE_STATUSBAR_HEIGHT = "var(--rei-size-statusbar-height, 24px)";
+export const SIZE_TREE_INDENT = "var(--rei-size-tree-indent, 16px)";
+export const SIZE_PROPERTY_LABEL = "var(--rei-size-property-label, 100px)";
+
+/**
+ * Checkbox sizes
+ */
+export const SIZE_CHECKBOX_SM = "var(--rei-size-checkbox-sm, 14px)";
+export const SIZE_CHECKBOX_MD = "var(--rei-size-checkbox-md, 18px)";
+
+/**
+ * Color swatch sizes
+ */
+export const SIZE_COLOR_SWATCH_SM = "var(--rei-size-color-swatch-sm, 16px)";
+export const SIZE_COLOR_SWATCH_MD = "var(--rei-size-color-swatch-md, 20px)";
+export const SIZE_COLOR_SWATCH_LG = "var(--rei-size-color-swatch-lg, 24px)";
+
+// ========================================
+// DIVIDER (Light theme default)
+// ========================================
+
+export const COLOR_DIVIDER = "var(--rei-color-divider, #e5e7eb)";
+export const SIZE_DIVIDER_WIDTH = "var(--rei-size-divider-width, 1px)";
+
+// ========================================
+// INPUT (Light theme default)
+// ========================================
+
+export const COLOR_INPUT_BG = "var(--rei-color-input-bg, #ffffff)";
+export const COLOR_INPUT_BORDER = "var(--rei-color-input-border, #d1d5db)";
+export const COLOR_INPUT_BORDER_FOCUS = "var(--rei-color-input-border-focus, #2563eb)";
+
+// ========================================
+// LOG LEVELS
+// ========================================
+
+export const COLOR_LOG_INFO = "var(--rei-color-log-info, #6b7280)";
+export const COLOR_LOG_WARNING = "var(--rei-color-log-warning, #d97706)";
+export const COLOR_LOG_ERROR = "var(--rei-color-log-error, #dc2626)";
+export const COLOR_LOG_DEBUG = "var(--rei-color-log-debug, #7c3aed)";
+export const COLOR_LOG_SUCCESS = "var(--rei-color-log-success, #16a34a)";

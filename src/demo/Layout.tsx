@@ -4,7 +4,7 @@
  */
 
 import type { FC, CSSProperties } from "react";
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useEffectEvent } from "react";
 import { Outlet, Link, useLocation } from "react-router";
 import {
   GridLayout,
@@ -12,6 +12,7 @@ import {
   type LayerDefinition,
 } from "react-panel-layout";
 import { demoCategories } from "./routes";
+import { ThemeSelector, type ThemeName } from "../themes";
 
 const styles = {
   sidebar: {
@@ -139,7 +140,12 @@ const styles = {
   } satisfies CSSProperties,
 };
 
-const SidebarNav: FC = () => {
+type SidebarNavProps = {
+  theme: ThemeName;
+  onThemeChange: (theme: ThemeName) => void;
+};
+
+const SidebarNav: FC<SidebarNavProps> = ({ theme, onThemeChange }) => {
   const location = useLocation();
   const topLinks = [{ path: "/", label: "Home" }] as const;
 
@@ -200,7 +206,17 @@ const SidebarNav: FC = () => {
           );
         })}
       </nav>
-      <div style={styles.sidebarFooter}>v{__APP_VERSION__}</div>
+      <div style={styles.sidebarFooter}>
+        <div style={{ marginBottom: "8px" }}>
+          <ThemeSelector
+            value={theme}
+            onChange={onThemeChange}
+            size="sm"
+            aria-label="Select component theme"
+          />
+        </div>
+        <div>v{__APP_VERSION__}</div>
+      </div>
     </div>
   );
 };
@@ -251,18 +267,21 @@ const StackedMainContent: FC<{ onOpenNav: () => void }> = ({ onOpenNav }) => {
 export const Layout: FC = () => {
   const [isStackedLayout, setIsStackedLayout] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [theme, setTheme] = useState<ThemeName>("light");
   const handleOpenNav = useCallback(() => setNavOpen(true), []);
+
+  const updateLayoutState = useEffectEvent((matches: boolean) => {
+    setIsStackedLayout(matches);
+    if (!matches) {
+      setNavOpen(false);
+    }
+  });
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 960px)");
-    setIsStackedLayout(mql.matches);
+    updateLayoutState(mql.matches);
 
-    const handler = (e: MediaQueryListEvent) => {
-      setIsStackedLayout(e.matches);
-      if (!e.matches) {
-        setNavOpen(false);
-      }
-    };
+    const handler = (e: MediaQueryListEvent) => updateLayoutState(e.matches);
     mql.addEventListener("change", handler);
     return () => mql.removeEventListener("change", handler);
   }, []);
@@ -296,7 +315,7 @@ export const Layout: FC = () => {
         },
         {
           id: "sidebar-drawer",
-          component: <SidebarNav />,
+          component: <SidebarNav theme={theme} onThemeChange={setTheme} />,
           drawer: {
             open: navOpen,
             onStateChange: setNavOpen,
@@ -316,7 +335,7 @@ export const Layout: FC = () => {
       {
         id: "sidebar",
         gridArea: "sidebar",
-        component: <SidebarNav />,
+        component: <SidebarNav theme={theme} onThemeChange={setTheme} />,
         scrollable: true,
       },
       {
@@ -326,7 +345,7 @@ export const Layout: FC = () => {
         scrollable: true,
       },
     ];
-  }, [handleOpenNav, isStackedLayout, navOpen]);
+  }, [handleOpenNav, isStackedLayout, navOpen, theme]);
 
   return <GridLayout config={config} layers={layers} root />;
 };

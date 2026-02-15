@@ -17,6 +17,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./themes": {
+      "types": "./dist/themes/index.d.ts",
+      "import": "./dist/themes/index.js",
+      "require": "./dist/themes/index.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -35,9 +40,12 @@
     "format": "prettier --write ./src && eslint ./src --fix",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:cov": "vitest run --coverage",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
+    "@playwright/test": "^1.52.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.9.1",
