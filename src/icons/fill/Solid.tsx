@@ -1,0 +1,26 @@
+import type { IconProps } from "../types";
+import { resolveSize } from "../utils";
+
+export function FillSolidIcon({
+  size,
+  color = "currentColor",
+  style,
+  className,
+  "aria-label": ariaLabel,
+}: IconProps) {
+  const resolvedSize = resolveSize(size);
+  return (
+    <svg
+      width={resolvedSize}
+      height={resolvedSize}
+      viewBox="0 0 14 14"
+      fill={color}
+      style={{ display: "block", ...style }}
+      className={className}
+      aria-hidden={!ariaLabel}
+      aria-label={ariaLabel}
+    >
+      <rect x="2" y="2" width="10" height="10" rx="2" />
+    </svg>
+  );
+}
