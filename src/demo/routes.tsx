@@ -24,6 +24,7 @@ import {
   SectionHeader,
   TreeItem,
   LayerItem,
+  ContextMenu,
   Select,
   StatusBar,
   StatusBarItem,
@@ -72,7 +73,18 @@ import type {
   Tokenizer,
   TextStyleSegment,
 } from "../components";
-import { CodeEditor, TextEditor, Canvas, CanvasContent } from "../components";
+import {
+  CodeEditor,
+  TextEditor,
+  Canvas,
+  CanvasContent,
+  CanvasGridLayer,
+  CanvasHorizontalRuler,
+  CanvasVerticalRuler,
+  CanvasRulerCorner,
+  CanvasCrosshair,
+  CanvasCheckerboard,
+} from "../components";
 import type { ViewportState } from "../components";
 
 export type DemoPage = {
@@ -1274,6 +1286,167 @@ function SelectDemo() {
           aria-label="Disabled select"
         />
       </div>
+    </div>
+  );
+}
+
+function ContextMenuDemo() {
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [menuType, setMenuType] = useState<"basic" | "nested" | "long" | "edge">("basic");
+  const [lastAction, setLastAction] = useState<string>("");
+
+  const basicItems = [
+    { id: "cut", label: "Cut", shortcut: "⌘X" },
+    { id: "copy", label: "Copy", shortcut: "⌘C" },
+    { id: "paste", label: "Paste", shortcut: "⌘V" },
+    { id: "divider1", label: "", divider: true },
+    { id: "delete", label: "Delete", danger: true, shortcut: "⌫" },
+  ];
+
+  const nestedItems = [
+    { id: "new", label: "New", children: [
+      { id: "new-file", label: "File", shortcut: "⌘N" },
+      { id: "new-folder", label: "Folder", shortcut: "⇧⌘N" },
+      { id: "new-template", label: "From Template", children: [
+        { id: "template-react", label: "React Component" },
+        { id: "template-vue", label: "Vue Component" },
+        { id: "template-svelte", label: "Svelte Component" },
+      ]},
+    ]},
+    { id: "open", label: "Open Recent", children: [
+      { id: "recent-1", label: "project-a/index.ts" },
+      { id: "recent-2", label: "project-b/main.tsx" },
+      { id: "recent-3", label: "utils/helpers.ts" },
+    ]},
+    { id: "divider", label: "", divider: true },
+    { id: "settings", label: "Settings", shortcut: "⌘," },
+  ];
+
+  const generateLongItems = () => {
+    const items = [];
+    for (let i = 1; i <= 30; i++) {
+      items.push({ id: `item-${i}`, label: `Menu Item ${i}` });
+    }
+    return items;
+  };
+
+  const getItems = () => {
+    switch (menuType) {
+      case "nested":
+        return nestedItems;
+      case "long":
+        return generateLongItems();
+      default:
+        return basicItems;
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, type: typeof menuType) => {
+    e.preventDefault();
+    setMenuType(type);
+    setMenuPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleSelect = (itemId: string) => {
+    setLastAction(`Selected: ${itemId}`);
+  };
+
+  const handleClose = () => {
+    setMenuPosition(null);
+  };
+
+  const triggerBoxStyle: React.CSSProperties = {
+    padding: "40px",
+    backgroundColor: "var(--rei-color-surface, #1e1f24)",
+    border: "1px dashed var(--rei-color-border, #3d3f46)",
+    borderRadius: "4px",
+    textAlign: "center",
+    cursor: "context-menu",
+    color: "var(--rei-color-text-muted, #8b8d94)",
+    fontSize: "12px",
+  };
+
+  const cornerBoxStyle: React.CSSProperties = {
+    ...triggerBoxStyle,
+    position: "fixed",
+    padding: "20px",
+    width: "100px",
+  };
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>ContextMenu</h2>
+      <p style={{ color: "var(--rei-color-text-muted, #8b8d94)", fontSize: "13px", margin: "0 0 16px" }}>
+        Last action: {lastAction || "None"}
+      </p>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Basic Menu</div>
+        <div
+          style={triggerBoxStyle}
+          onContextMenu={(e) => handleContextMenu(e, "basic")}
+          data-testid="context-trigger-basic"
+        >
+          Right-click here for basic menu
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Nested Submenus</div>
+        <div
+          style={triggerBoxStyle}
+          onContextMenu={(e) => handleContextMenu(e, "nested")}
+          data-testid="context-trigger-nested"
+        >
+          Right-click here for nested menu
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Long Scrollable Menu (30 items)</div>
+        <div
+          style={triggerBoxStyle}
+          onContextMenu={(e) => handleContextMenu(e, "long")}
+          data-testid="context-trigger-long"
+        >
+          Right-click here for scrollable menu
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Edge Position Testing</div>
+        <p style={{ color: "var(--rei-color-text-muted)", fontSize: "11px", margin: "0 0 8px" }}>
+          Right-click on corner boxes to test viewport boundary handling
+        </p>
+        <div style={{ position: "relative", height: "120px" }}>
+          {/* Top-right corner */}
+          <div
+            style={{ ...cornerBoxStyle, top: "60px", right: "20px" }}
+            onContextMenu={(e) => handleContextMenu(e, "basic")}
+            data-testid="context-trigger-top-right"
+          >
+            Top Right
+          </div>
+          {/* Bottom-right corner */}
+          <div
+            style={{ ...cornerBoxStyle, bottom: "20px", right: "20px" }}
+            onContextMenu={(e) => handleContextMenu(e, "nested")}
+            data-testid="context-trigger-bottom-right"
+          >
+            Bottom Right (nested)
+          </div>
+        </div>
+      </div>
+
+      {menuPosition && (
+        <ContextMenu
+          items={getItems()}
+          position={menuPosition}
+          onSelect={handleSelect}
+          onClose={handleClose}
+          maxHeight={250}
+        />
+      )}
     </div>
   );
 }
@@ -2930,7 +3103,23 @@ function TextEditorDemo() {
 // ========================================
 
 function CanvasDemo() {
-  const [viewport, setViewport] = useState<ViewportState>({ x: 0, y: 0, scale: 1 });
+  const [viewport, setViewport] = useState<ViewportState>({ x: -50, y: -150, scale: 1 });
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+
+  // Handle mouse move for crosshair and ruler indicators
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    // Convert screen coordinates to canvas coordinates
+    const canvasX = screenX / viewport.scale + viewport.x;
+    const canvasY = screenY / viewport.scale + viewport.y;
+    setMousePos({ x: canvasX, y: canvasY });
+  };
+
+  const handleMouseLeave = () => {
+    setMousePos(null);
+  };
 
   return (
     <div style={demoContainerStyle}>
@@ -3007,20 +3196,74 @@ function CanvasDemo() {
       </div>
 
       <div style={demoSectionStyle}>
-        <h3>Without Grid</h3>
-        <Canvas
-          viewport={{ x: 0, y: 0, scale: 1 }}
-          onViewportChange={() => {}}
-          width={400}
-          height={200}
-          background="var(--rei-color-surface-raised)"
-        >
-          <CanvasContent x={50} y={50}>
-            <div style={{ padding: 16, background: "white", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
-              Static content preview
+        <h3>With Rulers, Crosshair, and Checkerboard (Figma-style)</h3>
+        <p style={{ color: "var(--rei-color-text-muted)", marginBottom: 12 }}>
+          Complete canvas with rulers showing mouse position, crosshair guides, and checkerboard background.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {/* Horizontal ruler row */}
+          <div style={{ display: "flex" }}>
+            <CanvasRulerCorner size={20} />
+            <CanvasHorizontalRuler
+              viewport={viewport}
+              width={600}
+              indicatorPosition={mousePos?.x}
+            />
+          </div>
+          {/* Canvas row with vertical ruler */}
+          <div style={{ display: "flex" }}>
+            <CanvasVerticalRuler
+              viewport={viewport}
+              height={400}
+              indicatorPosition={mousePos?.y}
+            />
+            <div onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+              <Canvas
+                viewport={viewport}
+                onViewportChange={setViewport}
+                width={600}
+                height={400}
+                svgLayers={
+                  <>
+                    <CanvasCheckerboard size={8} />
+                    <CanvasGridLayer minorSize={10} majorSize={100} showOrigin />
+                    {mousePos && <CanvasCrosshair x={mousePos.x} y={mousePos.y} />}
+                  </>
+                }
+              >
+                <CanvasContent x={100} y={100}>
+                  <div
+                    style={{
+                      width: 200,
+                      height: 150,
+                      background: "var(--rei-color-primary)",
+                      borderRadius: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Element at (100, 100)
+                  </div>
+                </CanvasContent>
+                <CanvasContent x={0} y={0}>
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      background: "var(--rei-color-error)",
+                      borderRadius: "50%",
+                      transform: "translate(-5px, -5px)",
+                    }}
+                    title="Origin (0, 0)"
+                  />
+                </CanvasContent>
+              </Canvas>
             </div>
-          </CanvasContent>
-        </Canvas>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -3214,6 +3457,12 @@ export const demoCategories: DemoCategory[] = [
         label: "Select",
         path: "select",
         element: <SelectDemo />,
+      },
+      {
+        id: "context-menu",
+        label: "ContextMenu",
+        path: "context-menu",
+        element: <ContextMenuDemo />,
       },
     ],
   },

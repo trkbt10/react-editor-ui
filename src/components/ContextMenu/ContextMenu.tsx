@@ -3,7 +3,7 @@
  */
 
 import type { ReactNode, CSSProperties, PointerEvent as ReactPointerEvent } from "react";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import {
   COLOR_HOVER,
   COLOR_TEXT,
@@ -35,6 +35,8 @@ export type ContextMenuItem = {
   divider?: boolean;
   /** Keyboard shortcut hint */
   shortcut?: string;
+  /** Nested submenu items */
+  children?: ContextMenuItem[];
 };
 
 export type ContextMenuProps = {
@@ -48,19 +50,47 @@ export type ContextMenuProps = {
   onClose: () => void;
   /** Additional class name */
   className?: string;
+  /** Maximum height before scrolling (default: 300px) */
+  maxHeight?: number;
+  /** Nest level (internal use for submenus) */
+  nestLevel?: number;
 };
 
+// Default maximum height for scrollable content
+const DEFAULT_MAX_HEIGHT = 300;
+const SUBMENU_OFFSET = 4;
+
+// Chevron icon for submenu indicator
+function ChevronRightIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
+}
+
+/**
+ * ContextMenu component with viewport boundary handling, scrollable content, and nested submenus
+ */
 export function ContextMenu({
   items,
   position,
   onSelect,
   onClose,
   className,
+  maxHeight = DEFAULT_MAX_HEIGHT,
+  nestLevel = 0,
 }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
+  const [submenuPosition, setSubmenuPosition] = useState<{ x: number; y: number } | null>(null);
 
-  // Close on outside click or escape
+  // Close on outside click or escape (only for root menu)
   useEffect(() => {
+    if (nestLevel > 0) {
+      return;
+    }
+
     const handleClickOutside = (e: Event) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onClose();
@@ -79,44 +109,87 @@ export function ContextMenu({
       document.removeEventListener("pointerdown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, [onClose, nestLevel]);
 
   // Adjust position to stay within viewport
   useEffect(() => {
-    if (!menuRef.current) return;
+    if (!menuRef.current) {
+      return;
+    }
 
     const menu = menuRef.current;
     const rect = menu.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    let adjustedX = position.x;
-    let adjustedY = position.y;
+    const computeAdjustedX = () => {
+      const margin = 8;
+      // Check if overflowing right edge
+      if (position.x + rect.width > viewportWidth) {
+        if (nestLevel > 0) {
+          // For submenus, flip to the left side of parent
+          const flipped = position.x - rect.width - SUBMENU_OFFSET;
+          return Math.max(flipped, margin);
+        }
+        return viewportWidth - rect.width - margin;
+      }
+      return Math.max(position.x, margin);
+    };
 
-    if (position.x + rect.width > viewportWidth) {
-      adjustedX = viewportWidth - rect.width - 8;
+    const computeAdjustedY = () => {
+      const margin = 8;
+      // Check if overflowing bottom edge
+      if (position.y + rect.height > viewportHeight) {
+        return viewportHeight - rect.height - margin;
+      }
+      return Math.max(position.y, margin);
+    };
+
+    menu.style.left = `${computeAdjustedX()}px`;
+    menu.style.top = `${computeAdjustedY()}px`;
+  }, [position, nestLevel]);
+
+  const handleItemClick = useCallback((itemId: string, disabled?: boolean, hasChildren?: boolean) => {
+    if (disabled) {
+      return;
     }
-    if (position.y + rect.height > viewportHeight) {
-      adjustedY = viewportHeight - rect.height - 8;
+    if (hasChildren) {
+      return; // Don't close menu when clicking item with submenu
     }
-
-    menu.style.left = `${adjustedX}px`;
-    menu.style.top = `${adjustedY}px`;
-  }, [position]);
-
-  const handleItemClick = useCallback((itemId: string, disabled?: boolean) => {
-    if (disabled) return;
     onSelect(itemId);
     onClose();
   }, [onSelect, onClose]);
 
-  const handlePointerEnter = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = COLOR_HOVER;
+  const handlePointerEnter = useCallback((e: ReactPointerEvent<HTMLButtonElement>, item: ContextMenuItem) => {
+    if (!item.disabled) {
+      e.currentTarget.style.backgroundColor = COLOR_HOVER;
+    }
+
+    // Show submenu if item has children
+    if (item.children && item.children.length > 0) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setOpenSubmenuId(item.id);
+      setSubmenuPosition({
+        x: rect.right + SUBMENU_OFFSET,
+        y: rect.top,
+      });
+    } else {
+      setOpenSubmenuId(null);
+      setSubmenuPosition(null);
+    }
   }, []);
 
-  const handlePointerLeave = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = "transparent";
+  const handlePointerLeave = useCallback((e: ReactPointerEvent<HTMLButtonElement>, item: ContextMenuItem) => {
+    if (!item.disabled) {
+      e.currentTarget.style.backgroundColor = "transparent";
+    }
+    // Don't close submenu on pointer leave - let it stay open until another item is hovered
   }, []);
+
+  const handleSubmenuSelect = useCallback((itemId: string) => {
+    onSelect(itemId);
+    onClose();
+  }, [onSelect, onClose]);
 
   const menuStyle: CSSProperties = {
     position: "fixed",
@@ -127,7 +200,11 @@ export function ContextMenu({
     borderRadius: RADIUS_SM,
     padding: SPACE_XS,
     minWidth: "160px",
-    zIndex: Z_POPOVER,
+    maxWidth: "280px",
+    maxHeight: `${maxHeight}px`,
+    overflowY: "auto",
+    overflowX: "hidden",
+    zIndex: Z_POPOVER + nestLevel,
     boxShadow: SHADOW_MD,
   };
 
@@ -157,6 +234,17 @@ export function ContextMenu({
     fontSize: SIZE_FONT_SM,
     color: COLOR_TEXT_DISABLED,
     marginLeft: "auto",
+    flexShrink: 0,
+  };
+
+  const getItemColor = (item: ContextMenuItem) => {
+    if (item.danger) {
+      return COLOR_ERROR;
+    }
+    if (item.disabled) {
+      return COLOR_TEXT_DISABLED;
+    }
+    return COLOR_TEXT;
   };
 
   return (
@@ -165,36 +253,75 @@ export function ContextMenu({
       role="menu"
       className={className}
       style={menuStyle}
-      data-testid="context-menu"
+      data-testid={nestLevel === 0 ? "context-menu" : `context-submenu-${nestLevel}`}
+      data-nest-level={nestLevel}
     >
       {items.map((item) => {
         if (item.divider) {
           return <div key={item.id} style={dividerStyle} role="separator" />;
         }
+
+        const hasChildren = item.children && item.children.length > 0;
+
         return (
           <button
             key={item.id}
             role="menuitem"
+            aria-haspopup={hasChildren ? "menu" : undefined}
+            aria-expanded={hasChildren && openSubmenuId === item.id ? true : undefined}
             disabled={item.disabled}
-            onClick={() => handleItemClick(item.id, item.disabled)}
-            onPointerEnter={item.disabled ? undefined : handlePointerEnter}
-            onPointerLeave={item.disabled ? undefined : handlePointerLeave}
+            onClick={() => handleItemClick(item.id, item.disabled, hasChildren)}
+            onPointerEnter={(e) => handlePointerEnter(e, item)}
+            onPointerLeave={(e) => handlePointerLeave(e, item)}
             style={{
               ...itemStyle,
-              color: item.danger ? COLOR_ERROR : item.disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
+              color: getItemColor(item),
               cursor: item.disabled ? "default" : "pointer",
               opacity: item.disabled ? 0.5 : 1,
+              backgroundColor: openSubmenuId === item.id ? COLOR_HOVER : "transparent",
             }}
             data-testid={`context-menu-item-${item.id}`}
           >
-            <span style={{ display: "flex", alignItems: "center", gap: SPACE_SM }}>
-              {item.icon ? <span style={{ display: "flex" }}>{item.icon}</span> : null}
-              {item.label}
+            <span style={{ display: "flex", alignItems: "center", gap: SPACE_SM, overflow: "hidden" }}>
+              {item.icon ? <span style={{ display: "flex", flexShrink: 0 }}>{item.icon}</span> : null}
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {item.label}
+              </span>
             </span>
-            {item.shortcut ? <span style={shortcutStyle}>{item.shortcut}</span> : null}
+            {item.shortcut && !hasChildren && (
+              <span style={shortcutStyle}>{item.shortcut}</span>
+            )}
+            {hasChildren && (
+              <span style={{ display: "flex", color: COLOR_TEXT_DISABLED, flexShrink: 0 }}>
+                <ChevronRightIcon />
+              </span>
+            )}
           </button>
         );
       })}
+
+      {/* Render submenu */}
+      {renderSubmenu()}
     </div>
   );
+
+  function renderSubmenu() {
+    if (!openSubmenuId || !submenuPosition) {
+      return null;
+    }
+    const parentItem = items.find((i) => i.id === openSubmenuId);
+    if (!parentItem?.children) {
+      return null;
+    }
+    return (
+      <ContextMenu
+        items={parentItem.children}
+        position={submenuPosition}
+        onSelect={handleSubmenuSelect}
+        onClose={onClose}
+        maxHeight={maxHeight}
+        nestLevel={nestLevel + 1}
+      />
+    );
+  }
 }
