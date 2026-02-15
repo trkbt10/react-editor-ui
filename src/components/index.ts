@@ -127,6 +127,9 @@ export type {
 export { Tooltip } from "./Tooltip/Tooltip";
 export type { TooltipProps, TooltipPlacement } from "./Tooltip/Tooltip";
 
+export { SplitButton } from "./SplitButton/SplitButton";
+export type { SplitButtonProps, SplitButtonOption } from "./SplitButton/SplitButton";
+
 export { Portal } from "./Portal/Portal";
 export type { PortalProps } from "./Portal/Portal";
 

@@ -45,6 +45,7 @@ import {
   FontsPanel,
   PositionPanel,
   createDefaultPositionSettings,
+  SplitButton,
 } from "../components";
 import {
   LuRotateCw,
@@ -1284,6 +1285,94 @@ function SelectDemo() {
           onChange={() => {}}
           disabled
           aria-label="Disabled select"
+        />
+      </div>
+    </div>
+  );
+}
+
+function SplitButtonDemo() {
+  const [mode, setMode] = useState<"present" | "preview">("preview");
+  const [lastAction, setLastAction] = useState<string>("");
+
+  const presentIcon = (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+
+  const previewIcon = (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 9l6 3-6 3V9z" />
+    </svg>
+  );
+
+  const options = [
+    { value: "present" as const, label: "Present", icon: presentIcon, shortcut: "⌥⌘↵" },
+    { value: "preview" as const, label: "Preview", icon: previewIcon, shortcut: "⇧Space" },
+  ];
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>SplitButton</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Basic SplitButton</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <SplitButton
+            options={options}
+            value={mode}
+            onChange={setMode}
+            onAction={() => setLastAction(`Executed: ${mode}`)}
+            aria-label="Presentation mode"
+          />
+          <span style={{ color: "var(--rei-color-text-muted, #9ca3af)", fontSize: "12px" }}>
+            Selected: {mode}
+          </span>
+        </div>
+        {lastAction && (
+          <div style={{ marginTop: "8px", color: "var(--rei-color-success, #16a34a)", fontSize: "12px" }}>
+            {lastAction}
+          </div>
+        )}
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Sizes</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <SplitButton
+            options={options}
+            value="preview"
+            onChange={() => {}}
+            size="sm"
+            aria-label="Small"
+          />
+          <SplitButton
+            options={options}
+            value="preview"
+            onChange={() => {}}
+            size="md"
+            aria-label="Medium"
+          />
+          <SplitButton
+            options={options}
+            value="preview"
+            onChange={() => {}}
+            size="lg"
+            aria-label="Large"
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Disabled</div>
+        <SplitButton
+          options={options}
+          value="preview"
+          onChange={() => {}}
+          disabled
+          aria-label="Disabled"
         />
       </div>
     </div>
@@ -3333,6 +3422,12 @@ export const demoCategories: DemoCategory[] = [
         label: "Tooltip",
         path: "tooltip",
         element: <TooltipDemo />,
+      },
+      {
+        id: "split-button",
+        label: "SplitButton",
+        path: "split-button",
+        element: <SplitButtonDemo />,
       },
     ],
   },
