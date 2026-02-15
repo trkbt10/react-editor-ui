@@ -32,13 +32,34 @@ import {
   GradientEditor,
   FillEditor,
   createDefaultGradient,
+  Tooltip,
+  TransformButtons,
+  TypographyPanel,
+  FontsPanel,
+  PositionPanel,
+  createDefaultPositionSettings,
 } from "../components";
+import {
+  LuRotateCw,
+  LuRotateCcw,
+  LuFlipHorizontal,
+  LuFlipVertical,
+  LuAlignStartVertical,
+  LuAlignCenterVertical,
+  LuAlignEndVertical,
+  LuAlignStartHorizontal,
+  LuAlignCenterHorizontal,
+  LuAlignEndHorizontal,
+} from "react-icons/lu";
 import type {
   ColorValue,
   StrokeSettings,
   ImageSelectOption,
   GradientValue,
   FillValue,
+  TypographySettings,
+  FontItem,
+  PositionSettings,
 } from "../components";
 
 export type DemoPage = {
@@ -827,11 +848,30 @@ function ColorPickerDemo() {
 }
 
 function getFillBackground(fill: FillValue): string {
-  if (fill.type === "solid") {
-    return fill.color.hex;
+  switch (fill.type) {
+    case "solid": {
+      return fill.color.hex;
+    }
+    case "gradient": {
+      const stops = fill.gradient.stops.map((s) => `${s.color.hex} ${s.position}%`).join(", ");
+      return `linear-gradient(${fill.gradient.angle}deg, ${stops})`;
+    }
+    case "image": {
+      if (fill.image.url) {
+        return `url(${fill.image.url})`;
+      }
+      return "#808080";
+    }
+    case "pattern": {
+      if (fill.pattern.sourceUrl) {
+        return `url(${fill.pattern.sourceUrl})`;
+      }
+      return "#808080";
+    }
+    case "video": {
+      return "#1a1a2e";
+    }
   }
-  const stops = fill.gradient.stops.map((s) => `${s.color.hex} ${s.position}%`).join(", ");
-  return `linear-gradient(${fill.gradient.angle}deg, ${stops})`;
 }
 
 function getGradientBackground(gradient: GradientValue): string {
@@ -1290,6 +1330,264 @@ function ImageSelectDemo() {
   );
 }
 
+// Tooltip Demo
+function TooltipDemo() {
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>Tooltip</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Basic Tooltip</div>
+        <div style={demoRowStyle}>
+          <Tooltip content="Click to play">
+            <IconButton icon={<PlayIcon />} aria-label="Play" />
+          </Tooltip>
+          <Tooltip content="Pause playback">
+            <IconButton icon={<PauseIcon />} aria-label="Pause" />
+          </Tooltip>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Placement</div>
+        <div style={demoRowStyle}>
+          <Tooltip content="Top tooltip" placement="top">
+            <Button size="sm">Top</Button>
+          </Tooltip>
+          <Tooltip content="Bottom tooltip" placement="bottom">
+            <Button size="sm">Bottom</Button>
+          </Tooltip>
+          <Tooltip content="Left tooltip" placement="left">
+            <Button size="sm">Left</Button>
+          </Tooltip>
+          <Tooltip content="Right tooltip" placement="right">
+            <Button size="sm">Right</Button>
+          </Tooltip>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Custom Delay</div>
+        <div style={demoRowStyle}>
+          <Tooltip content="Instant (0ms)" delay={0}>
+            <Button size="sm">Instant</Button>
+          </Tooltip>
+          <Tooltip content="Default (300ms)" delay={300}>
+            <Button size="sm">Default</Button>
+          </Tooltip>
+          <Tooltip content="Slow (800ms)" delay={800}>
+            <Button size="sm">Slow</Button>
+          </Tooltip>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Disabled</div>
+        <Tooltip content="This won't show" disabled>
+          <Button size="sm">Disabled Tooltip</Button>
+        </Tooltip>
+      </div>
+    </div>
+  );
+}
+
+// TransformButtons Demo
+function TransformButtonsDemo() {
+  const handleAction = (actionId: string) => {
+    console.log("Transform action:", actionId);
+  };
+
+  const fullGroups = [
+    {
+      id: "rotate",
+      actions: [
+        { id: "rotate-cw", icon: <LuRotateCw size={14} />, label: "Rotate 90° right" },
+        { id: "rotate-ccw", icon: <LuRotateCcw size={14} />, label: "Rotate 90° left" },
+      ],
+    },
+    {
+      id: "flip",
+      actions: [
+        { id: "flip-h", icon: <LuFlipHorizontal size={14} />, label: "Flip horizontal" },
+        { id: "flip-v", icon: <LuFlipVertical size={14} />, label: "Flip vertical" },
+      ],
+    },
+    {
+      id: "align",
+      actions: [
+        { id: "align-left", icon: <LuAlignStartVertical size={14} />, label: "Align left" },
+        { id: "align-center-h", icon: <LuAlignCenterVertical size={14} />, label: "Align center" },
+        { id: "align-right", icon: <LuAlignEndVertical size={14} />, label: "Align right" },
+        { id: "align-top", icon: <LuAlignStartHorizontal size={14} />, label: "Align top" },
+        { id: "align-center-v", icon: <LuAlignCenterHorizontal size={14} />, label: "Align middle" },
+        { id: "align-bottom", icon: <LuAlignEndHorizontal size={14} />, label: "Align bottom" },
+      ],
+    },
+  ];
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>TransformButtons</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Full Transform Toolbar (react-icons)</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons groups={fullGroups} onAction={handleAction} />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Rotate Only</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "rotate",
+                actions: [
+                  { id: "rotate-cw", icon: <LuRotateCw size={14} />, label: "Rotate 90° right" },
+                  { id: "rotate-ccw", icon: <LuRotateCcw size={14} />, label: "Rotate 90° left" },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Flip Only</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "flip",
+                actions: [
+                  { id: "flip-h", icon: <LuFlipHorizontal size={14} />, label: "Flip horizontal" },
+                  { id: "flip-v", icon: <LuFlipVertical size={14} />, label: "Flip vertical" },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Custom Actions</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "custom",
+                actions: [
+                  { id: "rotate-45", icon: <LuRotateCw size={14} />, label: "Rotate 45°" },
+                  { id: "rotate-180", icon: <LuRotateCw size={14} />, label: "Rotate 180°" },
+                ],
+              },
+              {
+                id: "scale",
+                actions: [
+                  { id: "scale-up", icon: <span style={{ fontSize: 12 }}>+</span>, label: "Scale up" },
+                  { id: "scale-down", icon: <span style={{ fontSize: 12 }}>-</span>, label: "Scale down" },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Different Sizes</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+            <TransformButtons
+              groups={[
+                {
+                  id: "tools",
+                  actions: [
+                    { id: "rotate", icon: <LuRotateCw size={12} />, label: "Rotate" },
+                    { id: "flip", icon: <LuFlipHorizontal size={12} />, label: "Flip" },
+                  ],
+                },
+              ]}
+              onAction={handleAction}
+              size="sm"
+            />
+          </div>
+          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+            <TransformButtons
+              groups={[
+                {
+                  id: "tools",
+                  actions: [
+                    { id: "rotate", icon: <LuRotateCw size={14} />, label: "Rotate" },
+                    { id: "flip", icon: <LuFlipHorizontal size={14} />, label: "Flip" },
+                  ],
+                },
+              ]}
+              onAction={handleAction}
+              size="md"
+            />
+          </div>
+          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+            <TransformButtons
+              groups={[
+                {
+                  id: "tools",
+                  actions: [
+                    { id: "rotate", icon: <LuRotateCw size={18} />, label: "Rotate" },
+                    { id: "flip", icon: <LuFlipHorizontal size={18} />, label: "Flip" },
+                  ],
+                },
+              ]}
+              onAction={handleAction}
+              size="lg"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>With Disabled Action</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "tools",
+                actions: [
+                  { id: "rotate", icon: <LuRotateCw size={14} />, label: "Rotate (enabled)" },
+                  { id: "flip", icon: <LuFlipHorizontal size={14} />, label: "Flip (disabled)", disabled: true },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>All Disabled</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "tools",
+                actions: [
+                  { id: "rotate", icon: <LuRotateCw size={14} />, label: "Rotate" },
+                  { id: "flip", icon: <LuFlipHorizontal size={14} />, label: "Flip" },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+            disabled
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // StrokeSettingsPanel Demo
 function StrokeSettingsPanelDemo() {
   const [settings, setSettings] = useState<StrokeSettings>({
@@ -1332,6 +1630,230 @@ function StrokeSettingsPanelDemo() {
         }}>
           {JSON.stringify(settings, null, 2)}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// TypographyPanel Demo
+const sampleFonts: FontItem[] = [
+  { name: "SF Pro", family: "'SF Pro', -apple-system, sans-serif", category: "sans-serif" },
+  { name: "SF Pro Rounded", family: "'SF Pro Rounded', sans-serif", category: "sans-serif" },
+  { name: "Inter", family: "'Inter', sans-serif", category: "sans-serif" },
+  { name: "Roboto", family: "'Roboto', sans-serif", category: "sans-serif" },
+  { name: "Open Sans", family: "'Open Sans', sans-serif", category: "sans-serif" },
+  { name: "Lato", family: "'Lato', sans-serif", category: "sans-serif" },
+  { name: "Playfair Display", family: "'Playfair Display', serif", category: "serif" },
+  { name: "Georgia", family: "'Georgia', serif", category: "serif" },
+  { name: "Merriweather", family: "'Merriweather', serif", category: "serif" },
+  { name: "Fira Code", family: "'Fira Code', monospace", category: "monospace" },
+  { name: "JetBrains Mono", family: "'JetBrains Mono', monospace", category: "monospace" },
+  { name: "Pacifico", family: "'Pacifico', cursive", category: "display" },
+  { name: "Dancing Script", family: "'Dancing Script', cursive", category: "handwriting" },
+  { name: "Caveat", family: "'Caveat', cursive", category: "handwriting" },
+];
+
+function renderFontsPanelSection(
+  showFontsPanel: boolean,
+  settings: TypographySettings,
+  setSettings: (settings: TypographySettings) => void,
+  setShowFontsPanel: (show: boolean) => void,
+) {
+  if (!showFontsPanel) {
+    return null;
+  }
+  return (
+    <div style={demoSectionStyle}>
+      <div style={demoLabelStyle}>FontsPanel (triggered from icon)</div>
+      <FontsPanel
+        fonts={sampleFonts}
+        selectedFont={settings.fontFamily}
+        onSelectFont={(font) => {
+          setSettings({ ...settings, fontFamily: font });
+        }}
+        onClose={() => setShowFontsPanel(false)}
+        onSettings={() => alert("Font settings clicked")}
+      />
+    </div>
+  );
+}
+
+function TypographyPanelDemo() {
+  const [settings, setSettings] = useState<TypographySettings>({
+    fontFamily: "SF Pro",
+    fontWeight: "400",
+    fontSize: "28",
+    lineHeight: "Auto",
+    letterSpacing: "0px",
+    textAlign: "left",
+    verticalAlign: "top",
+  });
+
+  const [showFontsPanel, setShowFontsPanel] = useState(false);
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>TypographyPanel</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Complete Panel</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", width: 320 }}>
+          <TypographyPanel
+            settings={settings}
+            onChange={setSettings}
+            onOpenFontsPanel={() => setShowFontsPanel(true)}
+            onOpenSettings={() => alert("Settings clicked")}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Current Settings</div>
+        <div style={{
+          backgroundColor: "var(--rei-color-surface, #1e1f24)",
+          borderRadius: "4px",
+          padding: "12px",
+          fontSize: "11px",
+          fontFamily: "monospace",
+          color: "var(--rei-color-text-muted)",
+          whiteSpace: "pre-wrap",
+        }}>
+          {JSON.stringify(settings, null, 2)}
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Preview</div>
+        <div
+          style={{
+            backgroundColor: "var(--rei-color-surface, #1e1f24)",
+            borderRadius: "4px",
+            padding: "24px",
+            fontFamily: settings.fontFamily,
+            fontWeight: Number(settings.fontWeight),
+            fontSize: `${settings.fontSize}px`,
+            lineHeight: settings.lineHeight === "Auto" ? "normal" : settings.lineHeight,
+            letterSpacing: settings.letterSpacing,
+            textAlign: settings.textAlign,
+            color: "var(--rei-color-text)",
+          }}
+        >
+          The quick brown fox jumps over the lazy dog
+        </div>
+      </div>
+
+      {renderFontsPanelSection(showFontsPanel, settings, setSettings, setShowFontsPanel)}
+    </div>
+  );
+}
+
+// PositionPanel Demo
+function PositionPanelDemo() {
+  const [settings, setSettings] = useState<PositionSettings>(createDefaultPositionSettings());
+
+  const handleTransformAction = (action: string) => {
+    console.log("Transform action:", action);
+  };
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>PositionPanel</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Complete Panel</div>
+        <PositionPanel
+          settings={settings}
+          onChange={setSettings}
+          onClose={() => alert("Close clicked")}
+          onToggleConstraints={() => alert("Toggle constraints")}
+          onTransformAction={handleTransformAction}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Current Settings</div>
+        <div style={{
+          backgroundColor: "var(--rei-color-surface, #1e1f24)",
+          borderRadius: "4px",
+          padding: "12px",
+          fontSize: "11px",
+          fontFamily: "monospace",
+          color: "var(--rei-color-text-muted)",
+          whiteSpace: "pre-wrap",
+        }}>
+          {JSON.stringify(settings, null, 2)}
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Without Close Button</div>
+        <PositionPanel
+          settings={{
+            ...settings,
+            x: "100",
+            y: "200",
+            rotation: "45",
+          }}
+          onChange={setSettings}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Custom Width</div>
+        <PositionPanel
+          settings={settings}
+          onChange={setSettings}
+          width={400}
+        />
+      </div>
+    </div>
+  );
+}
+
+// FontsPanel Demo
+function FontsPanelDemo() {
+  const [selectedFont, setSelectedFont] = useState("SF Pro");
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>FontsPanel</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Basic Panel</div>
+        <FontsPanel
+          fonts={sampleFonts}
+          selectedFont={selectedFont}
+          onSelectFont={setSelectedFont}
+          onClose={() => alert("Close clicked")}
+          onSettings={() => alert("Settings clicked")}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Selected: {selectedFont}</div>
+        <div
+          style={{
+            backgroundColor: "var(--rei-color-surface, #1e1f24)",
+            borderRadius: "4px",
+            padding: "24px",
+            fontFamily: sampleFonts.find((f) => f.name === selectedFont)?.family ?? "inherit",
+            fontSize: "24px",
+            color: "var(--rei-color-text)",
+          }}
+        >
+          The quick brown fox jumps over the lazy dog
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Custom Size</div>
+        <FontsPanel
+          fonts={sampleFonts}
+          selectedFont={selectedFont}
+          onSelectFont={setSelectedFont}
+          width={350}
+          maxHeight={300}
+        />
       </div>
     </div>
   );
@@ -1409,6 +1931,12 @@ export const demoCategories: DemoCategory[] = [
         path: "image-select",
         element: <ImageSelectDemo />,
       },
+      {
+        id: "tooltip",
+        label: "Tooltip",
+        path: "tooltip",
+        element: <TooltipDemo />,
+      },
     ],
   },
   {
@@ -1452,6 +1980,30 @@ export const demoCategories: DemoCategory[] = [
         label: "StrokeSettingsPanel",
         path: "stroke-settings-panel",
         element: <StrokeSettingsPanelDemo />,
+      },
+      {
+        id: "transform-buttons",
+        label: "TransformButtons",
+        path: "transform-buttons",
+        element: <TransformButtonsDemo />,
+      },
+      {
+        id: "typography-panel",
+        label: "TypographyPanel",
+        path: "typography-panel",
+        element: <TypographyPanelDemo />,
+      },
+      {
+        id: "fonts-panel",
+        label: "FontsPanel",
+        path: "fonts-panel",
+        element: <FontsPanelDemo />,
+      },
+      {
+        id: "position-panel",
+        label: "PositionPanel",
+        path: "position-panel",
+        element: <PositionPanelDemo />,
       },
     ],
   },

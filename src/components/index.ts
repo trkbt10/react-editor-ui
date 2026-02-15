@@ -52,8 +52,6 @@ export type {
   GradientType,
   GradientStop,
   GradientValue,
-  FillType,
-  FillValue,
 } from "./GradientEditor/gradientTypes";
 
 export {
@@ -69,11 +67,62 @@ export {
 export { FillEditor } from "./FillEditor/FillEditor";
 export type { FillEditorProps } from "./FillEditor/FillEditor";
 
+export { FillTypeSelector } from "./FillEditor/FillTypeSelector";
+export type { FillTypeSelectorProps } from "./FillEditor/FillTypeSelector";
+
+export { ImageFillEditor } from "./FillEditor/ImageFillEditor";
+export type { ImageFillEditorProps } from "./FillEditor/ImageFillEditor";
+
+export { ImageAdjustments } from "./FillEditor/ImageAdjustments";
+export type { ImageAdjustmentsProps } from "./FillEditor/ImageAdjustments";
+
+export { PatternEditor } from "./FillEditor/PatternEditor";
+export type { PatternEditorProps } from "./FillEditor/PatternEditor";
+
+export { VideoFillEditor } from "./FillEditor/VideoFillEditor";
+export type { VideoFillEditorProps } from "./FillEditor/VideoFillEditor";
+
+export type {
+  FillType,
+  FillValue,
+  SolidFillValue,
+  GradientFillValue,
+  ImageFill,
+  PatternFill,
+  VideoFill,
+  ImageAdjustments as ImageAdjustmentsType,
+  ImageFillValue,
+  ImageFillMode,
+  PatternFillValue,
+  TileType,
+  AlignmentType,
+  VideoFillValue,
+} from "./FillEditor/fillTypes";
+
+export {
+  createDefaultImageAdjustments,
+  createDefaultImageFill,
+  createDefaultPatternFill,
+  createDefaultVideoFill,
+  createDefaultSolidColor,
+  createDefaultFill,
+  extractPrimaryColor,
+  getFillTypeLabel,
+  isSolidFill,
+  isGradientFill,
+  isImageFill,
+  isPatternFill,
+  isVideoFill,
+} from "./FillEditor/fillUtils";
+
 export { ImageSelect } from "./ImageSelect/ImageSelect";
 export type {
   ImageSelectProps,
   ImageSelectOption,
 } from "./ImageSelect/ImageSelect";
+
+export { Tooltip } from "./Tooltip/Tooltip";
+export type { TooltipProps, TooltipPlacement } from "./Tooltip/Tooltip";
 
 // ========================================
 // LAYOUT
@@ -145,3 +194,37 @@ export type {
   BrushType,
   StrokeTab,
 } from "./StrokeSettingsPanel/StrokeSettingsPanel";
+
+export { TransformButtons } from "./TransformButtons/TransformButtons";
+export type {
+  TransformButtonsProps,
+  TransformAction,
+  TransformActionGroup,
+} from "./TransformButtons/TransformButtons";
+
+export { TypographyPanel } from "./TypographyPanel/TypographyPanel";
+export type {
+  TypographyPanelProps,
+  TypographySettings,
+  TextAlign,
+  VerticalAlign as TextVerticalAlign,
+  FontOption,
+  FontWeightOption,
+} from "./TypographyPanel/TypographyPanel";
+
+export { FontsPanel } from "./FontsPanel/FontsPanel";
+export type {
+  FontsPanelProps,
+  FontItem,
+  FontCategory,
+} from "./FontsPanel/FontsPanel";
+
+export { PositionPanel, createDefaultPositionSettings } from "./PositionPanel/PositionPanel";
+export type {
+  PositionPanelProps,
+  PositionSettings,
+  HorizontalAlign,
+  VerticalAlign,
+  HorizontalConstraint,
+  VerticalConstraint,
+} from "./PositionPanel/PositionPanel";

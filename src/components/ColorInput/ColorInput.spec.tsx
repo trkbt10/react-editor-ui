@@ -30,20 +30,20 @@ describe("ColorInput", () => {
     expect(opacityInput).toHaveValue("100");
   });
 
-  it("renders visibility toggle by default", () => {
+  it("hides visibility toggle by default", () => {
     render(<ColorInput value={defaultValue} onChange={() => {}} />);
-    expect(screen.getByLabelText("Hide color")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Hide color")).not.toBeInTheDocument();
   });
 
-  it("hides visibility toggle when showVisibilityToggle is false", () => {
+  it("shows visibility toggle when showVisibilityToggle is true", () => {
     render(
       <ColorInput
         value={defaultValue}
         onChange={() => {}}
-        showVisibilityToggle={false}
+        showVisibilityToggle
       />,
     );
-    expect(screen.queryByLabelText("Hide color")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Hide color")).toBeInTheDocument();
   });
 
   it("renders remove button when showRemove is true", () => {
@@ -80,7 +80,13 @@ describe("ColorInput", () => {
     const handleChange = (v: ColorValue) => {
       changedVisible = v.visible;
     };
-    render(<ColorInput value={defaultValue} onChange={handleChange} />);
+    render(
+      <ColorInput
+        value={defaultValue}
+        onChange={handleChange}
+        showVisibilityToggle
+      />,
+    );
     fireEvent.click(screen.getByLabelText("Hide color"));
     expect(changedVisible).toBe(false);
   });
@@ -131,7 +137,11 @@ describe("ColorInput", () => {
 
   it("shows correct visibility icon based on visible state", () => {
     const { rerender } = render(
-      <ColorInput value={defaultValue} onChange={() => {}} />,
+      <ColorInput
+        value={defaultValue}
+        onChange={() => {}}
+        showVisibilityToggle
+      />,
     );
     expect(screen.getByLabelText("Hide color")).toBeInTheDocument();
 
@@ -139,6 +149,7 @@ describe("ColorInput", () => {
       <ColorInput
         value={{ ...defaultValue, visible: false }}
         onChange={() => {}}
+        showVisibilityToggle
       />,
     );
     expect(screen.getByLabelText("Show color")).toBeInTheDocument();

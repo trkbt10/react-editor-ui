@@ -1,65 +1,85 @@
 /**
- * @file FillEditor component - Switch between solid and gradient fill modes
+ * @file FillEditor component - Switch between solid, gradient, image, pattern, and video fill modes
  */
 
 import type { CSSProperties } from "react";
-import {
-  SPACE_MD,
-} from "../../constants/styles";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import type { SegmentedControlOption } from "../SegmentedControl/SegmentedControl";
+import { SPACE_MD } from "../../constants/styles";
 import { ColorInput } from "../ColorInput/ColorInput";
 import type { ColorValue } from "../ColorInput/ColorInput";
 import { GradientEditor } from "../GradientEditor/GradientEditor";
-import type { FillValue, FillType, GradientValue } from "../GradientEditor/gradientTypes";
+import type { GradientValue } from "../GradientEditor/gradientTypes";
 import { createDefaultGradient } from "../GradientEditor/gradientUtils";
+import { FillTypeSelector } from "./FillTypeSelector";
+import { ImageFillEditor } from "./ImageFillEditor";
+import { PatternEditor } from "./PatternEditor";
+import { VideoFillEditor } from "./VideoFillEditor";
+import type {
+  FillValue,
+  FillType,
+  ImageFillValue,
+  PatternFillValue,
+  VideoFillValue,
+} from "./fillTypes";
+import {
+  createDefaultImageFill,
+  createDefaultPatternFill,
+  createDefaultVideoFill,
+  extractPrimaryColor,
+} from "./fillUtils";
 
 export type FillEditorProps = {
   value: FillValue;
   onChange: (value: FillValue) => void;
+  onImageUpload?: () => void;
+  onPatternSelect?: () => void;
   disabled?: boolean;
   "aria-label"?: string;
 };
 
-const fillTypeOptions: SegmentedControlOption<FillType>[] = [
-  { value: "solid", label: "Solid" },
-  { value: "gradient", label: "Gradient" },
-];
 
-function getDefaultSolidColor(value: FillValue): ColorValue {
-  if (value.type === "gradient" && value.gradient.stops.length > 0) {
-    return { ...value.gradient.stops[0].color };
-  }
-  return { hex: "#000000", opacity: 100, visible: true };
-}
+
+
+
 
 export function FillEditor({
   value,
   onChange,
+  onImageUpload,
+  onPatternSelect,
   disabled = false,
   "aria-label": ariaLabel = "Fill editor",
 }: FillEditorProps) {
-  const handleTypeChange = (newType: FillType | FillType[]) => {
-    if (Array.isArray(newType)) {
-      return;
-    }
-
+  const handleTypeChange = (newType: FillType) => {
     if (newType === value.type) {
       return;
     }
 
-    if (newType === "solid") {
-      // Switch to solid - use first gradient stop color or default
-      const defaultColor = getDefaultSolidColor(value);
-      onChange({ type: "solid", color: defaultColor });
-    } else {
-      // Switch to gradient - use current solid color as first stop
-      const defaultGradient = createDefaultGradient();
-      if (value.type === "solid") {
-        defaultGradient.stops[0].color = { ...value.color };
+    switch (newType) {
+      case "solid": {
+        const defaultColor = extractPrimaryColor(value);
+        onChange({ type: "solid", color: defaultColor });
+        break;
       }
-
-      onChange({ type: "gradient", gradient: defaultGradient });
+      case "gradient": {
+        const defaultGradient = createDefaultGradient();
+        if (value.type === "solid") {
+          defaultGradient.stops[0].color = { ...value.color };
+        }
+        onChange({ type: "gradient", gradient: defaultGradient });
+        break;
+      }
+      case "image": {
+        onChange({ type: "image", image: createDefaultImageFill() });
+        break;
+      }
+      case "pattern": {
+        onChange({ type: "pattern", pattern: createDefaultPatternFill() });
+        break;
+      }
+      case "video": {
+        onChange({ type: "video", video: createDefaultVideoFill() });
+        break;
+      }
     }
   };
 
@@ -72,6 +92,24 @@ export function FillEditor({
   const handleGradientChange = (gradient: GradientValue) => {
     if (value.type === "gradient") {
       onChange({ type: "gradient", gradient });
+    }
+  };
+
+  const handleImageChange = (image: ImageFillValue) => {
+    if (value.type === "image") {
+      onChange({ type: "image", image });
+    }
+  };
+
+  const handlePatternChange = (pattern: PatternFillValue) => {
+    if (value.type === "pattern") {
+      onChange({ type: "pattern", pattern });
+    }
+  };
+
+  const handleVideoChange = (video: VideoFillValue) => {
+    if (value.type === "video") {
+      onChange({ type: "video", video });
     }
   };
 
@@ -88,16 +126,24 @@ export function FillEditor({
       aria-label={ariaLabel}
       style={containerStyle}
     >
-      <SegmentedControl
-        options={fillTypeOptions}
+      <FillTypeSelector
         value={value.type}
         onChange={handleTypeChange}
-        size="sm"
         disabled={disabled}
         aria-label="Fill type"
       />
 
-      {renderFillContent(value, handleSolidColorChange, handleGradientChange, disabled)}
+      {renderFillContent(
+        value,
+        handleSolidColorChange,
+        handleGradientChange,
+        handleImageChange,
+        handlePatternChange,
+        handleVideoChange,
+        onImageUpload,
+        onPatternSelect,
+        disabled,
+      )}
     </div>
   );
 }
@@ -106,23 +152,60 @@ function renderFillContent(
   value: FillValue,
   onSolidChange: (color: ColorValue) => void,
   onGradientChange: (gradient: GradientValue) => void,
+  onImageChange: (image: ImageFillValue) => void,
+  onPatternChange: (pattern: PatternFillValue) => void,
+  onVideoChange: (video: VideoFillValue) => void,
+  onImageUpload: (() => void) | undefined,
+  onPatternSelect: (() => void) | undefined,
   disabled: boolean,
 ) {
-  if (value.type === "solid") {
-    return (
-      <ColorInput
-        value={value.color}
-        onChange={onSolidChange}
-        disabled={disabled}
-      />
-    );
+  switch (value.type) {
+    case "solid": {
+      return (
+        <ColorInput
+          value={value.color}
+          onChange={onSolidChange}
+          disabled={disabled}
+        />
+      );
+    }
+    case "gradient": {
+      return (
+        <GradientEditor
+          value={value.gradient}
+          onChange={onGradientChange}
+          disabled={disabled}
+        />
+      );
+    }
+    case "image": {
+      return (
+        <ImageFillEditor
+          value={value.image}
+          onChange={onImageChange}
+          onUpload={onImageUpload}
+          disabled={disabled}
+        />
+      );
+    }
+    case "pattern": {
+      return (
+        <PatternEditor
+          value={value.pattern}
+          onChange={onPatternChange}
+          onSelectSource={onPatternSelect}
+          disabled={disabled}
+        />
+      );
+    }
+    case "video": {
+      return (
+        <VideoFillEditor
+          value={value.video}
+          onChange={onVideoChange}
+          disabled={disabled}
+        />
+      );
+    }
   }
-
-  return (
-    <GradientEditor
-      value={value.gradient}
-      onChange={onGradientChange}
-      disabled={disabled}
-    />
-  );
 }

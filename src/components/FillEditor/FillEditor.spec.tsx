@@ -4,7 +4,12 @@
 
 import { render, screen, fireEvent } from "@testing-library/react";
 import { FillEditor } from "./FillEditor";
-import type { FillValue } from "../GradientEditor/gradientTypes";
+import type { FillValue } from "./fillTypes";
+import {
+  createDefaultImageFill,
+  createDefaultPatternFill,
+  createDefaultVideoFill,
+} from "./fillUtils";
 
 const createSolidFill = (): FillValue => ({
   type: "solid",
@@ -23,6 +28,21 @@ const createGradientFill = (): FillValue => ({
   },
 });
 
+const createImageFill = (): FillValue => ({
+  type: "image",
+  image: createDefaultImageFill(),
+});
+
+const createPatternFill = (): FillValue => ({
+  type: "pattern",
+  pattern: createDefaultPatternFill(),
+});
+
+const createVideoFill = (): FillValue => ({
+  type: "video",
+  video: createDefaultVideoFill(),
+});
+
 describe("FillEditor", () => {
   it("renders solid fill with ColorInput", () => {
     const fill = createSolidFill();
@@ -33,9 +53,12 @@ describe("FillEditor", () => {
       />,
     );
 
-    // Fill type selector
-    expect(screen.getByRole("radio", { name: "Solid" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Gradient" })).toBeInTheDocument();
+    // Fill type selector should have 5 options
+    expect(screen.getByRole("radio", { name: "Solid fill" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Gradient fill" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Image fill" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Pattern fill" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Video fill" })).toBeInTheDocument();
 
     // ColorInput should be rendered
     expect(screen.getByRole("button", { name: "Open color picker" })).toBeInTheDocument();
@@ -55,6 +78,48 @@ describe("FillEditor", () => {
     expect(screen.getByText("Stops")).toBeInTheDocument();
   });
 
+  it("renders image fill with ImageFillEditor", () => {
+    const fill = createImageFill();
+    render(
+      <FillEditor
+        value={fill}
+        onChange={() => {}}
+      />,
+    );
+
+    // ImageFillEditor should be rendered
+    expect(screen.getByText("No image selected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Upload image/i })).toBeInTheDocument();
+  });
+
+  it("renders pattern fill with PatternEditor", () => {
+    const fill = createPatternFill();
+    render(
+      <FillEditor
+        value={fill}
+        onChange={() => {}}
+      />,
+    );
+
+    // PatternEditor should be rendered
+    expect(screen.getByText("No pattern source")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Select source/i })).toBeInTheDocument();
+  });
+
+  it("renders video fill with VideoFillEditor", () => {
+    const fill = createVideoFill();
+    render(
+      <FillEditor
+        value={fill}
+        onChange={() => {}}
+      />,
+    );
+
+    // VideoFillEditor should be rendered
+    expect(screen.getByText("Enter video URL")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Video URL" })).toBeInTheDocument();
+  });
+
   it("switches from solid to gradient", () => {
     const fill = createSolidFill();
     let updatedFill: FillValue = fill;
@@ -69,7 +134,7 @@ describe("FillEditor", () => {
       />,
     );
 
-    const gradientTab = screen.getByRole("radio", { name: "Gradient" });
+    const gradientTab = screen.getByRole("radio", { name: "Gradient fill" });
     fireEvent.click(gradientTab);
 
     expect(updatedFill.type).toBe("gradient");
@@ -93,13 +158,85 @@ describe("FillEditor", () => {
       />,
     );
 
-    const solidTab = screen.getByRole("radio", { name: "Solid" });
+    const solidTab = screen.getByRole("radio", { name: "Solid fill" });
     fireEvent.click(solidTab);
 
     expect(updatedFill.type).toBe("solid");
     if (updatedFill.type === "solid") {
       // Should use first gradient stop color
       expect(updatedFill.color.hex).toBe("#000000");
+    }
+  });
+
+  it("switches from solid to image", () => {
+    const fill = createSolidFill();
+    let updatedFill: FillValue = fill;
+    const handleChange = (f: FillValue) => {
+      updatedFill = f;
+    };
+
+    render(
+      <FillEditor
+        value={fill}
+        onChange={handleChange}
+      />,
+    );
+
+    const imageTab = screen.getByRole("radio", { name: "Image fill" });
+    fireEvent.click(imageTab);
+
+    expect(updatedFill.type).toBe("image");
+    if (updatedFill.type === "image") {
+      expect(updatedFill.image.url).toBe("");
+      expect(updatedFill.image.mode).toBe("fill");
+    }
+  });
+
+  it("switches from solid to pattern", () => {
+    const fill = createSolidFill();
+    let updatedFill: FillValue = fill;
+    const handleChange = (f: FillValue) => {
+      updatedFill = f;
+    };
+
+    render(
+      <FillEditor
+        value={fill}
+        onChange={handleChange}
+      />,
+    );
+
+    const patternTab = screen.getByRole("radio", { name: "Pattern fill" });
+    fireEvent.click(patternTab);
+
+    expect(updatedFill.type).toBe("pattern");
+    if (updatedFill.type === "pattern") {
+      expect(updatedFill.pattern.sourceUrl).toBe("");
+      expect(updatedFill.pattern.tileType).toBe("grid");
+    }
+  });
+
+  it("switches from solid to video", () => {
+    const fill = createSolidFill();
+    let updatedFill: FillValue = fill;
+    const handleChange = (f: FillValue) => {
+      updatedFill = f;
+    };
+
+    render(
+      <FillEditor
+        value={fill}
+        onChange={handleChange}
+      />,
+    );
+
+    const videoTab = screen.getByRole("radio", { name: "Video fill" });
+    fireEvent.click(videoTab);
+
+    expect(updatedFill.type).toBe("video");
+    if (updatedFill.type === "video") {
+      expect(updatedFill.video.url).toBe("");
+      expect(updatedFill.video.loop).toBe(true);
     }
   });
 
@@ -117,7 +254,7 @@ describe("FillEditor", () => {
       />,
     );
 
-    const solidTab = screen.getByRole("radio", { name: "Solid" });
+    const solidTab = screen.getByRole("radio", { name: "Solid fill" });
     fireEvent.click(solidTab);
 
     expect(callCount).toBe(0);
@@ -182,7 +319,49 @@ describe("FillEditor", () => {
       />,
     );
 
-    const gradientTab = screen.getByRole("radio", { name: "Gradient" });
+    const gradientTab = screen.getByRole("radio", { name: "Gradient fill" });
     expect(gradientTab).toBeDisabled();
+  });
+
+  it("calls onImageUpload when upload button clicked", () => {
+    const fill = createImageFill();
+    let uploadCallCount = 0;
+    const onImageUpload = () => {
+      uploadCallCount++;
+    };
+
+    render(
+      <FillEditor
+        value={fill}
+        onChange={() => {}}
+        onImageUpload={onImageUpload}
+      />,
+    );
+
+    const uploadButton = screen.getByRole("button", { name: /Upload image/i });
+    fireEvent.click(uploadButton);
+
+    expect(uploadCallCount).toBe(1);
+  });
+
+  it("calls onPatternSelect when select source button clicked", () => {
+    const fill = createPatternFill();
+    let selectCallCount = 0;
+    const onPatternSelect = () => {
+      selectCallCount++;
+    };
+
+    render(
+      <FillEditor
+        value={fill}
+        onChange={() => {}}
+        onPatternSelect={onPatternSelect}
+      />,
+    );
+
+    const selectButton = screen.getByRole("button", { name: /Select source/i });
+    fireEvent.click(selectButton);
+
+    expect(selectCallCount).toBe(1);
   });
 });
