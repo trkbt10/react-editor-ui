@@ -758,6 +758,42 @@ function getVisibleLayersOrdered(
   return result;
 }
 
+function DragStatusDisplay({
+  selectedIds,
+  draggedId,
+  dropInfo,
+  layerMap,
+  layers,
+}: {
+  selectedIds: Set<string>;
+  draggedId: string;
+  dropInfo: DropInfo;
+  layerMap: Map<string, LayerData>;
+  layers: LayerData[];
+}) {
+  const getDragLabel = () => {
+    if (selectedIds.size > 1) {
+      return `${selectedIds.size} layers`;
+    }
+    return layerMap.get(draggedId)?.label ?? "";
+  };
+
+  const getDropTarget = () => {
+    if (!dropInfo) {
+      return "";
+    }
+    const targetLabel = layers.find((l) => l.id === dropInfo.targetId)?.label ?? "";
+    return ` → ${dropInfo.position} "${targetLabel}"`;
+  };
+
+  return (
+    <div style={{ color: "var(--rei-color-primary)", fontSize: 11 }}>
+      Dragging: {getDragLabel()}
+      {getDropTarget()}
+    </div>
+  );
+}
+
 function LayerItemDemo() {
   const [layers, setLayers] = useState<LayerData[]>([
     { id: "1", label: "Main Frame", type: "frame", visible: true, locked: false, parentId: null, order: 0 },
@@ -1130,12 +1166,15 @@ function LayerItemDemo() {
           Selected: {selectedIds.size} layer(s)
           {lastAction ? ` | Last: ${lastAction}` : ""}
         </div>
-        {draggedId ? (
-          <div style={{ color: "var(--rei-color-primary)", fontSize: 11 }}>
-            Dragging: {selectedIds.size > 1 ? `${selectedIds.size} layers` : layerMap.get(draggedId)?.label}
-            {dropInfo ? ` → ${dropInfo.position} "${layers.find((l) => l.id === dropInfo.targetId)?.label}"` : ""}
-          </div>
-        ) : null}
+        {draggedId && (
+          <DragStatusDisplay
+            selectedIds={selectedIds}
+            draggedId={draggedId}
+            dropInfo={dropInfo}
+            layerMap={layerMap}
+            layers={layers}
+          />
+        )}
       </div>
 
       <div style={demoSectionStyle}>
