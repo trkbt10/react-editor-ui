@@ -42,7 +42,10 @@
     "test:cov": "vitest run --coverage",
     "test": "vitest --run",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "check:tokens": "bun scripts/check-tokens.ts",
+    "check:tokens:fix": "bun scripts/check-tokens.ts --fix",
+    "check:tokens:strict": "bun scripts/check-tokens.ts --strict"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",

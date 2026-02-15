@@ -71,6 +71,15 @@ export const COLOR_WARNING = "var(--rei-color-warning, #d97706)";
 export const COLOR_ERROR = "var(--rei-color-error, #dc2626)";
 
 /**
+ * Error state colors (backgrounds and borders)
+ */
+export const COLOR_ERROR_BG = "var(--rei-color-error-bg, rgba(239, 68, 68, 0.1))";
+export const COLOR_ERROR_BG_HOVER = "var(--rei-color-error-bg-hover, rgba(239, 68, 68, 0.15))";
+export const COLOR_ERROR_BG_ACTIVE = "var(--rei-color-error-bg-active, rgba(239, 68, 68, 0.2))";
+export const COLOR_ERROR_BORDER = "var(--rei-color-error-border, rgba(239, 68, 68, 0.3))";
+export const COLOR_ERROR_BORDER_HOVER = "var(--rei-color-error-border-hover, rgba(239, 68, 68, 0.4))";
+
+/**
  * Backdrop / overlay
  */
 export const COLOR_BACKDROP = "var(--rei-color-backdrop, rgba(0, 0, 0, 0.4))";
@@ -116,9 +125,9 @@ export const SIZE_HEIGHT_LG = "var(--rei-size-height-lg, 32px)";
 // BORDER RADIUS
 // ========================================
 
-export const RADIUS_SM = "var(--rei-radius-sm, 3px)";
-export const RADIUS_MD = "var(--rei-radius-md, 5px)";
-export const RADIUS_LG = "var(--rei-radius-lg, 6px)";
+export const RADIUS_SM = "var(--rei-radius-sm, 5px)";
+export const RADIUS_MD = "var(--rei-radius-md, 6px)";
+export const RADIUS_LG = "var(--rei-radius-lg, 8px)";
 export const RADIUS_FULL = "var(--rei-radius-full, 9999px)";
 
 // ========================================
@@ -216,3 +225,10 @@ export const COLOR_LOG_WARNING = "var(--rei-color-log-warning, #d97706)";
 export const COLOR_LOG_ERROR = "var(--rei-color-log-error, #dc2626)";
 export const COLOR_LOG_DEBUG = "var(--rei-color-log-debug, #7c3aed)";
 export const COLOR_LOG_SUCCESS = "var(--rei-color-log-success, #16a34a)";
+
+// ========================================
+// TOOLTIP
+// ========================================
+
+export const COLOR_TOOLTIP_BG = "var(--rei-tooltip-bg, #1f2937)";
+export const COLOR_TOOLTIP_TEXT = "var(--rei-tooltip-color, #ffffff)";
