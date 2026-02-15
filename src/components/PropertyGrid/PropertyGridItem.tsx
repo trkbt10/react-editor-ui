@@ -17,6 +17,11 @@ function getGridColumn(span: 1 | 2 | 3 | 4 | "full"): string {
   return `span ${span}`;
 }
 
+
+
+
+
+
 export function PropertyGridItem({
   children,
   span = 1,
@@ -25,6 +30,8 @@ export function PropertyGridItem({
 }: PropertyGridItemProps) {
   const style: CSSProperties = {
     gridColumn: getGridColumn(span),
+    minWidth: 0,
+    boxSizing: "border-box",
   };
 
   return (

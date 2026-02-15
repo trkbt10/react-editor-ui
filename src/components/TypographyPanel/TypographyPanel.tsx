@@ -246,6 +246,8 @@ function LabeledInput({
     display: "flex",
     flexDirection: "column",
     gap: SPACE_SM,
+    minWidth: 0,
+    boxSizing: "border-box",
   };
 
   const labelStyle: CSSProperties = {
