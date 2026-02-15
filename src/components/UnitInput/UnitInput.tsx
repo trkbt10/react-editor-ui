@@ -20,6 +20,8 @@ import {
   COLOR_TEXT_DISABLED,
   COLOR_HOVER,
   COLOR_FOCUS_RING,
+  COLOR_SURFACE_RAISED,
+  COLOR_SELECTED,
   RADIUS_SM,
   DURATION_FAST,
   EASING_DEFAULT,
@@ -29,7 +31,13 @@ import {
   SIZE_HEIGHT_LG,
   SPACE_XS,
   SPACE_SM,
+  SHADOW_MD,
+  Z_DROPDOWN,
 } from "../../constants/styles";
+import { Portal } from "../Portal/Portal";
+
+/** Threshold for showing dropdown instead of cycling */
+const DROPDOWN_THRESHOLD = 5;
 
 export type UnitOption = {
   value: string;
@@ -140,9 +148,17 @@ export function UnitInput({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [isUnitHovered, setIsUnitHovered] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
+  const unitButtonRef = useRef<HTMLSpanElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const skipBlurCommitRef = useRef(false);
   const sizeConfig = sizeMap[size];
+
+  // Determine if we should use dropdown based on unit count
+  const allOptions = allowAuto ? [...units, { value: "auto", label: "Auto" }] : units;
+  const useDropdown = allOptions.length >= DROPDOWN_THRESHOLD;
 
   const defaultUnit = units[0]?.value ?? "px";
   const parsed = parseValue(value, defaultUnit);
@@ -265,8 +281,6 @@ export function UnitInput({
   const cycleUnit = useCallback(() => {
     if (disabled) return;
 
-    const allOptions = allowAuto ? [...units, { value: "auto", label: "Auto" }] : units;
-
     if (parsed.isAuto) {
       const nextUnit = units[0]?.value ?? "px";
       onChange(formatFullValue(0, nextUnit, false));
@@ -283,7 +297,78 @@ export function UnitInput({
     } else {
       onChange(formatFullValue(parsed.num, nextOption.value, false));
     }
-  }, [disabled, allowAuto, units, parsed, currentUnitIndex, onChange]);
+  }, [disabled, units, parsed, currentUnitIndex, onChange, allOptions]);
+
+  const openDropdown = useCallback(() => {
+    if (disabled || !unitButtonRef.current) return;
+
+    const rect = unitButtonRef.current.getBoundingClientRect();
+    setDropdownPosition({
+      top: rect.bottom + window.scrollY + 4,
+      left: rect.left + window.scrollX,
+      width: Math.max(rect.width, 60),
+    });
+    setIsDropdownOpen(true);
+  }, [disabled]);
+
+  const closeDropdown = useCallback(() => {
+    setIsDropdownOpen(false);
+  }, []);
+
+  const selectUnit = useCallback((unitValue: string) => {
+    if (unitValue === "auto") {
+      onChange("Auto");
+    } else {
+      const num = parsed.isAuto ? 0 : (parsed.num ?? 0);
+      onChange(formatFullValue(num, unitValue, false));
+    }
+    closeDropdown();
+  }, [parsed, onChange, closeDropdown]);
+
+  const handleUnitClick = useCallback(() => {
+    if (disabled) return;
+
+    if (useDropdown) {
+      if (isDropdownOpen) {
+        closeDropdown();
+      } else {
+        openDropdown();
+      }
+    } else {
+      cycleUnit();
+    }
+  }, [disabled, useDropdown, isDropdownOpen, closeDropdown, openDropdown, cycleUnit]);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        unitButtonRef.current &&
+        !unitButtonRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
+      ) {
+        closeDropdown();
+      }
+    };
+
+    const handleEscape = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeDropdown();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isDropdownOpen, closeDropdown]);
 
   const containerStyle: CSSProperties = {
     display: "flex",
@@ -339,6 +424,29 @@ export function UnitInput({
   const displayUnit = getDisplayUnit();
   const showUnitButton = !parsed.isAuto && units.length > 0;
 
+  const dropdownStyle: CSSProperties = {
+    position: "fixed",
+    top: dropdownPosition.top,
+    left: dropdownPosition.left,
+    minWidth: dropdownPosition.width,
+    backgroundColor: COLOR_SURFACE_RAISED,
+    border: `1px solid ${COLOR_INPUT_BORDER}`,
+    borderRadius: RADIUS_SM,
+    boxShadow: SHADOW_MD,
+    zIndex: Z_DROPDOWN,
+    padding: "4px 0",
+    maxHeight: 200,
+    overflowY: "auto",
+  };
+
+  const dropdownItemStyle: CSSProperties = {
+    padding: `4px ${SPACE_SM}`,
+    fontSize: sizeConfig.fontSize,
+    color: COLOR_TEXT,
+    cursor: "pointer",
+    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+  };
+
   return (
     <div
       className={className}
@@ -362,17 +470,63 @@ export function UnitInput({
       />
       {showUnitButton && (
         <span
-          onClick={cycleUnit}
+          ref={unitButtonRef}
+          onClick={handleUnitClick}
           onPointerEnter={() => setIsUnitHovered(true)}
           onPointerLeave={() => setIsUnitHovered(false)}
           style={unitStyle}
           role="button"
           tabIndex={disabled ? -1 : 0}
-          aria-label={`Unit: ${displayUnit}. Click to change.`}
+          aria-label={`Unit: ${displayUnit}. Click to ${useDropdown ? "select" : "change"}.`}
+          aria-haspopup={useDropdown ? "listbox" : undefined}
+          aria-expanded={useDropdown ? isDropdownOpen : undefined}
           data-testid="unit-input-unit-button"
         >
           {displayUnit}
+          {useDropdown && (
+            <svg
+              width="8"
+              height="8"
+              viewBox="0 0 8 8"
+              fill="currentColor"
+              style={{ marginLeft: 2, opacity: 0.6 }}
+            >
+              <path d="M1 2.5L4 5.5L7 2.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+            </svg>
+          )}
         </span>
+      )}
+      {isDropdownOpen && (
+        <Portal>
+          <div
+            ref={dropdownRef}
+            style={dropdownStyle}
+            role="listbox"
+            aria-label="Select unit"
+            data-testid="unit-input-dropdown"
+          >
+            {allOptions.map((option) => {
+              const isSelected = option.value === "auto"
+                ? parsed.isAuto
+                : option.value.toLowerCase() === currentUnit.toLowerCase();
+              return (
+                <div
+                  key={option.value}
+                  onClick={() => selectUnit(option.value)}
+                  style={{
+                    ...dropdownItemStyle,
+                    backgroundColor: isSelected ? COLOR_SELECTED : "transparent",
+                  }}
+                  role="option"
+                  aria-selected={isSelected}
+                  data-testid={`unit-option-${option.value}`}
+                >
+                  {option.label}
+                </div>
+              );
+            })}
+          </div>
+        </Portal>
       )}
     </div>
   );

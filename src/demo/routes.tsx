@@ -324,14 +324,13 @@ function UnitInputDemo() {
               { value: "px", label: "px" },
               { value: "%", label: "%" },
               { value: "em", label: "em" },
-              { value: "rem", label: "rem" },
             ]}
             allowAuto
             aria-label="Height"
           />
         </div>
         <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11 }}>
-          Click the unit button to cycle through: px → % → em → rem → Auto
+          Click the unit button to cycle through: px → % → em → Auto
         </div>
       </div>
 
@@ -386,6 +385,29 @@ function UnitInputDemo() {
         </div>
         <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11 }}>
           Step: 0.1, Shift+Step: 0.5
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Many units (dropdown mode)</div>
+        <div style={{ width: 200 }}>
+          <UnitInput
+            value="100px"
+            onChange={(v) => console.log("Many units:", v)}
+            units={[
+              { value: "px", label: "px" },
+              { value: "%", label: "%" },
+              { value: "em", label: "em" },
+              { value: "rem", label: "rem" },
+              { value: "vw", label: "vw" },
+              { value: "vh", label: "vh" },
+              { value: "ch", label: "ch" },
+            ]}
+            aria-label="Many units"
+          />
+        </div>
+        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11 }}>
+          With 5+ units, clicking shows a dropdown instead of cycling
         </div>
       </div>
 

@@ -284,4 +284,92 @@ describe("UnitInput", () => {
     // Should not have changed the value
     expect(captured).toBe("");
   });
+
+  describe("dropdown mode (5+ units)", () => {
+    const manyUnits = [
+      { value: "px", label: "px" },
+      { value: "%", label: "%" },
+      { value: "em", label: "em" },
+      { value: "rem", label: "rem" },
+      { value: "vw", label: "vw" },
+    ];
+
+    it("shows dropdown when clicking unit button with 5+ units", () => {
+      render(<UnitInput value="10px" onChange={() => {}} units={manyUnits} />);
+
+      const unitButton = screen.getByTestId("unit-input-unit-button");
+      fireEvent.click(unitButton);
+
+      expect(screen.getByTestId("unit-input-dropdown")).toBeInTheDocument();
+    });
+
+    it("shows all unit options in dropdown", () => {
+      render(<UnitInput value="10px" onChange={() => {}} units={manyUnits} />);
+
+      const unitButton = screen.getByTestId("unit-input-unit-button");
+      fireEvent.click(unitButton);
+
+      expect(screen.getByTestId("unit-option-px")).toBeInTheDocument();
+      expect(screen.getByTestId("unit-option-%")).toBeInTheDocument();
+      expect(screen.getByTestId("unit-option-em")).toBeInTheDocument();
+      expect(screen.getByTestId("unit-option-rem")).toBeInTheDocument();
+      expect(screen.getByTestId("unit-option-vw")).toBeInTheDocument();
+    });
+
+    it("selects unit from dropdown", () => {
+      // eslint-disable-next-line no-restricted-syntax
+      let captured = "";
+      const handleChange = (v: string) => {
+        captured = v;
+      };
+      render(<UnitInput value="10px" onChange={handleChange} units={manyUnits} />);
+
+      const unitButton = screen.getByTestId("unit-input-unit-button");
+      fireEvent.click(unitButton);
+
+      const vwOption = screen.getByTestId("unit-option-vw");
+      fireEvent.click(vwOption);
+
+      expect(captured).toBe("10vw");
+      expect(screen.queryByTestId("unit-input-dropdown")).not.toBeInTheDocument();
+    });
+
+    it("closes dropdown on escape key", () => {
+      render(<UnitInput value="10px" onChange={() => {}} units={manyUnits} />);
+
+      const unitButton = screen.getByTestId("unit-input-unit-button");
+      fireEvent.click(unitButton);
+
+      expect(screen.getByTestId("unit-input-dropdown")).toBeInTheDocument();
+
+      fireEvent.keyDown(document, { key: "Escape" });
+
+      expect(screen.queryByTestId("unit-input-dropdown")).not.toBeInTheDocument();
+    });
+
+    it("still cycles when units < 5", () => {
+      // eslint-disable-next-line no-restricted-syntax
+      let captured = "";
+      const handleChange = (v: string) => {
+        captured = v;
+      };
+      render(
+        <UnitInput
+          value="10px"
+          onChange={handleChange}
+          units={[
+            { value: "px", label: "px" },
+            { value: "%", label: "%" },
+          ]}
+        />,
+      );
+
+      const unitButton = screen.getByTestId("unit-input-unit-button");
+      fireEvent.click(unitButton);
+
+      // Should cycle, not show dropdown
+      expect(screen.queryByTestId("unit-input-dropdown")).not.toBeInTheDocument();
+      expect(captured).toBe("10%");
+    });
+  });
 });

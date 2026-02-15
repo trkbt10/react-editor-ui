@@ -141,10 +141,9 @@ test.describe("UnitInput", () => {
     const unitButton = input.locator("..").locator('[data-testid="unit-input-unit-button"]');
     await expect(unitButton).toBeVisible();
 
-    // Cycle through: px -> % -> em -> rem -> Auto
+    // Cycle through: px -> % -> em -> Auto
     await unitButton.click(); // %
     await unitButton.click(); // em
-    await unitButton.click(); // rem
     await unitButton.click(); // Auto
 
     await expect(input).toHaveValue("Auto");
