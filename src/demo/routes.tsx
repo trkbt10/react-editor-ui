@@ -23,6 +23,7 @@ import {
   PropertySection,
   SectionHeader,
   TreeItem,
+  LayerItem,
   Select,
   StatusBar,
   StatusBarItem,
@@ -67,7 +68,12 @@ import type {
   TypographySettings,
   FontItem,
   PositionSettings,
+  Token,
+  Tokenizer,
+  TextStyleSegment,
 } from "../components";
+import { CodeEditor, TextEditor, Canvas, CanvasContent } from "../components";
+import type { ViewportState } from "../components";
 
 export type DemoPage = {
   id: string;
@@ -647,6 +653,536 @@ function TreeItemDemo() {
             icon={<FileIcon />}
             selected={selected === "package"}
             onClick={() => setSelected("package")}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Layer Type Icons for LayerItemDemo
+const FrameLayerIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+  </svg>
+);
+
+const TextLayerIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="4 7 4 4 20 4 20 7" />
+    <line x1="12" y1="4" x2="12" y2="20" />
+    <line x1="8" y1="20" x2="16" y2="20" />
+  </svg>
+);
+
+const ImageLayerIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </svg>
+);
+
+const ComponentLayerIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+  </svg>
+);
+
+type LayerData = {
+  id: string;
+  label: string;
+  type: "frame" | "text" | "image" | "component";
+  visible: boolean;
+  locked: boolean;
+  parentId: string | null;
+  order: number;
+};
+
+type DropInfo = {
+  targetId: string;
+  position: "before" | "inside" | "after";
+} | null;
+
+// Optimized layer tree utilities using Map for O(1) lookups
+function createLayerMap(layers: LayerData[]): Map<string, LayerData> {
+  return new Map(layers.map((l) => [l.id, l]));
+}
+
+function createChildrenMap(layers: LayerData[]): Map<string | null, LayerData[]> {
+  const map = new Map<string | null, LayerData[]>();
+  for (const layer of layers) {
+    const children = map.get(layer.parentId) ?? [];
+    children.push(layer);
+    map.set(layer.parentId, children);
+  }
+  // Sort children by order
+  for (const [, children] of map) {
+    children.sort((a, b) => a.order - b.order);
+  }
+  return map;
+}
+
+function getDepthWithMap(id: string, layerMap: Map<string, LayerData>): number {
+  const layer = layerMap.get(id);
+  if (!layer || !layer.parentId) {
+    return 0;
+  }
+  return getDepthWithMap(layer.parentId, layerMap) + 1;
+}
+
+function isDescendantWithMap(childId: string, ancestorId: string, layerMap: Map<string, LayerData>): boolean {
+  const child = layerMap.get(childId);
+  if (!child || !child.parentId) {
+    return false;
+  }
+  if (child.parentId === ancestorId) {
+    return true;
+  }
+  return isDescendantWithMap(child.parentId, ancestorId, layerMap);
+}
+
+function getVisibleLayersOrdered(
+  childrenMap: Map<string | null, LayerData[]>,
+  expandedIds: Set<string>,
+  parentId: string | null = null,
+): LayerData[] {
+  const result: LayerData[] = [];
+  const children = childrenMap.get(parentId) ?? [];
+  for (const child of children) {
+    result.push(child);
+    if (expandedIds.has(child.id)) {
+      result.push(...getVisibleLayersOrdered(childrenMap, expandedIds, child.id));
+    }
+  }
+  return result;
+}
+
+function LayerItemDemo() {
+  const [layers, setLayers] = useState<LayerData[]>([
+    { id: "1", label: "Main Frame", type: "frame", visible: true, locked: false, parentId: null, order: 0 },
+    { id: "2", label: "Header", type: "frame", visible: true, locked: false, parentId: "1", order: 0 },
+    { id: "3", label: "Logo", type: "image", visible: true, locked: false, parentId: "2", order: 0 },
+    { id: "4", label: "Navigation", type: "text", visible: true, locked: false, parentId: "2", order: 1 },
+    { id: "5", label: "Content", type: "frame", visible: true, locked: false, parentId: "1", order: 1 },
+    { id: "6", label: "Card", type: "component", visible: false, locked: false, parentId: "5", order: 0 },
+    { id: "7", label: "Footer", type: "text", visible: true, locked: true, parentId: "1", order: 2 },
+    { id: "8", label: "Background", type: "frame", visible: true, locked: false, parentId: null, order: 1 },
+  ]);
+
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(["1", "2", "5"]));
+  // Multi-selection support
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(["1"]));
+  const [lastClickedId, setLastClickedId] = useState<string | null>("1");
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dropInfo, setDropInfo] = useState<DropInfo>(null);
+  const [lastAction, setLastAction] = useState<string>("");
+
+  // Precompute maps for O(1) lookups
+  const layerMap = createLayerMap(layers);
+  const childrenMap = createChildrenMap(layers);
+  const visibleLayers = getVisibleLayersOrdered(childrenMap, expandedIds);
+
+  const getIcon = (type: LayerData["type"]) => {
+    switch (type) {
+      case "frame": return <FrameLayerIcon />;
+      case "text": return <TextLayerIcon />;
+      case "image": return <ImageLayerIcon />;
+      case "component": return <ComponentLayerIcon />;
+    }
+  };
+
+  const canHaveChildren = (type: LayerData["type"]) => type === "frame";
+
+  const hasChildren = (id: string): boolean => {
+    return (childrenMap.get(id)?.length ?? 0) > 0;
+  };
+
+  const handleToggle = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Selection handlers with Shift and Cmd/Ctrl support
+  const handlePointerDownForSelection = (id: string, e: React.PointerEvent) => {
+    const isMeta = e.metaKey || e.ctrlKey;
+    const isShift = e.shiftKey;
+
+    // Right-click on selected item: preserve selection for context menu
+    if (e.button === 2 && selectedIds.has(id)) {
+      return;
+    }
+
+    if (isShift && lastClickedId) {
+      // Shift+click: range selection
+      const startIdx = visibleLayers.findIndex((l) => l.id === lastClickedId);
+      const endIdx = visibleLayers.findIndex((l) => l.id === id);
+      if (startIdx !== -1 && endIdx !== -1) {
+        const [from, to] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+        const rangeIds = visibleLayers.slice(from, to + 1).map((l) => l.id);
+
+        if (isMeta) {
+          // Shift+Cmd/Ctrl: add range to existing selection
+          setSelectedIds((prev) => new Set([...prev, ...rangeIds]));
+        } else {
+          // Shift only: replace selection with range
+          setSelectedIds(new Set(rangeIds));
+        }
+        setLastAction(`Selected ${rangeIds.length} layers (range)`);
+      }
+    } else if (isMeta) {
+      // Cmd/Ctrl+click: toggle selection
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
+        return next;
+      });
+      setLastClickedId(id);
+      setLastAction(`Toggle selection: ${layerMap.get(id)?.label}`);
+    } else {
+      // Normal click: single selection
+      setSelectedIds(new Set([id]));
+      setLastClickedId(id);
+    }
+  };
+
+  const handleVisibilityChange = (id: string, visible: boolean) => {
+    // Apply to all selected if this layer is selected
+    const idsToUpdate = selectedIds.has(id) ? [...selectedIds] : [id];
+    setLayers((prev) =>
+      prev.map((l) => (idsToUpdate.includes(l.id) ? { ...l, visible } : l))
+    );
+    setLastAction(`Set visibility=${visible} for ${idsToUpdate.length} layer(s)`);
+  };
+
+  const handleLockChange = (id: string, locked: boolean) => {
+    // Apply to all selected if this layer is selected
+    const idsToUpdate = selectedIds.has(id) ? [...selectedIds] : [id];
+    setLayers((prev) =>
+      prev.map((l) => (idsToUpdate.includes(l.id) ? { ...l, locked } : l))
+    );
+    setLastAction(`Set locked=${locked} for ${idsToUpdate.length} layer(s)`);
+  };
+
+  const handleRename = (id: string, newLabel: string) => {
+    setLayers((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, label: newLabel } : l))
+    );
+  };
+
+  const handleDelete = (id: string) => {
+    // Delete selected layers and all their descendants
+    const idsToDelete = selectedIds.has(id) ? [...selectedIds] : [id];
+    const toDelete = new Set<string>(idsToDelete);
+
+    // Add all descendants
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const layer of layers) {
+        if (layer.parentId && toDelete.has(layer.parentId) && !toDelete.has(layer.id)) {
+          toDelete.add(layer.id);
+          changed = true;
+        }
+      }
+    }
+
+    setLayers((prev) => prev.filter((l) => !toDelete.has(l.id)));
+    setSelectedIds(new Set());
+    setLastClickedId(null);
+    setLastAction(`Deleted ${toDelete.size} layer(s)`);
+  };
+
+  const handleContextMenu = (id: string, action: string) => {
+    switch (action) {
+      case "delete":
+        handleDelete(id);
+        break;
+      case "duplicate": {
+        // Duplicate all selected layers
+        const idsToDuplicate = selectedIds.has(id) ? [...selectedIds] : [id];
+        const newLayers: LayerData[] = [];
+
+        for (const dupId of idsToDuplicate) {
+          const layer = layerMap.get(dupId);
+          if (layer) {
+            const siblings = childrenMap.get(layer.parentId) ?? [];
+            const maxOrder = Math.max(...siblings.map((l) => l.order), -1);
+            newLayers.push({
+              ...layer,
+              id: `${Date.now()}-${dupId}`,
+              label: `${layer.label} Copy`,
+              order: maxOrder + 1 + newLayers.length,
+            });
+          }
+        }
+
+        setLayers((prev) => [...prev, ...newLayers]);
+        setLastAction(`Duplicated ${newLayers.length} layer(s)`);
+        break;
+      }
+      case "selectAll": {
+        setSelectedIds(new Set(visibleLayers.map((l) => l.id)));
+        setLastAction("Selected all visible layers");
+        break;
+      }
+      case "deselectAll": {
+        setSelectedIds(new Set());
+        setLastClickedId(null);
+        setLastAction("Deselected all");
+        break;
+      }
+    }
+  };
+
+  // Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    // If dragging an unselected item, select only that item
+    if (!selectedIds.has(id)) {
+      setSelectedIds(new Set([id]));
+      setLastClickedId(id);
+    }
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedId || selectedIds.has(targetId)) {
+      setDropInfo(null);
+      return;
+    }
+
+    // Prevent dropping onto descendants of any selected item
+    for (const selId of selectedIds) {
+      if (isDescendantWithMap(targetId, selId, layerMap)) {
+        setDropInfo(null);
+        return;
+      }
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const height = rect.height;
+    const targetLayer = layerMap.get(targetId);
+
+    // Determine drop position based on mouse position
+    if (y < height * 0.25) {
+      setDropInfo({ targetId, position: "before" });
+    } else if (y > height * 0.75) {
+      setDropInfo({ targetId, position: "after" });
+    } else if (targetLayer && canHaveChildren(targetLayer.type)) {
+      setDropInfo({ targetId, position: "inside" });
+    } else {
+      setDropInfo({ targetId, position: y < height * 0.5 ? "before" : "after" });
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedId || !dropInfo || selectedIds.has(targetId)) {
+      setDropInfo(null);
+      setDraggedId(null);
+      return;
+    }
+
+    const targetLayer = layerMap.get(targetId);
+    if (!targetLayer) {
+      setDropInfo(null);
+      setDraggedId(null);
+      return;
+    }
+
+    // Move all selected layers
+    setLayers((prev) => {
+      const newLayers = prev.filter((l) => !selectedIds.has(l.id));
+      const movedLayers = prev.filter((l) => selectedIds.has(l.id)).map((l) => ({ ...l }));
+
+      if (dropInfo.position === "inside") {
+        // Insert as children of target
+        const existingChildren = newLayers.filter((l) => l.parentId === targetId);
+        let orderOffset = existingChildren.length;
+
+        for (const moved of movedLayers) {
+          moved.parentId = targetId;
+          moved.order = orderOffset++;
+        }
+
+        setExpandedIds((prev) => new Set([...prev, targetId]));
+        setLastAction(`Moved ${movedLayers.length} layer(s) into "${targetLayer.label}"`);
+      } else {
+        // Insert before or after target at same level
+        const siblings = newLayers.filter((l) => l.parentId === targetLayer.parentId);
+        const targetOrder = targetLayer.order;
+        const insertOrder = dropInfo.position === "before" ? targetOrder : targetOrder + 1;
+
+        // Shift orders of items at or after insert position
+        for (const sibling of siblings) {
+          if (sibling.order >= insertOrder) {
+            sibling.order += movedLayers.length;
+          }
+        }
+
+        let orderOffset = 0;
+        for (const moved of movedLayers) {
+          moved.parentId = targetLayer.parentId;
+          moved.order = insertOrder + orderOffset++;
+        }
+
+        const getParentLabel = () => {
+          if (!targetLayer.parentId) {
+            return "root";
+          }
+          return layerMap.get(targetLayer.parentId)?.label ?? "unknown";
+        };
+        setLastAction(
+          `Moved ${movedLayers.length} layer(s) ${dropInfo.position} "${targetLayer.label}" (in ${getParentLabel()})`
+        );
+      }
+
+      return [...newLayers, ...movedLayers];
+    });
+
+    setDropInfo(null);
+    setDraggedId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDropInfo(null);
+  };
+
+  const contextMenuItems = [
+    { id: "rename", label: "Rename" },
+    { id: "duplicate", label: `Duplicate${selectedIds.size > 1 ? ` (${selectedIds.size})` : ""}` },
+    { id: "divider1", label: "", divider: true },
+    { id: "selectAll", label: "Select All" },
+    { id: "deselectAll", label: "Deselect All", disabled: selectedIds.size === 0 },
+    { id: "divider2", label: "", divider: true },
+    { id: "delete", label: `Delete${selectedIds.size > 1 ? ` (${selectedIds.size})` : ""}`, danger: true },
+  ];
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>LayerItem</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Figma-style Layer Panel (Full DnD)</div>
+        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11, marginBottom: 8 }}>
+          Click to select. Shift+click for range. Cmd/Ctrl+click for multi-select. Drag to reorder.
+        </div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", width: "300px" }}>
+          {visibleLayers.map((layer) => {
+            const parent = layer.parentId ? layerMap.get(layer.parentId) : null;
+            const isDimmed = parent ? !parent.visible : false;
+            const depth = getDepthWithMap(layer.id, layerMap);
+            const isContainer = canHaveChildren(layer.type);
+            const layerHasChildren = hasChildren(layer.id);
+            const currentDropPosition = dropInfo?.targetId === layer.id ? dropInfo.position : null;
+            const isSelected = selectedIds.has(layer.id);
+
+            return (
+              <LayerItem
+                key={layer.id}
+                id={layer.id}
+                label={layer.label}
+                icon={getIcon(layer.type)}
+                depth={depth}
+                hasChildren={layerHasChildren}
+                expanded={expandedIds.has(layer.id)}
+                onToggle={() => handleToggle(layer.id)}
+                selected={isSelected}
+                onPointerDown={(e) => handlePointerDownForSelection(layer.id, e)}
+                visible={layer.visible}
+                onVisibilityChange={(v) => handleVisibilityChange(layer.id, v)}
+                locked={layer.locked}
+                onLockChange={(l) => handleLockChange(layer.id, l)}
+                renamable
+                onRename={(newLabel) => handleRename(layer.id, newLabel)}
+                contextMenuItems={contextMenuItems}
+                onContextMenu={(action) => handleContextMenu(layer.id, action)}
+                dimmed={isDimmed}
+                badge={layer.type === "component" ? <Badge size="sm" variant="primary">C</Badge> : undefined}
+                draggable
+                canHaveChildren={isContainer}
+                dropPosition={currentDropPosition}
+                onDragStart={(e) => handleDragStart(e, layer.id)}
+                onDragOver={(e) => handleDragOver(e, layer.id)}
+                onDragEnd={handleDragEnd}
+                onDrop={(e) => handleDrop(e, layer.id)}
+              />
+            );
+          })}
+        </div>
+        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11, marginTop: 8 }}>
+          Selected: {selectedIds.size} layer(s)
+          {lastAction ? ` | Last: ${lastAction}` : ""}
+        </div>
+        {draggedId ? (
+          <div style={{ color: "var(--rei-color-primary)", fontSize: 11 }}>
+            Dragging: {selectedIds.size > 1 ? `${selectedIds.size} layers` : layerMap.get(draggedId)?.label}
+            {dropInfo ? ` → ${dropInfo.position} "${layers.find((l) => l.id === dropInfo.targetId)?.label}"` : ""}
+          </div>
+        ) : null}
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>States</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", width: "280px" }}>
+          <LayerItem
+            id="state-1"
+            label="Selected"
+            icon={<FrameLayerIcon />}
+            selected
+            visible
+            onVisibilityChange={() => {}}
+          />
+          <LayerItem
+            id="state-2"
+            label="Hidden Layer"
+            icon={<ImageLayerIcon />}
+            visible={false}
+            onVisibilityChange={() => {}}
+          />
+          <LayerItem
+            id="state-3"
+            label="Locked Layer"
+            icon={<TextLayerIcon />}
+            visible
+            locked
+            onLockChange={() => {}}
+          />
+          <LayerItem
+            id="state-4"
+            label="Dimmed Layer"
+            icon={<FrameLayerIcon />}
+            dimmed
+            visible
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Minimal (no toggles)</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", width: "280px" }}>
+          <LayerItem
+            id="minimal-1"
+            label="Simple Layer"
+            icon={<FrameLayerIcon />}
+            showVisibilityToggle={false}
+            showLockToggle={false}
           />
         </div>
       </div>
@@ -2097,6 +2633,360 @@ function FontsPanelDemo() {
   );
 }
 
+// Simple JSON tokenizer for demo purposes
+const jsonTokenizer: Tokenizer = {
+  tokenize: (line: string): readonly Token[] => {
+    const tokens: Token[] = [];
+    // eslint-disable-next-line no-restricted-syntax -- Mutable accumulator for tokenizer position
+    let pos = 0;
+
+    while (pos < line.length) {
+      // Skip whitespace
+      if (/\s/.test(line[pos])) {
+        const start = pos;
+        while (pos < line.length && /\s/.test(line[pos])) {
+          pos++;
+        }
+        tokens.push({ type: "whitespace", text: line.slice(start, pos), start, end: pos });
+        continue;
+      }
+
+      // String
+      if (line[pos] === '"') {
+        const start = pos;
+        pos++;
+        while (pos < line.length && line[pos] !== '"') {
+          if (line[pos] === '\\') {
+            pos++;
+          }
+          pos++;
+        }
+        pos++;
+        tokens.push({ type: "string", text: line.slice(start, pos), start, end: pos });
+        continue;
+      }
+
+      // Number
+      if (/[0-9-]/.test(line[pos])) {
+        const start = pos;
+        while (pos < line.length && /[0-9.eE+-]/.test(line[pos])) {
+          pos++;
+        }
+        tokens.push({ type: "number", text: line.slice(start, pos), start, end: pos });
+        continue;
+      }
+
+      // Keywords: true, false, null
+      const remaining = line.slice(pos);
+      const keywordMatch = remaining.match(/^(true|false|null)/);
+      if (keywordMatch) {
+        tokens.push({ type: "keyword", text: keywordMatch[0], start: pos, end: pos + keywordMatch[0].length });
+        pos += keywordMatch[0].length;
+        continue;
+      }
+
+      // Punctuation
+      if (/[{}[\]:,]/.test(line[pos])) {
+        tokens.push({ type: "punctuation", text: line[pos], start: pos, end: pos + 1 });
+        pos++;
+        continue;
+      }
+
+      // Unknown
+      tokens.push({ type: "unknown", text: line[pos], start: pos, end: pos + 1 });
+      pos++;
+    }
+
+    return tokens;
+  },
+};
+
+const jsonTokenStyles = {
+  string: { color: "#a31515" },
+  number: { color: "#098658" },
+  keyword: { color: "#0000ff" },
+  punctuation: { color: "#333333" },
+  whitespace: {},
+  unknown: { color: "#666666" },
+};
+
+const sampleJson = `{
+  "name": "react-editor-ui",
+  "version": "1.0.0",
+  "description": "UI components for editor applications",
+  "features": [
+    "syntax highlighting",
+    "IME support",
+    "virtual scrolling"
+  ],
+  "count": 42,
+  "active": true,
+  "nullable": null
+}`;
+
+const sampleText = `The quick brown fox jumps over the lazy dog.
+
+This is a demonstration of the TextEditor component with rich text support.
+
+You can apply different styles to different parts of the text.`;
+
+const sampleTextStyles: readonly TextStyleSegment[] = [
+  { start: 0, end: 3, style: { fontWeight: "bold" } },
+  { start: 4, end: 9, style: { color: "#a52a2a", fontWeight: "bold" } },
+  { start: 10, end: 15, style: { color: "#8b4513", fontSize: "18px" } },
+  { start: 16, end: 19, style: { fontStyle: "italic" } },
+  { start: 20, end: 25, style: { fontSize: "10px", color: "#666666" } },
+  { start: 47, end: 51, style: { fontWeight: "bold", fontSize: "16px" } },
+  { start: 74, end: 84, style: { fontWeight: "bold", color: "#0066cc" } },
+  { start: 125, end: 142, style: { textDecoration: "underline" } },
+  { start: 143, end: 148, style: { fontFamily: "Georgia, serif", fontStyle: "italic" } },
+];
+
+function CodeEditorDemo() {
+  const [code, setCode] = useState(sampleJson);
+  const [renderer, setRenderer] = useState<"svg" | "canvas">("svg");
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>CodeEditor</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Renderer</div>
+        <div style={demoRowStyle}>
+          <Button
+            variant={renderer === "svg" ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => setRenderer("svg")}
+          >
+            SVG
+          </Button>
+          <Button
+            variant={renderer === "canvas" ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => setRenderer("canvas")}
+          >
+            Canvas
+          </Button>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>With JSON Tokenizer</div>
+        <CodeEditor
+          value={code}
+          onChange={setCode}
+          tokenizer={jsonTokenizer}
+          tokenStyles={jsonTokenStyles}
+          renderer={renderer}
+          showLineNumbers
+          style={{
+            height: 300,
+            border: "1px solid var(--rei-color-border, #3a3a3c)",
+            borderRadius: 4,
+          }}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Read Only</div>
+        <CodeEditor
+          value={code}
+          onChange={() => {}}
+          tokenizer={jsonTokenizer}
+          tokenStyles={jsonTokenStyles}
+          renderer={renderer}
+          showLineNumbers
+          readOnly
+          style={{
+            height: 200,
+            border: "1px solid var(--rei-color-border, #3a3a3c)",
+            borderRadius: 4,
+            opacity: 0.8,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function TextEditorDemo() {
+  const [text, setText] = useState(sampleText);
+  const [renderer, setRenderer] = useState<"svg" | "canvas">("svg");
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>TextEditor</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Renderer</div>
+        <div style={demoRowStyle}>
+          <Button
+            variant={renderer === "svg" ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => setRenderer("svg")}
+          >
+            SVG
+          </Button>
+          <Button
+            variant={renderer === "canvas" ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => setRenderer("canvas")}
+          >
+            Canvas
+          </Button>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>With Rich Text Styles</div>
+        <TextEditor
+          value={text}
+          onChange={setText}
+          styles={sampleTextStyles}
+          renderer={renderer}
+          style={{
+            height: 200,
+            border: "1px solid var(--rei-color-border, #3a3a3c)",
+            borderRadius: 4,
+          }}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Plain Text (no styles)</div>
+        <TextEditor
+          value={text}
+          onChange={setText}
+          renderer={renderer}
+          style={{
+            height: 150,
+            border: "1px solid var(--rei-color-border, #3a3a3c)",
+            borderRadius: 4,
+          }}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Read Only</div>
+        <TextEditor
+          value={text}
+          onChange={() => {}}
+          styles={sampleTextStyles}
+          renderer={renderer}
+          readOnly
+          style={{
+            height: 150,
+            border: "1px solid var(--rei-color-border, #3a3a3c)",
+            borderRadius: 4,
+            opacity: 0.8,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ========================================
+// CANVAS
+// ========================================
+
+function CanvasDemo() {
+  const [viewport, setViewport] = useState<ViewportState>({ x: 0, y: 0, scale: 1 });
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2>Canvas</h2>
+      <p style={{ color: "var(--rei-color-text-muted)" }}>
+        Pan/zoom canvas for placing elements. Pan: middle mouse, Alt+left click, Space+left click.
+        Zoom: mouse wheel or pinch.
+      </p>
+
+      <div style={demoSectionStyle}>
+        <h3>Basic Canvas</h3>
+        <div style={{ display: "flex", gap: 16 }}>
+          <Canvas
+            viewport={viewport}
+            onViewportChange={setViewport}
+            width={600}
+            height={400}
+            showGrid
+            gridSize={50}
+          >
+            <CanvasContent x={100} y={100}>
+              <div
+                style={{
+                  width: 200,
+                  height: 150,
+                  background: "var(--rei-color-primary)",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontWeight: 600,
+                }}
+              >
+                Drag me (pan)
+              </div>
+            </CanvasContent>
+            <CanvasContent x={350} y={200}>
+              <div
+                style={{
+                  width: 120,
+                  height: 120,
+                  background: "var(--rei-color-success)",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontWeight: 600,
+                }}
+              >
+                Circle
+              </div>
+            </CanvasContent>
+          </Canvas>
+          <div style={{ flex: "0 0 200px" }}>
+            <h4 style={{ margin: "0 0 8px" }}>Viewport State</h4>
+            <div style={{ fontSize: 12, color: "var(--rei-color-text-muted)" }}>
+              <div>X: {viewport.x.toFixed(1)}</div>
+              <div>Y: {viewport.y.toFixed(1)}</div>
+              <div>Scale: {(viewport.scale * 100).toFixed(0)}%</div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setViewport({ x: 0, y: 0, scale: 1 })}
+              >
+                Reset
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <h3>Without Grid</h3>
+        <Canvas
+          viewport={{ x: 0, y: 0, scale: 1 }}
+          onViewportChange={() => {}}
+          width={400}
+          height={200}
+          background="var(--rei-color-surface-raised)"
+        >
+          <CanvasContent x={50} y={50}>
+            <div style={{ padding: 16, background: "white", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+              Static content preview
+            </div>
+          </CanvasContent>
+        </Canvas>
+      </div>
+    </div>
+  );
+}
+
 export const demoCategories: DemoCategory[] = [
   {
     id: "primitives",
@@ -2275,6 +3165,12 @@ export const demoCategories: DemoCategory[] = [
         element: <TreeItemDemo />,
       },
       {
+        id: "layer-item",
+        label: "LayerItem",
+        path: "layer-item",
+        element: <LayerItemDemo />,
+      },
+      {
         id: "select",
         label: "Select",
         path: "select",
@@ -2298,6 +3194,38 @@ export const demoCategories: DemoCategory[] = [
         label: "LogEntry",
         path: "log-entry",
         element: <LogEntryDemo />,
+      },
+    ],
+  },
+  {
+    id: "editor",
+    label: "Editor",
+    base: "/components/editor",
+    pages: [
+      {
+        id: "code-editor",
+        label: "CodeEditor",
+        path: "code-editor",
+        element: <CodeEditorDemo />,
+      },
+      {
+        id: "text-editor",
+        label: "TextEditor",
+        path: "text-editor",
+        element: <TextEditorDemo />,
+      },
+    ],
+  },
+  {
+    id: "canvas",
+    label: "Canvas",
+    base: "/components/canvas",
+    pages: [
+      {
+        id: "canvas",
+        label: "Canvas",
+        path: "canvas",
+        element: <CanvasDemo />,
       },
     ],
   },

@@ -169,6 +169,12 @@ export type { SectionHeaderProps } from "./SectionHeader/SectionHeader";
 export { TreeItem } from "./TreeItem/TreeItem";
 export type { TreeItemProps } from "./TreeItem/TreeItem";
 
+export { LayerItem } from "./LayerItem/LayerItem";
+export type { LayerItemProps, LayerContextMenuItem, DropPosition } from "./LayerItem/LayerItem";
+
+export { ContextMenu } from "./ContextMenu/ContextMenu";
+export type { ContextMenuProps, ContextMenuItem } from "./ContextMenu/ContextMenu";
+
 export { Select } from "./Select/Select";
 export type { SelectProps, SelectOption } from "./Select/Select";
 
@@ -291,3 +297,64 @@ export type {
   HorizontalConstraint,
   VerticalConstraint,
 } from "./PositionPanel/PositionPanel";
+
+// ========================================
+// EDITOR
+// ========================================
+
+export {
+  CodeEditor,
+  TextEditor,
+  SvgRenderer,
+  CanvasRenderer,
+  useEditorStyles,
+  useTokenCache,
+  useTextStyles,
+  useLineIndex,
+  useVirtualScroll,
+  useHistory,
+  useFontMetrics,
+  injectCursorAnimation,
+} from "./Editor";
+
+export type {
+  CodeEditorProps,
+  TextEditorProps,
+  Token,
+  Tokenizer,
+  TokenStyleMap,
+  TokenCache,
+  RendererProps,
+  RendererType,
+  EditorConfig,
+  CursorPosition,
+  CursorState,
+  SelectionRange,
+  HighlightRange,
+  HighlightType,
+  TextStyle,
+  TextStyleSegment,
+  EditorStyles,
+  EditorStylesConfig,
+} from "./Editor";
+
+// ========================================
+// CANVAS
+// ========================================
+
+export { Canvas, CanvasContent, useCanvasContext } from "./Canvas";
+export {
+  DEFAULT_VIEWPORT,
+  DEFAULT_CONSTRAINTS,
+  DEFAULT_GESTURE_CONFIG,
+} from "./Canvas";
+export type {
+  CanvasProps,
+  CanvasContentProps,
+  ViewportState,
+  ViewportConstraints,
+  PanTrigger,
+  GestureConfig,
+  CanvasContextValue,
+  Point,
+} from "./Canvas";
