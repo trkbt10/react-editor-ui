@@ -39,6 +39,7 @@ import {
   SPACE_MD,
   SPACE_LG,
 } from "../../constants/styles";
+import { CheckIcon, ChevronDownIcon } from "../../icons";
 
 export type SplitButtonOption<T extends string = string> = {
   /** Unique value identifier */
@@ -83,22 +84,6 @@ type DropdownPosition = {
   left: number;
   width: number;
 };
-
-function CheckIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
 
 /**
  * SplitButton displays a main action button with a dropdown for additional options.
