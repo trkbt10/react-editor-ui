@@ -2,9 +2,9 @@
  * @file TypographyPanel component - Typography settings panel for text properties
  */
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type CSSProperties } from "react";
 import { Select, type SelectOption } from "../Select/Select";
-import { Input } from "../Input/Input";
+import { UnitInput } from "../UnitInput/UnitInput";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import { IconButton } from "../IconButton/IconButton";
 import { SectionHeader } from "../SectionHeader/SectionHeader";
@@ -229,18 +229,42 @@ function FontFamilyRow({
   );
 }
 
-function LabeledInput({
+const fontSizeUnits = [
+  { value: "px", label: "px" },
+  { value: "pt", label: "pt" },
+  { value: "em", label: "em" },
+  { value: "rem", label: "rem" },
+];
+
+const lineHeightUnits = [
+  { value: "", label: "—" },
+  { value: "px", label: "px" },
+  { value: "em", label: "em" },
+  { value: "%", label: "%" },
+];
+
+const letterSpacingUnits = [
+  { value: "px", label: "px" },
+  { value: "em", label: "em" },
+  { value: "%", label: "%" },
+];
+
+function LabeledUnitInput({
   label,
   value,
   onChange,
-  prefix,
-  suffix,
+  units,
+  allowAuto = false,
+  step = 1,
+  shiftStep = 10,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
+  units: { value: string; label: string }[];
+  allowAuto?: boolean;
+  step?: number;
+  shiftStep?: number;
 }) {
   const containerStyle: CSSProperties = {
     display: "flex",
@@ -258,24 +282,18 @@ function LabeledInput({
   return (
     <div style={containerStyle}>
       <span style={labelStyle}>{label}</span>
-      <Input
+      <UnitInput
         value={value}
         onChange={onChange}
-        prefix={prefix}
-        suffix={suffix}
+        units={units}
+        allowAuto={allowAuto}
+        step={step}
+        shiftStep={shiftStep}
         aria-label={label}
       />
     </div>
   );
 }
-
-const LineHeightIcon = () => (
-  <span style={{ color: COLOR_TEXT_MUTED, fontSize: 11 }}>A</span>
-);
-
-const LetterSpacingIcon = () => (
-  <span style={{ color: COLOR_TEXT_MUTED, fontSize: 10 }}>|A|</span>
-);
 
 
 
@@ -373,28 +391,34 @@ export function TypographyPanel({
             />
           </PropertyGridItem>
           <PropertyGridItem>
-            <Input
+            <UnitInput
               value={settings.fontSize}
               onChange={(v) => handleChange("fontSize", v)}
+              units={fontSizeUnits}
               aria-label="Font size"
             />
           </PropertyGridItem>
         </PropertyGrid>
         <PropertyGrid columns={2}>
           <PropertyGridItem>
-            <LabeledInput
+            <LabeledUnitInput
               label="Line height"
               value={settings.lineHeight}
               onChange={(v) => handleChange("lineHeight", v)}
-              prefix={<LineHeightIcon />}
+              units={lineHeightUnits}
+              allowAuto
+              step={0.1}
+              shiftStep={0.5}
             />
           </PropertyGridItem>
           <PropertyGridItem>
-            <LabeledInput
+            <LabeledUnitInput
               label="Letter spacing"
               value={settings.letterSpacing}
               onChange={(v) => handleChange("letterSpacing", v)}
-              prefix={<LetterSpacingIcon />}
+              units={letterSpacingUnits}
+              step={0.1}
+              shiftStep={1}
             />
           </PropertyGridItem>
         </PropertyGrid>

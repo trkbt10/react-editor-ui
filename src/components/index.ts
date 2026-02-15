@@ -36,6 +36,9 @@ export type { ColorInputProps, ColorValue } from "./ColorInput/ColorInput";
 export { Slider } from "./Slider/Slider";
 export type { SliderProps } from "./Slider/Slider";
 
+export { UnitInput } from "./UnitInput/UnitInput";
+export type { UnitInputProps, UnitOption } from "./UnitInput/UnitInput";
+
 export { GradientEditor } from "./GradientEditor/GradientEditor";
 export type { GradientEditorProps } from "./GradientEditor/GradientEditor";
 
@@ -183,6 +186,7 @@ export type { LogEntryProps } from "./LogEntry/LogEntry";
 // COMPOSITE
 // ========================================
 
+// Legacy StrokeSettingsPanel (backward compatibility)
 export { StrokeSettingsPanel } from "./StrokeSettingsPanel/StrokeSettingsPanel";
 export type {
   StrokeSettingsPanelProps,
@@ -194,6 +198,62 @@ export type {
   BrushType,
   StrokeTab,
 } from "./StrokeSettingsPanel/StrokeSettingsPanel";
+
+// New stroke panel variants
+export {
+  StrokePanelExpanded,
+  createDefaultExpandedSettings,
+} from "./StrokeSettingsPanel/StrokePanelExpanded";
+export type {
+  StrokePanelExpandedProps,
+  StrokePanelExpandedSettings,
+} from "./StrokeSettingsPanel/StrokePanelExpanded";
+
+export {
+  StrokePanelCompact,
+  createDefaultCompactSettings,
+} from "./StrokeSettingsPanel/StrokePanelCompact";
+export type {
+  StrokePanelCompactProps,
+  StrokePanelCompactSettings,
+  StrokePanelCompactTab,
+  StrokeLineStyle,
+  BrushStyle,
+} from "./StrokeSettingsPanel/StrokePanelCompact";
+
+// Stroke sub-components
+export { StrokeCapSelect } from "./StrokeSettingsPanel/StrokeCapSelect";
+export type { StrokeCapSelectProps } from "./StrokeSettingsPanel/StrokeCapSelect";
+
+export { StrokeJoinSelect } from "./StrokeSettingsPanel/StrokeJoinSelect";
+export type { StrokeJoinSelectProps } from "./StrokeSettingsPanel/StrokeJoinSelect";
+
+export { StrokeAlignSelect } from "./StrokeSettingsPanel/StrokeAlignSelect";
+export type { StrokeAlignSelectProps } from "./StrokeSettingsPanel/StrokeAlignSelect";
+
+export { StrokeDashEditor } from "./StrokeSettingsPanel/StrokeDashEditor";
+export type { StrokeDashEditorProps } from "./StrokeSettingsPanel/StrokeDashEditor";
+
+export { StrokeArrowheadSelect } from "./StrokeSettingsPanel/StrokeArrowheadSelect";
+export type { StrokeArrowheadSelectProps } from "./StrokeSettingsPanel/StrokeArrowheadSelect";
+
+export { StrokeProfileSelect } from "./StrokeSettingsPanel/StrokeProfileSelect";
+export type { StrokeProfileSelectProps } from "./StrokeSettingsPanel/StrokeProfileSelect";
+
+export { StrokeWeightInput } from "./StrokeSettingsPanel/StrokeWeightInput";
+export type { StrokeWeightInputProps, WeightUnit } from "./StrokeSettingsPanel/StrokeWeightInput";
+
+// Stroke types
+export type {
+  StrokeCap,
+  StrokeJoin,
+  StrokeAlign,
+  ArrowheadType,
+  ArrowheadAlign,
+  ArrowheadSettings,
+  DashPattern,
+  StrokePanelVariant,
+} from "./StrokeSettingsPanel/types";
 
 export { TransformButtons } from "./TransformButtons/TransformButtons";
 export type {

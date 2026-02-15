@@ -8,6 +8,7 @@ import {
   IconButton,
   Button,
   Input,
+  UnitInput,
   Badge,
   Checkbox,
   SegmentedControl,
@@ -29,6 +30,10 @@ import {
   Panel,
   ImageSelect,
   StrokeSettingsPanel,
+  StrokePanelExpanded,
+  StrokePanelCompact,
+  createDefaultExpandedSettings,
+  createDefaultCompactSettings,
   GradientEditor,
   FillEditor,
   createDefaultGradient,
@@ -54,6 +59,8 @@ import {
 import type {
   ColorValue,
   StrokeSettings,
+  StrokePanelExpandedSettings,
+  StrokePanelCompactSettings,
   ImageSelectOption,
   GradientValue,
   FillValue,
@@ -271,6 +278,124 @@ function InputDemo() {
           disabled
           aria-label="Disabled input"
         />
+      </div>
+    </div>
+  );
+}
+
+function UnitInputDemo() {
+  const [width, setWidth] = useState("100px");
+  const [height, setHeight] = useState("Auto");
+  const [fontSize, setFontSize] = useState("16px");
+  const [lineHeight, setLineHeight] = useState("1.5em");
+  const [opacity, setOpacity] = useState("100%");
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>UnitInput</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Basic (with wheel &amp; arrow key support)</div>
+        <div style={{ width: 200 }}>
+          <UnitInput
+            value={width}
+            onChange={setWidth}
+            aria-label="Width"
+          />
+        </div>
+        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11 }}>
+          Focus and use mouse wheel or arrow keys to adjust value. Hold Shift for larger steps.
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>With Auto support (click unit to cycle)</div>
+        <div style={{ width: 200 }}>
+          <UnitInput
+            value={height}
+            onChange={setHeight}
+            allowAuto
+            aria-label="Height"
+          />
+        </div>
+        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11 }}>
+          Click the unit button to cycle through: px → % → em → rem → Auto
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Custom units</div>
+        <div style={{ width: 200 }}>
+          <UnitInput
+            value={fontSize}
+            onChange={setFontSize}
+            units={[
+              { value: "px", label: "px" },
+              { value: "pt", label: "pt" },
+              { value: "em", label: "em" },
+              { value: "rem", label: "rem" },
+            ]}
+            aria-label="Font size"
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>With min/max constraints</div>
+        <div style={{ width: 200 }}>
+          <UnitInput
+            value={opacity}
+            onChange={setOpacity}
+            units={[{ value: "%", label: "%" }]}
+            min={0}
+            max={100}
+            aria-label="Opacity"
+          />
+        </div>
+        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11 }}>
+          Constrained between 0% and 100%
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Custom step values</div>
+        <div style={{ width: 200 }}>
+          <UnitInput
+            value={lineHeight}
+            onChange={setLineHeight}
+            units={[
+              { value: "em", label: "em" },
+              { value: "", label: "—" },
+            ]}
+            step={0.1}
+            shiftStep={0.5}
+            aria-label="Line height"
+          />
+        </div>
+        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11 }}>
+          Step: 0.1, Shift+Step: 0.5
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Sizes</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: 200 }}>
+          <UnitInput value="10px" onChange={() => {}} size="sm" aria-label="Small" />
+          <UnitInput value="10px" onChange={() => {}} size="md" aria-label="Medium" />
+          <UnitInput value="10px" onChange={() => {}} size="lg" aria-label="Large" />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Disabled</div>
+        <div style={{ width: 200 }}>
+          <UnitInput
+            value="100px"
+            onChange={() => {}}
+            disabled
+            aria-label="Disabled"
+          />
+        </div>
       </div>
     </div>
   );
@@ -1590,7 +1715,8 @@ function TransformButtonsDemo() {
 
 // StrokeSettingsPanel Demo
 function StrokeSettingsPanelDemo() {
-  const [settings, setSettings] = useState<StrokeSettings>({
+  // Legacy settings
+  const [legacySettings, setLegacySettings] = useState<StrokeSettings>({
     tab: "basic",
     style: "solid",
     widthProfile: "uniform",
@@ -1604,21 +1730,51 @@ function StrokeSettingsPanelDemo() {
     brushWidthProfile: "uniform",
   });
 
+  // Expanded panel settings
+  const [expandedSettings, setExpandedSettings] = useState<StrokePanelExpandedSettings>(
+    createDefaultExpandedSettings(),
+  );
+
+  // Compact panel settings
+  const [compactSettings, setCompactSettings] = useState<StrokePanelCompactSettings>(
+    createDefaultCompactSettings(),
+  );
+
   return (
     <div style={demoContainerStyle}>
       <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>StrokeSettingsPanel</h2>
 
+      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
+        <div style={demoSectionStyle}>
+          <div style={demoLabelStyle}>Expanded (all options visible)</div>
+          <StrokePanelExpanded
+            settings={expandedSettings}
+            onChange={setExpandedSettings}
+            onClose={() => alert("Close")}
+          />
+        </div>
+
+        <div style={demoSectionStyle}>
+          <div style={demoLabelStyle}>Compact (tabbed interface)</div>
+          <StrokePanelCompact
+            settings={compactSettings}
+            onChange={setCompactSettings}
+            onClose={() => alert("Close")}
+          />
+        </div>
+      </div>
+
       <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Complete Panel</div>
+        <div style={demoLabelStyle}>Legacy Panel (backward compatible)</div>
         <StrokeSettingsPanel
-          settings={settings}
-          onChange={setSettings}
-          onClose={() => alert("Panel closed")}
+          settings={legacySettings}
+          onChange={setLegacySettings}
+          onClose={() => alert("Close")}
         />
       </div>
 
       <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Current Settings</div>
+        <div style={demoLabelStyle}>Expanded Settings</div>
         <div style={{
           backgroundColor: "var(--rei-color-surface, #1e1f24)",
           borderRadius: "4px",
@@ -1627,8 +1783,10 @@ function StrokeSettingsPanelDemo() {
           fontFamily: "monospace",
           color: "var(--rei-color-text-muted)",
           whiteSpace: "pre-wrap",
+          maxHeight: "200px",
+          overflow: "auto",
         }}>
-          {JSON.stringify(settings, null, 2)}
+          {JSON.stringify(expandedSettings, null, 2)}
         </div>
       </div>
     </div>
@@ -1882,6 +2040,12 @@ export const demoCategories: DemoCategory[] = [
         label: "Input",
         path: "input",
         element: <InputDemo />,
+      },
+      {
+        id: "unit-input",
+        label: "UnitInput",
+        path: "unit-input",
+        element: <UnitInputDemo />,
       },
       {
         id: "badge",
