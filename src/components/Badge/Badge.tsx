@@ -50,13 +50,13 @@ const variantStyles = {
 const sizeStyles = {
   sm: {
     fontSize: SIZE_FONT_XS,
-    padding: `${SPACE_XS} ${SPACE_SM}`,
-    minHeight: "16px",
+    padding: `1px ${SPACE_XS}`,
+    minHeight: "14px",
   },
   md: {
     fontSize: SIZE_FONT_SM,
     padding: `${SPACE_XS} ${SPACE_SM}`,
-    minHeight: "20px",
+    minHeight: "18px",
   },
 };
 

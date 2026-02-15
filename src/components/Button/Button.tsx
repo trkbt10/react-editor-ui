@@ -23,6 +23,7 @@ import {
   SIZE_HEIGHT_SM,
   SIZE_HEIGHT_MD,
   SIZE_HEIGHT_LG,
+  SPACE_XS,
   SPACE_SM,
   SPACE_MD,
   SPACE_LG,
@@ -44,20 +45,20 @@ const sizeMap = {
   sm: {
     height: SIZE_HEIGHT_SM,
     fontSize: SIZE_FONT_SM,
-    paddingX: SPACE_MD,
-    gap: SPACE_SM,
+    paddingX: SPACE_SM,
+    gap: SPACE_XS,
   },
   md: {
     height: SIZE_HEIGHT_MD,
     fontSize: SIZE_FONT_MD,
-    paddingX: SPACE_LG,
+    paddingX: SPACE_MD,
     gap: SPACE_SM,
   },
   lg: {
     height: SIZE_HEIGHT_LG,
     fontSize: SIZE_FONT_MD,
     paddingX: SPACE_LG,
-    gap: SPACE_MD,
+    gap: SPACE_SM,
   },
 };
 

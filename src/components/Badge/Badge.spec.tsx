@@ -49,14 +49,14 @@ describe("Badge", () => {
   it("applies sm size", () => {
     render(<Badge size="sm">Small</Badge>);
     expect(screen.getByText("Small")).toHaveStyle({
-      fontSize: "var(--rei-size-font-xs, 10px)",
+      fontSize: "var(--rei-size-font-xs, 9px)",
     });
   });
 
   it("applies md size", () => {
     render(<Badge size="md">Medium</Badge>);
     expect(screen.getByText("Medium")).toHaveStyle({
-      fontSize: "var(--rei-size-font-sm, 12px)",
+      fontSize: "var(--rei-size-font-sm, 11px)",
     });
   });
 

@@ -90,12 +90,12 @@ describe("Button", () => {
   it("applies size variants", () => {
     const { rerender } = render(<Button size="sm">Small</Button>);
     expect(screen.getByRole("button")).toHaveStyle({
-      height: "var(--rei-size-height-sm, 24px)",
+      height: "var(--rei-size-height-sm, 22px)",
     });
 
     rerender(<Button size="lg">Large</Button>);
     expect(screen.getByRole("button")).toHaveStyle({
-      height: "var(--rei-size-height-lg, 40px)",
+      height: "var(--rei-size-height-lg, 32px)",
     });
   });
 

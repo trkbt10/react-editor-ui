@@ -21,7 +21,7 @@ const gapMap = {
 export function PropertyGrid({
   children,
   columns = 2,
-  gap = "md",
+  gap = "sm",
   className,
   ...rest
 }: PropertyGridProps) {

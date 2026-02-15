@@ -1,5 +1,5 @@
 /**
- * @file ColorInput component - Color input row with swatch, hex, opacity, and visibility toggle
+ * @file ColorInput component - Figma-style color input with integrated swatch
  */
 
 import { useState, useRef, useEffect, useEffectEvent } from "react";
@@ -7,12 +7,12 @@ import type { CSSProperties, PointerEvent, ChangeEvent } from "react";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
+  COLOR_INPUT_BORDER_FOCUS,
   COLOR_TEXT,
   COLOR_TEXT_MUTED,
   COLOR_TEXT_DISABLED,
   COLOR_ICON,
   COLOR_ICON_HOVER,
-  COLOR_BORDER,
   COLOR_FOCUS_RING,
   RADIUS_SM,
   DURATION_FAST,
@@ -22,11 +22,8 @@ import {
   SIZE_HEIGHT_SM,
   SIZE_HEIGHT_MD,
   SIZE_HEIGHT_LG,
-  SIZE_COLOR_SWATCH_SM,
-  SIZE_COLOR_SWATCH_MD,
-  SIZE_COLOR_SWATCH_LG,
+  SPACE_XS,
   SPACE_SM,
-  SPACE_MD,
   Z_POPOVER,
 } from "../../constants/styles";
 import { ColorPicker } from "../ColorPicker/ColorPicker";
@@ -54,28 +51,44 @@ const sizeMap = {
   sm: {
     height: SIZE_HEIGHT_SM,
     fontSize: SIZE_FONT_SM,
-    swatchSize: SIZE_COLOR_SWATCH_SM,
-    paddingX: SPACE_SM,
+    swatchSize: "14px",
+    iconSize: 12,
   },
   md: {
     height: SIZE_HEIGHT_MD,
-    fontSize: SIZE_FONT_MD,
-    swatchSize: SIZE_COLOR_SWATCH_MD,
-    paddingX: SPACE_MD,
+    fontSize: SIZE_FONT_SM,
+    swatchSize: "16px",
+    iconSize: 14,
   },
   lg: {
     height: SIZE_HEIGHT_LG,
     fontSize: SIZE_FONT_MD,
-    swatchSize: SIZE_COLOR_SWATCH_LG,
-    paddingX: SPACE_MD,
+    swatchSize: "18px",
+    iconSize: 14,
   },
 };
 
-function EyeIcon() {
+/**
+ * Checkerboard pattern for transparency indication
+ */
+const CHECKERBOARD_BG = `
+  linear-gradient(45deg, #ccc 25%, transparent 25%),
+  linear-gradient(-45deg, #ccc 25%, transparent 25%),
+  linear-gradient(45deg, transparent 75%, #ccc 75%),
+  linear-gradient(-45deg, transparent 75%, #ccc 75%)
+`;
+const CHECKERBOARD_SIZE = "8px 8px";
+const CHECKERBOARD_POSITION = "0 0, 0 4px, 4px -4px, -4px 0px";
+
+type IconProps = {
+  size: number;
+};
+
+function EyeIcon({ size }: IconProps) {
   return (
     <svg
-      width="14"
-      height="14"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -87,11 +100,11 @@ function EyeIcon() {
   );
 }
 
-function EyeOffIcon() {
+function EyeOffIcon({ size }: IconProps) {
   return (
     <svg
-      width="14"
-      height="14"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -103,29 +116,21 @@ function EyeOffIcon() {
   );
 }
 
-function TrashIcon() {
+function MinusIcon({ size }: IconProps) {
   return (
     <svg
-      width="14"
-      height="14"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
     >
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
 }
 
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>(undefined);
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-}
 
 export function ColorInput({
   value,
@@ -144,13 +149,18 @@ export function ColorInput({
   const containerRef = useRef<HTMLDivElement>(null);
   const sizeConfig = sizeMap[size];
 
-  const prevHex = usePrevious(value.hex);
-  const prevOpacity = usePrevious(value.opacity);
+  // Track last committed external values for controlled input synchronization
+  const lastExternalHexRef = useRef(value.hex);
+  const lastExternalOpacityRef = useRef(value.opacity);
 
-  if (prevHex !== value.hex && prevHex !== undefined) {
+  // Sync local state when external value changes (setState during render is allowed
+  // when the condition ensures it won't repeat on the next render)
+  if (lastExternalHexRef.current !== value.hex) {
+    lastExternalHexRef.current = value.hex;
     setHexInput(value.hex.replace(/^#/, ""));
   }
-  if (prevOpacity !== value.opacity && prevOpacity !== undefined) {
+  if (lastExternalOpacityRef.current !== value.opacity) {
+    lastExternalOpacityRef.current = value.opacity;
     setOpacityInput(String(value.opacity));
   }
 
@@ -233,71 +243,139 @@ export function ColorInput({
     onRemove?.();
   };
 
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Container wrapping everything
   const containerStyle: CSSProperties = {
     position: "relative",
     display: "inline-flex",
     alignItems: "center",
-    gap: SPACE_SM,
     opacity: disabled ? 0.5 : 1,
   };
 
-  const swatchStyle: CSSProperties = {
+  // Main input field container (Figma-style unified row)
+  const fieldContainerStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    height: sizeConfig.height,
+    border: `1px solid ${isFocused ? COLOR_INPUT_BORDER_FOCUS : COLOR_INPUT_BORDER}`,
+    borderRadius: RADIUS_SM,
+    backgroundColor: COLOR_INPUT_BG,
+    overflow: "hidden",
+    transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+    boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+  };
+
+  // Swatch wrapper with checkerboard background
+  const swatchWrapperStyle: CSSProperties = {
+    position: "relative",
     width: sizeConfig.swatchSize,
     height: sizeConfig.swatchSize,
-    borderRadius: RADIUS_SM,
-    border: `1px solid ${COLOR_BORDER}`,
+    marginLeft: SPACE_SM,
+    borderRadius: "2px",
+    overflow: "hidden",
+    cursor: disabled ? "not-allowed" : "pointer",
+    flexShrink: 0,
+  };
+
+  const swatchCheckerboardStyle: CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    background: CHECKERBOARD_BG,
+    backgroundSize: CHECKERBOARD_SIZE,
+    backgroundPosition: CHECKERBOARD_POSITION,
+  };
+
+  const swatchColorStyle: CSSProperties = {
+    position: "absolute",
+    inset: 0,
     backgroundColor: value.hex,
+    opacity: value.opacity / 100,
+  };
+
+  const swatchButtonStyle: CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    border: "none",
+    backgroundColor: "transparent",
     cursor: disabled ? "not-allowed" : "pointer",
     padding: 0,
     outline: "none",
   };
 
-  const inputContainerStyle: CSSProperties = {
+  // Hex input with # prefix
+  const hexContainerStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
-    height: sizeConfig.height,
-    border: `1px solid ${COLOR_INPUT_BORDER}`,
-    borderRadius: RADIUS_SM,
-    backgroundColor: COLOR_INPUT_BG,
-    overflow: "hidden",
+    marginLeft: SPACE_SM,
+    flexShrink: 0,
+  };
+
+  const hexPrefixStyle: CSSProperties = {
+    color: COLOR_TEXT_MUTED,
+    fontSize: sizeConfig.fontSize,
+    lineHeight: 1,
+    userSelect: "none",
   };
 
   const hexInputStyle: CSSProperties = {
-    width: 60,
+    width: "48px",
     height: "100%",
-    padding: `0 ${SPACE_SM}`,
+    padding: 0,
     border: "none",
     backgroundColor: "transparent",
     color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
     fontSize: sizeConfig.fontSize,
+    fontFamily: "inherit",
     outline: "none",
+    textTransform: "uppercase",
+  };
+
+  // Separator between hex and opacity
+  const separatorStyle: CSSProperties = {
+    width: "1px",
+    height: "60%",
+    backgroundColor: COLOR_INPUT_BORDER,
+    marginLeft: SPACE_SM,
+    flexShrink: 0,
+  };
+
+  // Opacity input with % suffix
+  const opacityContainerStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    marginLeft: SPACE_SM,
+    marginRight: SPACE_SM,
+    flexShrink: 0,
   };
 
   const opacityInputStyle: CSSProperties = {
-    width: 40,
+    width: "28px",
     height: "100%",
-    padding: `0 ${SPACE_SM}`,
+    padding: 0,
     border: "none",
-    borderLeft: `1px solid ${COLOR_INPUT_BORDER}`,
     backgroundColor: "transparent",
     color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
     fontSize: sizeConfig.fontSize,
+    fontFamily: "inherit",
     outline: "none",
-    textAlign: "right" as const,
+    textAlign: "right",
   };
 
-  const suffixStyle: CSSProperties = {
-    paddingRight: SPACE_SM,
+  const opacitySuffixStyle: CSSProperties = {
     color: COLOR_TEXT_MUTED,
     fontSize: sizeConfig.fontSize,
+    lineHeight: 1,
+    userSelect: "none",
   };
 
-  const iconButtonStyle: CSSProperties = {
+  // Icon button (visibility, remove) inside field
+  const inlineIconButtonStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: sizeConfig.height,
-    height: sizeConfig.height,
+    width: "20px",
+    height: "100%",
     padding: 0,
     border: "none",
     backgroundColor: "transparent",
@@ -305,6 +383,25 @@ export function ColorInput({
     cursor: disabled ? "not-allowed" : "pointer",
     outline: "none",
     transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
+    flexShrink: 0,
+  };
+
+  // Remove button outside field
+  const removeButtonStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "20px",
+    height: sizeConfig.height,
+    marginLeft: SPACE_XS,
+    padding: 0,
+    border: "none",
+    backgroundColor: "transparent",
+    color: COLOR_ICON,
+    cursor: disabled ? "not-allowed" : "pointer",
+    outline: "none",
+    transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
+    flexShrink: 0,
   };
 
   const pickerContainerStyle: CSSProperties = {
@@ -314,6 +411,9 @@ export function ColorInput({
     marginTop: SPACE_SM,
     zIndex: Z_POPOVER,
   };
+
+  const handleFieldFocus = () => setIsFocused(true);
+  const handleFieldBlur = () => setIsFocused(false);
 
   const handleIconPointerEnter = (e: PointerEvent<HTMLButtonElement>) => {
     if (!disabled) {
@@ -332,61 +432,83 @@ export function ColorInput({
       style={containerStyle}
       aria-label={ariaLabel}
     >
-      <button
-        type="button"
-        onClick={handleSwatchClick}
-        disabled={disabled}
-        style={swatchStyle}
-        aria-label="Open color picker"
-        onFocus={(e) => {
-          e.currentTarget.style.boxShadow = `0 0 0 2px ${COLOR_FOCUS_RING}`;
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.boxShadow = "none";
-        }}
-      />
+      <div style={fieldContainerStyle}>
+        {/* Color Swatch */}
+        <div style={swatchWrapperStyle}>
+          <div style={swatchCheckerboardStyle} />
+          <div style={swatchColorStyle} />
+          <button
+            type="button"
+            onClick={handleSwatchClick}
+            disabled={disabled}
+            style={swatchButtonStyle}
+            aria-label="Open color picker"
+          />
+        </div>
 
-      <div style={inputContainerStyle}>
-        <input
-          type="text"
-          value={hexInput}
-          onChange={handleHexInputChange}
-          onBlur={handleHexInputBlur}
-          maxLength={6}
-          disabled={disabled}
-          aria-label="Hex color"
-          style={hexInputStyle}
-        />
-        <input
-          type="text"
-          value={opacityInput}
-          onChange={handleOpacityInputChange}
-          onBlur={handleOpacityInputBlur}
-          maxLength={3}
-          disabled={disabled}
-          aria-label="Opacity"
-          style={opacityInputStyle}
-        />
-        <span style={suffixStyle}>%</span>
+        {/* Hex Input */}
+        <div style={hexContainerStyle}>
+          <span style={hexPrefixStyle}>#</span>
+          <input
+            type="text"
+            value={hexInput}
+            onChange={handleHexInputChange}
+            onBlur={() => {
+              handleHexInputBlur();
+              handleFieldBlur();
+            }}
+            onFocus={handleFieldFocus}
+            maxLength={6}
+            disabled={disabled}
+            aria-label="Hex color"
+            style={hexInputStyle}
+          />
+        </div>
+
+        {/* Separator */}
+        <div style={separatorStyle} />
+
+        {/* Opacity Input */}
+        <div style={opacityContainerStyle}>
+          <input
+            type="text"
+            value={opacityInput}
+            onChange={handleOpacityInputChange}
+            onBlur={() => {
+              handleOpacityInputBlur();
+              handleFieldBlur();
+            }}
+            onFocus={handleFieldFocus}
+            maxLength={3}
+            disabled={disabled}
+            aria-label="Opacity"
+            style={opacityInputStyle}
+          />
+          <span style={opacitySuffixStyle}>%</span>
+        </div>
+
+        {/* Visibility Toggle (inside field) */}
+        {renderVisibilityToggle(
+          showVisibilityToggle,
+          handleVisibilityToggle,
+          disabled,
+          value.visible,
+          inlineIconButtonStyle,
+          handleIconPointerEnter,
+          handleIconPointerLeave,
+          sizeConfig.iconSize,
+        )}
       </div>
 
-      {renderVisibilityToggle(
-        showVisibilityToggle,
-        handleVisibilityToggle,
-        disabled,
-        value.visible,
-        iconButtonStyle,
-        handleIconPointerEnter,
-        handleIconPointerLeave,
-      )}
-
+      {/* Remove Button (outside field) */}
       {renderRemoveButton(
         showRemove,
         handleRemove,
         disabled,
-        iconButtonStyle,
+        removeButtonStyle,
         handleIconPointerEnter,
         handleIconPointerLeave,
+        sizeConfig.iconSize,
       )}
 
       {renderPicker(showPicker, pickerContainerStyle, value.hex, handleColorChange)}
@@ -401,11 +523,11 @@ function getVisibilityAriaLabel(visible: boolean): string {
   return "Show color";
 }
 
-function renderVisibilityIcon(visible: boolean) {
+function renderVisibilityIcon(visible: boolean, iconSize: number) {
   if (visible) {
-    return <EyeIcon />;
+    return <EyeIcon size={iconSize} />;
   }
-  return <EyeOffIcon />;
+  return <EyeOffIcon size={iconSize} />;
 }
 
 function renderVisibilityToggle(
@@ -416,6 +538,7 @@ function renderVisibilityToggle(
   buttonStyle: CSSProperties,
   onPointerEnter: (e: PointerEvent<HTMLButtonElement>) => void,
   onPointerLeave: (e: PointerEvent<HTMLButtonElement>) => void,
+  iconSize: number,
 ) {
   if (!show) {
     return null;
@@ -430,7 +553,7 @@ function renderVisibilityToggle(
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
     >
-      {renderVisibilityIcon(visible)}
+      {renderVisibilityIcon(visible, iconSize)}
     </button>
   );
 }
@@ -442,6 +565,7 @@ function renderRemoveButton(
   buttonStyle: CSSProperties,
   onPointerEnter: (e: PointerEvent<HTMLButtonElement>) => void,
   onPointerLeave: (e: PointerEvent<HTMLButtonElement>) => void,
+  iconSize: number,
 ) {
   if (!show) {
     return null;
@@ -456,7 +580,7 @@ function renderRemoveButton(
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
     >
-      <TrashIcon />
+      <MinusIcon size={iconSize} />
     </button>
   );
 }

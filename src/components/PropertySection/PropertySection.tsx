@@ -33,7 +33,7 @@ export function PropertySection({
   defaultExpanded = true,
   onToggle,
   action,
-  contentPadding = "md",
+  contentPadding = "sm",
   className,
 }: PropertySectionProps) {
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);

@@ -58,17 +58,17 @@ describe("IconButton", () => {
       <IconButton icon={<TestIcon />} aria-label="Small" size="sm" />,
     );
     expect(screen.getByRole("button")).toHaveStyle({
-      width: "var(--rei-size-height-sm, 24px)",
+      width: "var(--rei-size-height-sm, 22px)",
     });
 
     rerender(<IconButton icon={<TestIcon />} aria-label="Medium" size="md" />);
     expect(screen.getByRole("button")).toHaveStyle({
-      width: "var(--rei-size-height-md, 32px)",
+      width: "var(--rei-size-height-md, 28px)",
     });
 
     rerender(<IconButton icon={<TestIcon />} aria-label="Large" size="lg" />);
     expect(screen.getByRole("button")).toHaveStyle({
-      width: "var(--rei-size-height-lg, 40px)",
+      width: "var(--rei-size-height-lg, 32px)",
     });
   });
 

@@ -32,8 +32,8 @@ export type CheckboxProps = {
 };
 
 const sizeMap = {
-  sm: { box: SIZE_CHECKBOX_SM, icon: 10, fontSize: SIZE_FONT_SM },
-  md: { box: SIZE_CHECKBOX_MD, icon: 12, fontSize: SIZE_FONT_MD },
+  sm: { box: SIZE_CHECKBOX_SM, icon: 8, fontSize: SIZE_FONT_SM },
+  md: { box: SIZE_CHECKBOX_MD, icon: 10, fontSize: SIZE_FONT_MD },
 };
 
 function renderCheckIcon(iconSize: number) {
