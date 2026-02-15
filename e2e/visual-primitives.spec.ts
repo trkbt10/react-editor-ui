@@ -76,4 +76,13 @@ test.describe("Visual: Primitives", () => {
       fullPage: true,
     });
   });
+
+  test("GradientEditor", async ({ page }) => {
+    await page.goto("/#/components/primitives/gradient-editor");
+    await page.waitForSelector("h2");
+    await page.screenshot({
+      path: "e2e/screenshots/gradient-editor.png",
+      fullPage: true,
+    });
+  });
 });

@@ -35,9 +35,11 @@ export type ColorInputProps = {
   onChange: (value: ColorValue) => void;
   showVisibilityToggle?: boolean;
   showRemove?: boolean;
+  removeDisabled?: boolean;
   onRemove?: () => void;
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
+  fullWidth?: boolean;
   "aria-label"?: string;
   className?: string;
 };
@@ -131,9 +133,11 @@ export function ColorInput({
   onChange,
   showVisibilityToggle = false,
   showRemove = false,
+  removeDisabled = false,
   onRemove,
   disabled = false,
   size = "md",
+  fullWidth = false,
   "aria-label": ariaLabel,
   className,
 }: ColorInputProps) {
@@ -249,10 +253,11 @@ export function ColorInput({
   // Container wrapping everything
   const containerStyle: CSSProperties = {
     position: "relative",
-    display: "inline-flex",
+    display: fullWidth ? "flex" : "inline-flex",
     alignItems: "center",
     gap: SPACE_SM,
     opacity: disabled ? 0.5 : 1,
+    width: fullWidth ? "100%" : undefined,
   };
 
   // Swatch with checkerboard background
@@ -301,10 +306,13 @@ export function ColorInput({
     borderRadius: RADIUS_SM,
     backgroundColor: COLOR_INPUT_BG,
     overflow: "hidden",
+    flex: fullWidth ? 1 : undefined,
   };
 
   const hexInputStyle: CSSProperties = {
-    width: 52,
+    width: fullWidth ? undefined : 52,
+    flex: fullWidth ? 1 : undefined,
+    minWidth: fullWidth ? 52 : undefined,
     height: "100%",
     padding: `0 ${SPACE_XS}`,
     border: "none",
@@ -423,7 +431,8 @@ export function ColorInput({
       {renderRemoveButton(
         showRemove,
         handleRemove,
-        disabled,
+        disabled || removeDisabled,
+        removeDisabled,
         iconButtonStyle,
         handleIconPointerEnter,
         handleIconPointerLeave,
@@ -481,6 +490,7 @@ function renderRemoveButton(
   show: boolean,
   onClick: () => void,
   disabled: boolean,
+  removeDisabled: boolean,
   buttonStyle: CSSProperties,
   onPointerEnter: (e: PointerEvent<HTMLButtonElement>) => void,
   onPointerLeave: (e: PointerEvent<HTMLButtonElement>) => void,
@@ -489,15 +499,20 @@ function renderRemoveButton(
   if (!show) {
     return null;
   }
+  const style: CSSProperties = {
+    ...buttonStyle,
+    opacity: removeDisabled ? 0.3 : 1,
+    cursor: disabled ? "not-allowed" : "pointer",
+  };
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-label="Remove color"
-      style={buttonStyle}
-      onPointerEnter={onPointerEnter}
-      onPointerLeave={onPointerLeave}
+      style={style}
+      onPointerEnter={disabled ? undefined : onPointerEnter}
+      onPointerLeave={disabled ? undefined : onPointerLeave}
     >
       <MinusIcon size={iconSize} />
     </button>

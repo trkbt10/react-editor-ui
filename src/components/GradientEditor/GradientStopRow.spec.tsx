@@ -121,7 +121,7 @@ describe("GradientStopRow", () => {
       />,
     );
 
-    const deleteButton = screen.getByRole("button", { name: "Remove stop" });
+    const deleteButton = screen.getByRole("button", { name: "Remove color" });
     fireEvent.click(deleteButton);
 
     expect(removed).toBe(true);
@@ -168,7 +168,7 @@ describe("GradientStopRow", () => {
       />,
     );
 
-    const deleteButton = screen.getByRole("button", { name: "Remove stop" });
+    const deleteButton = screen.getByRole("button", { name: "Remove color" });
     fireEvent.click(deleteButton);
 
     expect(removed).toBe(false);
