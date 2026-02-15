@@ -2,7 +2,7 @@
  * @file ColorPicker component - Color selection with HSV area and hue slider
  */
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import {
   COLOR_SURFACE,
@@ -16,17 +16,20 @@ import {
   RADIUS_MD,
   SHADOW_LG,
   SPACE_SM,
-  SPACE_MD,
   SIZE_FONT_SM,
   DURATION_FAST,
   EASING_DEFAULT,
 } from "../../constants/styles";
 import { hexToHsv, hsvToHex, isValidHex, normalizeHex } from "./colorUtils";
 import type { HSV } from "./colorUtils";
+import { OpacitySlider } from "./OpacitySlider";
 
 export type ColorPickerProps = {
   value: string;
   onChange: (hex: string) => void;
+  opacity?: number;
+  onOpacityChange?: (opacity: number) => void;
+  showOpacity?: boolean;
   presetColors?: string[];
   "aria-label"?: string;
 };
@@ -48,17 +51,12 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>(undefined);
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-}
-
 export function ColorPicker({
   value,
   onChange,
+  opacity = 100,
+  onOpacityChange,
+  showOpacity = false,
   presetColors = DEFAULT_PRESETS,
   "aria-label": ariaLabel,
 }: ColorPickerProps) {
@@ -69,10 +67,14 @@ export function ColorPicker({
   const isDraggingSaturation = useRef(false);
   const isDraggingHue = useRef(false);
 
-  const prevValue = usePrevious(value);
-  if (prevValue !== value && prevValue !== undefined) {
-    const newHsv = hexToHsv(value);
-    setHsv(newHsv);
+  // Track last committed external value for controlled input synchronization
+  const lastExternalValueRef = useRef(value);
+
+  // Sync local state when external value changes (setState during render is allowed
+  // when the condition ensures it won't repeat on the next render)
+  if (lastExternalValueRef.current !== value) {
+    lastExternalValueRef.current = value;
+    setHsv(hexToHsv(value));
     setHexInput(value.replace(/^#/, ""));
   }
 
@@ -159,21 +161,21 @@ export function ColorPicker({
   };
 
   const containerStyle: CSSProperties = {
-    width: 220,
-    padding: SPACE_MD,
+    width: 200,
+    padding: SPACE_SM,
     backgroundColor: COLOR_SURFACE,
     border: `1px solid ${COLOR_BORDER}`,
     borderRadius: RADIUS_MD,
     boxShadow: SHADOW_LG,
     display: "flex",
     flexDirection: "column",
-    gap: SPACE_MD,
+    gap: SPACE_SM,
   };
 
   const saturationAreaStyle: CSSProperties = {
     position: "relative",
     width: "100%",
-    height: 150,
+    height: 130,
     borderRadius: RADIUS_SM,
     cursor: "crosshair",
     background: `
@@ -184,11 +186,11 @@ export function ColorPicker({
 
   const saturationHandleStyle: CSSProperties = {
     position: "absolute",
-    width: 12,
-    height: 12,
+    width: 10,
+    height: 10,
     borderRadius: "50%",
     border: "2px solid white",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
     transform: "translate(-50%, -50%)",
     left: `${hsv.s}%`,
     top: `${100 - hsv.v}%`,
@@ -198,7 +200,7 @@ export function ColorPicker({
   const hueSliderStyle: CSSProperties = {
     position: "relative",
     width: "100%",
-    height: 12,
+    height: 10,
     borderRadius: RADIUS_SM,
     cursor: "pointer",
     background:
@@ -207,11 +209,11 @@ export function ColorPicker({
 
   const hueHandleStyle: CSSProperties = {
     position: "absolute",
-    width: 12,
-    height: 12,
+    width: 10,
+    height: 10,
     borderRadius: "50%",
     border: "2px solid white",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.3)",
     transform: "translate(-50%, 0)",
     left: `${(hsv.h / 360) * 100}%`,
     top: 0,
@@ -232,7 +234,7 @@ export function ColorPicker({
 
   const hexInputStyle: CSSProperties = {
     flex: 1,
-    height: 28,
+    height: 24,
     padding: `0 ${SPACE_SM}`,
     border: `1px solid ${COLOR_INPUT_BORDER}`,
     borderRadius: RADIUS_SM,
@@ -250,8 +252,8 @@ export function ColorPicker({
   };
 
   const getPresetStyle = (color: string): CSSProperties => ({
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     borderRadius: RADIUS_SM,
     border: `1px solid ${COLOR_BORDER}`,
     backgroundColor: color,
@@ -296,6 +298,8 @@ export function ColorPicker({
         <div style={hueHandleStyle} />
       </div>
 
+      {renderOpacitySlider(showOpacity, opacity, onOpacityChange, value)}
+
       <div style={hexInputContainerStyle}>
         <span style={hexLabelStyle}>#</span>
         <input
@@ -318,6 +322,24 @@ export function ColorPicker({
 
       {renderPresets(presetColors, presetContainerStyle, handlePresetClick, getPresetStyle)}
     </div>
+  );
+}
+
+function renderOpacitySlider(
+  show: boolean,
+  opacity: number,
+  onOpacityChange: ((value: number) => void) | undefined,
+  color: string,
+) {
+  if (!show || !onOpacityChange) {
+    return null;
+  }
+  return (
+    <OpacitySlider
+      value={opacity}
+      onChange={onOpacityChange}
+      color={color}
+    />
   );
 }
 

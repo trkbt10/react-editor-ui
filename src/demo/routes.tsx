@@ -26,8 +26,20 @@ import {
   StatusBar,
   StatusBarItem,
   LogEntry,
+  Panel,
+  ImageSelect,
+  StrokeSettingsPanel,
+  GradientEditor,
+  FillEditor,
+  createDefaultGradient,
 } from "../components";
-import type { ColorValue } from "../components";
+import type {
+  ColorValue,
+  StrokeSettings,
+  ImageSelectOption,
+  GradientValue,
+  FillValue,
+} from "../components";
 
 export type DemoPage = {
   id: string;
@@ -814,6 +826,104 @@ function ColorPickerDemo() {
   );
 }
 
+function getFillBackground(fill: FillValue): string {
+  if (fill.type === "solid") {
+    return fill.color.hex;
+  }
+  const stops = fill.gradient.stops.map((s) => `${s.color.hex} ${s.position}%`).join(", ");
+  return `linear-gradient(${fill.gradient.angle}deg, ${stops})`;
+}
+
+function getGradientBackground(gradient: GradientValue): string {
+  const stops = gradient.stops.map((s) => `${s.color.hex} ${s.position}%`).join(", ");
+  return `linear-gradient(${gradient.angle}deg, ${stops})`;
+}
+
+function GradientEditorDemo() {
+  const [gradient, setGradient] = useState<GradientValue>(createDefaultGradient());
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>GradientEditor</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Basic</div>
+        <div style={{ width: 280 }}>
+          <GradientEditor value={gradient} onChange={setGradient} />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Preview</div>
+        <div
+          style={{
+            width: 280,
+            height: 80,
+            borderRadius: "4px",
+            background: getGradientBackground(gradient),
+            border: "1px solid var(--rei-color-border)",
+          }}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Disabled</div>
+        <div style={{ width: 280 }}>
+          <GradientEditor value={gradient} onChange={() => {}} disabled />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FillEditorDemo() {
+  const [fill, setFill] = useState<FillValue>({
+    type: "solid",
+    color: { hex: "#3b82f6", opacity: 100, visible: true },
+  });
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>FillEditor</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Solid/Gradient Toggle</div>
+        <div style={{ width: 280 }}>
+          <FillEditor value={fill} onChange={setFill} />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Preview</div>
+        <div
+          style={{
+            width: 280,
+            height: 80,
+            borderRadius: "4px",
+            background: getFillBackground(fill),
+            border: "1px solid var(--rei-color-border)",
+          }}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Current State</div>
+        <div style={{
+          backgroundColor: "var(--rei-color-surface, #1e1f24)",
+          borderRadius: "4px",
+          padding: "12px",
+          fontSize: "11px",
+          fontFamily: "monospace",
+          color: "var(--rei-color-text-muted)",
+          whiteSpace: "pre-wrap",
+        }}>
+          {JSON.stringify(fill, null, 2)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ColorInputDemo() {
   const [colorValue, setColorValue] = useState<ColorValue>({
     hex: "#3b82f6",
@@ -1027,6 +1137,206 @@ function PropertySectionDemo() {
   );
 }
 
+// Panel Demo
+function PanelDemo() {
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>Panel</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Basic Panel</div>
+        <Panel title="Settings" onClose={() => alert("Close clicked")}>
+          <div style={{ color: "var(--rei-color-text)", fontSize: "12px" }}>
+            Panel content goes here
+          </div>
+        </Panel>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Without Close Button</div>
+        <Panel title="Information" width={280}>
+          <PropertyRow label="Name">Component</PropertyRow>
+          <PropertyRow label="Type">UIView</PropertyRow>
+        </Panel>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Custom Width</div>
+        <Panel title="Wide Panel" width={400} onClose={() => {}}>
+          <div style={{ color: "var(--rei-color-text)", fontSize: "12px" }}>
+            This panel has a custom width of 400px
+          </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+// ImageSelect Demo
+function WidthProfilePreview({ variant = "uniform" }: { variant?: "uniform" | "taper" }) {
+  return (
+    <div style={{ width: "100%", height: "8px", display: "flex", alignItems: "center" }}>
+      <svg width="100%" height="8" viewBox="0 0 160 8" preserveAspectRatio="none">
+        <path
+          d={variant === "uniform" ? "M0 4 L160 4" : "M0 4 Q40 2 80 4 Q120 6 160 4"}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={variant === "uniform" ? "4" : "3"}
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
+function getBrushDemoPath(type: "smooth" | "rough"): string {
+  if (type === "rough") {
+    return "M0 12 Q10 8 20 12 Q30 16 40 12 Q50 8 60 12 Q70 16 80 12 Q90 8 100 12 Q110 16 120 12 Q130 8 140 12 Q150 16 160 12 Q170 8 180 12 Q190 16 200 12";
+  }
+  return "M0 12 Q50 6 100 12 Q150 18 200 12";
+}
+
+function BrushPreviewDemo({ type = "smooth" }: { type?: "smooth" | "rough" }) {
+  return (
+    <div style={{ width: "100%", height: "24px", display: "flex", alignItems: "center" }}>
+      <svg width="100%" height="24" viewBox="0 0 200 24" preserveAspectRatio="none">
+        <path
+          d={getBrushDemoPath(type)}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="8"
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
+function ImageSelectDemo() {
+  const [widthProfile, setWidthProfile] = useState("uniform");
+  const [brushType, setBrushType] = useState("smooth");
+  const [selectedFruit, setSelectedFruit] = useState("apple");
+
+  const widthOptions: ImageSelectOption<string>[] = [
+    { value: "uniform", image: <WidthProfilePreview variant="uniform" /> },
+    { value: "taper", image: <WidthProfilePreview variant="taper" /> },
+  ];
+
+  const brushOptions: ImageSelectOption<string>[] = [
+    { value: "smooth", image: <BrushPreviewDemo type="smooth" /> },
+    { value: "rough", image: <BrushPreviewDemo type="rough" /> },
+  ];
+
+  const fruitOptions: ImageSelectOption<string>[] = [
+    { value: "apple", label: "Apple", image: <span style={{ fontSize: "20px" }}>&#127822;</span> },
+    { value: "banana", label: "Banana", image: <span style={{ fontSize: "20px" }}>&#127820;</span> },
+    { value: "cherry", label: "Cherry", image: <span style={{ fontSize: "20px" }}>&#127826;</span> },
+  ];
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>ImageSelect</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Width Profile (Image Only)</div>
+        <div style={{ width: "200px" }}>
+          <ImageSelect
+            options={widthOptions}
+            value={widthProfile}
+            onChange={setWidthProfile}
+            aria-label="Width profile"
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Brush Type (Large Preview)</div>
+        <div style={{ width: "250px" }}>
+          <ImageSelect
+            options={brushOptions}
+            value={brushType}
+            onChange={setBrushType}
+            size="lg"
+            aria-label="Brush type"
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>With Icon and Label</div>
+        <div style={{ width: "200px" }}>
+          <ImageSelect
+            options={fruitOptions}
+            value={selectedFruit}
+            onChange={setSelectedFruit}
+            aria-label="Select fruit"
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Disabled</div>
+        <div style={{ width: "200px" }}>
+          <ImageSelect
+            options={widthOptions}
+            value="uniform"
+            onChange={() => {}}
+            disabled
+            aria-label="Disabled select"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// StrokeSettingsPanel Demo
+function StrokeSettingsPanelDemo() {
+  const [settings, setSettings] = useState<StrokeSettings>({
+    tab: "basic",
+    style: "solid",
+    widthProfile: "uniform",
+    join: "miter",
+    miterAngle: "28.96",
+    frequency: "75",
+    wiggle: "30",
+    smoothen: "50",
+    brushType: "smooth",
+    brushDirection: "right",
+    brushWidthProfile: "uniform",
+  });
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>StrokeSettingsPanel</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Complete Panel</div>
+        <StrokeSettingsPanel
+          settings={settings}
+          onChange={setSettings}
+          onClose={() => alert("Panel closed")}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Current Settings</div>
+        <div style={{
+          backgroundColor: "var(--rei-color-surface, #1e1f24)",
+          borderRadius: "4px",
+          padding: "12px",
+          fontSize: "11px",
+          fontFamily: "monospace",
+          color: "var(--rei-color-text-muted)",
+          whiteSpace: "pre-wrap",
+        }}>
+          {JSON.stringify(settings, null, 2)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const demoCategories: DemoCategory[] = [
   {
     id: "primitives",
@@ -1081,6 +1391,24 @@ export const demoCategories: DemoCategory[] = [
         path: "color-input",
         element: <ColorInputDemo />,
       },
+      {
+        id: "gradient-editor",
+        label: "GradientEditor",
+        path: "gradient-editor",
+        element: <GradientEditorDemo />,
+      },
+      {
+        id: "fill-editor",
+        label: "FillEditor",
+        path: "fill-editor",
+        element: <FillEditorDemo />,
+      },
+      {
+        id: "image-select",
+        label: "ImageSelect",
+        path: "image-select",
+        element: <ImageSelectDemo />,
+      },
     ],
   },
   {
@@ -1105,6 +1433,25 @@ export const demoCategories: DemoCategory[] = [
         label: "PropertySection",
         path: "property-section",
         element: <PropertySectionDemo />,
+      },
+      {
+        id: "panel",
+        label: "Panel",
+        path: "panel",
+        element: <PanelDemo />,
+      },
+    ],
+  },
+  {
+    id: "composite",
+    label: "Composite",
+    base: "/components/composite",
+    pages: [
+      {
+        id: "stroke-settings-panel",
+        label: "StrokeSettingsPanel",
+        path: "stroke-settings-panel",
+        element: <StrokeSettingsPanelDemo />,
       },
     ],
   },

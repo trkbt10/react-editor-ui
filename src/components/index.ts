@@ -33,9 +33,55 @@ export type { ColorPickerProps } from "./ColorPicker/ColorPicker";
 export { ColorInput } from "./ColorInput/ColorInput";
 export type { ColorInputProps, ColorValue } from "./ColorInput/ColorInput";
 
+export { Slider } from "./Slider/Slider";
+export type { SliderProps } from "./Slider/Slider";
+
+export { GradientEditor } from "./GradientEditor/GradientEditor";
+export type { GradientEditorProps } from "./GradientEditor/GradientEditor";
+
+export { GradientBar } from "./GradientEditor/GradientBar";
+export type { GradientBarProps } from "./GradientEditor/GradientBar";
+
+export { GradientStopRow } from "./GradientEditor/GradientStopRow";
+export type { GradientStopRowProps } from "./GradientEditor/GradientStopRow";
+
+export { GradientTypeSelector } from "./GradientEditor/GradientTypeSelector";
+export type { GradientTypeSelectorProps } from "./GradientEditor/GradientTypeSelector";
+
+export type {
+  GradientType,
+  GradientStop,
+  GradientValue,
+  FillType,
+  FillValue,
+} from "./GradientEditor/gradientTypes";
+
+export {
+  generateStopId,
+  sortStopsByPosition,
+  createDefaultGradient,
+  gradientToCss,
+  gradientToLinearCss,
+  interpolateColor,
+  getGradientTypeName,
+} from "./GradientEditor/gradientUtils";
+
+export { FillEditor } from "./FillEditor/FillEditor";
+export type { FillEditorProps } from "./FillEditor/FillEditor";
+
+export { ImageSelect } from "./ImageSelect/ImageSelect";
+export type {
+  ImageSelectProps,
+  ImageSelectOption,
+} from "./ImageSelect/ImageSelect";
+
 // ========================================
 // LAYOUT
 // ========================================
+
+export { Panel } from "./Panel/Panel";
+export type { PanelProps } from "./Panel/Panel";
+
 
 export { Toolbar } from "./Toolbar/Toolbar";
 export type { ToolbarProps } from "./Toolbar/Toolbar";
@@ -83,3 +129,19 @@ export type { StatusBarItemProps } from "./StatusBar/StatusBarItem";
 
 export { LogEntry } from "./LogEntry/LogEntry";
 export type { LogEntryProps } from "./LogEntry/LogEntry";
+
+// ========================================
+// COMPOSITE
+// ========================================
+
+export { StrokeSettingsPanel } from "./StrokeSettingsPanel/StrokeSettingsPanel";
+export type {
+  StrokeSettingsPanelProps,
+  StrokeSettings,
+  StrokeStyle,
+  JoinType,
+  BrushDirection,
+  WidthProfile,
+  BrushType,
+  StrokeTab,
+} from "./StrokeSettingsPanel/StrokeSettingsPanel";

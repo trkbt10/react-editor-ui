@@ -1,0 +1,346 @@
+/**
+ * @file GradientEditor component - Full gradient editing interface
+ */
+
+import { useState, useRef } from "react";
+import type { CSSProperties, ChangeEvent } from "react";
+import {
+  COLOR_TEXT,
+  COLOR_TEXT_MUTED,
+  COLOR_INPUT_BG,
+  COLOR_INPUT_BORDER,
+  COLOR_ICON,
+  COLOR_ICON_HOVER,
+  RADIUS_SM,
+  SIZE_FONT_SM,
+  SPACE_SM,
+  SPACE_MD,
+  SPACE_XS,
+  DURATION_FAST,
+  EASING_DEFAULT,
+} from "../../constants/styles";
+import type { GradientValue, GradientType, GradientStop } from "./gradientTypes";
+import { generateStopId, sortStopsByPosition } from "./gradientUtils";
+import { GradientBar } from "./GradientBar";
+import { GradientStopRow } from "./GradientStopRow";
+import { GradientTypeSelector } from "./GradientTypeSelector";
+
+export type GradientEditorProps = {
+  value: GradientValue;
+  onChange: (value: GradientValue) => void;
+  disabled?: boolean;
+  "aria-label"?: string;
+};
+
+function PlusIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+export function GradientEditor({
+  value,
+  onChange,
+  disabled = false,
+  "aria-label": ariaLabel = "Gradient editor",
+}: GradientEditorProps) {
+  const [selectedStopId, setSelectedStopId] = useState<string | null>(
+    value.stops[0]?.id ?? null,
+  );
+  const [angleInput, setAngleInput] = useState(String(value.angle));
+
+  // Track last angle for syncing
+  const lastAngleRef = useRef(value.angle);
+
+  // Sync local state when external value changes
+  if (lastAngleRef.current !== value.angle) {
+    lastAngleRef.current = value.angle;
+    setAngleInput(String(value.angle));
+  }
+
+  const handleTypeChange = (type: GradientType) => {
+    onChange({ ...value, type });
+  };
+
+  const handleAngleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    setAngleInput(inputValue);
+    const parsed = parseInt(inputValue, 10);
+    if (!Number.isNaN(parsed)) {
+      const normalized = ((parsed % 360) + 360) % 360;
+      onChange({ ...value, angle: normalized });
+    }
+  };
+
+  const handleAngleBlur = () => {
+    const parsed = parseInt(angleInput, 10);
+    if (Number.isNaN(parsed)) {
+      setAngleInput(String(value.angle));
+    }
+  };
+
+  const handleGradientChange = (newValue: GradientValue) => {
+    onChange(newValue);
+  };
+
+  const handleStopChange = (updatedStop: GradientStop) => {
+    const newStops = value.stops.map((stop) => {
+      if (stop.id === updatedStop.id) {
+        return updatedStop;
+      }
+      return stop;
+    });
+    onChange({ ...value, stops: newStops });
+  };
+
+  const handleStopRemove = (stopId: string) => {
+    if (value.stops.length <= 2) {
+      return; // Keep at least 2 stops
+    }
+    const newStops = value.stops.filter((stop) => stop.id !== stopId);
+    onChange({ ...value, stops: newStops });
+
+    // Select another stop if the removed one was selected
+    if (selectedStopId === stopId) {
+      setSelectedStopId(newStops[0]?.id ?? null);
+    }
+  };
+
+  const handleAddStop = () => {
+    // Add a new stop at 50% or find a gap
+    const sortedStops = sortStopsByPosition(value.stops);
+    let newPosition = 50;
+
+    // Find the largest gap between stops
+    let maxGap = 0;
+    let gapStart = 0;
+
+    for (let i = 0; i < sortedStops.length - 1; i++) {
+      const gap = sortedStops[i + 1].position - sortedStops[i].position;
+      if (gap > maxGap) {
+        maxGap = gap;
+        gapStart = sortedStops[i].position;
+      }
+    }
+
+    if (maxGap > 0) {
+      newPosition = Math.round(gapStart + maxGap / 2);
+    }
+
+    const newStop: GradientStop = {
+      id: generateStopId(),
+      position: newPosition,
+      color: { hex: "#808080", opacity: 100, visible: true },
+    };
+
+    onChange({ ...value, stops: [...value.stops, newStop] });
+    setSelectedStopId(newStop.id);
+  };
+
+  const showAngleInput = value.type === "linear" || value.type === "angular";
+  const sortedStops = sortStopsByPosition(value.stops);
+
+  const containerStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: SPACE_MD,
+    opacity: disabled ? 0.5 : 1,
+  };
+
+  const headerRowStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: SPACE_MD,
+  };
+
+  const angleContainerStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: SPACE_XS,
+  };
+
+  const angleLabelStyle: CSSProperties = {
+    color: COLOR_TEXT_MUTED,
+    fontSize: SIZE_FONT_SM,
+  };
+
+  const angleInputContainerStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    height: 22,
+    border: `1px solid ${COLOR_INPUT_BORDER}`,
+    borderRadius: RADIUS_SM,
+    backgroundColor: COLOR_INPUT_BG,
+    overflow: "hidden",
+  };
+
+  const angleInputStyle: CSSProperties = {
+    width: 36,
+    height: "100%",
+    padding: `0 ${SPACE_XS}`,
+    border: "none",
+    backgroundColor: "transparent",
+    color: COLOR_TEXT,
+    fontSize: SIZE_FONT_SM,
+    outline: "none",
+    textAlign: "right" as const,
+  };
+
+  const suffixStyle: CSSProperties = {
+    paddingRight: SPACE_XS,
+    color: COLOR_TEXT_MUTED,
+    fontSize: SIZE_FONT_SM,
+  };
+
+  const stopsHeaderStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: SPACE_SM,
+  };
+
+  const stopsLabelStyle: CSSProperties = {
+    color: COLOR_TEXT,
+    fontSize: SIZE_FONT_SM,
+    fontWeight: 500,
+  };
+
+  const addButtonStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 22,
+    height: 22,
+    padding: 0,
+    border: "none",
+    backgroundColor: "transparent",
+    color: COLOR_ICON,
+    cursor: disabled ? "not-allowed" : "pointer",
+    outline: "none",
+    transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
+  };
+
+  const stopsListStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: SPACE_XS,
+  };
+
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      style={containerStyle}
+    >
+      <div style={headerRowStyle}>
+        <GradientTypeSelector
+          value={value.type}
+          onChange={handleTypeChange}
+          disabled={disabled}
+        />
+
+        {renderAngleInput(
+          showAngleInput,
+          angleInput,
+          handleAngleChange,
+          handleAngleBlur,
+          disabled,
+          angleContainerStyle,
+          angleLabelStyle,
+          angleInputContainerStyle,
+          angleInputStyle,
+          suffixStyle,
+        )}
+      </div>
+
+      <GradientBar
+        value={value}
+        onChange={handleGradientChange}
+        selectedStopId={selectedStopId}
+        onSelectStop={setSelectedStopId}
+        disabled={disabled}
+      />
+
+      <div style={stopsHeaderStyle}>
+        <span style={stopsLabelStyle}>Stops</span>
+        <button
+          type="button"
+          onClick={handleAddStop}
+          disabled={disabled}
+          aria-label="Add stop"
+          style={addButtonStyle}
+          onPointerEnter={(e) => {
+            if (!disabled) {
+              e.currentTarget.style.color = COLOR_ICON_HOVER;
+            }
+          }}
+          onPointerLeave={(e) => {
+            e.currentTarget.style.color = COLOR_ICON;
+          }}
+        >
+          <PlusIcon />
+        </button>
+      </div>
+
+      <div style={stopsListStyle}>
+        {sortedStops.map((stop) => (
+          <GradientStopRow
+            key={stop.id}
+            stop={stop}
+            onChange={handleStopChange}
+            onRemove={() => handleStopRemove(stop.id)}
+            isSelected={stop.id === selectedStopId}
+            onSelect={() => setSelectedStopId(stop.id)}
+            removeDisabled={value.stops.length <= 2}
+            disabled={disabled}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function renderAngleInput(
+  show: boolean,
+  angleInput: string,
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void,
+  onBlur: () => void,
+  disabled: boolean,
+  containerStyle: CSSProperties,
+  labelStyle: CSSProperties,
+  inputContainerStyle: CSSProperties,
+  inputStyle: CSSProperties,
+  suffixStyle: CSSProperties,
+) {
+  if (!show) {
+    return null;
+  }
+  return (
+    <div style={containerStyle}>
+      <span style={labelStyle}>Angle</span>
+      <div style={inputContainerStyle}>
+        <input
+          type="text"
+          value={angleInput}
+          onChange={onChange}
+          onBlur={onBlur}
+          maxLength={3}
+          disabled={disabled}
+          aria-label="Gradient angle"
+          style={inputStyle}
+        />
+        <span style={suffixStyle}>°</span>
+      </div>
+    </div>
+  );
+}
