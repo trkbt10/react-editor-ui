@@ -91,34 +91,34 @@ export const SPACE_2XL = "var(--rei-space-2xl, 24px)";
 // ========================================
 
 /**
- * Font sizes
+ * Font sizes (Figma-style compact)
  */
-export const SIZE_FONT_XS = "var(--rei-size-font-xs, 10px)";
-export const SIZE_FONT_SM = "var(--rei-size-font-sm, 12px)";
-export const SIZE_FONT_MD = "var(--rei-size-font-md, 14px)";
-export const SIZE_FONT_LG = "var(--rei-size-font-lg, 16px)";
+export const SIZE_FONT_XS = "var(--rei-size-font-xs, 9px)";
+export const SIZE_FONT_SM = "var(--rei-size-font-sm, 11px)";
+export const SIZE_FONT_MD = "var(--rei-size-font-md, 12px)";
+export const SIZE_FONT_LG = "var(--rei-size-font-lg, 14px)";
 
 /**
- * Icon sizes
+ * Icon sizes (Figma-style compact)
  */
-export const SIZE_ICON_SM = "var(--rei-size-icon-sm, 14px)";
-export const SIZE_ICON_MD = "var(--rei-size-icon-md, 18px)";
-export const SIZE_ICON_LG = "var(--rei-size-icon-lg, 24px)";
+export const SIZE_ICON_SM = "var(--rei-size-icon-sm, 12px)";
+export const SIZE_ICON_MD = "var(--rei-size-icon-md, 14px)";
+export const SIZE_ICON_LG = "var(--rei-size-icon-lg, 18px)";
 
 /**
- * Component heights
+ * Component heights (Figma-style compact)
  */
-export const SIZE_HEIGHT_SM = "var(--rei-size-height-sm, 24px)";
-export const SIZE_HEIGHT_MD = "var(--rei-size-height-md, 32px)";
-export const SIZE_HEIGHT_LG = "var(--rei-size-height-lg, 40px)";
+export const SIZE_HEIGHT_SM = "var(--rei-size-height-sm, 22px)";
+export const SIZE_HEIGHT_MD = "var(--rei-size-height-md, 28px)";
+export const SIZE_HEIGHT_LG = "var(--rei-size-height-lg, 32px)";
 
 // ========================================
 // BORDER RADIUS
 // ========================================
 
-export const RADIUS_SM = "var(--rei-radius-sm, 2px)";
-export const RADIUS_MD = "var(--rei-radius-md, 4px)";
-export const RADIUS_LG = "var(--rei-radius-lg, 8px)";
+export const RADIUS_SM = "var(--rei-radius-sm, 3px)";
+export const RADIUS_MD = "var(--rei-radius-md, 5px)";
+export const RADIUS_LG = "var(--rei-radius-lg, 6px)";
 export const RADIUS_FULL = "var(--rei-radius-full, 9999px)";
 
 // ========================================
@@ -175,21 +175,22 @@ export const COLOR_ICON_ACTIVE = "var(--rei-color-icon-active, #2563eb)";
 export const SIZE_TOOLBAR_HEIGHT = "var(--rei-size-toolbar-height, 36px)";
 export const SIZE_TABBAR_HEIGHT = "var(--rei-size-tabbar-height, 32px)";
 export const SIZE_STATUSBAR_HEIGHT = "var(--rei-size-statusbar-height, 24px)";
+export const SIZE_PANEL_HEADER_HEIGHT = "var(--rei-size-panel-header-height, 40px)";
 export const SIZE_TREE_INDENT = "var(--rei-size-tree-indent, 16px)";
 export const SIZE_PROPERTY_LABEL = "var(--rei-size-property-label, 100px)";
 
 /**
- * Checkbox sizes
+ * Checkbox sizes (Figma-style compact)
  */
-export const SIZE_CHECKBOX_SM = "var(--rei-size-checkbox-sm, 14px)";
-export const SIZE_CHECKBOX_MD = "var(--rei-size-checkbox-md, 18px)";
+export const SIZE_CHECKBOX_SM = "var(--rei-size-checkbox-sm, 12px)";
+export const SIZE_CHECKBOX_MD = "var(--rei-size-checkbox-md, 14px)";
 
 /**
- * Color swatch sizes
+ * Color swatch sizes (Figma-style compact)
  */
-export const SIZE_COLOR_SWATCH_SM = "var(--rei-size-color-swatch-sm, 16px)";
-export const SIZE_COLOR_SWATCH_MD = "var(--rei-size-color-swatch-md, 20px)";
-export const SIZE_COLOR_SWATCH_LG = "var(--rei-size-color-swatch-lg, 24px)";
+export const SIZE_COLOR_SWATCH_SM = "var(--rei-size-color-swatch-sm, 14px)";
+export const SIZE_COLOR_SWATCH_MD = "var(--rei-size-color-swatch-md, 18px)";
+export const SIZE_COLOR_SWATCH_LG = "var(--rei-size-color-swatch-lg, 22px)";
 
 // ========================================
 // DIVIDER (Light theme default)

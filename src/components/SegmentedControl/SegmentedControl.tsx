@@ -1,17 +1,17 @@
 /**
- * @file SegmentedControl component - Button group for selecting options
+ * @file SegmentedControl component - Figma-style button group for selecting options
  */
 
 import type { ReactNode, CSSProperties, PointerEvent } from "react";
 import {
   COLOR_HOVER,
   COLOR_ACTIVE,
-  COLOR_SELECTED,
   COLOR_PRIMARY,
   COLOR_TEXT,
-  COLOR_BORDER,
+  COLOR_TEXT_MUTED,
+  COLOR_SURFACE,
   COLOR_FOCUS_RING,
-  RADIUS_SM,
+  RADIUS_MD,
   DURATION_FAST,
   EASING_DEFAULT,
   SIZE_FONT_SM,
@@ -22,8 +22,10 @@ import {
   SIZE_ICON_SM,
   SIZE_ICON_MD,
   SIZE_ICON_LG,
+  SPACE_XS,
   SPACE_SM,
   SPACE_MD,
+  SHADOW_SM,
 } from "../../constants/styles";
 
 export type SegmentedControlOption<T extends string = string> = {
@@ -41,6 +43,7 @@ export type SegmentedControlProps<T extends string = string> = {
   size?: "sm" | "md" | "lg";
   disabled?: boolean;
   multiple?: boolean;
+  fullWidth?: boolean;
   "aria-label"?: string;
   className?: string;
 };
@@ -48,21 +51,27 @@ export type SegmentedControlProps<T extends string = string> = {
 const sizeMap = {
   sm: {
     height: SIZE_HEIGHT_SM,
+    innerHeight: "calc(var(--rei-size-height-sm, 22px) - 4px)",
     fontSize: SIZE_FONT_SM,
     iconSize: SIZE_ICON_SM,
     paddingX: SPACE_SM,
+    containerPadding: "2px",
   },
   md: {
     height: SIZE_HEIGHT_MD,
+    innerHeight: "calc(var(--rei-size-height-md, 28px) - 4px)",
     fontSize: SIZE_FONT_MD,
     iconSize: SIZE_ICON_MD,
     paddingX: SPACE_MD,
+    containerPadding: "2px",
   },
   lg: {
     height: SIZE_HEIGHT_LG,
+    innerHeight: "calc(var(--rei-size-height-lg, 32px) - 6px)",
     fontSize: SIZE_FONT_MD,
     iconSize: SIZE_ICON_LG,
     paddingX: SPACE_MD,
+    containerPadding: "3px",
   },
 };
 
@@ -86,20 +95,6 @@ function computeNewValue<T extends string>(
   return [...currentValue, optionValue];
 }
 
-function getPointerLeaveBackground(selected: boolean): string {
-  if (selected) {
-    return COLOR_SELECTED;
-  }
-  return "transparent";
-}
-
-function getPointerUpBackground(selected: boolean): string {
-  if (selected) {
-    return COLOR_SELECTED;
-  }
-  return COLOR_HOVER;
-}
-
 export function SegmentedControl<T extends string = string>({
   options,
   value,
@@ -107,37 +102,46 @@ export function SegmentedControl<T extends string = string>({
   size = "md",
   disabled = false,
   multiple = false,
+  fullWidth = false,
   "aria-label": ariaLabel,
   className,
 }: SegmentedControlProps<T>) {
   const sizeConfig = sizeMap[size];
 
   const containerStyle: CSSProperties = {
-    display: "inline-flex",
+    display: "flex",
     alignItems: "center",
-    border: `1px solid ${COLOR_BORDER}`,
-    borderRadius: RADIUS_SM,
-    overflow: "hidden",
+    width: fullWidth ? "100%" : "auto",
+    height: sizeConfig.height,
+    padding: sizeConfig.containerPadding,
+    backgroundColor: "var(--rei-color-surface-overlay, #f3f4f6)",
+    borderRadius: RADIUS_MD,
+    gap: "1px",
+    boxSizing: "border-box",
   };
 
   const getButtonStyle = (
     optionDisabled: boolean,
     selected: boolean,
   ): CSSProperties => ({
-    display: "inline-flex",
+    flex: 1,
+    minWidth: 0,
+    display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: SPACE_SM,
-    height: sizeConfig.height,
+    gap: SPACE_XS,
+    height: sizeConfig.innerHeight,
     padding: `0 ${sizeConfig.paddingX}`,
     border: "none",
-    borderRight: `1px solid ${COLOR_BORDER}`,
-    backgroundColor: selected ? COLOR_SELECTED : "transparent",
-    color: selected ? COLOR_PRIMARY : COLOR_TEXT,
+    borderRadius: `calc(${RADIUS_MD} - 1px)`,
+    backgroundColor: selected ? COLOR_SURFACE : "transparent",
+    boxShadow: selected ? SHADOW_SM : "none",
+    color: selected ? COLOR_PRIMARY : COLOR_TEXT_MUTED,
     fontSize: sizeConfig.fontSize,
+    fontWeight: selected ? 500 : 400,
     cursor: disabled || optionDisabled ? "not-allowed" : "pointer",
     opacity: disabled || optionDisabled ? 0.5 : 1,
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}, color ${DURATION_FAST} ${EASING_DEFAULT}`,
+    transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
     outline: "none",
   });
 
@@ -169,12 +173,10 @@ export function SegmentedControl<T extends string = string>({
     optionDisabled: boolean,
     selected: boolean,
   ) => {
-    if (disabled || optionDisabled) {
+    if (disabled || optionDisabled || selected) {
       return;
     }
-    if (!selected) {
-      e.currentTarget.style.backgroundColor = COLOR_HOVER;
-    }
+    e.currentTarget.style.backgroundColor = COLOR_HOVER;
   };
 
   const handlePointerLeave = (
@@ -185,14 +187,15 @@ export function SegmentedControl<T extends string = string>({
     if (disabled || optionDisabled) {
       return;
     }
-    e.currentTarget.style.backgroundColor = getPointerLeaveBackground(selected);
+    e.currentTarget.style.backgroundColor = selected ? COLOR_SURFACE : "transparent";
   };
 
   const handlePointerDown = (
     e: PointerEvent<HTMLButtonElement>,
     optionDisabled: boolean,
+    selected: boolean,
   ) => {
-    if (disabled || optionDisabled) {
+    if (disabled || optionDisabled || selected) {
       return;
     }
     e.currentTarget.style.backgroundColor = COLOR_ACTIVE;
@@ -206,15 +209,18 @@ export function SegmentedControl<T extends string = string>({
     if (disabled || optionDisabled) {
       return;
     }
-    e.currentTarget.style.backgroundColor = getPointerUpBackground(selected);
+    e.currentTarget.style.backgroundColor = selected ? COLOR_SURFACE : COLOR_HOVER;
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.boxShadow = `inset 0 0 0 2px ${COLOR_FOCUS_RING}`;
+    e.currentTarget.style.boxShadow = `0 0 0 2px ${COLOR_FOCUS_RING}`;
   };
 
-  const handleBlur = (e: React.FocusEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.boxShadow = "none";
+  const handleBlur = (
+    e: React.FocusEvent<HTMLButtonElement>,
+    selected: boolean,
+  ) => {
+    e.currentTarget.style.boxShadow = selected ? SHADOW_SM : "none";
   };
 
   return (
@@ -224,15 +230,9 @@ export function SegmentedControl<T extends string = string>({
       className={className}
       style={containerStyle}
     >
-      {options.map((option, index) => {
+      {options.map((option) => {
         const selected = isSelected(value, option.value);
         const optionDisabled = option.disabled ?? false;
-        const isLast = index === options.length - 1;
-
-        const buttonStyle = getButtonStyle(optionDisabled, selected);
-        if (isLast) {
-          buttonStyle.borderRight = "none";
-        }
 
         return (
           <button
@@ -249,11 +249,11 @@ export function SegmentedControl<T extends string = string>({
             onPointerLeave={(e) =>
               handlePointerLeave(e, optionDisabled, selected)
             }
-            onPointerDown={(e) => handlePointerDown(e, optionDisabled)}
+            onPointerDown={(e) => handlePointerDown(e, optionDisabled, selected)}
             onPointerUp={(e) => handlePointerUp(e, optionDisabled, selected)}
             onFocus={handleFocus}
-            onBlur={handleBlur}
-            style={buttonStyle}
+            onBlur={(e) => handleBlur(e, selected)}
+            style={getButtonStyle(optionDisabled, selected)}
           >
             {option.icon ? <span style={iconStyle}>{option.icon}</span> : null}
             {option.label ? <span>{option.label}</span> : null}

@@ -189,4 +189,46 @@ describe("SegmentedControl", () => {
     );
     expect(screen.getAllByRole("radio")).toHaveLength(3);
   });
+
+  it("applies fullWidth style when fullWidth is true", () => {
+    render(
+      <SegmentedControl
+        options={options}
+        value="a"
+        onChange={() => {}}
+        fullWidth
+        aria-label="Test"
+      />,
+    );
+    const container = screen.getByRole("group");
+    expect(container.style.width).toBe("100%");
+  });
+
+  it("has auto width when fullWidth is false", () => {
+    render(
+      <SegmentedControl
+        options={options}
+        value="a"
+        onChange={() => {}}
+        aria-label="Test"
+      />,
+    );
+    const container = screen.getByRole("group");
+    expect(container.style.width).toBe("auto");
+  });
+
+  it("buttons have flex for equal width", () => {
+    render(
+      <SegmentedControl
+        options={options}
+        value="a"
+        onChange={() => {}}
+        aria-label="Test"
+      />,
+    );
+    const buttons = screen.getAllByRole("radio");
+    buttons.forEach((button) => {
+      expect(button.style.flex).toContain("1");
+    });
+  });
 });

@@ -1,8 +1,8 @@
 /**
- * @file Select component - Dropdown selection
+ * @file ImageSelect component - Dropdown selection with image/preview support
  */
 
-import { useState, useRef, useEffect, useEffectEvent, type CSSProperties } from "react";
+import { useState, useRef, useEffect, useEffectEvent, type CSSProperties, type ReactNode } from "react";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
@@ -11,7 +11,6 @@ import {
   COLOR_HOVER,
   COLOR_SELECTED,
   COLOR_TEXT,
-  COLOR_TEXT_MUTED,
   COLOR_TEXT_DISABLED,
   COLOR_ICON,
   COLOR_FOCUS_RING,
@@ -29,66 +28,23 @@ import {
   SPACE_LG,
 } from "../../constants/styles";
 
-type DropdownRenderProps<T extends string> = {
-  isOpen: boolean;
-  dropdownStyle: CSSProperties;
-  options: SelectOption<T>[];
+export type ImageSelectOption<T extends string = string> = {
   value: T;
-  focusedIndex: number;
-  onChange: (value: T) => void;
-  setIsOpen: (open: boolean) => void;
-  setFocusedIndex: (index: number) => void;
-  getOptionStyle: (
-    isSelected: boolean,
-    isFocused: boolean,
-    isDisabled: boolean,
-  ) => CSSProperties;
+  label?: string;
+  image?: ReactNode;
+  disabled?: boolean;
 };
 
-function renderDropdown<T extends string>(props: DropdownRenderProps<T>) {
-  const {
-    isOpen,
-    dropdownStyle,
-    options,
-    value,
-    focusedIndex,
-    onChange,
-    setIsOpen,
-    setFocusedIndex,
-    getOptionStyle,
-  } = props;
-
-  if (!isOpen) {
-    return null;
-  }
-
-  return (
-    <div role="listbox" style={dropdownStyle}>
-      {options.map((option, index) => (
-        <div
-          key={option.value}
-          role="option"
-          aria-selected={option.value === value}
-          aria-disabled={option.disabled}
-          onClick={() => {
-            if (!option.disabled) {
-              onChange(option.value);
-              setIsOpen(false);
-            }
-          }}
-          onPointerEnter={() => setFocusedIndex(index)}
-          style={getOptionStyle(
-            option.value === value,
-            index === focusedIndex,
-            option.disabled ?? false,
-          )}
-        >
-          {option.label}
-        </div>
-      ))}
-    </div>
-  );
-}
+export type ImageSelectProps<T extends string = string> = {
+  options: ImageSelectOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  placeholder?: string;
+  size?: "sm" | "md" | "lg";
+  disabled?: boolean;
+  "aria-label"?: string;
+  className?: string;
+};
 
 function getOptionBackground(isSelected: boolean, isFocused: boolean): string {
   if (isSelected) {
@@ -100,22 +56,23 @@ function getOptionBackground(isSelected: boolean, isFocused: boolean): string {
   return "transparent";
 }
 
-export type SelectOption<T extends string = string> = {
-  value: T;
-  label: string;
-  disabled?: boolean;
-};
+function renderOptionImage(image: ReactNode | undefined) {
+  if (!image) {
+    return null;
+  }
+  return (
+    <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+      {image}
+    </div>
+  );
+}
 
-export type SelectProps<T extends string = string> = {
-  options: SelectOption<T>[];
-  value: T;
-  onChange: (value: T) => void;
-  placeholder?: string;
-  size?: "sm" | "md" | "lg";
-  disabled?: boolean;
-  "aria-label"?: string;
-  className?: string;
-};
+function renderOptionLabel(label: string | undefined) {
+  if (!label) {
+    return null;
+  }
+  return <span>{label}</span>;
+}
 
 const sizeMap = {
   sm: { height: SIZE_HEIGHT_SM, fontSize: SIZE_FONT_SM, padding: SPACE_SM },
@@ -123,7 +80,7 @@ const sizeMap = {
   lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_SM, padding: SPACE_LG },
 };
 
-export function Select<T extends string = string>({
+export function ImageSelect<T extends string = string>({
   options,
   value,
   onChange,
@@ -132,7 +89,7 @@ export function Select<T extends string = string>({
   disabled = false,
   "aria-label": ariaLabel,
   className,
-}: SelectProps<T>) {
+}: ImageSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -207,13 +164,23 @@ export function Select<T extends string = string>({
     backgroundColor: COLOR_INPUT_BG,
     border: `1px solid ${isOpen ? COLOR_INPUT_BORDER_FOCUS : COLOR_INPUT_BORDER}`,
     borderRadius: RADIUS_SM,
-    color: selectedOption ? COLOR_TEXT : COLOR_TEXT_MUTED,
+    color: COLOR_TEXT,
     fontSize: sizeConfig.fontSize,
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.5 : 1,
     transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
     outline: "none",
     boxShadow: isOpen ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+    gap: SPACE_SM,
+  };
+
+  const previewContainerStyle: CSSProperties = {
+    flex: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    minWidth: 0,
+    overflow: "hidden",
   };
 
   const dropdownStyle: CSSProperties = {
@@ -227,7 +194,7 @@ export function Select<T extends string = string>({
     borderRadius: RADIUS_SM,
     boxShadow: SHADOW_MD,
     zIndex: Z_DROPDOWN,
-    maxHeight: "200px",
+    maxHeight: "240px",
     overflowY: "auto",
   };
 
@@ -244,7 +211,52 @@ export function Select<T extends string = string>({
     fontSize: sizeConfig.fontSize,
     cursor: isDisabled ? "not-allowed" : "pointer",
     opacity: isDisabled ? 0.5 : 1,
+    gap: SPACE_SM,
   });
+
+  const renderTriggerContent = () => {
+    if (!selectedOption) {
+      return <span style={{ color: "var(--rei-color-text-muted)" }}>{placeholder}</span>;
+    }
+    if (selectedOption.image) {
+      return <div style={previewContainerStyle}>{selectedOption.image}</div>;
+    }
+    return <span>{selectedOption.label ?? selectedOption.value}</span>;
+  };
+
+  const renderDropdown = () => {
+    if (!isOpen) {
+      return null;
+    }
+
+    return (
+      <div role="listbox" style={dropdownStyle}>
+        {options.map((option, index) => (
+          <div
+            key={option.value}
+            role="option"
+            aria-selected={option.value === value}
+            aria-disabled={option.disabled}
+            onClick={() => {
+              if (!option.disabled) {
+                onChange(option.value);
+                setIsOpen(false);
+              }
+            }}
+            onPointerEnter={() => setFocusedIndex(index)}
+            style={getOptionStyle(
+              option.value === value,
+              index === focusedIndex,
+              option.disabled ?? false,
+            )}
+          >
+            {renderOptionImage(option.image)}
+            {renderOptionLabel(option.label)}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -267,13 +279,11 @@ export function Select<T extends string = string>({
         onKeyDown={handleKeyDown}
         style={triggerStyle}
       >
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {selectedOption?.label ?? placeholder}
-        </span>
+        {renderTriggerContent()}
         <span
           style={{
             display: "flex",
-            marginLeft: SPACE_SM,
+            flexShrink: 0,
             color: COLOR_ICON,
             transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
             transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
@@ -291,17 +301,7 @@ export function Select<T extends string = string>({
           </svg>
         </span>
       </button>
-      {renderDropdown({
-        isOpen,
-        dropdownStyle,
-        options,
-        value,
-        focusedIndex,
-        onChange,
-        setIsOpen,
-        setFocusedIndex,
-        getOptionStyle,
-      })}
+      {renderDropdown()}
     </div>
   );
 }

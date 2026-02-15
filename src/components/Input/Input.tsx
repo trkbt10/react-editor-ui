@@ -24,6 +24,7 @@ import {
   SIZE_HEIGHT_LG,
   SPACE_SM,
   SPACE_MD,
+  SPACE_LG,
 } from "../../constants/styles";
 
 function renderClearButton(showClearButton: boolean, handleClear: () => void) {
@@ -98,7 +99,7 @@ export type InputProps = {
 const sizeMap = {
   sm: { height: SIZE_HEIGHT_SM, fontSize: SIZE_FONT_SM, paddingX: SPACE_SM },
   md: { height: SIZE_HEIGHT_MD, fontSize: SIZE_FONT_MD, paddingX: SPACE_MD },
-  lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_MD, paddingX: SPACE_MD },
+  lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_MD, paddingX: SPACE_LG },
 };
 
 function renderPrefix(
@@ -140,8 +141,9 @@ export function Input({
   const sizeConfig = sizeMap[size];
 
   const containerStyle: CSSProperties = {
-    display: "inline-flex",
+    display: "flex",
     alignItems: "center",
+    width: "100%",
     gap: SPACE_SM,
     height: sizeConfig.height,
     padding: `0 ${sizeConfig.paddingX}`,
@@ -151,6 +153,7 @@ export function Input({
     transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
     boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
     opacity: disabled ? 0.5 : 1,
+    boxSizing: "border-box",
   };
 
   const inputStyle: CSSProperties = {
