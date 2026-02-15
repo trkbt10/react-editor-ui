@@ -814,6 +814,8 @@ function CheckboxDemo() {
   const [checked1, setChecked1] = useState(false);
   const [checked2, setChecked2] = useState(true);
   const [checked3, setChecked3] = useState(false);
+  const [switch1, setSwitch1] = useState(false);
+  const [switch2, setSwitch2] = useState(true);
 
   return (
     <div style={demoContainerStyle}>
@@ -858,6 +860,50 @@ function CheckboxDemo() {
         <div style={demoRowStyle}>
           <Checkbox checked={false} onChange={() => {}} label="Disabled unchecked" disabled />
           <Checkbox checked onChange={() => {}} label="Disabled checked" disabled />
+        </div>
+      </div>
+
+      <h2 style={{ margin: "24px 0 0 0", color: "var(--rei-color-text, #e4e6eb)" }}>Switch</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Basic</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Checkbox
+            variant="switch"
+            checked={switch1}
+            onChange={setSwitch1}
+            label="Dark mode"
+          />
+          <Checkbox
+            variant="switch"
+            checked={switch2}
+            onChange={setSwitch2}
+            label="Notifications"
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Sizes</div>
+        <div style={demoRowStyle}>
+          <Checkbox variant="switch" checked onChange={() => {}} label="Small" size="sm" />
+          <Checkbox variant="switch" checked onChange={() => {}} label="Medium" size="md" />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>States</div>
+        <div style={demoRowStyle}>
+          <Checkbox variant="switch" checked={false} onChange={() => {}} label="Off" />
+          <Checkbox variant="switch" checked onChange={() => {}} label="On" />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Disabled</div>
+        <div style={demoRowStyle}>
+          <Checkbox variant="switch" checked={false} onChange={() => {}} label="Disabled off" disabled />
+          <Checkbox variant="switch" checked onChange={() => {}} label="Disabled on" disabled />
         </div>
       </div>
     </div>

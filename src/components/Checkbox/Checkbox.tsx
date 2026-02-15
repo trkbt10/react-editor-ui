@@ -27,6 +27,7 @@ export type CheckboxProps = {
   disabled?: boolean;
   indeterminate?: boolean;
   size?: "sm" | "md";
+  variant?: "checkbox" | "switch";
   "aria-label"?: string;
   className?: string;
 };
@@ -35,6 +36,22 @@ const sizeMap = {
   sm: { box: SIZE_CHECKBOX_SM, icon: 8, fontSize: SIZE_FONT_SM },
   md: { box: SIZE_CHECKBOX_MD, icon: 10, fontSize: SIZE_FONT_MD },
 };
+
+const switchSizeMap = {
+  sm: { trackWidth: 24, trackHeight: 12, thumbSize: 8, thumbOffset: 2 },
+  md: { trackWidth: 28, trackHeight: 14, thumbSize: 10, thumbOffset: 2 },
+};
+
+function getThumbTransform(
+  checked: boolean,
+  config: { trackWidth: number; thumbSize: number; thumbOffset: number },
+): string {
+  if (checked) {
+    const offset = config.trackWidth - config.thumbSize - config.thumbOffset;
+    return `translateX(${offset}px)`;
+  }
+  return `translateX(${config.thumbOffset}px)`;
+}
 
 function renderCheckIcon(iconSize: number) {
   return (
@@ -83,6 +100,11 @@ function renderIcon(
   return null;
 }
 
+
+
+
+
+
 export function Checkbox({
   checked,
   onChange,
@@ -90,10 +112,12 @@ export function Checkbox({
   disabled = false,
   indeterminate = false,
   size = "md",
+  variant = "checkbox",
   "aria-label": ariaLabel,
   className,
 }: CheckboxProps) {
   const sizeConfig = sizeMap[size];
+  const switchConfig = switchSizeMap[size];
   const isActive = checked || indeterminate;
 
   const containerStyle: CSSProperties = {
@@ -182,6 +206,55 @@ export function Checkbox({
       box.style.boxShadow = "none";
     }
   };
+
+  // Switch variant styles
+  const trackStyle: CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    width: switchConfig.trackWidth,
+    height: switchConfig.trackHeight,
+    borderRadius: switchConfig.trackHeight / 2,
+    backgroundColor: checked ? COLOR_PRIMARY : COLOR_BORDER,
+    transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
+    flexShrink: 0,
+    position: "relative",
+  };
+
+  const thumbStyle: CSSProperties = {
+    position: "absolute",
+    width: switchConfig.thumbSize,
+    height: switchConfig.thumbSize,
+    borderRadius: "50%",
+    backgroundColor: "#ffffff",
+    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+    transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
+    transform: getThumbTransform(checked, switchConfig),
+  };
+
+  if (variant === "switch") {
+    return (
+      <div
+        role="switch"
+        aria-checked={checked}
+        aria-label={ariaLabel ?? label}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        className={className}
+        style={containerStyle}
+      >
+        <span data-checkbox-box style={trackStyle}>
+          <span style={thumbStyle} />
+        </span>
+        {label ? <span style={labelStyle}>{label}</span> : null}
+      </div>
+    );
+  }
 
   return (
     <div

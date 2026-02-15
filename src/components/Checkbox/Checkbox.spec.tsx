@@ -127,3 +127,96 @@ describe("Checkbox", () => {
     expect(screen.getByRole("checkbox")).toHaveClass("custom-class");
   });
 });
+
+describe("Checkbox with switch variant", () => {
+  it("renders as a switch", () => {
+    render(
+      <Checkbox
+        variant="switch"
+        checked={false}
+        onChange={() => {}}
+        aria-label="Test"
+      />,
+    );
+    const switchEl = screen.getByRole("switch");
+    expect(switchEl).toBeInTheDocument();
+    expect(switchEl).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("renders checked state", () => {
+    render(
+      <Checkbox
+        variant="switch"
+        checked={true}
+        onChange={() => {}}
+        aria-label="Test"
+      />,
+    );
+    const switchEl = screen.getByRole("switch");
+    expect(switchEl).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("calls onChange when clicked", () => {
+    const values: boolean[] = [];
+    const handleChange = (checked: boolean) => {
+      values.push(checked);
+    };
+    render(
+      <Checkbox
+        variant="switch"
+        checked={false}
+        onChange={handleChange}
+        aria-label="Test"
+      />,
+    );
+    fireEvent.click(screen.getByRole("switch"));
+    expect(values).toEqual([true]);
+  });
+
+  it("does not call onChange when disabled", () => {
+    const values: boolean[] = [];
+    const handleChange = (checked: boolean) => {
+      values.push(checked);
+    };
+    render(
+      <Checkbox
+        variant="switch"
+        checked={false}
+        onChange={handleChange}
+        disabled
+        aria-label="Test"
+      />,
+    );
+    fireEvent.click(screen.getByRole("switch"));
+    expect(values).toEqual([]);
+  });
+
+  it("renders with label", () => {
+    render(
+      <Checkbox
+        variant="switch"
+        checked={false}
+        onChange={() => {}}
+        label="Dark mode"
+      />,
+    );
+    expect(screen.getByText("Dark mode")).toBeInTheDocument();
+  });
+
+  it("responds to keyboard Enter", () => {
+    const values: boolean[] = [];
+    const handleChange = (checked: boolean) => {
+      values.push(checked);
+    };
+    render(
+      <Checkbox
+        variant="switch"
+        checked={false}
+        onChange={handleChange}
+        aria-label="Test"
+      />,
+    );
+    fireEvent.keyDown(screen.getByRole("switch"), { key: "Enter" });
+    expect(values).toEqual([true]);
+  });
+});
