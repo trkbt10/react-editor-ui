@@ -200,7 +200,6 @@ test.describe("LayerItem: Inline Rename", () => {
 
   test("Escape cancels rename", async ({ page }) => {
     const layer = page.locator('[data-testid="layer-item-3"]');
-    const originalText = await layer.textContent();
 
     // Enter edit mode
     await layer.click();
