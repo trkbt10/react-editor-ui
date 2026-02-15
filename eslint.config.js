@@ -52,6 +52,8 @@ export default [
         "custom/no-as-outside-guard": "error",
         "custom/no-nested-try": "error",
         "custom/no-iife-in-anonymous": "error",
+        "custom/no-export-star": "error",
+        "custom/no-parent-reexport": "error",
         // Spread from modular groups
         ...rulesJSDoc,
         ...rulesRestrictedSyntax,

@@ -1,0 +1,91 @@
+/**
+ * @file Demo page styles
+ * Uses --rei-demo-* prefix for demo-specific tokens
+ * Design follows react-panel-layout demo style
+ */
+
+:root {
+  /* Modern LP / Bento Design Tokens (matching react-panel-layout) */
+
+  /* Colors & Gradients */
+  --rei-demo-bg: #ffffff;
+  --rei-demo-sidebar-bg: #ffffff;
+  --rei-demo-sidebar-border: rgba(0, 0, 0, 0.06);
+
+  --rei-demo-text-primary: #000000;
+  --rei-demo-text-secondary: #666666;
+  --rei-demo-text-tertiary: #999999;
+
+  --rei-demo-accent: #000000;
+  --rei-demo-accent-hover: #333333;
+  --rei-demo-accent-contrast: #ffffff;
+
+  --rei-demo-gradient-hero: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    #f5f5f7 100%
+  );
+  --rei-demo-gradient-text: linear-gradient(135deg, #000000 0%, #444444 100%);
+  --rei-demo-gradient-glow: radial-gradient(
+    circle at 50% 50%,
+    rgba(0, 113, 227, 0.15) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+
+  --rei-demo-control-bg: rgba(0, 0, 0, 0.04);
+  --rei-demo-control-bg-hover: rgba(0, 0, 0, 0.08);
+  --rei-demo-control-bg-active: rgba(0, 0, 0, 0.12);
+
+  /* Typography */
+  --rei-demo-font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --rei-demo-font-size-xs: 12px;
+  --rei-demo-font-size-sm: 14px;
+  --rei-demo-font-size-md: 16px;
+  --rei-demo-font-size-lg: 20px;
+  --rei-demo-font-size-xl: 24px;
+  --rei-demo-font-size-display: 56px;
+  --rei-demo-font-size-display-sm: 40px;
+
+  /* Spacing & Layout */
+  --rei-demo-radius-sm: 8px;
+  --rei-demo-radius-md: 12px;
+  --rei-demo-radius-lg: 24px;
+  --rei-demo-radius-xl: 32px;
+
+  --rei-demo-space-xs: 4px;
+  --rei-demo-space-sm: 8px;
+  --rei-demo-space-md: 16px;
+  --rei-demo-space-lg: 24px;
+  --rei-demo-space-xl: 48px;
+  --rei-demo-space-xxl: 80px;
+
+  /* Shadows */
+  --rei-demo-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+  --rei-demo-shadow-md: 0 8px 16px rgba(0, 0, 0, 0.04);
+  --rei-demo-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.08);
+  --rei-demo-shadow-hero: 0 40px 80px rgba(0, 0, 0, 0.12);
+
+  /* Transitions */
+  --rei-demo-transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Blue accent for functional UI */
+  --rei-demo-color-primary: #0071e3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--rei-demo-font-family);
+  background: var(--rei-demo-bg);
+  color: var(--rei-demo-text-primary);
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}

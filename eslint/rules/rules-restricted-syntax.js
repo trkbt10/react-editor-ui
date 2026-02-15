@@ -8,8 +8,6 @@ export default {
     { selector: "ImportExpression", message: "dynamic import() is prohibited" },
     { selector: "TSImportType", message: "type import() (TS import type expression) is prohibited" },
     { selector: "TSInterfaceDeclaration", message: "Please use type instead of interface" },
-    { selector: "ExportAllDeclaration[exported!=null]", message: "export * as is prohibited" },
-    { selector: "ExportAllDeclaration[exportKind='type']", message: "export type * from is prohibited" },
     {
       selector:
         "ClassDeclaration" +
