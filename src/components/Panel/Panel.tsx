@@ -45,6 +45,11 @@ const CloseIcon = () => (
   </svg>
 );
 
+
+
+
+
+
 export function Panel({
   title,
   children,
@@ -60,7 +65,6 @@ export function Panel({
     border: `1px solid ${COLOR_BORDER}`,
     borderRadius: RADIUS_LG,
     boxShadow: SHADOW_LG,
-    overflow: "hidden",
   };
 
   const headerStyle: CSSProperties = {
