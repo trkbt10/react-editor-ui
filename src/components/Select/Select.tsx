@@ -1,8 +1,9 @@
 /**
- * @file Select component - Dropdown selection
+ * @file Select component - Dropdown selection with portal rendering
  */
 
-import { useState, useRef, useEffect, useEffectEvent, type CSSProperties } from "react";
+import { useState, useRef, useEffect, useEffectEvent, useLayoutEffect, type CSSProperties } from "react";
+import { Portal } from "../Portal/Portal";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
@@ -28,67 +29,6 @@ import {
   SPACE_MD,
   SPACE_LG,
 } from "../../constants/styles";
-
-type DropdownRenderProps<T extends string> = {
-  isOpen: boolean;
-  dropdownStyle: CSSProperties;
-  options: SelectOption<T>[];
-  value: T;
-  focusedIndex: number;
-  onChange: (value: T) => void;
-  setIsOpen: (open: boolean) => void;
-  setFocusedIndex: (index: number) => void;
-  getOptionStyle: (
-    isSelected: boolean,
-    isFocused: boolean,
-    isDisabled: boolean,
-  ) => CSSProperties;
-};
-
-function renderDropdown<T extends string>(props: DropdownRenderProps<T>) {
-  const {
-    isOpen,
-    dropdownStyle,
-    options,
-    value,
-    focusedIndex,
-    onChange,
-    setIsOpen,
-    setFocusedIndex,
-    getOptionStyle,
-  } = props;
-
-  if (!isOpen) {
-    return null;
-  }
-
-  return (
-    <div role="listbox" style={dropdownStyle}>
-      {options.map((option, index) => (
-        <div
-          key={option.value}
-          role="option"
-          aria-selected={option.value === value}
-          aria-disabled={option.disabled}
-          onClick={() => {
-            if (!option.disabled) {
-              onChange(option.value);
-              setIsOpen(false);
-            }
-          }}
-          onPointerEnter={() => setFocusedIndex(index)}
-          style={getOptionStyle(
-            option.value === value,
-            index === focusedIndex,
-            option.disabled ?? false,
-          )}
-        >
-          {option.label}
-        </div>
-      ))}
-    </div>
-  );
-}
 
 function getOptionBackground(isSelected: boolean, isFocused: boolean): string {
   if (isSelected) {
@@ -123,6 +63,17 @@ const sizeMap = {
   lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_SM, padding: SPACE_LG },
 };
 
+
+
+
+
+
+type DropdownPosition = {
+  top: number;
+  left: number;
+  width: number;
+};
+
 export function Select<T extends string = string>({
   options,
   value,
@@ -135,24 +86,52 @@ export function Select<T extends string = string>({
 }: SelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const sizeConfig = sizeMap[size];
 
   const selectedOption = options.find((opt) => opt.value === value);
 
+  const updateDropdownPosition = useEffectEvent(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  });
+
   const handleClickOutside = useEffectEvent((event: PointerEvent) => {
+    const target = event.target as Node;
     if (
       containerRef.current &&
-      !containerRef.current.contains(event.target as Node)
+      !containerRef.current.contains(target) &&
+      dropdownRef.current &&
+      !dropdownRef.current.contains(target)
     ) {
       setIsOpen(false);
     }
   });
 
+  useLayoutEffect(() => {
+    if (isOpen) {
+      updateDropdownPosition();
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       document.addEventListener("pointerdown", handleClickOutside);
-      return () => document.removeEventListener("pointerdown", handleClickOutside);
+      window.addEventListener("scroll", updateDropdownPosition, true);
+      window.addEventListener("resize", updateDropdownPosition);
+      return () => {
+        document.removeEventListener("pointerdown", handleClickOutside);
+        window.removeEventListener("scroll", updateDropdownPosition, true);
+        window.removeEventListener("resize", updateDropdownPosition);
+      };
     }
   }, [isOpen]);
 
@@ -218,10 +197,9 @@ export function Select<T extends string = string>({
 
   const dropdownStyle: CSSProperties = {
     position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    marginTop: "4px",
+    top: dropdownPosition.top,
+    left: dropdownPosition.left,
+    width: dropdownPosition.width,
     backgroundColor: COLOR_SURFACE_RAISED,
     border: `1px solid ${COLOR_INPUT_BORDER}`,
     borderRadius: RADIUS_SM,
@@ -291,17 +269,34 @@ export function Select<T extends string = string>({
           </svg>
         </span>
       </button>
-      {renderDropdown({
-        isOpen,
-        dropdownStyle,
-        options,
-        value,
-        focusedIndex,
-        onChange,
-        setIsOpen,
-        setFocusedIndex,
-        getOptionStyle,
-      })}
+      {isOpen && (
+        <Portal>
+          <div ref={dropdownRef} role="listbox" style={dropdownStyle}>
+            {options.map((option, index) => (
+              <div
+                key={option.value}
+                role="option"
+                aria-selected={option.value === value}
+                aria-disabled={option.disabled}
+                onClick={() => {
+                  if (!option.disabled) {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }
+                }}
+                onPointerEnter={() => setFocusedIndex(index)}
+                style={getOptionStyle(
+                  option.value === value,
+                  index === focusedIndex,
+                  option.disabled ?? false,
+                )}
+              >
+                {option.label}
+              </div>
+            ))}
+          </div>
+        </Portal>
+      )}
     </div>
   );
 }

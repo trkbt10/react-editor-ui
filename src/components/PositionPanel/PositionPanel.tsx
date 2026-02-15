@@ -197,7 +197,7 @@ export function PositionPanel({
       <div style={sectionStyle}>
         <SectionLabel>Position</SectionLabel>
         <div style={rowStyle}>
-          <div style={gridStyle}>
+          <div style={{ ...gridStyle, flex: 1, minWidth: 0 }}>
             <Input
               value={settings.x}
               onChange={(v) => {

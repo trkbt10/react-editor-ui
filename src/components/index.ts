@@ -127,6 +127,9 @@ export type {
 export { Tooltip } from "./Tooltip/Tooltip";
 export type { TooltipProps, TooltipPlacement } from "./Tooltip/Tooltip";
 
+export { Portal } from "./Portal/Portal";
+export type { PortalProps } from "./Portal/Portal";
+
 // ========================================
 // LAYOUT
 // ========================================
