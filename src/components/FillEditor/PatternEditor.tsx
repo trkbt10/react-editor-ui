@@ -240,10 +240,12 @@ export function PatternEditor({
   const rowStyle: CSSProperties = {
     display: "flex",
     gap: SPACE_SM,
+    minWidth: 0,
   };
 
   const inputContainerStyle: CSSProperties = {
     flex: 1,
+    minWidth: 0,
   };
 
   const handleTileTypeChange = (tileType: TileType | TileType[]) => {
