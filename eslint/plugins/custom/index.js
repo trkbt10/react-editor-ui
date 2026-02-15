@@ -9,6 +9,9 @@ import noNestedTry from "./rules/no-nested-try.js";
 import noIifeInAnonymous from "./rules/no-iife-in-anonymous.js";
 import noExportStar from "./rules/no-export-star.js";
 import noParentReexport from "./rules/no-parent-reexport.js";
+import noUseStateInUseEffect from "./rules/no-use-state-in-use-effect.js";
+import preferPointerEvents from "./rules/prefer-pointer-events.js";
+import noIife from "./rules/no-iife.js";
 
 export default {
   rules: {
@@ -20,5 +23,8 @@ export default {
     "no-iife-in-anonymous": noIifeInAnonymous,
     "no-export-star": noExportStar,
     "no-parent-reexport": noParentReexport,
+    "no-use-state-in-use-effect": noUseStateInUseEffect,
+    "prefer-pointer-events": preferPointerEvents,
+    "no-iife": noIife,
   },
 };
