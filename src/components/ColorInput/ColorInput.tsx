@@ -48,19 +48,19 @@ const sizeMap = {
   sm: {
     height: 20,
     fontSize: SIZE_FONT_SM,
-    swatchSize: 16,
+    swatchSize: 20,
     iconSize: 12,
   },
   md: {
     height: 22,
     fontSize: SIZE_FONT_SM,
-    swatchSize: 18,
+    swatchSize: 22,
     iconSize: 14,
   },
   lg: {
     height: 24,
     fontSize: SIZE_FONT_SM,
-    swatchSize: 20,
+    swatchSize: 24,
     iconSize: 14,
   },
 };
