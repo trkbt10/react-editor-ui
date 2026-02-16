@@ -11,7 +11,6 @@ import type {
   MeasureTextFn,
   SelectionRect,
 } from "./types";
-import { assertMeasureText } from "./invariant";
 
 // =============================================================================
 // Constants

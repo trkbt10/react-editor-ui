@@ -6,57 +6,7 @@
 
 import { useCallback, useRef } from "react";
 import type { Token, TokenCache, Tokenizer } from "./types";
-
-// =============================================================================
-// LRU Cache Implementation
-// =============================================================================
-
-/**
- * LRU cache instance type.
- */
-type LRUCacheInstance<K, V> = {
-  readonly get: (key: K) => V | undefined;
-  readonly set: (key: K, value: V) => void;
-  readonly clear: () => void;
-};
-
-/**
- * Create an LRU cache using Map's insertion order.
- * Map maintains insertion order, so we can evict the oldest entries.
- */
-function createLRUCache<K, V>(maxSize: number): LRUCacheInstance<K, V> {
-  const cache = new Map<K, V>();
-
-  const get = (key: K): V | undefined => {
-    const value = cache.get(key);
-    if (value !== undefined) {
-      // Move to end (most recently used)
-      cache.delete(key);
-      cache.set(key, value);
-    }
-    return value;
-  };
-
-  const set = (key: K, value: V): void => {
-    // Delete first to update insertion order if exists
-    cache.delete(key);
-    cache.set(key, value);
-
-    // Evict oldest entries if over capacity
-    if (cache.size > maxSize) {
-      const firstKey = cache.keys().next().value;
-      if (firstKey !== undefined) {
-        cache.delete(firstKey);
-      }
-    }
-  };
-
-  const clear = (): void => {
-    cache.clear();
-  };
-
-  return { get, set, clear };
-}
+import { createLRUCache, type LRUCache } from "../../../utils/lruCache";
 
 // =============================================================================
 // Hook
@@ -83,7 +33,7 @@ export function useTokenCache(
   tokenizer: Tokenizer,
   maxSize: number = DEFAULT_CACHE_SIZE
 ): TokenCache {
-  const cacheRef = useRef<LRUCacheInstance<string, readonly Token[]> | null>(null);
+  const cacheRef = useRef<LRUCache<string, readonly Token[]> | null>(null);
   const tokenizerRef = useRef(tokenizer);
 
   // Update tokenizer ref

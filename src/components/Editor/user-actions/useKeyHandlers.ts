@@ -5,7 +5,7 @@
  */
 
 import { useCallback, type KeyboardEvent } from "react";
-import type { CompositionState } from "./types";
+import type { CompositionState } from "../core/types";
 
 // =============================================================================
 // Types

@@ -1,15 +1,16 @@
 /**
- * @file Style-aware text measurement
+ * @file Style-aware text measurement hook
  *
- * Provides text measurement that considers individual character/segment styles.
+ * React hook for text measurement that considers individual character/segment styles.
  * Essential for accurate cursor positioning and scroll synchronization in TextEditor
  * where text can have variable font sizes and families.
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo, type RefObject } from "react";
-import type { TextStyleSegment, TextStyle, CursorPosition } from "../core/types";
-import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "../core/useCoordinates";
+import type { TextStyleSegment } from "../core/types";
+import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "../core/coordinates";
 import { assertMeasureElement } from "../core/invariant";
+import { parseFontSize, findStyleAtOffset } from "./styledMeasurement";
 
 // =============================================================================
 // Types
@@ -48,41 +49,6 @@ export type UseStyledMeasurementOptions = {
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/**
- * Parse font size string to number.
- */
-function parseFontSize(size: string | undefined, baseSize: number): number {
-  if (!size) {
-    return baseSize;
-  }
-  if (size.endsWith("px")) {
-    return parseFloat(size);
-  }
-  if (size.endsWith("em")) {
-    return parseFloat(size) * baseSize;
-  }
-  if (size.endsWith("%")) {
-    return (parseFloat(size) / 100) * baseSize;
-  }
-  const num = parseFloat(size);
-  return Number.isNaN(num) ? baseSize : num;
-}
-
-/**
- * Find the style at a specific offset.
- */
-function findStyleAtOffset(
-  offset: number,
-  styles: readonly TextStyleSegment[]
-): TextStyle | undefined {
-  for (const segment of styles) {
-    if (offset >= segment.start && offset < segment.end) {
-      return segment.style;
-    }
-  }
-  return undefined;
-}
 
 /**
  * Create a hidden measurement element.
@@ -277,53 +243,8 @@ export function useStyledMeasurement(
 }
 
 // =============================================================================
-// Coordinate Conversion
+// Re-exports for Backwards Compatibility
 // =============================================================================
 
-/**
- * Options for styled coordinate conversion.
- */
-export type StyledCoordinatesToPositionOptions = {
-  readonly x: number;
-  readonly y: number;
-  readonly lines: readonly string[];
-  readonly lineOffsets: readonly number[];
-  readonly scrollTop?: number;
-  readonly lineHeight?: number;
-  readonly paddingLeft?: number;
-  readonly paddingTop?: number;
-  readonly findColumnAtStyledX: (line: string, x: number, lineOffset: number) => number;
-};
-
-/**
- * Convert pixel coordinates to line/column position with styled measurement.
- */
-export function styledCoordinatesToPosition(
-  options: StyledCoordinatesToPositionOptions
-): CursorPosition {
-  const {
-    x,
-    y,
-    lines,
-    lineOffsets,
-    scrollTop = 0,
-    lineHeight = DEFAULT_LINE_HEIGHT,
-    paddingLeft = 8,
-    paddingTop = 8,
-    findColumnAtStyledX,
-  } = options;
-
-  // Calculate line from Y coordinate
-  const adjustedY = y + scrollTop - paddingTop;
-  const lineIndex = Math.max(0, Math.min(Math.floor(adjustedY / lineHeight), lines.length - 1));
-  const line = lineIndex + 1;
-
-  // Calculate column from X coordinate using styled measurement
-  const lineText = lines[lineIndex] ?? "";
-  const lineOffset = lineOffsets[lineIndex] ?? 0;
-  const adjustedX = x - paddingLeft;
-
-  const column = findColumnAtStyledX(lineText, adjustedX, lineOffset);
-
-  return { line, column };
-}
+export { styledCoordinatesToPosition } from "./styledMeasurement";
+export type { StyledCoordinatesToPositionOptions } from "./styledMeasurement";

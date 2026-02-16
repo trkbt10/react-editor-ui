@@ -10,7 +10,7 @@ import type { CodeEditorProps } from "./types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
 import { useEditorCore, type GetOffsetFromPositionFn } from "../core/useEditorCore";
 import { useFontMetrics } from "../core/useFontMetrics";
-import { coordinatesToPosition } from "../core/useCoordinates";
+import { coordinatesToPosition } from "../core/coordinates";
 import { assertMeasureText } from "../core/invariant";
 import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTokenCache } from "./useTokenCache";

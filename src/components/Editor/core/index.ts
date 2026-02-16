@@ -63,6 +63,23 @@ export {
   getDisplayDocumentForComposition,
 } from "./styledDocument";
 
+// Pure Functions - Line Index
+export {
+  buildLineOffsets,
+  findLineIndex,
+  offsetToLineColumnFromIndex,
+  lineColumnToOffsetFromIndex,
+} from "./lineIndex";
+export type { LineColumnToOffsetOptions } from "./lineIndex";
+
+// Pure Functions - Editor State
+export {
+  createCursorState,
+  createSelectionHighlight,
+  createCompositionHighlight,
+  combineHighlights,
+} from "./editorState";
+
 // Hooks
 export { useComposition } from "./useComposition";
 export { useEditorCore } from "./useEditorCore";
@@ -77,23 +94,17 @@ export {
   CODE_AREA_PADDING_TOP,
   DEFAULT_CHAR_WIDTH,
   DEFAULT_LINE_HEIGHT,
-} from "./useCoordinates";
+} from "./coordinates";
 export type {
   CoordinateOptions,
   CoordinatesToPositionOptions,
   LineColumnToCoordinatesOptions,
   SelectionRectsOptions,
-} from "./useCoordinates";
+} from "./coordinates";
 export { useFontMetrics } from "./useFontMetrics";
 export { useHistory } from "./useHistory";
 export type { UseHistoryConfig, UseHistoryResult } from "./useHistory";
-export {
-  buildLineOffsets,
-  findLineIndex,
-  lineColumnToOffsetFromIndex,
-  offsetToLineColumnFromIndex,
-  useLineIndex,
-} from "./useLineIndex";
+export { useLineIndex } from "./useLineIndex";
 export { useSelectionChange } from "./useSelectionChange";
 export { useTextareaInput } from "./useTextareaInput";
 export type { UseTextareaInputConfig, UseTextareaInputResult } from "./useTextareaInput";

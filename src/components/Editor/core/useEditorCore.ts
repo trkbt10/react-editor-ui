@@ -28,8 +28,14 @@ import { useComposition } from "./useComposition";
 import { useSelectionChange } from "./useSelectionChange";
 import { useVirtualScroll, type UseVirtualScrollResult } from "./useVirtualScroll";
 import { useHistory } from "./useHistory";
-import { useKeyHandlers } from "../code/useKeyHandlers";
+import { useKeyHandlers } from "../user-actions/useKeyHandlers";
 import { injectCursorAnimation } from "../styles/useEditorStyles";
+import {
+  createCursorState,
+  createSelectionHighlight,
+  createCompositionHighlight,
+  combineHighlights,
+} from "./editorState";
 
 // =============================================================================
 // Types
@@ -94,81 +100,15 @@ export type GetOffsetFromPositionFn = (
 const HISTORY_DEBOUNCE_MS = 300;
 
 // =============================================================================
-// Pure Functions (testable)
+// Re-exports for Backwards Compatibility
 // =============================================================================
 
-/**
- * Create cursor state from selection info.
- */
-export function createCursorState(
-  cursorPos: CursorPosition,
-  hasFocus: boolean,
-  hasSelection: boolean,
-  isComposing: boolean
-): CursorState {
-  return {
-    line: cursorPos.line,
-    column: cursorPos.column,
-    visible: hasFocus,
-    blinking: hasFocus && !hasSelection && !isComposing,
-  };
-}
-
-/**
- * Create selection highlight from start/end positions.
- */
-export function createSelectionHighlight(
-  startPos: CursorPosition,
-  endPos: CursorPosition
-): HighlightRange {
-  return {
-    startLine: startPos.line,
-    startColumn: startPos.column,
-    endLine: endPos.line,
-    endColumn: endPos.column,
-    type: "selection",
-  };
-}
-
-/**
- * Create composition highlight from composition state.
- */
-export function createCompositionHighlight(
-  composition: CompositionState,
-  lineIndex: LineIndex
-): HighlightRange | null {
-  if (!composition.isComposing || composition.text.length === 0) {
-    return null;
-  }
-
-  const startPos = lineIndex.getLineAtOffset(composition.startOffset);
-  const endPos = lineIndex.getLineAtOffset(composition.startOffset + composition.text.length);
-
-  return {
-    startLine: startPos.line,
-    startColumn: startPos.column,
-    endLine: endPos.line,
-    endColumn: endPos.column,
-    type: "composition",
-  };
-}
-
-/**
- * Combine highlights into a single array.
- */
-export function combineHighlights(
-  selectionHighlight: HighlightRange | null,
-  compositionHighlight: HighlightRange | null
-): readonly HighlightRange[] {
-  const result: HighlightRange[] = [];
-  if (selectionHighlight) {
-    result.push(selectionHighlight);
-  }
-  if (compositionHighlight) {
-    result.push(compositionHighlight);
-  }
-  return result;
-}
+export {
+  createCursorState,
+  createSelectionHighlight,
+  createCompositionHighlight,
+  combineHighlights,
+} from "./editorState";
 
 // =============================================================================
 // Sub-hooks
@@ -385,6 +325,10 @@ export function useEditorCore(
   const codeAreaRef = useRef<HTMLDivElement>(null);
   const pendingCursorRef = useRef<number | null>(null);
 
+  // Stable ref for onChange to avoid re-creating callbacks on every onChange change
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   // Inject cursor animation on mount
   useEffect(() => {
     injectCursorAnimation();
@@ -420,9 +364,9 @@ export function useEditorCore(
   const handleCompositionConfirm = useCallback(
     (finalValue: string, cursorOffset: number) => {
       history.push(finalValue, cursorOffset);
-      onChange(finalValue);
+      onChangeRef.current(finalValue);
     },
-    [history, onChange]
+    [history]
   );
 
   const compositionHandlers = useComposition({
@@ -458,10 +402,10 @@ export function useEditorCore(
         history.push(newValue, cursorOffset);
       }
 
-      onChange(newValue);
+      onChangeRef.current(newValue);
       requestAnimationFrame(updateCursorPosition);
     },
-    [readOnly, composition.isComposing, history, onChange, updateCursorPosition]
+    [readOnly, composition.isComposing, history, updateCursorPosition]
   );
 
   // Undo handler
@@ -472,10 +416,10 @@ export function useEditorCore(
     const restored = history.undo();
     if (restored) {
       pendingCursorRef.current = restored.cursorOffset;
-      onChange(restored.state);
+      onChangeRef.current(restored.state);
       requestAnimationFrame(updateCursorPosition);
     }
-  }, [readOnly, history, onChange, updateCursorPosition]);
+  }, [readOnly, history, updateCursorPosition]);
 
   // Redo handler
   const handleRedo = useCallback(() => {
@@ -485,10 +429,10 @@ export function useEditorCore(
     const restored = history.redo();
     if (restored) {
       pendingCursorRef.current = restored.cursorOffset;
-      onChange(restored.state);
+      onChangeRef.current(restored.state);
       requestAnimationFrame(updateCursorPosition);
     }
-  }, [readOnly, history, onChange, updateCursorPosition]);
+  }, [readOnly, history, updateCursorPosition]);
 
   // Insert handler (tab, etc.)
   const handleInsert = useCallback(
@@ -497,7 +441,7 @@ export function useEditorCore(
         return;
       }
       history.push(newValue, cursorOffset);
-      onChange(newValue);
+      onChangeRef.current(newValue);
       const textarea = textareaRef.current;
       if (textarea) {
         textarea.value = newValue;
@@ -505,7 +449,7 @@ export function useEditorCore(
       }
       requestAnimationFrame(updateCursorPosition);
     },
-    [readOnly, history, onChange, updateCursorPosition]
+    [readOnly, history, updateCursorPosition]
   );
 
   // Key handlers

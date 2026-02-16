@@ -15,7 +15,7 @@ import {
   DEFAULT_LINE_HEIGHT,
   CODE_AREA_PADDING_LEFT,
   CODE_AREA_PADDING_TOP,
-} from "./useCoordinates";
+} from "./coordinates";
 
 /**
  * Default measureText function for tests.

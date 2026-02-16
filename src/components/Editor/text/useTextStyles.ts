@@ -1,7 +1,7 @@
 /**
  * @file Text Styles Hook
  *
- * Manages style segments for rich text editing.
+ * React hook for managing style segments in rich text editing.
  * Converts style segments into tokens that the renderer can use.
  */
 
@@ -9,6 +9,13 @@ import { useMemo, useCallback, type CSSProperties } from "react";
 import type { TextStyleSegment, TextStyle } from "../core/types";
 import type { StyleToken } from "./types";
 import type { Token, Tokenizer, TokenStyleMap } from "../code/types";
+import {
+  DEFAULT_TOKEN_TYPE,
+  DEFAULT_STYLE,
+  textStyleToCss,
+  buildStyleEntries,
+  findOverlappingEntries,
+} from "./textStyles";
 
 // =============================================================================
 // Types
@@ -24,72 +31,6 @@ export type UseTextStylesResult = {
   /** Get styles for a line */
   readonly getLineStyles: (lineStart: number, lineEnd: number) => readonly StyleToken[];
 };
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/** Default token type for unstyled text */
-const DEFAULT_TOKEN_TYPE = "text";
-
-/** Default style (empty) */
-const DEFAULT_STYLE: TextStyle = {};
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-/**
- * Generate a unique token type for a style segment.
- */
-function generateTokenType(index: number): string {
-  return `styled-${index}`;
-}
-
-/**
- * Convert TextStyle to CSSProperties for the renderer.
- */
-function textStyleToCss(style: TextStyle): CSSProperties {
-  return {
-    fontFamily: style.fontFamily,
-    fontSize: style.fontSize,
-    fontWeight: style.fontWeight,
-    fontStyle: style.fontStyle,
-    textDecoration: style.textDecoration,
-    color: style.color,
-  };
-}
-
-/**
- * Build a style lookup map for quick offset-based queries.
- * Returns a sorted array of style segments with their token types.
- */
-type StyleEntry = {
-  readonly start: number;
-  readonly end: number;
-  readonly tokenType: string;
-  readonly style: TextStyle;
-};
-
-function buildStyleEntries(styles: readonly TextStyleSegment[]): readonly StyleEntry[] {
-  return styles.map((segment, index) => ({
-    start: segment.start,
-    end: segment.end,
-    tokenType: generateTokenType(index),
-    style: segment.style,
-  })).sort((a, b) => a.start - b.start);
-}
-
-/**
- * Find all style entries that overlap with a given range.
- */
-function findOverlappingEntries(
-  entries: readonly StyleEntry[],
-  rangeStart: number,
-  rangeEnd: number
-): readonly StyleEntry[] {
-  return entries.filter((e) => e.start < rangeEnd && e.end > rangeStart);
-}
 
 // =============================================================================
 // Hook

@@ -78,9 +78,10 @@ export type {
 
 export {
   CodeEditor,
-  useKeyHandlers,
   useTokenCache,
 } from "./code";
+
+export { useKeyHandlers } from "./user-actions";
 
 // =============================================================================
 // Text Editor
