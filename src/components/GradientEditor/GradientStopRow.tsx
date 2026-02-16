@@ -17,8 +17,9 @@ import {
   SPACE_XS,
 } from "../../constants/styles";
 import { ColorInput } from "../ColorInput/ColorInput";
-import type { ColorValue } from "../ColorInput/ColorInput";
+import type { ColorValue } from "../../utils/color/types";
 import type { GradientStop } from "./gradientTypes";
+import { parsePercentageInput } from "../../utils/color/rangeValidation";
 
 export type GradientStopRowProps = {
   stop: GradientStop;
@@ -52,17 +53,17 @@ export function GradientStopRow({
   }
 
   const handlePositionChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPositionInput(value);
-    const parsed = parseInt(value, 10);
-    if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 100) {
-      onChange({ ...stop, position: parsed });
+    const inputValue = e.target.value;
+    setPositionInput(inputValue);
+    const result = parsePercentageInput(inputValue);
+    if (result.isValid && result.parsed !== null) {
+      onChange({ ...stop, position: result.parsed });
     }
   };
 
   const handlePositionBlur = () => {
-    const parsed = parseInt(positionInput, 10);
-    if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
+    const result = parsePercentageInput(positionInput);
+    if (!result.isValid) {
       setPositionInput(String(stop.position));
     }
   };

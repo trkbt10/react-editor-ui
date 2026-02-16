@@ -2,7 +2,7 @@
  * @file ColorInput component - Compact color input with swatch
  */
 
-import { useState, useRef, useEffect, useEffectEvent } from "react";
+import { useState, useRef, useEffect, useEffectEvent, useMemo } from "react";
 import type { CSSProperties, PointerEvent, ChangeEvent } from "react";
 import {
   COLOR_INPUT_BG,
@@ -22,13 +22,14 @@ import {
   Z_POPOVER,
 } from "../../constants/styles";
 import { ColorPicker } from "../ColorPicker/ColorPicker";
-import { isValidHex, normalizeHex } from "../ColorPicker/colorUtils";
+import { isValidHex, normalizeHex } from "../../utils/color/conversion";
+import { createCheckerboardCSS } from "../../utils/color/checkerboard";
+import { parsePercentageInput } from "../../utils/color/rangeValidation";
+import type { ColorValue } from "../../utils/color/types";
 
-export type ColorValue = {
-  hex: string;
-  opacity: number;
-  visible: boolean;
-};
+// Re-export type for backward compatibility
+// eslint-disable-next-line custom/no-parent-reexport -- backward compatibility: external consumers import ColorValue from ColorInput
+export type { ColorValue } from "../../utils/color/types";
 
 export type ColorInputProps = {
   value: ColorValue;
@@ -65,17 +66,8 @@ const sizeMap = {
   },
 };
 
-/**
- * Checkerboard pattern for transparency indication
- */
-const CHECKERBOARD_BG = `
-  linear-gradient(45deg, #ccc 25%, transparent 25%),
-  linear-gradient(-45deg, #ccc 25%, transparent 25%),
-  linear-gradient(45deg, transparent 75%, #ccc 75%),
-  linear-gradient(-45deg, transparent 75%, #ccc 75%)
-`;
-const CHECKERBOARD_SIZE = "8px 8px";
-const CHECKERBOARD_POSITION = "0 0, 0 4px, 4px -4px, -4px 0px";
+/** Pre-computed checkerboard style (memoized at module level) */
+const CHECKERBOARD_STYLE = createCheckerboardCSS(4);
 
 type IconProps = {
   size: number;
@@ -214,15 +206,15 @@ export function ColorInput({
   const handleOpacityInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newOpacity = e.target.value;
     setOpacityInput(newOpacity);
-    const parsed = parseInt(newOpacity, 10);
-    if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 100) {
-      onChange({ ...value, opacity: parsed });
+    const result = parsePercentageInput(newOpacity);
+    if (result.isValid && result.parsed !== null) {
+      onChange({ ...value, opacity: result.parsed });
     }
   };
 
   const handleOpacityInputBlur = () => {
-    const parsed = parseInt(opacityInput, 10);
-    if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
+    const result = parsePercentageInput(opacityInput);
+    if (!result.isValid) {
       setOpacityInput(String(value.opacity));
     }
   };
@@ -273,13 +265,16 @@ export function ColorInput({
     flexShrink: 0,
   };
 
-  const swatchCheckerboardStyle: CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    background: CHECKERBOARD_BG,
-    backgroundSize: CHECKERBOARD_SIZE,
-    backgroundPosition: CHECKERBOARD_POSITION,
-  };
+  const swatchCheckerboardStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      inset: 0,
+      background: CHECKERBOARD_STYLE.background,
+      backgroundSize: CHECKERBOARD_STYLE.backgroundSize,
+      backgroundPosition: CHECKERBOARD_STYLE.backgroundPosition,
+    }),
+    [],
+  );
 
   const swatchColorStyle: CSSProperties = {
     position: "absolute",

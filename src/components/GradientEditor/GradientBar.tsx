@@ -2,7 +2,7 @@
  * @file GradientBar component - Visual gradient preview with draggable stop handles
  */
 
-import { memo, useRef, useCallback } from "react";
+import { memo, useRef, useCallback, useMemo } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import {
   COLOR_BORDER,
@@ -11,6 +11,8 @@ import {
 } from "../../constants/styles";
 import type { GradientValue, GradientStop } from "./gradientTypes";
 import { gradientToLinearCss, generateStopId, interpolateColor } from "./gradientUtils";
+import { clamp } from "../../utils/color/clamp";
+import { createCheckerboardSVG } from "../../utils/color/checkerboard";
 
 export type GradientBarProps = {
   value: GradientValue;
@@ -20,10 +22,6 @@ export type GradientBarProps = {
   height?: number;
   disabled?: boolean;
 };
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
 
 function getHandleBoxShadow(isSelected: boolean): string {
   if (isSelected) {
@@ -47,17 +45,6 @@ function getHandleBorderColor(isSelected: boolean): string {
 }
 
 const CHECKERBOARD_SIZE = 6;
-
-function createCheckerboardPattern(): string {
-  const s = CHECKERBOARD_SIZE;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s * 2}" height="${s * 2}">
-    <rect width="${s}" height="${s}" fill="#fff"/>
-    <rect x="${s}" width="${s}" height="${s}" fill="#ccc"/>
-    <rect y="${s}" width="${s}" height="${s}" fill="#ccc"/>
-    <rect x="${s}" y="${s}" width="${s}" height="${s}" fill="#fff"/>
-  </svg>`;
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
-}
 
 
 
@@ -165,13 +152,16 @@ export const GradientBar = memo(function GradientBar({
     touchAction: "none",
   };
 
-  const checkerboardStyle: CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    borderRadius: RADIUS_SM,
-    backgroundImage: createCheckerboardPattern(),
-    backgroundSize: `${CHECKERBOARD_SIZE * 2}px ${CHECKERBOARD_SIZE * 2}px`,
-  };
+  const checkerboardStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      inset: 0,
+      borderRadius: RADIUS_SM,
+      backgroundImage: createCheckerboardSVG(CHECKERBOARD_SIZE),
+      backgroundSize: `${CHECKERBOARD_SIZE * 2}px ${CHECKERBOARD_SIZE * 2}px`,
+    }),
+    [],
+  );
 
   const gradientStyle: CSSProperties = {
     position: "absolute",
@@ -180,23 +170,26 @@ export const GradientBar = memo(function GradientBar({
     background: gradientToLinearCss(value),
   };
 
-  const getHandleStyle = (stop: GradientStop): CSSProperties => {
-    const isSelected = stop.id === selectedStopId;
-    return {
-      position: "absolute",
-      left: `${stop.position}%`,
-      top: "50%",
-      width: 12,
-      height: 12,
-      borderRadius: "50%",
-      border: `2px solid ${getHandleBorderColor(isSelected)}`,
-      boxShadow: getHandleBoxShadow(isSelected),
-      transform: "translate(-50%, -50%)",
-      backgroundColor: stop.color.hex,
-      cursor: getHandleCursor(disabled),
-      zIndex: isSelected ? 10 : 1,
-    };
-  };
+  const getHandleStyle = useCallback(
+    (stop: GradientStop): CSSProperties => {
+      const isSelected = stop.id === selectedStopId;
+      return {
+        position: "absolute",
+        left: `${stop.position}%`,
+        top: "50%",
+        width: 12,
+        height: 12,
+        borderRadius: "50%",
+        border: `2px solid ${getHandleBorderColor(isSelected)}`,
+        boxShadow: getHandleBoxShadow(isSelected),
+        transform: "translate(-50%, -50%)",
+        backgroundColor: stop.color.hex,
+        cursor: getHandleCursor(disabled),
+        zIndex: isSelected ? 10 : 1,
+      };
+    },
+    [selectedStopId, disabled],
+  );
 
   return (
     <div

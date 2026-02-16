@@ -1,9 +1,8 @@
 /**
- * @file Color utility functions for HSV/RGB/Hex conversions
+ * @file Color conversion utilities for HSV/RGB/Hex transformations
  */
 
-export type RGB = { r: number; g: number; b: number };
-export type HSV = { h: number; s: number; v: number };
+import type { RGB, HSV } from "./types";
 
 function expandShortHex(hex: string): string {
   if (hex.length === 3) {

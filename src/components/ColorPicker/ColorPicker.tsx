@@ -20,8 +20,9 @@ import {
   DURATION_FAST,
   EASING_DEFAULT,
 } from "../../constants/styles";
-import { hexToHsv, hsvToHex, isValidHex, normalizeHex } from "./colorUtils";
-import type { HSV } from "./colorUtils";
+import { hexToHsv, hsvToHex, isValidHex, normalizeHex } from "../../utils/color/conversion";
+import type { HSV } from "../../utils/color/types";
+import { clamp } from "../../utils/color/clamp";
 import { OpacitySlider } from "./OpacitySlider";
 
 export type ColorPickerProps = {
@@ -46,10 +47,6 @@ const DEFAULT_PRESETS = [
   "#000000",
   "#ffffff",
 ];
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
 
 
 

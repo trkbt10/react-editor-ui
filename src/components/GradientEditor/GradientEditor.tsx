@@ -25,6 +25,7 @@ import { generateStopId, sortStopsByPosition } from "./gradientUtils";
 import { GradientBar } from "./GradientBar";
 import { GradientStopRow } from "./GradientStopRow";
 import { GradientTypeSelector } from "./GradientTypeSelector";
+import { normalizeAngle } from "../../utils/color/angleNormalization";
 
 export type GradientEditorProps = {
   value: GradientValue;
@@ -87,8 +88,7 @@ export const GradientEditor = memo(function GradientEditor({
     setAngleInput(inputValue);
     const parsed = parseInt(inputValue, 10);
     if (!Number.isNaN(parsed)) {
-      const normalized = ((parsed % 360) + 360) % 360;
-      onChange({ ...value, angle: normalized });
+      onChange({ ...value, angle: normalizeAngle(parsed) });
     }
   };
 

@@ -3,8 +3,9 @@
  */
 
 import type { GradientStop, GradientValue, GradientType } from "./gradientTypes";
-import type { ColorValue } from "../ColorInput/ColorInput";
-import { hexToRgb, rgbToHex } from "../ColorPicker/colorUtils";
+import type { ColorValue } from "../../utils/color/types";
+import { hexToRgb, rgbToHex } from "../../utils/color/conversion";
+import { colorToRgba } from "../../utils/color/rgba";
 
 const stopIdState = { counter: 0 };
 
@@ -45,14 +46,6 @@ export function createDefaultGradient(): GradientValue {
   };
 }
 
-/**
- * Convert hex+opacity to CSS rgba
- */
-function colorToRgba(color: ColorValue): string {
-  const rgb = hexToRgb(color.hex);
-  const alpha = color.opacity / 100;
-  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-}
 
 /**
  * Generate CSS gradient string from GradientValue

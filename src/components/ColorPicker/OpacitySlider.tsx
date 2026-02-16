@@ -5,6 +5,7 @@
 import { memo, useMemo, useCallback } from "react";
 import type { CSSProperties } from "react";
 import { Slider } from "../Slider/Slider";
+import { createCheckerboardSVG } from "../../utils/color/checkerboard";
 
 export type OpacitySliderProps = {
   value: number; // 0-100
@@ -15,20 +16,6 @@ export type OpacitySliderProps = {
 };
 
 const CHECKERBOARD_SIZE = 6;
-
-/**
- * Generate inline checkerboard pattern as data URI
- */
-function createCheckerboardPattern(): string {
-  const s = CHECKERBOARD_SIZE;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s * 2}" height="${s * 2}">
-    <rect width="${s}" height="${s}" fill="#fff"/>
-    <rect x="${s}" width="${s}" height="${s}" fill="#ccc"/>
-    <rect y="${s}" width="${s}" height="${s}" fill="#ccc"/>
-    <rect x="${s}" y="${s}" width="${s}" height="${s}" fill="#fff"/>
-  </svg>`;
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
-}
 
 
 
@@ -63,7 +50,7 @@ export const OpacitySlider = memo(function OpacitySlider({
       position: "absolute",
       inset: 0,
       borderRadius: "9999px",
-      backgroundImage: createCheckerboardPattern(),
+      backgroundImage: createCheckerboardSVG(CHECKERBOARD_SIZE),
       backgroundSize: `${CHECKERBOARD_SIZE * 2}px ${CHECKERBOARD_SIZE * 2}px`,
     }),
     [],
