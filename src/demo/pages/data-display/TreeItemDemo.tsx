@@ -4,9 +4,9 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoSurface,
   FileIcon,
   FolderIcon,
 } from "../../components";
@@ -47,12 +47,9 @@ export function TreeItemDemo() {
   const [selected, setSelected] = useState("file1");
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>TreeItem</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>File Tree</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px" }}>
+    <DemoContainer title="TreeItem">
+      <DemoSection label="File Tree">
+        <DemoSurface>
           <TreeItem
             label="src"
             icon={<FolderIcon />}
@@ -69,8 +66,8 @@ export function TreeItemDemo() {
             selected={selected === "package"}
             onClick={() => setSelected("package")}
           />
-        </div>
-      </div>
-    </div>
+        </DemoSurface>
+      </DemoSection>
+    </DemoContainer>
   );
 }

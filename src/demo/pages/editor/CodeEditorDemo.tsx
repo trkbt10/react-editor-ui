@@ -4,10 +4,9 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
-  demoRowStyle,
+  DemoContainer,
+  DemoSection,
+  DemoRow,
 } from "../../components";
 import { CodeEditor } from "../../../components/Editor/code/CodeEditor";
 import { Button } from "../../../components/Button/Button";
@@ -109,12 +108,9 @@ export function CodeEditorDemo() {
   const [renderer, setRenderer] = useState<"svg" | "canvas">("svg");
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>CodeEditor</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Renderer</div>
-        <div style={demoRowStyle}>
+    <DemoContainer title="CodeEditor">
+      <DemoSection label="Renderer">
+        <DemoRow>
           <Button
             variant={renderer === "svg" ? "primary" : "secondary"}
             size="sm"
@@ -129,11 +125,10 @@ export function CodeEditorDemo() {
           >
             Canvas
           </Button>
-        </div>
-      </div>
+        </DemoRow>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>With JSON Tokenizer</div>
+      <DemoSection label="With JSON Tokenizer">
         <CodeEditor
           value={code}
           onChange={setCode}
@@ -147,10 +142,9 @@ export function CodeEditorDemo() {
             borderRadius: 4,
           }}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Read Only</div>
+      <DemoSection label="Read Only">
         <CodeEditor
           value={code}
           onChange={() => {}}
@@ -166,7 +160,7 @@ export function CodeEditorDemo() {
             opacity: 0.8,
           }}
         />
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }

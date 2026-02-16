@@ -15,9 +15,10 @@ import {
   LuAlignEndHorizontal,
 } from "react-icons/lu";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoSurface,
+  DemoVerticalStack,
 } from "../../components";
 import { TransformButtons } from "../../../components/TransformButtons/TransformButtons";
 
@@ -55,19 +56,15 @@ export function TransformButtonsDemo() {
   ];
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>TransformButtons</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Full Transform Toolbar (react-icons)</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+    <DemoContainer title="TransformButtons">
+      <DemoSection label="Full Transform Toolbar (react-icons)">
+        <DemoSurface padding={8}>
           <TransformButtons groups={fullGroups} onAction={handleAction} />
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Rotate Only</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+      <DemoSection label="Rotate Only">
+        <DemoSurface padding={8}>
           <TransformButtons
             groups={[
               {
@@ -80,12 +77,11 @@ export function TransformButtonsDemo() {
             ]}
             onAction={handleAction}
           />
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Flip Only</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+      <DemoSection label="Flip Only">
+        <DemoSurface padding={8}>
           <TransformButtons
             groups={[
               {
@@ -98,12 +94,11 @@ export function TransformButtonsDemo() {
             ]}
             onAction={handleAction}
           />
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Custom Actions</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+      <DemoSection label="Custom Actions">
+        <DemoSurface padding={8}>
           <TransformButtons
             groups={[
               {
@@ -123,13 +118,12 @@ export function TransformButtonsDemo() {
             ]}
             onAction={handleAction}
           />
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Different Sizes</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+      <DemoSection label="Different Sizes">
+        <DemoVerticalStack gap={8}>
+          <DemoSurface padding={8}>
             <TransformButtons
               groups={[
                 {
@@ -143,8 +137,8 @@ export function TransformButtonsDemo() {
               onAction={handleAction}
               size="sm"
             />
-          </div>
-          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          </DemoSurface>
+          <DemoSurface padding={8}>
             <TransformButtons
               groups={[
                 {
@@ -158,8 +152,8 @@ export function TransformButtonsDemo() {
               onAction={handleAction}
               size="md"
             />
-          </div>
-          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          </DemoSurface>
+          <DemoSurface padding={8}>
             <TransformButtons
               groups={[
                 {
@@ -173,13 +167,12 @@ export function TransformButtonsDemo() {
               onAction={handleAction}
               size="lg"
             />
-          </div>
-        </div>
-      </div>
+          </DemoSurface>
+        </DemoVerticalStack>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>With Disabled Action</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+      <DemoSection label="With Disabled Action">
+        <DemoSurface padding={8}>
           <TransformButtons
             groups={[
               {
@@ -192,12 +185,11 @@ export function TransformButtonsDemo() {
             ]}
             onAction={handleAction}
           />
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>All Disabled</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+      <DemoSection label="All Disabled">
+        <DemoSurface padding={8}>
           <TransformButtons
             groups={[
               {
@@ -211,8 +203,8 @@ export function TransformButtonsDemo() {
             onAction={handleAction}
             disabled
           />
-        </div>
-      </div>
-    </div>
+        </DemoSurface>
+      </DemoSection>
+    </DemoContainer>
   );
 }

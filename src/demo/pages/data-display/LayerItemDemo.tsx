@@ -4,9 +4,10 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoSurface,
+  DemoMutedText,
   FrameLayerIcon,
   TextLayerIcon,
   ImageLayerIcon,
@@ -437,61 +438,60 @@ export function LayerItemDemo() {
   ];
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>LayerItem</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Figma-style Layer Panel (Full DnD)</div>
-        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11, marginBottom: 8 }}>
+    <DemoContainer title="LayerItem">
+      <DemoSection label="Figma-style Layer Panel (Full DnD)">
+        <DemoMutedText>
           Click to select. Shift+click for range. Cmd/Ctrl+click for multi-select. Drag to reorder.
-        </div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", width: "300px" }}>
-          {visibleLayers.map((layer) => {
-            const parent = layer.parentId ? layerMap.get(layer.parentId) : null;
-            const isDimmed = parent ? !parent.visible : false;
-            const depth = getDepthWithMap(layer.id, layerMap);
-            const isContainer = canHaveChildren(layer.type);
-            const layerHasChildren = hasChildren(layer.id);
-            const currentDropPosition = dropInfo?.targetId === layer.id ? dropInfo.position : null;
-            const isSelected = selectedIds.has(layer.id);
+        </DemoMutedText>
+        <DemoSurface>
+          <div style={{ width: "300px" }}>
+            {visibleLayers.map((layer) => {
+              const parent = layer.parentId ? layerMap.get(layer.parentId) : null;
+              const isDimmed = parent ? !parent.visible : false;
+              const depth = getDepthWithMap(layer.id, layerMap);
+              const isContainer = canHaveChildren(layer.type);
+              const layerHasChildren = hasChildren(layer.id);
+              const currentDropPosition = dropInfo?.targetId === layer.id ? dropInfo.position : null;
+              const isSelected = selectedIds.has(layer.id);
 
-            return (
-              <LayerItem
-                key={layer.id}
-                id={layer.id}
-                label={layer.label}
-                icon={getIcon(layer.type)}
-                depth={depth}
-                hasChildren={layerHasChildren}
-                expanded={expandedIds.has(layer.id)}
-                onToggle={() => handleToggle(layer.id)}
-                selected={isSelected}
-                onPointerDown={(e) => handlePointerDownForSelection(layer.id, e)}
-                visible={layer.visible}
-                onVisibilityChange={(v) => handleVisibilityChange(layer.id, v)}
-                locked={layer.locked}
-                onLockChange={(l) => handleLockChange(layer.id, l)}
-                renamable
-                onRename={(newLabel) => handleRename(layer.id, newLabel)}
-                contextMenuItems={contextMenuItems}
-                onContextMenu={(action) => handleContextMenu(layer.id, action)}
-                dimmed={isDimmed}
-                badge={layer.type === "component" ? <Badge size="sm" variant="primary">C</Badge> : undefined}
-                draggable
-                canHaveChildren={isContainer}
-                dropPosition={currentDropPosition}
-                onDragStart={(e) => handleDragStart(e, layer.id)}
-                onDragOver={(e) => handleDragOver(e, layer.id)}
-                onDragEnd={handleDragEnd}
-                onDrop={(e) => handleDrop(e, layer.id)}
-              />
-            );
-          })}
-        </div>
-        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11, marginTop: 8 }}>
+              return (
+                <LayerItem
+                  key={layer.id}
+                  id={layer.id}
+                  label={layer.label}
+                  icon={getIcon(layer.type)}
+                  depth={depth}
+                  hasChildren={layerHasChildren}
+                  expanded={expandedIds.has(layer.id)}
+                  onToggle={() => handleToggle(layer.id)}
+                  selected={isSelected}
+                  onPointerDown={(e) => handlePointerDownForSelection(layer.id, e)}
+                  visible={layer.visible}
+                  onVisibilityChange={(v) => handleVisibilityChange(layer.id, v)}
+                  locked={layer.locked}
+                  onLockChange={(l) => handleLockChange(layer.id, l)}
+                  renamable
+                  onRename={(newLabel) => handleRename(layer.id, newLabel)}
+                  contextMenuItems={contextMenuItems}
+                  onContextMenu={(action) => handleContextMenu(layer.id, action)}
+                  dimmed={isDimmed}
+                  badge={layer.type === "component" ? <Badge size="sm" variant="primary">C</Badge> : undefined}
+                  draggable
+                  canHaveChildren={isContainer}
+                  dropPosition={currentDropPosition}
+                  onDragStart={(e) => handleDragStart(e, layer.id)}
+                  onDragOver={(e) => handleDragOver(e, layer.id)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={(e) => handleDrop(e, layer.id)}
+                />
+              );
+            })}
+          </div>
+        </DemoSurface>
+        <DemoMutedText>
           Selected: {selectedIds.size} layer(s)
           {lastAction ? ` | Last: ${lastAction}` : ""}
-        </div>
+        </DemoMutedText>
         {draggedId && (
           <DragStatusDisplay
             selectedIds={selectedIds}
@@ -501,56 +501,58 @@ export function LayerItemDemo() {
             layers={layers}
           />
         )}
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>States</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", width: "280px" }}>
-          <LayerItem
-            id="state-1"
-            label="Selected"
-            icon={<FrameLayerIcon />}
-            selected
-            visible
-            onVisibilityChange={() => {}}
-          />
-          <LayerItem
-            id="state-2"
-            label="Hidden Layer"
-            icon={<ImageLayerIcon />}
-            visible={false}
-            onVisibilityChange={() => {}}
-          />
-          <LayerItem
-            id="state-3"
-            label="Locked Layer"
-            icon={<TextLayerIcon />}
-            visible
-            locked
-            onLockChange={() => {}}
-          />
-          <LayerItem
-            id="state-4"
-            label="Dimmed Layer"
-            icon={<FrameLayerIcon />}
-            dimmed
-            visible
-          />
-        </div>
-      </div>
+      <DemoSection label="States">
+        <DemoSurface>
+          <div style={{ width: "280px" }}>
+            <LayerItem
+              id="state-1"
+              label="Selected"
+              icon={<FrameLayerIcon />}
+              selected
+              visible
+              onVisibilityChange={() => {}}
+            />
+            <LayerItem
+              id="state-2"
+              label="Hidden Layer"
+              icon={<ImageLayerIcon />}
+              visible={false}
+              onVisibilityChange={() => {}}
+            />
+            <LayerItem
+              id="state-3"
+              label="Locked Layer"
+              icon={<TextLayerIcon />}
+              visible
+              locked
+              onLockChange={() => {}}
+            />
+            <LayerItem
+              id="state-4"
+              label="Dimmed Layer"
+              icon={<FrameLayerIcon />}
+              dimmed
+              visible
+            />
+          </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Minimal (no toggles)</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", width: "280px" }}>
-          <LayerItem
-            id="minimal-1"
-            label="Simple Layer"
-            icon={<FrameLayerIcon />}
-            showVisibilityToggle={false}
-            showLockToggle={false}
-          />
-        </div>
-      </div>
-    </div>
+      <DemoSection label="Minimal (no toggles)">
+        <DemoSurface>
+          <div style={{ width: "280px" }}>
+            <LayerItem
+              id="minimal-1"
+              label="Simple Layer"
+              icon={<FrameLayerIcon />}
+              showVisibilityToggle={false}
+              showLockToggle={false}
+            />
+          </div>
+        </DemoSurface>
+      </DemoSection>
+    </DemoContainer>
   );
 }

@@ -3,7 +3,11 @@
  */
 
 import { useState } from "react";
-import { DemoContainer, DemoSection } from "../../components";
+import {
+  DemoContainer,
+  DemoSection,
+  DemoStateDisplay,
+} from "../../components";
 import { FillEditor } from "../../../components/FillEditor/FillEditor";
 import type { FillValue } from "../../../components/FillEditor/fillTypes";
 import type { GradientStop } from "../../../components/GradientEditor/gradientTypes";
@@ -62,17 +66,7 @@ export function FillEditorDemo() {
       </DemoSection>
 
       <DemoSection label="Current State">
-        <div style={{
-          backgroundColor: "var(--rei-color-surface, #1e1f24)",
-          borderRadius: "4px",
-          padding: "12px",
-          fontSize: "11px",
-          fontFamily: "monospace",
-          color: "var(--rei-color-text-muted)",
-          whiteSpace: "pre-wrap",
-        }}>
-          {JSON.stringify(fill, null, 2)}
-        </div>
+        <DemoStateDisplay value={fill} />
       </DemoSection>
     </DemoContainer>
   );

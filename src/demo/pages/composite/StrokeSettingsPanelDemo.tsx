@@ -4,9 +4,10 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoRow,
+  DemoStateDisplay,
 } from "../../components";
 import { StrokeSettingsPanel } from "../../../components/StrokeSettingsPanel/StrokeSettingsPanel";
 import {
@@ -48,54 +49,38 @@ export function StrokeSettingsPanelDemo() {
   );
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>StrokeSettingsPanel</h2>
-
-      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-        <div style={demoSectionStyle}>
-          <div style={demoLabelStyle}>Expanded (all options visible)</div>
+    <DemoContainer title="StrokeSettingsPanel">
+      <DemoRow>
+        <DemoSection label="Expanded (all options visible)">
           <StrokePanelExpanded
             settings={expandedSettings}
             onChange={setExpandedSettings}
             onClose={() => alert("Close")}
           />
-        </div>
+        </DemoSection>
 
-        <div style={demoSectionStyle}>
-          <div style={demoLabelStyle}>Compact (tabbed interface)</div>
+        <DemoSection label="Compact (tabbed interface)">
           <StrokePanelCompact
             settings={compactSettings}
             onChange={setCompactSettings}
             onClose={() => alert("Close")}
           />
-        </div>
-      </div>
+        </DemoSection>
+      </DemoRow>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Legacy Panel (backward compatible)</div>
+      <DemoSection label="Legacy Panel (backward compatible)">
         <StrokeSettingsPanel
           settings={legacySettings}
           onChange={setLegacySettings}
           onClose={() => alert("Close")}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Expanded Settings</div>
-        <div style={{
-          backgroundColor: "var(--rei-color-surface, #1e1f24)",
-          borderRadius: "4px",
-          padding: "12px",
-          fontSize: "11px",
-          fontFamily: "monospace",
-          color: "var(--rei-color-text-muted)",
-          whiteSpace: "pre-wrap",
-          maxHeight: "200px",
-          overflow: "auto",
-        }}>
-          {JSON.stringify(expandedSettings, null, 2)}
+      <DemoSection label="Expanded Settings">
+        <div style={{ maxHeight: "200px", overflow: "auto" }}>
+          <DemoStateDisplay value={expandedSettings} />
         </div>
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }

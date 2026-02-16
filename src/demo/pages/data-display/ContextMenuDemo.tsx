@@ -5,9 +5,9 @@
 import type { CSSProperties } from "react";
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoMutedText,
 } from "../../components";
 import { ContextMenu } from "../../../components/ContextMenu/ContextMenu";
 
@@ -95,14 +95,12 @@ export function ContextMenuDemo() {
   };
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>ContextMenu</h2>
-      <p style={{ color: "var(--rei-color-text-muted, #8b8d94)", fontSize: "13px", margin: "0 0 16px" }}>
+    <DemoContainer title="ContextMenu">
+      <DemoMutedText size={12}>
         Last action: {lastAction || "None"}
-      </p>
+      </DemoMutedText>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Basic Menu</div>
+      <DemoSection label="Basic Menu">
         <div
           style={triggerBoxStyle}
           onContextMenu={(e) => handleContextMenu(e, "basic")}
@@ -110,10 +108,9 @@ export function ContextMenuDemo() {
         >
           Right-click here for basic menu
         </div>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Nested Submenus</div>
+      <DemoSection label="Nested Submenus">
         <div
           style={triggerBoxStyle}
           onContextMenu={(e) => handleContextMenu(e, "nested")}
@@ -121,10 +118,9 @@ export function ContextMenuDemo() {
         >
           Right-click here for nested menu
         </div>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Long Scrollable Menu (30 items)</div>
+      <DemoSection label="Long Scrollable Menu (30 items)">
         <div
           style={triggerBoxStyle}
           onContextMenu={(e) => handleContextMenu(e, "long")}
@@ -132,13 +128,12 @@ export function ContextMenuDemo() {
         >
           Right-click here for scrollable menu
         </div>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Edge Position Testing</div>
-        <p style={{ color: "var(--rei-color-text-muted)", fontSize: "11px", margin: "0 0 8px" }}>
+      <DemoSection label="Edge Position Testing">
+        <DemoMutedText>
           Right-click on corner boxes to test viewport boundary handling
-        </p>
+        </DemoMutedText>
         <div style={{ position: "relative", height: "120px" }}>
           {/* Top-right corner */}
           <div
@@ -157,7 +152,7 @@ export function ContextMenuDemo() {
             Bottom Right (nested)
           </div>
         </div>
-      </div>
+      </DemoSection>
 
       {menuPosition && (
         <ContextMenu
@@ -168,6 +163,6 @@ export function ContextMenuDemo() {
           maxHeight={250}
         />
       )}
-    </div>
+    </DemoContainer>
   );
 }

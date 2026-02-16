@@ -3,7 +3,11 @@
  */
 
 import { useState } from "react";
-import { demoContainerStyle, demoSectionStyle } from "../../components";
+import {
+  DemoContainer,
+  DemoSection,
+  DemoMutedText,
+} from "../../components";
 import { Canvas } from "../../../components/Canvas/Canvas";
 import { CanvasContent } from "../../../components/Canvas/CanvasContent";
 import { CanvasGridLayer } from "../../../components/Canvas/CanvasGridLayer";
@@ -27,15 +31,13 @@ export function CanvasDemo() {
   ];
 
   return (
-    <div style={demoContainerStyle}>
-      <h2>Canvas</h2>
-      <p style={{ color: "var(--rei-color-text-muted)" }}>
+    <DemoContainer title="Canvas">
+      <DemoMutedText>
         Pan/zoom canvas for placing elements. Pan: middle mouse, Alt+left click, Space+left click.
         Zoom: mouse wheel or pinch.
-      </p>
+      </DemoMutedText>
 
-      <div style={demoSectionStyle}>
-        <h3>Basic Canvas</h3>
+      <DemoSection label="Basic Canvas">
         <div style={{ display: "flex", gap: 16 }}>
           <Canvas
             viewport={viewport}
@@ -82,11 +84,11 @@ export function CanvasDemo() {
           </Canvas>
           <div style={{ flex: "0 0 200px" }}>
             <h4 style={{ margin: "0 0 8px" }}>Viewport State</h4>
-            <div style={{ fontSize: 12, color: "var(--rei-color-text-muted)" }}>
+            <DemoMutedText size={12}>
               <div>X: {viewport.x.toFixed(1)}</div>
               <div>Y: {viewport.y.toFixed(1)}</div>
               <div>Scale: {(viewport.scale * 100).toFixed(0)}%</div>
-            </div>
+            </DemoMutedText>
             <div style={{ marginTop: 12 }}>
               <Button
                 variant="secondary"
@@ -98,14 +100,13 @@ export function CanvasDemo() {
             </div>
           </div>
         </div>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <h3>With Rulers, Guides, and Checkerboard (Figma-style)</h3>
-        <p style={{ color: "var(--rei-color-text-muted)", marginBottom: 12 }}>
+      <DemoSection label="With Rulers, Guides, and Checkerboard (Figma-style)">
+        <DemoMutedText>
           Complete canvas with rulers, fixed guide lines, and checkerboard background.
           Guides are drawn at fixed positions (Y=-134, X=50).
-        </p>
+        </DemoMutedText>
         <div style={{ display: "flex", flexDirection: "column" }}>
           {/* Horizontal ruler row */}
           <div style={{ display: "flex" }}>
@@ -160,7 +161,7 @@ export function CanvasDemo() {
             </Canvas>
           </div>
         </div>
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }

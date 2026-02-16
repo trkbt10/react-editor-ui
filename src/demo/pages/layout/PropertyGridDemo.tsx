@@ -4,9 +4,9 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoSurface,
   RotateIcon,
 } from "../../components";
 import { Input } from "../../../components/Input/Input";
@@ -21,12 +21,9 @@ export function PropertyGridDemo() {
   const [rotateValue, setRotateValue] = useState("0");
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>PropertyGrid</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>2 Column (Default)</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+    <DemoContainer title="PropertyGrid">
+      <DemoSection label="2 Column (Default)">
+        <DemoSurface padding={8}>
           <PropertyGrid>
             <PropertyGridItem>
               <Input value={xValue} onChange={setXValue} prefix="X" aria-label="X position" />
@@ -41,12 +38,11 @@ export function PropertyGridDemo() {
               <Input value={heightValue} onChange={setHeightValue} prefix="H" aria-label="Height" />
             </PropertyGridItem>
           </PropertyGrid>
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Full Span Item</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+      <DemoSection label="Full Span Item">
+        <DemoSurface padding={8}>
           <PropertyGrid>
             <PropertyGridItem span="full">
               <Input
@@ -64,12 +60,11 @@ export function PropertyGridDemo() {
               <Input value="100" onChange={() => {}} suffix="%" aria-label="Scale Y" />
             </PropertyGridItem>
           </PropertyGrid>
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>4 Columns</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+      <DemoSection label="4 Columns">
+        <DemoSurface padding={8}>
           <PropertyGrid columns={4}>
             <PropertyGridItem>
               <Input value="0" onChange={() => {}} prefix="T" aria-label="Top" />
@@ -84,8 +79,8 @@ export function PropertyGridDemo() {
               <Input value="0" onChange={() => {}} prefix="L" aria-label="Left" />
             </PropertyGridItem>
           </PropertyGrid>
-        </div>
-      </div>
-    </div>
+        </DemoSurface>
+      </DemoSection>
+    </DemoContainer>
   );
 }

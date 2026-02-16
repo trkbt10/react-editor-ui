@@ -4,9 +4,9 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoMutedText,
 } from "../../components";
 import { LogViewer, type LogItem } from "../../../components/LogViewer/LogViewer";
 
@@ -61,18 +61,16 @@ export function LogViewerDemo() {
   const filter = filterLevel === "all" ? undefined : (item: LogItem) => item.level === filterLevel;
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>LogViewer</h2>
-      <p style={{ margin: 0, color: "var(--rei-color-text-muted, #9ba1a6)", fontSize: "12px" }}>
+    <DemoContainer title="LogViewer">
+      <DemoMutedText size={12}>
         High-performance log viewer with virtual scrolling. Displaying 10,000 log entries.
-      </p>
+      </DemoMutedText>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Virtual Scrolling (10,000 items)</div>
+      <DemoSection label="Virtual Scrolling (10,000 items)">
         <div style={{ marginBottom: "8px", display: "flex", gap: "8px", alignItems: "center" }}>
-          <span style={{ color: "var(--rei-color-text-muted, #9ba1a6)", fontSize: "11px" }}>
+          <DemoMutedText>
             Filter by level:
-          </span>
+          </DemoMutedText>
           <select
             value={filterLevel}
             onChange={(e) => setFilterLevel(e.target.value as LogItem["level"] | "all")}
@@ -100,10 +98,9 @@ export function LogViewerDemo() {
           onItemClick={(index) => setSelectedIndex(index)}
           filter={filter}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>With Pagination (100 items per page)</div>
+      <DemoSection label="With Pagination (100 items per page)">
         <LogViewer
           items={items}
           height={300}
@@ -114,7 +111,7 @@ export function LogViewerDemo() {
           selectedIndex={selectedIndex}
           onItemClick={(index) => setSelectedIndex(index)}
         />
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }

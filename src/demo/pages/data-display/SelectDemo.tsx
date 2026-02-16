@@ -4,9 +4,8 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
 } from "../../components";
 import { Select } from "../../../components/Select/Select";
 
@@ -14,11 +13,8 @@ export function SelectDemo() {
   const [value, setValue] = useState("apple");
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>Select</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Basic Select</div>
+    <DemoContainer title="Select">
+      <DemoSection label="Basic Select">
         <Select
           options={[
             { value: "apple", label: "Apple" },
@@ -29,10 +25,9 @@ export function SelectDemo() {
           onChange={setValue}
           aria-label="Select fruit"
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>With Disabled Option</div>
+      <DemoSection label="With Disabled Option">
         <Select
           options={[
             { value: "small", label: "Small" },
@@ -43,10 +38,9 @@ export function SelectDemo() {
           onChange={() => {}}
           aria-label="Select size"
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Disabled</div>
+      <DemoSection label="Disabled">
         <Select
           options={[{ value: "disabled", label: "Cannot change" }]}
           value="disabled"
@@ -54,7 +48,7 @@ export function SelectDemo() {
           disabled
           aria-label="Disabled select"
         />
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }

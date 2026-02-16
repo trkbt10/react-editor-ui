@@ -4,10 +4,9 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
-  demoRowStyle,
+  DemoContainer,
+  DemoSection,
+  DemoRow,
 } from "../../components";
 import { TextEditor } from "../../../components/Editor/text/TextEditor";
 import { Button } from "../../../components/Button/Button";
@@ -61,12 +60,9 @@ export function TextEditorDemo() {
   const [renderer, setRenderer] = useState<"svg" | "canvas">("svg");
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>TextEditor</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Renderer</div>
-        <div style={demoRowStyle}>
+    <DemoContainer title="TextEditor">
+      <DemoSection label="Renderer">
+        <DemoRow>
           <Button
             variant={renderer === "svg" ? "primary" : "secondary"}
             size="sm"
@@ -81,11 +77,10 @@ export function TextEditorDemo() {
           >
             Canvas
           </Button>
-        </div>
-      </div>
+        </DemoRow>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>With Rich Text Styles</div>
+      <DemoSection label="With Rich Text Styles">
         <TextEditor
           document={doc}
           onDocumentChange={setDoc}
@@ -96,10 +91,9 @@ export function TextEditorDemo() {
             borderRadius: 4,
           }}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Plain Text (no styles)</div>
+      <DemoSection label="Plain Text (no styles)">
         <TextEditor
           document={plainDoc}
           onDocumentChange={setPlainDoc}
@@ -110,10 +104,9 @@ export function TextEditorDemo() {
             borderRadius: 4,
           }}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Read Only</div>
+      <DemoSection label="Read Only">
         <TextEditor
           document={doc}
           onDocumentChange={() => {}}
@@ -126,7 +119,7 @@ export function TextEditorDemo() {
             opacity: 0.8,
           }}
         />
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }

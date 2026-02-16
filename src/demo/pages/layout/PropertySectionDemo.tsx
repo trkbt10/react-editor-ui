@@ -4,9 +4,10 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoSurface,
+  DemoMutedText,
 } from "../../components";
 import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
@@ -21,22 +22,18 @@ export function PropertySectionDemo() {
   const [expanded2, setExpanded2] = useState(true);
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>PropertySection</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Basic Section</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px" }}>
+    <DemoContainer title="PropertySection">
+      <DemoSection label="Basic Section">
+        <DemoSurface>
           <PropertySection title="Properties">
             <PropertyRow label="Name">MyComponent</PropertyRow>
             <PropertyRow label="Type">UIView</PropertyRow>
           </PropertySection>
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Collapsible</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px" }}>
+      <DemoSection label="Collapsible">
+        <DemoSurface>
           <PropertySection
             title="Layout"
             collapsible
@@ -63,23 +60,22 @@ export function PropertySectionDemo() {
               onChange={() => {}}
             />
           </PropertySection>
-        </div>
-      </div>
+        </DemoSurface>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>With Action</div>
-        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px" }}>
+      <DemoSection label="With Action">
+        <DemoSurface>
           <PropertySection
             title="Effects"
             collapsible
             action={<Button size="sm" variant="ghost">+ Add</Button>}
           >
-            <div style={{ color: "var(--rei-color-text-muted)", fontSize: "12px" }}>
+            <DemoMutedText size={12}>
               No effects applied
-            </div>
+            </DemoMutedText>
           </PropertySection>
-        </div>
-      </div>
-    </div>
+        </DemoSurface>
+      </DemoSection>
+    </DemoContainer>
   );
 }

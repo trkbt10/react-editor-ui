@@ -3,9 +3,8 @@
  */
 
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
 } from "../../components";
 import {
   PlayIcon,
@@ -31,11 +30,8 @@ import { ToolbarDivider } from "../../../components/Toolbar/ToolbarDivider";
 
 export function ToolbarDemo() {
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>Toolbar</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Basic Toolbar</div>
+    <DemoContainer title="Toolbar">
+      <DemoSection label="Basic Toolbar">
         <Toolbar>
           <ToolbarGroup>
             <IconButton icon={<PlayIcon />} aria-label="Play" />
@@ -46,10 +42,9 @@ export function ToolbarDemo() {
             <IconButton icon={<SearchIcon />} aria-label="Search" />
           </ToolbarGroup>
         </Toolbar>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>With Buttons</div>
+      <DemoSection label="With Buttons">
         <Toolbar>
           <ToolbarGroup>
             <Button size="sm" variant="primary">Run</Button>
@@ -60,10 +55,9 @@ export function ToolbarDemo() {
             <Badge variant="success">Ready</Badge>
           </ToolbarGroup>
         </Toolbar>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Floating Toolbar</div>
+      <DemoSection label="Floating Toolbar">
         <div style={{ padding: "16px", backgroundColor: "var(--rei-color-surface-overlay, #f5f5f5)" }}>
           <Toolbar variant="floating">
             <ToolbarGroup>
@@ -83,10 +77,9 @@ export function ToolbarDemo() {
             </ToolbarGroup>
           </Toolbar>
         </div>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Floating Toolbar with fitContent</div>
+      <DemoSection label="Floating Toolbar with fitContent">
         <div style={{ padding: "16px", backgroundColor: "var(--rei-color-surface-overlay, #f5f5f5)" }}>
           <Toolbar variant="floating" fitContent>
             <ToolbarGroup>
@@ -96,10 +89,9 @@ export function ToolbarDemo() {
             </ToolbarGroup>
           </Toolbar>
         </div>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Vertical Toolbar</div>
+      <DemoSection label="Vertical Toolbar">
         <div style={{ display: "flex", gap: "16px" }}>
           <Toolbar orientation="vertical">
             <ToolbarGroup>
@@ -114,10 +106,9 @@ export function ToolbarDemo() {
             </ToolbarGroup>
           </Toolbar>
         </div>
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Vertical Floating Toolbar with fitContent</div>
+      <DemoSection label="Vertical Floating Toolbar with fitContent">
         <div style={{ padding: "16px", backgroundColor: "var(--rei-color-surface-overlay, #f5f5f5)" }}>
           <Toolbar variant="floating" orientation="vertical" fitContent>
             <ToolbarGroup>
@@ -132,7 +123,7 @@ export function ToolbarDemo() {
             </ToolbarGroup>
           </Toolbar>
         </div>
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }

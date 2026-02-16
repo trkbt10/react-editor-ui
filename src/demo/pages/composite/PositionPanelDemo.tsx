@@ -4,9 +4,9 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoStateDisplay,
 } from "../../components";
 import {
   PositionPanel,
@@ -22,11 +22,8 @@ export function PositionPanelDemo() {
   };
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>PositionPanel</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Complete Panel</div>
+    <DemoContainer title="PositionPanel">
+      <DemoSection label="Complete Panel">
         <PositionPanel
           settings={settings}
           onChange={setSettings}
@@ -34,25 +31,13 @@ export function PositionPanelDemo() {
           onToggleConstraints={() => alert("Toggle constraints")}
           onTransformAction={handleTransformAction}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Current Settings</div>
-        <div style={{
-          backgroundColor: "var(--rei-color-surface, #1e1f24)",
-          borderRadius: "4px",
-          padding: "12px",
-          fontSize: "11px",
-          fontFamily: "monospace",
-          color: "var(--rei-color-text-muted)",
-          whiteSpace: "pre-wrap",
-        }}>
-          {JSON.stringify(settings, null, 2)}
-        </div>
-      </div>
+      <DemoSection label="Current Settings">
+        <DemoStateDisplay value={settings} />
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Without Close Button</div>
+      <DemoSection label="Without Close Button">
         <PositionPanel
           settings={{
             ...settings,
@@ -62,16 +47,15 @@ export function PositionPanelDemo() {
           }}
           onChange={setSettings}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Custom Width</div>
+      <DemoSection label="Custom Width">
         <PositionPanel
           settings={settings}
           onChange={setSettings}
           width={400}
         />
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }

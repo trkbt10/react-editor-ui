@@ -4,9 +4,10 @@
 
 import { useState } from "react";
 import {
-  demoContainerStyle,
-  demoSectionStyle,
-  demoLabelStyle,
+  DemoContainer,
+  DemoSection,
+  DemoSurface,
+  DemoPreview,
 } from "../../components";
 import { FontsPanel } from "../../../components/FontsPanel/FontsPanel";
 import { LocalFontList } from "../../../components/FontsPanel/LocalFontList";
@@ -39,11 +40,8 @@ export function FontsPanelDemo() {
     : sampleFonts.find((f) => f.name === selectedFont)?.family ?? "inherit";
 
   return (
-    <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>FontsPanel</h2>
-
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Basic Panel (with predefined fonts)</div>
+    <DemoContainer title="FontsPanel">
+      <DemoSection label="Basic Panel (with predefined fonts)">
         <FontsPanel
           fonts={sampleFonts}
           selectedFont={selectedFont}
@@ -54,12 +52,9 @@ export function FontsPanelDemo() {
           onClose={() => alert("Close clicked")}
           onSettings={() => alert("Settings clicked")}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>
-          Local Font List (via queryLocalFonts API)
-        </div>
+      <DemoSection label="Local Font List (via queryLocalFonts API)">
         <LocalFontList
           selectedFont={localSelectedFont}
           onSelectFont={(font) => {
@@ -69,28 +64,20 @@ export function FontsPanelDemo() {
           onClose={() => alert("Close clicked")}
           onSettings={() => alert("Settings clicked")}
         />
-      </div>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>
-          Selected: {localSelectedFont || selectedFont || "None"}
-        </div>
-        <div
+      <DemoSection label={`Selected: ${localSelectedFont || selectedFont || "None"}`}>
+        <DemoPreview
           style={{
-            backgroundColor: "var(--rei-color-surface, #1e1f24)",
-            borderRadius: "4px",
-            padding: "24px",
             fontFamily: previewFontFamily,
             fontSize: "24px",
-            color: "var(--rei-color-text)",
           }}
         >
           The quick brown fox jumps over the lazy dog
-        </div>
-      </div>
+        </DemoPreview>
+      </DemoSection>
 
-      <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Custom Size</div>
+      <DemoSection label="Custom Size">
         <FontsPanel
           fonts={sampleFonts}
           selectedFont={selectedFont}
@@ -98,7 +85,7 @@ export function FontsPanelDemo() {
           width={350}
           maxHeight={300}
         />
-      </div>
-    </div>
+      </DemoSection>
+    </DemoContainer>
   );
 }
