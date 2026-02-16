@@ -12,6 +12,8 @@ import noParentReexport from "./rules/no-parent-reexport.js";
 import noUseStateInUseEffect from "./rules/no-use-state-in-use-effect.js";
 import preferPointerEvents from "./rules/prefer-pointer-events.js";
 import noIife from "./rules/no-iife.js";
+import noDemoImport from "./rules/no-demo-import.js";
+import noParentTypeReexport from "./rules/no-parent-type-reexport.js";
 
 export default {
   rules: {
@@ -26,5 +28,7 @@ export default {
     "no-use-state-in-use-effect": noUseStateInUseEffect,
     "prefer-pointer-events": preferPointerEvents,
     "no-iife": noIife,
+    "no-demo-import": noDemoImport,
+    "no-parent-type-reexport": noParentTypeReexport,
   },
 };
