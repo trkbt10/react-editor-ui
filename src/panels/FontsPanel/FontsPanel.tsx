@@ -2,7 +2,7 @@
  * @file FontsPanel component - Floating font picker panel with search and category filter
  */
 
-import { useState, useMemo, type CSSProperties } from "react";
+import { useState, useMemo, memo, useCallback, type CSSProperties } from "react";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import {
   COLOR_SURFACE,
@@ -108,16 +108,25 @@ const fontNameStyle: CSSProperties = {
 type FontListItemProps = {
   font: FontItem;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelectFont: (fontName: string) => void;
 };
 
-function FontListItem({ font, isSelected, onSelect }: FontListItemProps) {
+const FontListItem = memo(function FontListItem({ font, isSelected, onSelectFont }: FontListItemProps) {
+  const handleSelect = useCallback(() => {
+    onSelectFont(font.name);
+  }, [onSelectFont, font.name]);
+
+  const nameStyle = useMemo<CSSProperties>(
+    () => ({ ...fontNameStyle, fontFamily: font.family }),
+    [font.family],
+  );
+
   return (
-    <FontListItemBase isSelected={isSelected} onSelect={onSelect}>
-      <span style={{ ...fontNameStyle, fontFamily: font.family }}>{font.name}</span>
+    <FontListItemBase isSelected={isSelected} onSelect={handleSelect}>
+      <span style={nameStyle}>{font.name}</span>
     </FontListItemBase>
   );
-}
+});
 
 type FontListContentProps = {
   fonts: FontItem[];
@@ -125,7 +134,7 @@ type FontListContentProps = {
   onSelectFont: (fontName: string) => void;
 };
 
-function FontListContent({ fonts, selectedFont, onSelectFont }: FontListContentProps) {
+const FontListContent = memo(function FontListContent({ fonts, selectedFont, onSelectFont }: FontListContentProps) {
   if (fonts.length === 0) {
     return <div style={emptyStyle}>No fonts found</div>;
   }
@@ -137,19 +146,19 @@ function FontListContent({ fonts, selectedFont, onSelectFont }: FontListContentP
           key={font.name}
           font={font}
           isSelected={font.name === selectedFont}
-          onSelect={() => onSelectFont(font.name)}
+          onSelectFont={onSelectFont}
         />
       ))}
     </>
   );
-}
+});
 
 // ============================================================================
 // Main Component
 // ============================================================================
 
 /** Scrollable font picker panel with search and family/style grouping */
-export function FontsPanel({
+export const FontsPanel = memo(function FontsPanel({
   fonts,
   selectedFont,
   onSelectFont,
@@ -169,8 +178,13 @@ export function FontsPanel({
     });
   }, [fonts, searchQuery, category]);
 
+  const containerStyle = useMemo(
+    () => createContainerStyle(width, maxHeight),
+    [width, maxHeight],
+  );
+
   return (
-    <div style={createContainerStyle(width, maxHeight)}>
+    <div style={containerStyle}>
       <FontPanelHeader
         title="Fonts"
         onClose={onClose}
@@ -197,4 +211,4 @@ export function FontsPanel({
       </div>
     </div>
   );
-}
+});

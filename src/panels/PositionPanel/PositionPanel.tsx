@@ -24,7 +24,40 @@ import {
   FlipHorizontalIcon,
   FlipVerticalIcon,
 } from "../../icons";
-import type { PositionSettings, PositionPanelProps } from "./positionTypes";
+import type { PositionSettings, PositionPanelProps, HorizontalAlign, VerticalAlign, HorizontalConstraint, VerticalConstraint } from "./positionTypes";
+
+// Option arrays (moved outside component to prevent recreation)
+const horizontalConstraintOptions = [
+  { value: "left" as const, label: "Left" },
+  { value: "right" as const, label: "Right" },
+  { value: "left-right" as const, label: "Left and Right" },
+  { value: "center" as const, label: "Center" },
+  { value: "scale" as const, label: "Scale" },
+];
+
+const verticalConstraintOptions = [
+  { value: "top" as const, label: "Top" },
+  { value: "bottom" as const, label: "Bottom" },
+  { value: "top-bottom" as const, label: "Top and Bottom" },
+  { value: "center" as const, label: "Center" },
+  { value: "scale" as const, label: "Scale" },
+];
+
+const transformGroups = [
+  {
+    id: "reset",
+    actions: [
+      { id: "reset", icon: <ResetIcon />, label: "Reset rotation" },
+    ],
+  },
+  {
+    id: "flip",
+    actions: [
+      { id: "flip-horizontal", icon: <FlipHorizontalIcon />, label: "Flip horizontal" },
+      { id: "flip-vertical", icon: <FlipVerticalIcon />, label: "Flip vertical" },
+    ],
+  },
+];
 
 // Re-export types and utilities for external use
 export type {
@@ -49,44 +82,41 @@ export const PositionPanel = memo(function PositionPanel({
   width = 320,
   className,
 }: PositionPanelProps) {
-  const updateSettings = useCallback(
-    <K extends keyof PositionSettings>(key: K, value: PositionSettings[K]) => {
-      onChange({ ...settings, [key]: value });
-    },
+  // Memoized change handlers
+  const handleHorizontalAlignChange = useCallback(
+    (v: HorizontalAlign) => onChange({ ...settings, horizontalAlign: v }),
     [onChange, settings],
   );
 
-  const horizontalConstraintOptions = [
-    { value: "left" as const, label: "Left" },
-    { value: "right" as const, label: "Right" },
-    { value: "left-right" as const, label: "Left and Right" },
-    { value: "center" as const, label: "Center" },
-    { value: "scale" as const, label: "Scale" },
-  ];
+  const handleVerticalAlignChange = useCallback(
+    (v: VerticalAlign) => onChange({ ...settings, verticalAlign: v }),
+    [onChange, settings],
+  );
 
-  const verticalConstraintOptions = [
-    { value: "top" as const, label: "Top" },
-    { value: "bottom" as const, label: "Bottom" },
-    { value: "top-bottom" as const, label: "Top and Bottom" },
-    { value: "center" as const, label: "Center" },
-    { value: "scale" as const, label: "Scale" },
-  ];
+  const handleXChange = useCallback(
+    (v: string) => onChange({ ...settings, x: v }),
+    [onChange, settings],
+  );
 
-  const transformGroups = [
-    {
-      id: "reset",
-      actions: [
-        { id: "reset", icon: <ResetIcon />, label: "Reset rotation" },
-      ],
-    },
-    {
-      id: "flip",
-      actions: [
-        { id: "flip-horizontal", icon: <FlipHorizontalIcon />, label: "Flip horizontal" },
-        { id: "flip-vertical", icon: <FlipVerticalIcon />, label: "Flip vertical" },
-      ],
-    },
-  ];
+  const handleYChange = useCallback(
+    (v: string) => onChange({ ...settings, y: v }),
+    [onChange, settings],
+  );
+
+  const handleHorizontalConstraintChange = useCallback(
+    (v: HorizontalConstraint) => onChange({ ...settings, horizontalConstraint: v }),
+    [onChange, settings],
+  );
+
+  const handleVerticalConstraintChange = useCallback(
+    (v: VerticalConstraint) => onChange({ ...settings, verticalConstraint: v }),
+    [onChange, settings],
+  );
+
+  const handleRotationChange = useCallback(
+    (v: string) => onChange({ ...settings, rotation: v }),
+    [onChange, settings],
+  );
 
   const handleTransformAction = useCallback(
     (actionId: string) => {
@@ -121,16 +151,12 @@ export const PositionPanel = memo(function PositionPanel({
         <ControlRow spacer>
           <ObjectHorizontalAlignSelect
             value={settings.horizontalAlign}
-            onChange={(v) => {
-              updateSettings("horizontalAlign", v);
-            }}
+            onChange={handleHorizontalAlignChange}
             fullWidth
           />
           <ObjectVerticalAlignSelect
             value={settings.verticalAlign}
-            onChange={(v) => {
-              updateSettings("verticalAlign", v);
-            }}
+            onChange={handleVerticalAlignChange}
             fullWidth
           />
         </ControlRow>
@@ -150,17 +176,13 @@ export const PositionPanel = memo(function PositionPanel({
         >
           <Input
             value={settings.x}
-            onChange={(v) => {
-              updateSettings("x", v);
-            }}
+            onChange={handleXChange}
             prefix="X"
             aria-label="X position"
           />
           <Input
             value={settings.y}
-            onChange={(v) => {
-              updateSettings("y", v);
-            }}
+            onChange={handleYChange}
             prefix="Y"
             aria-label="Y position"
           />
@@ -173,29 +195,21 @@ export const PositionPanel = memo(function PositionPanel({
             <Select
               options={horizontalConstraintOptions}
               value={settings.horizontalConstraint}
-              onChange={(v) => {
-                updateSettings("horizontalConstraint", v);
-              }}
+              onChange={handleHorizontalConstraintChange}
               aria-label="Horizontal constraint"
             />
             <Select
               options={verticalConstraintOptions}
               value={settings.verticalConstraint}
-              onChange={(v) => {
-                updateSettings("verticalConstraint", v);
-              }}
+              onChange={handleVerticalConstraintChange}
               aria-label="Vertical constraint"
             />
           </div>
           <ConstraintVisualization
             horizontal={settings.horizontalConstraint}
             vertical={settings.verticalConstraint}
-            onHorizontalChange={(v) => {
-              updateSettings("horizontalConstraint", v);
-            }}
-            onVerticalChange={(v) => {
-              updateSettings("verticalConstraint", v);
-            }}
+            onHorizontalChange={handleHorizontalConstraintChange}
+            onVerticalChange={handleVerticalConstraintChange}
           />
         </div>
       </ControlGroup>
@@ -212,9 +226,7 @@ export const PositionPanel = memo(function PositionPanel({
         >
           <Input
             value={settings.rotation}
-            onChange={(v) => {
-              updateSettings("rotation", v);
-            }}
+            onChange={handleRotationChange}
             prefix={<RotationIcon />}
             suffix="°"
             aria-label="Rotation"

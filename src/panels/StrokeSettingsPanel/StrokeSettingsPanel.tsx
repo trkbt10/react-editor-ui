@@ -2,7 +2,7 @@
  * @file StrokeSettingsPanel component - Comprehensive stroke settings panel
  */
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Panel } from "../../panels/Panel/Panel";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
@@ -27,15 +27,15 @@ import {
   MiterAngleIcon,
 } from "../../icons";
 
-// Width profile preview
-function WidthProfilePreview({ variant = "uniform" }: { variant?: "uniform" | "taper-end" | "taper-both" }) {
-  const previewStyle: CSSProperties = {
-    width: "100%",
-    height: "8px",
-    display: "flex",
-    alignItems: "center",
-  };
+// Width profile preview styles
+const widthProfilePreviewStyle: CSSProperties = {
+  width: "100%",
+  height: "8px",
+  display: "flex",
+  alignItems: "center",
+};
 
+const WidthProfilePreview = memo(function WidthProfilePreview({ variant = "uniform" }: { variant?: "uniform" | "taper-end" | "taper-both" }) {
   const getPath = () => {
     switch (variant) {
       case "taper-end":
@@ -55,7 +55,7 @@ function WidthProfilePreview({ variant = "uniform" }: { variant?: "uniform" | "t
   };
 
   return (
-    <div style={previewStyle}>
+    <div style={widthProfilePreviewStyle}>
       <svg width="100%" height="8" viewBox="0 0 160 8" preserveAspectRatio="none">
         <path
           d={getPath()}
@@ -67,20 +67,27 @@ function WidthProfilePreview({ variant = "uniform" }: { variant?: "uniform" | "t
       </svg>
     </div>
   );
-}
+});
 
-// Brush preview
-function BrushPreview({ type = "smooth" }: { type?: "smooth" | "rough" | "spray" }) {
-  const previewStyle: CSSProperties = {
-    width: "100%",
-    height: "24px",
-    display: "flex",
-    alignItems: "center",
-  };
+// Brush preview styles
+const brushPreviewStyle: CSSProperties = {
+  width: "100%",
+  height: "24px",
+  display: "flex",
+  alignItems: "center",
+};
 
+// Pre-generated spray particles (avoid Math.random on each render)
+const sprayParticles = Array.from({ length: 40 }).map((_, i) => ({
+  cx: 5 + (i * 5) + ((i % 5) * 0.8 - 2),
+  cy: 12 + ((i % 7) * 1.14 - 4),
+  r: 2 + (i % 3) * 0.67,
+}));
+
+const BrushPreview = memo(function BrushPreview({ type = "smooth" }: { type?: "smooth" | "rough" | "spray" }) {
   if (type === "rough") {
     return (
-      <div style={previewStyle}>
+      <div style={brushPreviewStyle}>
         <svg width="100%" height="24" viewBox="0 0 200 24" preserveAspectRatio="none">
           <path
             d="M0 12 Q10 8 20 12 Q30 16 40 12 Q50 8 60 12 Q70 16 80 12 Q90 8 100 12 Q110 16 120 12 Q130 8 140 12 Q150 16 160 12 Q170 8 180 12 Q190 16 200 12"
@@ -96,14 +103,14 @@ function BrushPreview({ type = "smooth" }: { type?: "smooth" | "rough" | "spray"
 
   if (type === "spray") {
     return (
-      <div style={previewStyle}>
+      <div style={brushPreviewStyle}>
         <svg width="100%" height="24" viewBox="0 0 200 24" preserveAspectRatio="none">
-          {Array.from({ length: 40 }).map((_, i) => (
+          {sprayParticles.map((p, i) => (
             <circle
               key={i}
-              cx={5 + (i * 5) + (Math.random() * 4 - 2)}
-              cy={12 + (Math.random() * 8 - 4)}
-              r={2 + Math.random() * 2}
+              cx={p.cx}
+              cy={p.cy}
+              r={p.r}
               fill="currentColor"
             />
           ))}
@@ -113,7 +120,7 @@ function BrushPreview({ type = "smooth" }: { type?: "smooth" | "rough" | "spray"
   }
 
   return (
-    <div style={previewStyle}>
+    <div style={brushPreviewStyle}>
       <svg width="100%" height="24" viewBox="0 0 200 24" preserveAspectRatio="none">
         <path
           d="M0 12 Q50 6 100 12 Q150 18 200 12"
@@ -125,7 +132,7 @@ function BrushPreview({ type = "smooth" }: { type?: "smooth" | "rough" | "spray"
       </svg>
     </div>
   );
-}
+});
 
 export type StrokeStyle = "solid" | "dashed" | "dotted";
 export type JoinType = "miter" | "round" | "bevel";
@@ -178,18 +185,74 @@ const controlStyle: CSSProperties = {
   gap: SPACE_SM,
 };
 
-function PropertyRow({ label, children }: { label: string; children: ReactNode }) {
+const PropertyRow = memo(function PropertyRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div style={rowStyle}>
       <span style={labelStyle}>{label}</span>
       <div style={controlStyle}>{children}</div>
     </div>
   );
-}
+});
 
+// Option arrays (moved outside component to prevent recreation)
+const tabOptions = [
+  { value: "basic" as const, label: "Basic" },
+  { value: "dynamic" as const, label: "Dynamic" },
+  { value: "brush" as const, label: "Brush" },
+];
 
+const styleOptions: SelectOption<StrokeStyle>[] = [
+  { value: "solid", label: "Solid" },
+  { value: "dashed", label: "Dashed" },
+  { value: "dotted", label: "Dotted" },
+];
 
+const widthProfileOptions: SelectOption<WidthProfile>[] = [
+  {
+    value: "uniform",
+    preview: <WidthProfilePreview variant="uniform" />,
+  },
+  {
+    value: "taper-end",
+    preview: <WidthProfilePreview variant="taper-end" />,
+  },
+  {
+    value: "taper-both",
+    preview: <WidthProfilePreview variant="taper-both" />,
+  },
+];
 
+const brushOptions: SelectOption<BrushType>[] = [
+  {
+    value: "smooth",
+    preview: <BrushPreview type="smooth" />,
+  },
+  {
+    value: "rough",
+    preview: <BrushPreview type="rough" />,
+  },
+  {
+    value: "spray",
+    preview: <BrushPreview type="spray" />,
+  },
+];
+
+const joinOptions = [
+  { value: "miter" as const, icon: <JoinMiterIcon size={20} />, "aria-label": "Miter join" },
+  { value: "round" as const, icon: <JoinRoundIcon size={20} />, "aria-label": "Round join" },
+  { value: "bevel" as const, icon: <JoinBevelIcon size={20} />, "aria-label": "Bevel join" },
+];
+
+const directionOptions = [
+  { value: "left" as const, icon: <ChevronLeftIcon size={18} />, "aria-label": "Left direction" },
+  { value: "right" as const, icon: <ChevronRightIcon size={18} />, "aria-label": "Right direction" },
+];
+
+const flexOneStyle: CSSProperties = { flex: 1 };
+
+// Unit arrays
+const miterAngleUnits = [{ value: "°", label: "°" }];
+const percentUnits = [{ value: "%", label: "%" }];
 
 
 export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
@@ -198,85 +261,90 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
   onClose,
   className,
 }: StrokeSettingsPanelProps) {
-  const updateSetting = useCallback(
-    <K extends keyof StrokeSettings>(key: K, value: StrokeSettings[K]) => {
-      onChange({ ...settings, [key]: value });
+  // Memoized change handlers
+  const handleTabChange = useCallback(
+    (v: StrokeTab | StrokeTab[]) => {
+      const tab = Array.isArray(v) ? v[0] : v;
+      onChange({ ...settings, tab });
     },
     [onChange, settings],
   );
 
-  const tabOptions = [
-    { value: "basic" as const, label: "Basic" },
-    { value: "dynamic" as const, label: "Dynamic" },
-    { value: "brush" as const, label: "Brush" },
-  ];
+  const handleStyleChange = useCallback(
+    (v: StrokeStyle) => onChange({ ...settings, style: v }),
+    [onChange, settings],
+  );
 
-  const styleOptions: SelectOption<StrokeStyle>[] = [
-    { value: "solid", label: "Solid" },
-    { value: "dashed", label: "Dashed" },
-    { value: "dotted", label: "Dotted" },
-  ];
+  const handleWidthProfileChange = useCallback(
+    (v: WidthProfile) => onChange({ ...settings, widthProfile: v }),
+    [onChange, settings],
+  );
 
-  const widthProfileOptions: SelectOption<WidthProfile>[] = [
-    {
-      value: "uniform",
-      preview: <WidthProfilePreview variant="uniform" />,
+  const handleJoinChange = useCallback(
+    (v: JoinType | JoinType[]) => {
+      const join = Array.isArray(v) ? v[0] : v;
+      onChange({ ...settings, join });
     },
-    {
-      value: "taper-end",
-      preview: <WidthProfilePreview variant="taper-end" />,
-    },
-    {
-      value: "taper-both",
-      preview: <WidthProfilePreview variant="taper-both" />,
-    },
-  ];
+    [onChange, settings],
+  );
 
-  const brushOptions: SelectOption<BrushType>[] = [
-    {
-      value: "smooth",
-      preview: <BrushPreview type="smooth" />,
-    },
-    {
-      value: "rough",
-      preview: <BrushPreview type="rough" />,
-    },
-    {
-      value: "spray",
-      preview: <BrushPreview type="spray" />,
-    },
-  ];
+  const handleMiterAngleChange = useCallback(
+    (v: string) => onChange({ ...settings, miterAngle: v }),
+    [onChange, settings],
+  );
 
-  const joinOptions = [
-    { value: "miter" as const, icon: <JoinMiterIcon size={20} />, "aria-label": "Miter join" },
-    { value: "round" as const, icon: <JoinRoundIcon size={20} />, "aria-label": "Round join" },
-    { value: "bevel" as const, icon: <JoinBevelIcon size={20} />, "aria-label": "Bevel join" },
-  ];
+  const handleFrequencyChange = useCallback(
+    (v: string) => onChange({ ...settings, frequency: v }),
+    [onChange, settings],
+  );
 
-  const directionOptions = [
-    { value: "left" as const, icon: <ChevronLeftIcon size={18} />, "aria-label": "Left direction" },
-    { value: "right" as const, icon: <ChevronRightIcon size={18} />, "aria-label": "Right direction" },
-  ];
+  const handleWiggleChange = useCallback(
+    (v: string) => onChange({ ...settings, wiggle: v }),
+    [onChange, settings],
+  );
+
+  const handleSmoothenChange = useCallback(
+    (v: string) => onChange({ ...settings, smoothen: v }),
+    [onChange, settings],
+  );
+
+  const handleBrushTypeChange = useCallback(
+    (v: BrushType) => onChange({ ...settings, brushType: v }),
+    [onChange, settings],
+  );
+
+  const handleBrushDirectionChange = useCallback(
+    (v: BrushDirection | BrushDirection[]) => {
+      const brushDirection = Array.isArray(v) ? v[0] : v;
+      onChange({ ...settings, brushDirection });
+    },
+    [onChange, settings],
+  );
+
+  const handleBrushWidthProfileChange = useCallback(
+    (v: WidthProfile) => onChange({ ...settings, brushWidthProfile: v }),
+    [onChange, settings],
+  );
 
   const renderBasicTab = () => (
     <>
       <PropertyRow label="Style">
-        <div style={{ flex: 1 }}>
+        <div style={flexOneStyle}>
           <Select
             options={styleOptions}
             value={settings.style}
-            onChange={(v) => updateSetting("style", v)}
+            onChange={handleStyleChange}
             aria-label="Stroke style"
           />
         </div>
       </PropertyRow>
 
       <PropertyRow label="Width profile">
-        <div style={{ flex: 1 }}>
+        <div style={flexOneStyle}>
           <Select
             options={widthProfileOptions}
             value={settings.widthProfile}
-            onChange={(v) => updateSetting("widthProfile", v)}
+            onChange={handleWidthProfileChange}
             aria-label="Width profile"
           />
         </div>
@@ -291,20 +359,20 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
         <SegmentedControl
           options={joinOptions}
           value={settings.join}
-          onChange={(v) => updateSetting("join", v as JoinType)}
+          onChange={handleJoinChange}
           size="md"
           aria-label="Join type"
         />
       </PropertyRow>
 
       <PropertyRow label="Miter angle">
-        <div style={{ flex: 1 }}>
+        <div style={flexOneStyle}>
           <UnitInput
             value={settings.miterAngle}
-            onChange={(v) => updateSetting("miterAngle", v)}
-            units={[{ value: "°", label: "°" }]}
+            onChange={handleMiterAngleChange}
+            units={miterAngleUnits}
             iconStart={<MiterAngleIcon />}
-                        min={0}
+            min={0}
             max={180}
             step={1}
             aria-label="Miter angle"
@@ -317,13 +385,13 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
   const renderDynamicTab = () => (
     <>
       <PropertyRow label="Frequency">
-        <div style={{ flex: 1 }}>
+        <div style={flexOneStyle}>
           <UnitInput
             value={settings.frequency}
-            onChange={(v) => updateSetting("frequency", v)}
-            units={[{ value: "%", label: "%" }]}
+            onChange={handleFrequencyChange}
+            units={percentUnits}
             iconStart={<FrequencyIcon />}
-                        min={0}
+            min={0}
             max={100}
             step={1}
             aria-label="Frequency"
@@ -332,13 +400,13 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
       </PropertyRow>
 
       <PropertyRow label="Wiggle">
-        <div style={{ flex: 1 }}>
+        <div style={flexOneStyle}>
           <UnitInput
             value={settings.wiggle}
-            onChange={(v) => updateSetting("wiggle", v)}
-            units={[{ value: "%", label: "%" }]}
+            onChange={handleWiggleChange}
+            units={percentUnits}
             iconStart={<WiggleIcon />}
-                        min={0}
+            min={0}
             max={100}
             step={1}
             aria-label="Wiggle"
@@ -347,13 +415,13 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
       </PropertyRow>
 
       <PropertyRow label="Smoothen">
-        <div style={{ flex: 1 }}>
+        <div style={flexOneStyle}>
           <UnitInput
             value={settings.smoothen}
-            onChange={(v) => updateSetting("smoothen", v)}
-            units={[{ value: "%", label: "%" }]}
+            onChange={handleSmoothenChange}
+            units={percentUnits}
             iconStart={<SmoothIcon />}
-                        min={0}
+            min={0}
             max={100}
             step={1}
             aria-label="Smoothen"
@@ -369,7 +437,7 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
         <Select
           options={brushOptions}
           value={settings.brushType}
-          onChange={(v) => updateSetting("brushType", v)}
+          onChange={handleBrushTypeChange}
           size="lg"
           aria-label="Brush type"
         />
@@ -379,18 +447,18 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
         <SegmentedControl
           options={directionOptions}
           value={settings.brushDirection}
-          onChange={(v) => updateSetting("brushDirection", v as BrushDirection)}
+          onChange={handleBrushDirectionChange}
           size="md"
           aria-label="Brush direction"
         />
       </PropertyRow>
 
       <PropertyRow label="Width profile">
-        <div style={{ flex: 1 }}>
+        <div style={flexOneStyle}>
           <Select
             options={widthProfileOptions}
             value={settings.brushWidthProfile}
-            onChange={(v) => updateSetting("brushWidthProfile", v)}
+            onChange={handleBrushWidthProfileChange}
             aria-label="Brush width profile"
           />
         </div>
@@ -424,7 +492,7 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
       <SegmentedControl
         options={tabOptions}
         value={settings.tab}
-        onChange={(v) => updateSetting("tab", v as StrokeTab)}
+        onChange={handleTabChange}
         aria-label="Stroke settings tab"
       />
 

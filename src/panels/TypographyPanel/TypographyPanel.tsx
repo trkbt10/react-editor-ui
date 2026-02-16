@@ -2,7 +2,7 @@
  * @file TypographyPanel component - Typography settings panel for text properties
  */
 
-import { useState, type CSSProperties } from "react";
+import { useState, memo, useCallback, useMemo, type CSSProperties } from "react";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { UnitInput } from "../../components/UnitInput/UnitInput";
 import { TooltipIconButton } from "../../components/TooltipIconButton/TooltipIconButton";
@@ -81,97 +81,65 @@ const defaultWeightOptions: FontWeightOption[] = [
   { value: "900", label: "Black" },
 ];
 
-// Icons
-function FontIcon({ isMissing }: { isMissing: boolean }) {
-  if (isMissing) {
-    return (
-      <span
-        data-testid="font-icon-missing"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 20,
-          height: 20,
-          borderRadius: 4,
-          backgroundColor: COLOR_WARNING,
-          color: "#000",
-          fontSize: 11,
-          fontWeight: 600,
-        }}
-      >
-        A?
-      </span>
-    );
-  }
-  return (
-    <span
-      data-testid="font-icon"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: 20,
-        height: 20,
-        borderRadius: 4,
-        backgroundColor: COLOR_TEXT_MUTED,
-        color: "#fff",
-        fontSize: 11,
-        fontWeight: 600,
-      }}
-    >
-      A
-    </span>
-  );
-}
+// Static styles (moved outside component)
+const fontIconBaseStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 20,
+  height: 20,
+  borderRadius: 4,
+  fontSize: 11,
+  fontWeight: 600,
+};
 
-function FontFamilyRow({
-  value,
-  options,
-  onChange,
-  onOpenFontsPanel,
-  showFontIcon = 'always',
-}: {
-  value: string;
-  options: SelectOption<string>[];
-  onChange: (value: string) => void;
-  onOpenFontsPanel?: () => void;
-  showFontIcon?: FontIconVisibility;
-}) {
-  const isMissing = !options.some((opt) => opt.value === value);
+const fontIconMissingStyle: CSSProperties = {
+  ...fontIconBaseStyle,
+  backgroundColor: COLOR_WARNING,
+  color: "#000",
+};
 
-  const shouldShowIcon =
-    showFontIcon === 'always' ||
-    (showFontIcon === 'missing-only' && isMissing);
+const fontIconNormalStyle: CSSProperties = {
+  ...fontIconBaseStyle,
+  backgroundColor: COLOR_TEXT_MUTED,
+  color: "#fff",
+};
 
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_SM,
-  };
+const fontFamilyRowContainerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: SPACE_SM,
+};
 
-  return (
-    <div style={containerStyle}>
-      {shouldShowIcon && (
-        <span
-          onClick={onOpenFontsPanel}
-          style={{ cursor: onOpenFontsPanel ? "pointer" : "default" }}
-        >
-          <FontIcon isMissing={isMissing} />
-        </span>
-      )}
-      <div style={{ flex: 1 }}>
-        <Select
-          options={options}
-          value={value}
-          onChange={onChange}
-          aria-label="Font family"
-        />
-      </div>
-    </div>
-  );
-}
+const flexOneStyle: CSSProperties = { flex: 1 };
 
+const labeledUnitInputContainerStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: SPACE_SM,
+  minWidth: 0,
+  boxSizing: "border-box",
+};
+
+const labeledUnitInputLabelStyle: CSSProperties = {
+  color: COLOR_TEXT_MUTED,
+  fontSize: SIZE_FONT_SM,
+};
+
+const alignmentLabelStyle: CSSProperties = {
+  color: COLOR_TEXT_MUTED,
+  fontSize: SIZE_FONT_SM,
+  display: "block",
+  marginBottom: SPACE_SM,
+};
+
+const alignmentRowStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: SPACE_SM,
+};
+
+// Unit options
 const fontSizeUnits = [
   { value: "px", label: "px" },
   { value: "pt", label: "pt" },
@@ -192,15 +160,68 @@ const letterSpacingUnits = [
   { value: "%", label: "%" },
 ];
 
-function LabeledUnitInput({
-  label,
+// Icons - memoized sub-component
+const FontIcon = memo(function FontIcon({ isMissing }: { isMissing: boolean }) {
+  if (isMissing) {
+    return (
+      <span data-testid="font-icon-missing" style={fontIconMissingStyle}>
+        A?
+      </span>
+    );
+  }
+  return (
+    <span data-testid="font-icon" style={fontIconNormalStyle}>
+      A
+    </span>
+  );
+});
+
+type FontFamilyRowProps = {
+  value: string;
+  options: SelectOption<string>[];
+  onChange: (value: string) => void;
+  onOpenFontsPanel?: () => void;
+  showFontIcon?: FontIconVisibility;
+};
+
+const FontFamilyRow = memo(function FontFamilyRow({
   value,
+  options,
   onChange,
-  units,
-  allowAuto = false,
-  step = 1,
-  shiftStep = 10,
-}: {
+  onOpenFontsPanel,
+  showFontIcon = 'always',
+}: FontFamilyRowProps) {
+  const isMissing = !options.some((opt) => opt.value === value);
+
+  const shouldShowIcon =
+    showFontIcon === 'always' ||
+    (showFontIcon === 'missing-only' && isMissing);
+
+  const iconClickStyle = useMemo<CSSProperties>(
+    () => ({ cursor: onOpenFontsPanel ? "pointer" : "default" }),
+    [onOpenFontsPanel],
+  );
+
+  return (
+    <div style={fontFamilyRowContainerStyle}>
+      {shouldShowIcon && (
+        <span onClick={onOpenFontsPanel} style={iconClickStyle}>
+          <FontIcon isMissing={isMissing} />
+        </span>
+      )}
+      <div style={flexOneStyle}>
+        <Select
+          options={options}
+          value={value}
+          onChange={onChange}
+          aria-label="Font family"
+        />
+      </div>
+    </div>
+  );
+});
+
+type LabeledUnitInputProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -208,23 +229,20 @@ function LabeledUnitInput({
   allowAuto?: boolean;
   step?: number;
   shiftStep?: number;
-}) {
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_SM,
-    minWidth: 0,
-    boxSizing: "border-box",
-  };
+};
 
-  const labelStyle: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_SM,
-  };
-
+const LabeledUnitInput = memo(function LabeledUnitInput({
+  label,
+  value,
+  onChange,
+  units,
+  allowAuto = false,
+  step = 1,
+  shiftStep = 10,
+}: LabeledUnitInputProps) {
   return (
-    <div style={containerStyle}>
-      <span style={labelStyle}>{label}</span>
+    <div style={labeledUnitInputContainerStyle}>
+      <span style={labeledUnitInputLabelStyle}>{label}</span>
       <UnitInput
         value={value}
         onChange={onChange}
@@ -236,10 +254,10 @@ function LabeledUnitInput({
       />
     </div>
   );
-}
+});
 
 /** Typography settings panel with font, size, weight, color, and spacing controls */
-export function TypographyPanel({
+export const TypographyPanel = memo(function TypographyPanel({
   settings,
   onChange,
   fontOptions = defaultFontOptions,
@@ -251,51 +269,73 @@ export function TypographyPanel({
 }: TypographyPanelProps) {
   const [expanded, setExpanded] = useState(true);
 
-  const handleChange = <K extends keyof TypographySettings>(
-    key: K,
-    value: TypographySettings[K],
-  ) => {
-    onChange({ ...settings, [key]: value });
-  };
-
-  const contentStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_MD,
-    padding: `${SPACE_SM} ${SPACE_MD}`,
-  };
-
-  const alignmentRowStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_SM,
-  };
-
-  const fontSelectOptions: SelectOption<string>[] = fontOptions.map((f) => ({
-    value: f.value,
-    label: f.label,
-  }));
-
-  const weightSelectOptions: SelectOption<string>[] = weightOptions.map((w) => ({
-    value: w.value,
-    label: w.label,
-  }));
-
-  const headerAction = (
-    <TooltipIconButton
-      icon={<GridIcon />}
-      tooltip="Grid options"
-      size="sm"
-      onClick={onOpenSettings}
-    />
+  // Memoized change handlers
+  const handleFontFamilyChange = useCallback(
+    (v: string) => onChange({ ...settings, fontFamily: v }),
+    [onChange, settings],
   );
 
-  const alignmentLabelStyle: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_SM,
-    display: "block",
-    marginBottom: SPACE_SM,
-  };
+  const handleFontWeightChange = useCallback(
+    (v: string) => onChange({ ...settings, fontWeight: v }),
+    [onChange, settings],
+  );
+
+  const handleFontSizeChange = useCallback(
+    (v: string) => onChange({ ...settings, fontSize: v }),
+    [onChange, settings],
+  );
+
+  const handleLineHeightChange = useCallback(
+    (v: string) => onChange({ ...settings, lineHeight: v }),
+    [onChange, settings],
+  );
+
+  const handleLetterSpacingChange = useCallback(
+    (v: string) => onChange({ ...settings, letterSpacing: v }),
+    [onChange, settings],
+  );
+
+  const handleTextAlignChange = useCallback(
+    (v: "left" | "center" | "right") => onChange({ ...settings, textAlign: v }),
+    [onChange, settings],
+  );
+
+  const handleVerticalAlignChange = useCallback(
+    (v: VerticalAlign) => onChange({ ...settings, verticalAlign: v }),
+    [onChange, settings],
+  );
+
+  const contentStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_MD,
+      padding: `${SPACE_SM} ${SPACE_MD}`,
+    }),
+    [],
+  );
+
+  const fontSelectOptions = useMemo<SelectOption<string>[]>(
+    () => fontOptions.map((f) => ({ value: f.value, label: f.label })),
+    [fontOptions],
+  );
+
+  const weightSelectOptions = useMemo<SelectOption<string>[]>(
+    () => weightOptions.map((w) => ({ value: w.value, label: w.label })),
+    [weightOptions],
+  );
+
+  const headerAction = useMemo(
+    () => (
+      <TooltipIconButton
+        icon={<GridIcon />}
+        tooltip="Grid options"
+        size="sm"
+        onClick={onOpenSettings}
+      />
+    ),
+    [onOpenSettings],
+  );
 
   const renderContent = () => {
     if (!expanded) {
@@ -306,7 +346,7 @@ export function TypographyPanel({
         <FontFamilyRow
           value={settings.fontFamily}
           options={fontSelectOptions}
-          onChange={(v) => handleChange("fontFamily", v)}
+          onChange={handleFontFamilyChange}
           onOpenFontsPanel={onOpenFontsPanel}
           showFontIcon={showFontIcon}
         />
@@ -315,14 +355,14 @@ export function TypographyPanel({
             <Select
               options={weightSelectOptions}
               value={settings.fontWeight}
-              onChange={(v) => handleChange("fontWeight", v)}
+              onChange={handleFontWeightChange}
               aria-label="Font weight"
             />
           </PropertyGridItem>
           <PropertyGridItem>
             <UnitInput
               value={settings.fontSize}
-              onChange={(v) => handleChange("fontSize", v)}
+              onChange={handleFontSizeChange}
               units={fontSizeUnits}
               aria-label="Font size"
             />
@@ -333,7 +373,7 @@ export function TypographyPanel({
             <LabeledUnitInput
               label="Line height"
               value={settings.lineHeight}
-              onChange={(v) => handleChange("lineHeight", v)}
+              onChange={handleLineHeightChange}
               units={lineHeightUnits}
               allowAuto
               step={0.1}
@@ -344,7 +384,7 @@ export function TypographyPanel({
             <LabeledUnitInput
               label="Letter spacing"
               value={settings.letterSpacing}
-              onChange={(v) => handleChange("letterSpacing", v)}
+              onChange={handleLetterSpacingChange}
               units={letterSpacingUnits}
               step={0.1}
               shiftStep={1}
@@ -356,11 +396,11 @@ export function TypographyPanel({
           <div style={alignmentRowStyle}>
             <TextHorizontalAlignSelect
               value={settings.textAlign as "left" | "center" | "right"}
-              onChange={(v) => handleChange("textAlign", v)}
+              onChange={handleTextAlignChange}
             />
             <TextVerticalAlignSelect
               value={settings.verticalAlign}
-              onChange={(v) => handleChange("verticalAlign", v)}
+              onChange={handleVerticalAlignChange}
             />
             <TooltipIconButton
               icon={<SettingsIcon />}
@@ -386,4 +426,4 @@ export function TypographyPanel({
       {renderContent()}
     </div>
   );
-}
+});

@@ -53,10 +53,13 @@ export const AnimationPanel = memo(function AnimationPanel({
   width = 320,
   className,
 }: AnimationPanelProps) {
-  const updateSetting = useCallback(
-    <K extends keyof AnimationSettings>(key: K, value: AnimationSettings[K]) => {
-      onChange({ ...settings, [key]: value });
-    },
+  const handleDurationChange = useCallback(
+    (v: string) => onChange({ ...settings, duration: v }),
+    [onChange, settings]
+  );
+
+  const handleDelayChange = useCallback(
+    (v: string) => onChange({ ...settings, delay: v }),
     [onChange, settings]
   );
 
@@ -144,7 +147,7 @@ export const AnimationPanel = memo(function AnimationPanel({
           <ControlGroup label="Duration">
             <UnitInput
               value={settings.duration}
-              onChange={(v) => updateSetting("duration", v)}
+              onChange={handleDurationChange}
               units={timeUnits}
               iconStart={<ClockIcon />}
               min={0}
@@ -157,7 +160,7 @@ export const AnimationPanel = memo(function AnimationPanel({
           <ControlGroup label="Delay">
             <UnitInput
               value={settings.delay}
-              onChange={(v) => updateSetting("delay", v)}
+              onChange={handleDelayChange}
               units={timeUnits}
               iconStart={<HourglassIcon />}
               min={0}
