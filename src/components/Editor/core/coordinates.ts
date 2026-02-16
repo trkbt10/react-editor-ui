@@ -146,16 +146,15 @@ function findLineColumn(
   lines: readonly string[],
   offset: number
 ): CursorPosition | null {
-  // eslint-disable-next-line no-restricted-syntax -- Accumulator pattern requires mutation
-  let remaining = offset;
+  const acc = { remaining: offset };
 
   for (const [i, lineText] of lines.entries()) {
     const lineLength = lineText.length;
-    if (remaining <= lineLength) {
-      return { line: i + 1, column: remaining + 1 };
+    if (acc.remaining <= lineLength) {
+      return { line: i + 1, column: acc.remaining + 1 };
     }
     // +1 for newline character
-    remaining -= lineLength + 1;
+    acc.remaining -= lineLength + 1;
   }
 
   return null;
@@ -278,25 +277,22 @@ function findColumnAtX(
     return 1;
   }
 
-  // eslint-disable-next-line no-restricted-syntax -- Binary search requires mutable bounds
-  let lo = 0;
-  // eslint-disable-next-line no-restricted-syntax -- Binary search requires mutable bounds
-  let hi = lineText.length;
+  const bounds = { lo: 0, hi: lineText.length };
 
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
+  while (bounds.lo < bounds.hi) {
+    const mid = (bounds.lo + bounds.hi) >> 1;
     const textWidth = measureText(lineText.slice(0, mid));
     const nextWidth = measureText(lineText.slice(0, mid + 1));
     const midPoint = (textWidth + nextWidth) / 2;
 
     if (x <= midPoint) {
-      hi = mid;
+      bounds.hi = mid;
     } else {
-      lo = mid + 1;
+      bounds.lo = mid + 1;
     }
   }
 
-  return lo + 1; // Convert to 1-based
+  return bounds.lo + 1; // Convert to 1-based
 }
 
 // =============================================================================

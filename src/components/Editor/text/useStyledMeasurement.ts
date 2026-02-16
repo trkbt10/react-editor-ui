@@ -172,12 +172,11 @@ export function useStyledMeasurement(
       }
 
       // Sum width of each character considering its style
-      // eslint-disable-next-line no-restricted-syntax -- Accumulator pattern
-      let total = 0;
+      const acc = { total: 0 };
       for (const [i, char] of [...text].entries()) {
-        total += measureStyledChar(char, textOffset + i);
+        acc.total += measureStyledChar(char, textOffset + i);
       }
-      return total;
+      return acc.total;
     },
     [measureStyledChar]
   );
@@ -209,25 +208,22 @@ export function useStyledMeasurement(
       }
 
       // Binary search for the column
-      // eslint-disable-next-line no-restricted-syntax -- Binary search requires mutable bounds
-      let lo = 0;
-      // eslint-disable-next-line no-restricted-syntax -- Binary search requires mutable bounds
-      let hi = line.length;
+      const bounds = { lo: 0, hi: line.length };
 
-      while (lo < hi) {
-        const mid = (lo + hi) >> 1;
+      while (bounds.lo < bounds.hi) {
+        const mid = (bounds.lo + bounds.hi) >> 1;
         const textWidth = measureStyledText(line.slice(0, mid), lineOffset);
         const nextWidth = measureStyledText(line.slice(0, mid + 1), lineOffset);
         const midPoint = (textWidth + nextWidth) / 2;
 
         if (x <= midPoint) {
-          hi = mid;
+          bounds.hi = mid;
         } else {
-          lo = mid + 1;
+          bounds.lo = mid + 1;
         }
       }
 
-      return lo + 1; // Convert to 1-based
+      return bounds.lo + 1; // Convert to 1-based
     },
     [measureStyledText]
   );

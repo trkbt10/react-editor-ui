@@ -6,15 +6,14 @@ import type { GradientStop, GradientValue, GradientType } from "./gradientTypes"
 import type { ColorValue } from "../ColorInput/ColorInput";
 import { hexToRgb, rgbToHex } from "../ColorPicker/colorUtils";
 
-// eslint-disable-next-line no-restricted-syntax -- Counter requires mutation
-let stopIdCounter = 0;
+const stopIdState = { counter: 0 };
 
 /**
  * Generate a unique ID for gradient stops
  */
 export function generateStopId(): string {
-  stopIdCounter += 1;
-  return `stop-${Date.now()}-${stopIdCounter}`;
+  stopIdState.counter += 1;
+  return `stop-${Date.now()}-${stopIdState.counter}`;
 }
 
 /**

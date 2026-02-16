@@ -187,35 +187,34 @@ export function createVirtualScrollEngine(config: EngineConfig): (itemCount: num
     // Internal mutable state (scoped to this calculator instance)
     const tree = createSegmentTree(new Array(itemCount).fill(estimatedItemHeight) as number[]);
     const rangeCache = createMemoCache<VisibleRange>();
-    // eslint-disable-next-line no-restricted-syntax -- version counter for cache invalidation
-    let treeVersion = 0;
-    // eslint-disable-next-line no-restricted-syntax -- tracking dirty state
-    let dirtyStart = -1;
-    // eslint-disable-next-line no-restricted-syntax -- tracking dirty state
-    let dirtyEnd = -1;
+    const mutableState = {
+      treeVersion: 0,
+      dirtyStart: -1,
+      dirtyEnd: -1,
+    };
 
     function markDirty(index: number): void {
-      if (dirtyStart === -1) {
-        dirtyStart = index;
-        dirtyEnd = index + 1;
+      if (mutableState.dirtyStart === -1) {
+        mutableState.dirtyStart = index;
+        mutableState.dirtyEnd = index + 1;
       } else {
-        dirtyStart = Math.min(dirtyStart, index);
-        dirtyEnd = Math.max(dirtyEnd, index + 1);
+        mutableState.dirtyStart = Math.min(mutableState.dirtyStart, index);
+        mutableState.dirtyEnd = Math.max(mutableState.dirtyEnd, index + 1);
       }
     }
 
     function clearDirty(): { start: number; end: number } | null {
-      if (dirtyStart === -1) {
+      if (mutableState.dirtyStart === -1) {
         return null;
       }
-      const result = { start: dirtyStart, end: dirtyEnd };
-      dirtyStart = -1;
-      dirtyEnd = -1;
+      const result = { start: mutableState.dirtyStart, end: mutableState.dirtyEnd };
+      mutableState.dirtyStart = -1;
+      mutableState.dirtyEnd = -1;
       return result;
     }
 
     function getCacheKey(scrollOffset: number, containerHeight: number): MemoKey {
-      return `${treeVersion}:${Math.round(scrollOffset)}:${Math.round(containerHeight)}`;
+      return `${mutableState.treeVersion}:${Math.round(scrollOffset)}:${Math.round(containerHeight)}`;
     }
 
     return {
@@ -252,7 +251,7 @@ export function createVirtualScrollEngine(config: EngineConfig): (itemCount: num
           return false;
         }
         tree.update(index, height);
-        treeVersion++;
+        mutableState.treeVersion++;
         markDirty(index);
         return true;
       },
@@ -261,20 +260,19 @@ export function createVirtualScrollEngine(config: EngineConfig): (itemCount: num
        * Batch update multiple heights
        */
       updateHeights(updates: ReadonlyArray<{ index: number; height: number }>): number {
-        // eslint-disable-next-line no-restricted-syntax -- count changes
-        let changed = 0;
+        const counter = { changed: 0 };
         for (const { index, height } of updates) {
           const current = tree.get(index);
           if (Math.abs(current - height) > 0.5) {
             tree.update(index, height);
             markDirty(index);
-            changed++;
+            counter.changed++;
           }
         }
-        if (changed > 0) {
-          treeVersion++;
+        if (counter.changed > 0) {
+          mutableState.treeVersion++;
         }
-        return changed;
+        return counter.changed;
       },
 
       /**
@@ -327,17 +325,17 @@ export function createVirtualScrollEngine(config: EngineConfig): (itemCount: num
        * Check if range overlaps with dirty range
        */
       isDirtyInRange(start: number, end: number): boolean {
-        if (dirtyStart === -1) {
+        if (mutableState.dirtyStart === -1) {
           return false;
         }
-        return dirtyStart < end && dirtyEnd > start;
+        return mutableState.dirtyStart < end && mutableState.dirtyEnd > start;
       },
 
       /**
        * Get current version (for cache invalidation)
        */
       get version(): number {
-        return treeVersion;
+        return mutableState.treeVersion;
       },
 
       /**

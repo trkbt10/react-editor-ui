@@ -35,6 +35,9 @@ import {
 /** Minimum highlight width (for empty selections) */
 const MIN_HIGHLIGHT_WIDTH = 8;
 
+/** Empty highlight array constant to avoid creating new arrays */
+const EMPTY_HIGHLIGHTS: readonly LineHighlight[] = [];
+
 // =============================================================================
 // SVG Components
 // =============================================================================
@@ -219,11 +222,10 @@ function calculateTokenPositions(
   measureText: (text: string) => number
 ): readonly number[] {
   const positions: number[] = [];
-  // eslint-disable-next-line no-restricted-syntax -- Accumulator pattern for position calculation
-  let currentX = baseXOffset;
+  const acc = { x: baseXOffset };
 
   for (const token of tokens) {
-    positions.push(currentX);
+    positions.push(acc.x);
 
     // Calculate token width using actual text measurement
     const style = tokenStyles?.[token.type];
@@ -235,7 +237,7 @@ function calculateTokenPositions(
     // Measure actual text width (handles CJK correctly)
     const baseWidth = measureText(token.text);
     const tokenWidth = baseWidth * fontSizeRatio;
-    currentX += tokenWidth;
+    acc.x += tokenWidth;
   }
 
   return positions;
@@ -506,7 +508,7 @@ export const SvgRenderer = memo(function SvgRenderer({
           const lineNumber = lineIndex + 1;
           const lineText = lines[lineIndex] ?? "";
           const tokens = tokenCache.getTokens(lineText, lineIndex);
-          const lineHighlights = lineHighlightsMap.get(lineNumber) ?? [];
+          const lineHighlights = lineHighlightsMap.get(lineNumber) ?? EMPTY_HIGHLIGHTS;
           const lineCursor = getLineCursor(cursorOnLine, lineNumber, cursor);
 
           return (

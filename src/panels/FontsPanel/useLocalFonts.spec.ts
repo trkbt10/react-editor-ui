@@ -113,10 +113,9 @@ describe("useLocalFonts", () => {
     });
 
     it("should set status to requesting while loading", async () => {
-      // eslint-disable-next-line no-restricted-syntax -- Manual promise control needed for testing async state
-      let resolvePromise: (value: LocalFontData[]) => void;
+      const deferred = { resolve: null as ((value: LocalFontData[]) => void) | null };
       const pendingPromise = new Promise<LocalFontData[]>((resolve) => {
-        resolvePromise = resolve;
+        deferred.resolve = resolve;
       });
       const fakeQuery = () => pendingPromise;
 
@@ -129,7 +128,7 @@ describe("useLocalFonts", () => {
       expect(result.current.status).toBe("requesting");
 
       await act(async () => {
-        resolvePromise!(mockFonts);
+        deferred.resolve!(mockFonts);
         await waitFor(() => result.current.status === "granted");
       });
 

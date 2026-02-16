@@ -34,13 +34,12 @@ export type LineColumnToOffsetOptions = {
  */
 export function buildLineOffsets(lines: readonly string[]): readonly number[] {
   const offsets: number[] = new Array(lines.length);
-  // eslint-disable-next-line no-restricted-syntax -- Accumulator pattern requires mutation
-  let offset = 0;
+  const acc = { current: 0 };
 
   for (const [i, line] of lines.entries()) {
-    offsets[i] = offset;
+    offsets[i] = acc.current;
     // +1 for newline character
-    offset += line.length + 1;
+    acc.current += line.length + 1;
   }
 
   return offsets;
@@ -59,21 +58,18 @@ export function findLineIndex(lineOffsets: readonly number[], offset: number): n
     return 0;
   }
 
-  // eslint-disable-next-line no-restricted-syntax -- Binary search requires mutable bounds
-  let lo = 0;
-  // eslint-disable-next-line no-restricted-syntax -- Binary search requires mutable bounds
-  let hi = lineOffsets.length - 1;
+  const bounds = { lo: 0, hi: lineOffsets.length - 1 };
 
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
+  while (bounds.lo < bounds.hi) {
+    const mid = (bounds.lo + bounds.hi + 1) >> 1;
     if (lineOffsets[mid] <= offset) {
-      lo = mid;
+      bounds.lo = mid;
     } else {
-      hi = mid - 1;
+      bounds.hi = mid - 1;
     }
   }
 
-  return lo;
+  return bounds.lo;
 }
 
 /**

@@ -228,11 +228,10 @@ function calculateCanvasTokenPositions(
   baseFontFamily: string
 ): readonly number[] {
   const positions: number[] = [];
-  // eslint-disable-next-line no-restricted-syntax -- Accumulator pattern
-  let currentX = baseXOffset;
+  const acc = { x: baseXOffset };
 
   for (const token of tokens) {
-    positions.push(currentX);
+    positions.push(acc.x);
 
     // Set font for this token to measure width correctly
     const style = tokenStyles?.[token.type];
@@ -243,7 +242,7 @@ function calculateCanvasTokenPositions(
 
     ctx.font = `${tokenFontStyle} ${tokenFontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
     const tokenWidth = ctx.measureText(token.text).width;
-    currentX += tokenWidth;
+    acc.x += tokenWidth;
   }
 
   // Reset font

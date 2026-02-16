@@ -227,11 +227,8 @@ function insertTextIntoNode(
   }
 
   // Find which child contains the offset
-  // eslint-disable-next-line no-restricted-syntax -- Performance: O(n) loop with mutable state
-  let currentOffset = 0;
+  const state = { currentOffset: 0, inserted: false };
   const newChildren: StyledNode[] = [];
-  // eslint-disable-next-line no-restricted-syntax -- Performance: O(n) loop with mutable state
-  let inserted = false;
 
   for (let i = 0; i < node.children.length; i++) {
     const child = node.children[i];
@@ -239,21 +236,21 @@ function insertTextIntoNode(
 
     // Insert into the first child that contains the offset
     // Use strict less-than for the upper bound to avoid inserting at boundaries twice
-    if (!inserted && offset >= currentOffset && offset < currentOffset + childLength) {
-      newChildren.push(insertTextIntoNode(child, offset - currentOffset, newText));
-      inserted = true;
-    } else if (!inserted && offset === currentOffset + childLength && i === node.children.length - 1) {
+    if (!state.inserted && offset >= state.currentOffset && offset < state.currentOffset + childLength) {
+      newChildren.push(insertTextIntoNode(child, offset - state.currentOffset, newText));
+      state.inserted = true;
+    } else if (!state.inserted && offset === state.currentOffset + childLength && i === node.children.length - 1) {
       // Special case: inserting at the end of the last child
-      newChildren.push(insertTextIntoNode(child, offset - currentOffset, newText));
-      inserted = true;
+      newChildren.push(insertTextIntoNode(child, offset - state.currentOffset, newText));
+      state.inserted = true;
     } else {
       newChildren.push(child);
     }
-    currentOffset += childLength;
+    state.currentOffset += childLength;
   }
 
   // If we haven't inserted yet, insert at the end
-  if (!inserted) {
+  if (!state.inserted) {
     if (newChildren.length === 0) {
       newChildren.push({ type: "text", content: newText });
     } else {
@@ -306,13 +303,12 @@ function deleteRangeFromNode(
 
   // Process children
   const newChildren: StyledNode[] = [];
-  // eslint-disable-next-line no-restricted-syntax -- Performance: O(n) offset accumulation
-  let currentOffset = 0;
+  const acc = { current: 0 };
 
   for (const child of node.children) {
     const childLength = getNodeLength(child);
-    const childStart = currentOffset;
-    const childEnd = currentOffset + childLength;
+    const childStart = acc.current;
+    const childEnd = acc.current + childLength;
 
     if (end <= childStart || start >= childEnd) {
       // Child is completely outside delete range
@@ -330,7 +326,7 @@ function deleteRangeFromNode(
       }
     }
 
-    currentOffset = childEnd;
+    acc.current = childEnd;
   }
 
   // Merge adjacent text nodes
@@ -449,13 +445,12 @@ function wrapRangeInNode(
 
   // For elements, process children
   const newChildren: StyledNode[] = [];
-  // eslint-disable-next-line no-restricted-syntax -- Performance: O(n) offset accumulation
-  let currentOffset = 0;
+  const acc = { current: 0 };
 
   for (const child of node.children) {
     const childLength = getNodeLength(child);
-    const childStart = currentOffset;
-    const childEnd = currentOffset + childLength;
+    const childStart = acc.current;
+    const childEnd = acc.current + childLength;
 
     if (end <= childStart || start >= childEnd) {
       // Child is completely outside range
@@ -481,7 +476,7 @@ function wrapRangeInNode(
       }
     }
 
-    currentOffset = childEnd;
+    acc.current = childEnd;
   }
 
   return { ...node, children: newChildren };
@@ -553,13 +548,12 @@ function unwrapTagInNode(
 
   // Process children recursively
   const newChildren: StyledNode[] = [];
-  // eslint-disable-next-line no-restricted-syntax -- Performance: O(n) offset accumulation
-  let currentOffset = 0;
+  const acc = { current: 0 };
 
   for (const child of node.children) {
     const childLength = getNodeLength(child);
-    const childStart = currentOffset;
-    const childEnd = currentOffset + childLength;
+    const childStart = acc.current;
+    const childEnd = acc.current + childLength;
 
     if (end <= childStart || start >= childEnd) {
       // Child is completely outside range
@@ -578,7 +572,7 @@ function unwrapTagInNode(
       }
     }
 
-    currentOffset = childEnd;
+    acc.current = childEnd;
   }
 
   return { ...node, children: mergeAdjacentTextNodes(newChildren) };
@@ -716,13 +710,12 @@ function flattenNode(
   // Element node: add tag to stack
   const newTags = computeNewTags(node.tag, tags);
 
-  // eslint-disable-next-line no-restricted-syntax -- Performance: O(n) offset accumulation through recursion
-  let currentOffset = offset;
+  const acc = { current: offset };
   for (const child of node.children) {
-    currentOffset = flattenNode(child, currentOffset, newTags, styles, segments);
+    acc.current = flattenNode(child, acc.current, newTags, styles, segments);
   }
 
-  return currentOffset;
+  return acc.current;
 }
 
 /**
@@ -760,13 +753,12 @@ function flattenOverlay(
 
   const newTags = computeNewTags(node.tag, tags);
 
-  // eslint-disable-next-line no-restricted-syntax -- Performance: O(n) offset accumulation through recursion
-  let currentOffset = offset;
+  const acc = { current: offset };
   for (const child of node.children) {
-    currentOffset = flattenOverlay(child, currentOffset, newTags, styles, segments, priority);
+    acc.current = flattenOverlay(child, acc.current, newTags, styles, segments, priority);
   }
 
-  return currentOffset;
+  return acc.current;
 }
 
 /**

@@ -16,64 +16,63 @@ import type { Token, Tokenizer } from "../../../components/Editor/code/types";
 const jsonTokenizer: Tokenizer = {
   tokenize: (line: string): readonly Token[] => {
     const tokens: Token[] = [];
-    // eslint-disable-next-line no-restricted-syntax -- Mutable accumulator for tokenizer position
-    let pos = 0;
+    const cursor = { pos: 0 };
 
-    while (pos < line.length) {
+    while (cursor.pos < line.length) {
       // Skip whitespace
-      if (/\s/.test(line[pos])) {
-        const start = pos;
-        while (pos < line.length && /\s/.test(line[pos])) {
-          pos++;
+      if (/\s/.test(line[cursor.pos])) {
+        const start = cursor.pos;
+        while (cursor.pos < line.length && /\s/.test(line[cursor.pos])) {
+          cursor.pos++;
         }
-        tokens.push({ type: "whitespace", text: line.slice(start, pos), start, end: pos });
+        tokens.push({ type: "whitespace", text: line.slice(start, cursor.pos), start, end: cursor.pos });
         continue;
       }
 
       // String
-      if (line[pos] === '"') {
-        const start = pos;
-        pos++;
-        while (pos < line.length && line[pos] !== '"') {
-          if (line[pos] === '\\') {
-            pos++;
+      if (line[cursor.pos] === '"') {
+        const start = cursor.pos;
+        cursor.pos++;
+        while (cursor.pos < line.length && line[cursor.pos] !== '"') {
+          if (line[cursor.pos] === '\\') {
+            cursor.pos++;
           }
-          pos++;
+          cursor.pos++;
         }
-        pos++;
-        tokens.push({ type: "string", text: line.slice(start, pos), start, end: pos });
+        cursor.pos++;
+        tokens.push({ type: "string", text: line.slice(start, cursor.pos), start, end: cursor.pos });
         continue;
       }
 
       // Number
-      if (/[0-9-]/.test(line[pos])) {
-        const start = pos;
-        while (pos < line.length && /[0-9.eE+-]/.test(line[pos])) {
-          pos++;
+      if (/[0-9-]/.test(line[cursor.pos])) {
+        const start = cursor.pos;
+        while (cursor.pos < line.length && /[0-9.eE+-]/.test(line[cursor.pos])) {
+          cursor.pos++;
         }
-        tokens.push({ type: "number", text: line.slice(start, pos), start, end: pos });
+        tokens.push({ type: "number", text: line.slice(start, cursor.pos), start, end: cursor.pos });
         continue;
       }
 
       // Keywords: true, false, null
-      const remaining = line.slice(pos);
+      const remaining = line.slice(cursor.pos);
       const keywordMatch = remaining.match(/^(true|false|null)/);
       if (keywordMatch) {
-        tokens.push({ type: "keyword", text: keywordMatch[0], start: pos, end: pos + keywordMatch[0].length });
-        pos += keywordMatch[0].length;
+        tokens.push({ type: "keyword", text: keywordMatch[0], start: cursor.pos, end: cursor.pos + keywordMatch[0].length });
+        cursor.pos += keywordMatch[0].length;
         continue;
       }
 
       // Punctuation
-      if (/[{}[\]:,]/.test(line[pos])) {
-        tokens.push({ type: "punctuation", text: line[pos], start: pos, end: pos + 1 });
-        pos++;
+      if (/[{}[\]:,]/.test(line[cursor.pos])) {
+        tokens.push({ type: "punctuation", text: line[cursor.pos], start: cursor.pos, end: cursor.pos + 1 });
+        cursor.pos++;
         continue;
       }
 
       // Unknown
-      tokens.push({ type: "unknown", text: line[pos], start: pos, end: pos + 1 });
-      pos++;
+      tokens.push({ type: "unknown", text: line[cursor.pos], start: cursor.pos, end: cursor.pos + 1 });
+      cursor.pos++;
     }
 
     return tokens;

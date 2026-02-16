@@ -102,19 +102,18 @@ export function useTextStyles(
         }];
       }
 
-      // eslint-disable-next-line no-restricted-syntax -- Accumulator pattern
-      let currentPos = lineStart;
+      const pos = { current: lineStart };
 
       for (const entry of overlapping) {
         // Gap before this segment
-        if (currentPos < entry.start) {
+        if (pos.current < entry.start) {
           result.push({
             text: "",
-            start: currentPos - lineStart,
+            start: pos.current - lineStart,
             end: entry.start - lineStart,
             style: DEFAULT_STYLE,
           });
-          currentPos = entry.start;
+          pos.current = entry.start;
         }
 
         // This segment (clipped to line bounds)
@@ -127,15 +126,15 @@ export function useTextStyles(
             end: end - lineStart,
             style: entry.style,
           });
-          currentPos = end;
+          pos.current = end;
         }
       }
 
       // Gap after last segment
-      if (currentPos < lineEnd) {
+      if (pos.current < lineEnd) {
         result.push({
           text: "",
-          start: currentPos - lineStart,
+          start: pos.current - lineStart,
           end: lineEnd - lineStart,
           style: DEFAULT_STYLE,
         });
@@ -173,22 +172,21 @@ export function useTextStyles(
 
         // Build tokens based on style segments
         const tokens: Token[] = [];
-        // eslint-disable-next-line no-restricted-syntax -- Accumulator pattern
-        let currentPos = 0;
+        const pos = { current: 0 };
 
         for (const entry of overlapping) {
           const entryStartInLine = Math.max(0, entry.start - lineStart);
           const entryEndInLine = Math.min(line.length, entry.end - lineStart);
 
           // Gap before this entry
-          if (currentPos < entryStartInLine) {
+          if (pos.current < entryStartInLine) {
             tokens.push({
               type: DEFAULT_TOKEN_TYPE,
-              text: line.slice(currentPos, entryStartInLine),
-              start: currentPos,
+              text: line.slice(pos.current, entryStartInLine),
+              start: pos.current,
               end: entryStartInLine,
             });
-            currentPos = entryStartInLine;
+            pos.current = entryStartInLine;
           }
 
           // This entry
@@ -199,16 +197,16 @@ export function useTextStyles(
               start: entryStartInLine,
               end: entryEndInLine,
             });
-            currentPos = entryEndInLine;
+            pos.current = entryEndInLine;
           }
         }
 
         // Gap after last entry
-        if (currentPos < line.length) {
+        if (pos.current < line.length) {
           tokens.push({
             type: DEFAULT_TOKEN_TYPE,
-            text: line.slice(currentPos),
-            start: currentPos,
+            text: line.slice(pos.current),
+            start: pos.current,
             end: line.length,
           });
         }

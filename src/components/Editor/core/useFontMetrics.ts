@@ -150,12 +150,11 @@ export function useFontMetrics(
       }
 
       // For longer strings, sum character widths (uses cache)
-      // eslint-disable-next-line no-restricted-syntax -- Accumulator pattern
-      let total = 0;
+      const acc = { total: 0 };
       for (const char of text) {
-        total += measureChar(char);
+        acc.total += measureChar(char);
       }
-      return total;
+      return acc.total;
     },
     [measureChar]
   );

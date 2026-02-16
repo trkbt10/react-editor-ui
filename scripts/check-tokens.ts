@@ -63,9 +63,7 @@ function extractDefinedTokens(): Set<string> {
   const content = readFileSync(STYLES_PATH, "utf-8");
   const tokens = new Set<string>();
 
-  // eslint-disable-next-line no-restricted-syntax -- Required for RegExp.exec loop
-  let match: RegExpExecArray | null;
-  while ((match = TOKEN_DEFINITION_PATTERN.exec(content)) !== null) {
+  for (const match of content.matchAll(TOKEN_DEFINITION_PATTERN)) {
     tokens.add(match[1]);
   }
 
@@ -104,13 +102,7 @@ function scanFile(filePath: string): TokenUsage[] {
   const usages: TokenUsage[] = [];
 
   lines.forEach((line, index) => {
-    // eslint-disable-next-line no-restricted-syntax -- Required for RegExp.exec loop
-    let match: RegExpExecArray | null;
-
-    // Reset regex lastIndex for each line
-    VAR_USAGE_PATTERN.lastIndex = 0;
-
-    while ((match = VAR_USAGE_PATTERN.exec(line)) !== null) {
+    for (const match of line.matchAll(VAR_USAGE_PATTERN)) {
       usages.push({
         token: match[1],
         file: relative(PROJECT_ROOT, filePath),
