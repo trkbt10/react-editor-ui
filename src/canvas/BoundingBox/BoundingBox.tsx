@@ -26,7 +26,7 @@
  * ```
  */
 
-import { useRef, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
+import { useRef, useMemo, useCallback, memo, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
 import { useCanvasContext } from "../core/CanvasContext";
 import { calculateAngle as matrixCalculateAngle } from "../../utils/matrix";
 
@@ -168,7 +168,7 @@ const ROTATION_CURSOR = `url("data:image/svg+xml,${encodeURIComponent(ROTATION_C
 /**
  * BoundingBox component for selection visualization and transform interactions
  */
-export function BoundingBox({
+export const BoundingBox = memo(function BoundingBox({
   x,
   y,
   width,
@@ -221,22 +221,28 @@ export function BoundingBox({
   const centerX = x + width / 2;
   const centerY = y + height / 2;
 
-  // Handle positions (relative to box, before rotation)
-  const cornerHandles: HandleConfig[] = [
-    { position: "top-left", x: x - halfHandle, y: y - halfHandle, cursor: "nwse-resize", isEdge: false },
-    { position: "top-right", x: x + width - halfHandle, y: y - halfHandle, cursor: "nesw-resize", isEdge: false },
-    { position: "bottom-left", x: x - halfHandle, y: y + height - halfHandle, cursor: "nesw-resize", isEdge: false },
-    { position: "bottom-right", x: x + width - halfHandle, y: y + height - halfHandle, cursor: "nwse-resize", isEdge: false },
-  ];
+  // Handle positions (relative to box, before rotation) - memoized
+  const handles = useMemo((): HandleConfig[] => {
+    const cornerHandles: HandleConfig[] = [
+      { position: "top-left", x: x - halfHandle, y: y - halfHandle, cursor: "nwse-resize", isEdge: false },
+      { position: "top-right", x: x + width - halfHandle, y: y - halfHandle, cursor: "nesw-resize", isEdge: false },
+      { position: "bottom-left", x: x - halfHandle, y: y + height - halfHandle, cursor: "nesw-resize", isEdge: false },
+      { position: "bottom-right", x: x + width - halfHandle, y: y + height - halfHandle, cursor: "nwse-resize", isEdge: false },
+    ];
 
-  const edgeHandles: HandleConfig[] = [
-    { position: "top", x: x + width / 2 - halfHandle, y: y - halfHandle, cursor: "ns-resize", isEdge: true },
-    { position: "right", x: x + width - halfHandle, y: y + height / 2 - halfHandle, cursor: "ew-resize", isEdge: true },
-    { position: "bottom", x: x + width / 2 - halfHandle, y: y + height - halfHandle, cursor: "ns-resize", isEdge: true },
-    { position: "left", x: x - halfHandle, y: y + height / 2 - halfHandle, cursor: "ew-resize", isEdge: true },
-  ];
+    if (!showEdgeHandles) {
+      return cornerHandles;
+    }
 
-  const handles = showEdgeHandles ? [...cornerHandles, ...edgeHandles] : cornerHandles;
+    const edgeHandles: HandleConfig[] = [
+      { position: "top", x: x + width / 2 - halfHandle, y: y - halfHandle, cursor: "ns-resize", isEdge: true },
+      { position: "right", x: x + width - halfHandle, y: y + height / 2 - halfHandle, cursor: "ew-resize", isEdge: true },
+      { position: "bottom", x: x + width / 2 - halfHandle, y: y + height - halfHandle, cursor: "ns-resize", isEdge: true },
+      { position: "left", x: x - halfHandle, y: y + height / 2 - halfHandle, cursor: "ew-resize", isEdge: true },
+    ];
+
+    return [...cornerHandles, ...edgeHandles];
+  }, [x, y, width, height, halfHandle, showEdgeHandles]);
 
   // Label positioning
   const labelPadding = 4 / scale;
@@ -247,98 +253,141 @@ export function BoundingBox({
   const labelX = x + (width - labelWidth) / 2;
   const labelY = y + height + 6 / scale;
 
-  const handlePointerDown = (
-    mode: InteractionMode,
-    event: ReactPointerEvent<SVGElement>,
-    handle?: HandlePosition,
-  ): void => {
-    if (!interactive) {
-      return;
-    }
-    event.stopPropagation();
-    event.preventDefault();
-
-    const element = event.currentTarget;
-    // setPointerCapture may not exist in JSDOM
-    if (typeof element.setPointerCapture === "function") {
-      element.setPointerCapture(event.pointerId);
-    }
-
-    const canvasPos = screenToCanvas(event.clientX, event.clientY);
-
-    // For rotation, calculate the initial angle from center to pointer
-    const initialAngle = mode === "rotate" ? matrixCalculateAngle(centerX, centerY, canvasPos.x, canvasPos.y) : undefined;
-
-    dragStateRef.current = {
-      mode,
-      handle,
-      startX: canvasPos.x,
-      startY: canvasPos.y,
-      lastX: canvasPos.x,
-      lastY: canvasPos.y,
-      initialAngle,
-      initialRotation: mode === "rotate" ? rotation : undefined,
-    };
-
-    if (mode === "move") {
-      onMoveStart?.();
-    } else if (mode === "resize" && handle) {
-      onResizeStart?.(handle);
-    } else if (mode === "rotate") {
-      onRotateStart?.();
-    }
+  // Store callbacks in refs to avoid recreating handlers
+  const callbacksRef = useRef({
+    onMoveStart,
+    onMove,
+    onMoveEnd,
+    onResizeStart,
+    onResize,
+    onResizeEnd,
+    onRotateStart,
+    onRotate,
+    onRotateEnd,
+  });
+  callbacksRef.current = {
+    onMoveStart,
+    onMove,
+    onMoveEnd,
+    onResizeStart,
+    onResize,
+    onResizeEnd,
+    onRotateStart,
+    onRotate,
+    onRotateEnd,
   };
 
-  const handlePointerMove = (event: ReactPointerEvent<SVGElement>): void => {
-    const state = dragStateRef.current;
-    if (!state) {
-      return;
-    }
+  // Store mutable values in refs for stable callbacks
+  const propsRef = useRef({ rotation, centerX, centerY, interactive });
+  propsRef.current = { rotation, centerX, centerY, interactive };
 
-    const canvasPos = screenToCanvas(event.clientX, event.clientY);
-    const deltaX = canvasPos.x - state.lastX;
-    const deltaY = canvasPos.y - state.lastY;
+  const handlePointerDown = useCallback(
+    (
+      mode: InteractionMode,
+      event: ReactPointerEvent<SVGElement>,
+      handle?: HandlePosition,
+    ): void => {
+      const { interactive, rotation: rot, centerX: cx, centerY: cy } = propsRef.current;
+      if (!interactive) {
+        return;
+      }
+      event.stopPropagation();
+      event.preventDefault();
 
-    state.lastX = canvasPos.x;
-    state.lastY = canvasPos.y;
+      const element = event.currentTarget;
+      // setPointerCapture may not exist in JSDOM
+      if (typeof element.setPointerCapture === "function") {
+        element.setPointerCapture(event.pointerId);
+      }
 
-    if (state.mode === "move") {
-      onMove?.(deltaX, deltaY);
-    } else if (state.mode === "resize" && state.handle) {
-      onResize?.(state.handle, deltaX, deltaY);
-    } else if (state.mode === "rotate" && state.initialAngle !== undefined && state.initialRotation !== undefined) {
-      // Calculate current angle from center to pointer
-      const currentAngle = matrixCalculateAngle(centerX, centerY, canvasPos.x, canvasPos.y);
-      // Calculate delta from initial angle
-      const deltaAngle = currentAngle - state.initialAngle;
-      // Apply delta to initial rotation
-      const newRotation = state.initialRotation + deltaAngle;
-      onRotate?.(newRotation);
-    }
-  };
+      const canvasPos = screenToCanvas(event.clientX, event.clientY);
 
-  const handlePointerUp = (event: ReactPointerEvent<SVGElement>): void => {
-    const state = dragStateRef.current;
-    if (!state) {
-      return;
-    }
+      // For rotation, calculate the initial angle from center to pointer
+      const initialAngle = mode === "rotate" ? matrixCalculateAngle(cx, cy, canvasPos.x, canvasPos.y) : undefined;
 
-    const element = event.currentTarget;
-    // releasePointerCapture may not exist in JSDOM
-    if (typeof element.releasePointerCapture === "function") {
-      element.releasePointerCapture(event.pointerId);
-    }
+      dragStateRef.current = {
+        mode,
+        handle,
+        startX: canvasPos.x,
+        startY: canvasPos.y,
+        lastX: canvasPos.x,
+        lastY: canvasPos.y,
+        initialAngle,
+        initialRotation: mode === "rotate" ? rot : undefined,
+      };
 
-    if (state.mode === "move") {
-      onMoveEnd?.();
-    } else if (state.mode === "resize" && state.handle) {
-      onResizeEnd?.(state.handle);
-    } else if (state.mode === "rotate") {
-      onRotateEnd?.();
-    }
+      const callbacks = callbacksRef.current;
+      if (mode === "move") {
+        callbacks.onMoveStart?.();
+      } else if (mode === "resize" && handle) {
+        callbacks.onResizeStart?.(handle);
+      } else if (mode === "rotate") {
+        callbacks.onRotateStart?.();
+      }
+    },
+    [screenToCanvas],
+  );
 
-    dragStateRef.current = null;
-  };
+  const handlePointerMove = useCallback(
+    (event: ReactPointerEvent<SVGElement>): void => {
+      const state = dragStateRef.current;
+      if (!state) {
+        return;
+      }
+
+      const canvasPos = screenToCanvas(event.clientX, event.clientY);
+      const deltaX = canvasPos.x - state.lastX;
+      const deltaY = canvasPos.y - state.lastY;
+
+      state.lastX = canvasPos.x;
+      state.lastY = canvasPos.y;
+
+      const { centerX: cx, centerY: cy } = propsRef.current;
+      const callbacks = callbacksRef.current;
+
+      if (state.mode === "move") {
+        callbacks.onMove?.(deltaX, deltaY);
+      } else if (state.mode === "resize" && state.handle) {
+        callbacks.onResize?.(state.handle, deltaX, deltaY);
+      } else if (state.mode === "rotate" && state.initialAngle !== undefined && state.initialRotation !== undefined) {
+        // Calculate current angle from center to pointer
+        const currentAngle = matrixCalculateAngle(cx, cy, canvasPos.x, canvasPos.y);
+        // Calculate delta from initial angle
+        const deltaAngle = currentAngle - state.initialAngle;
+        // Apply delta to initial rotation
+        const newRotation = state.initialRotation + deltaAngle;
+        callbacks.onRotate?.(newRotation);
+      }
+    },
+    [screenToCanvas],
+  );
+
+  const handlePointerUp = useCallback(
+    (event: ReactPointerEvent<SVGElement>): void => {
+      const state = dragStateRef.current;
+      if (!state) {
+        return;
+      }
+
+      const element = event.currentTarget;
+      // releasePointerCapture may not exist in JSDOM
+      if (typeof element.releasePointerCapture === "function") {
+        element.releasePointerCapture(event.pointerId);
+      }
+
+      const callbacks = callbacksRef.current;
+      if (state.mode === "move") {
+        callbacks.onMoveEnd?.();
+      } else if (state.mode === "resize" && state.handle) {
+        callbacks.onResizeEnd?.(state.handle);
+      } else if (state.mode === "rotate") {
+        callbacks.onRotateEnd?.();
+      }
+
+      dragStateRef.current = null;
+    },
+    [],
+  );
 
   // Transform string for rotation
   const transform = rotation !== 0 ? `rotate(${rotation} ${centerX} ${centerY})` : undefined;
@@ -501,4 +550,4 @@ export function BoundingBox({
       )}
     </g>
   );
-}
+});

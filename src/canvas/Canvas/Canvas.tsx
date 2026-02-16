@@ -10,7 +10,7 @@
  * - Context for children to access viewport state
  */
 
-import { useRef, useMemo, type ReactNode, type CSSProperties } from "react";
+import { useRef, useMemo, useCallback, type ReactNode, type CSSProperties } from "react";
 import { COLOR_SURFACE, COLOR_BORDER } from "../../constants/styles";
 import { CanvasContext, type CanvasContextValue, type Point } from "../core/CanvasContext";
 import { useGestures } from "../core/useGestures";
@@ -67,38 +67,44 @@ export function Canvas({
     [viewport],
   );
 
-  // Context value for children
-  const contextValue = useMemo((): CanvasContextValue => {
-    const screenToCanvas = (screenX: number, screenY: number): Point => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) {
-        return { x: 0, y: 0 };
-      }
-      return {
-        x: (screenX - rect.left) / viewport.scale + viewport.x,
-        y: (screenY - rect.top) / viewport.scale + viewport.y,
-      };
-    };
+  // Keep viewport in ref for stable function references
+  const viewportRef = useRef(viewport);
+  viewportRef.current = viewport;
 
-    const canvasToScreen = (canvasX: number, canvasY: number): Point => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) {
-        return { x: 0, y: 0 };
-      }
-      return {
-        x: (canvasX - viewport.x) * viewport.scale + rect.left,
-        y: (canvasY - viewport.y) * viewport.scale + rect.top,
-      };
-    };
-
+  // Stable screen-to-canvas converter (reads viewport from ref)
+  const screenToCanvas = useCallback((screenX: number, screenY: number): Point => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    const vp = viewportRef.current;
+    if (!rect) {
+      return { x: 0, y: 0 };
+    }
     return {
-      viewport,
-      canvasWidth: width,
-      canvasHeight: height,
-      screenToCanvas,
-      canvasToScreen,
+      x: (screenX - rect.left) / vp.scale + vp.x,
+      y: (screenY - rect.top) / vp.scale + vp.y,
     };
-  }, [viewport, width, height]);
+  }, []);
+
+  // Stable canvas-to-screen converter (reads viewport from ref)
+  const canvasToScreen = useCallback((canvasX: number, canvasY: number): Point => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    const vp = viewportRef.current;
+    if (!rect) {
+      return { x: 0, y: 0 };
+    }
+    return {
+      x: (canvasX - vp.x) * vp.scale + rect.left,
+      y: (canvasY - vp.y) * vp.scale + rect.top,
+    };
+  }, []);
+
+  // Context value for children - functions are now stable
+  const contextValue = useMemo((): CanvasContextValue => ({
+    viewport,
+    canvasWidth: width,
+    canvasHeight: height,
+    screenToCanvas,
+    canvasToScreen,
+  }), [viewport, width, height, screenToCanvas, canvasToScreen]);
 
   // Determine cursor based on state
   const getCursor = (): string => {

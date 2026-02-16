@@ -5,7 +5,7 @@
  * Guides are drawn from ruler and stay fixed (do not follow mouse).
  */
 
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { COLOR_CANVAS_GUIDE } from "../../constants/styles";
 import { useCanvasContext } from "../core/CanvasContext";
 
@@ -57,7 +57,7 @@ function getLineAttrs(
 /**
  * Single guide line component
  */
-export function CanvasGuide({
+export const CanvasGuide = memo(function CanvasGuide({
   orientation,
   position,
   color = COLOR_CANVAS_GUIDE,
@@ -84,7 +84,7 @@ export function CanvasGuide({
       data-testid={`canvas-guide-${orientation}`}
     />
   );
-}
+});
 
 export type CanvasGuidesProps = {
   /** Array of guide definitions */
@@ -100,7 +100,7 @@ export type CanvasGuidesProps = {
 /**
  * Multiple guides component
  */
-export function CanvasGuides({
+export const CanvasGuides = memo(function CanvasGuides({
   guides,
   color = COLOR_CANVAS_GUIDE,
 }: CanvasGuidesProps): ReactNode {
@@ -116,4 +116,4 @@ export function CanvasGuides({
       ))}
     </g>
   );
-}
+});

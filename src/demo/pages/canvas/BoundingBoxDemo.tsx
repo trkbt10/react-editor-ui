@@ -2,7 +2,7 @@
  * @file BoundingBox demo page
  */
 
-import { useState } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import {
   DemoContainer,
   DemoSection,
@@ -15,7 +15,6 @@ import { BoundingBox } from "../../../canvas/BoundingBox/BoundingBox";
 import { Button } from "../../../components/Button/Button";
 import {
   screenToLocalDelta,
-  localToScreenDelta,
   createRotationMatrix,
   transformPoint,
 } from "../../../utils/matrix";
@@ -134,10 +133,160 @@ function applyResize(
   };
 }
 
-export function BoundingBoxDemo() {
+// ============================================================================
+// INTERACTIVE CANVAS - Only this part re-renders on transform changes
+// ============================================================================
+const InteractiveCanvas = memo(function InteractiveCanvas({
+  transform,
+  onMove,
+  onResize,
+  onRotate,
+  onMoveStart,
+  onMoveEnd,
+  onResizeStart,
+  onResizeEnd,
+  onRotateStart,
+  onRotateEnd,
+}: {
+  transform: TransformState;
+  onMove: (dx: number, dy: number) => void;
+  onResize: (handle: HandlePosition, dx: number, dy: number) => void;
+  onRotate: (angle: number) => void;
+  onMoveStart: () => void;
+  onMoveEnd: () => void;
+  onResizeStart: (h: HandlePosition) => void;
+  onResizeEnd: (h: HandlePosition) => void;
+  onRotateStart: () => void;
+  onRotateEnd: () => void;
+}) {
   const [viewport, setViewport] = useState<ViewportState>({ x: -50, y: -50, scale: 1 });
 
-  // Interactive bounding box state
+  const svgLayers = useMemo(
+    () => (
+      <>
+        <CanvasCheckerboard size={8} />
+        <CanvasGridLayer minorSize={10} majorSize={100} showOrigin />
+        <g transform={`rotate(${transform.rotation} ${transform.x + transform.width / 2} ${transform.y + transform.height / 2})`}>
+          <foreignObject
+            x={transform.x}
+            y={transform.y}
+            width={transform.width}
+            height={transform.height}
+          >
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                background: "var(--rei-color-primary)",
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontWeight: 600,
+                boxSizing: "border-box",
+              }}
+            >
+              Selected
+            </div>
+          </foreignObject>
+        </g>
+        <BoundingBox
+          x={transform.x}
+          y={transform.y}
+          width={transform.width}
+          height={transform.height}
+          rotation={transform.rotation}
+          onMoveStart={onMoveStart}
+          onMove={onMove}
+          onMoveEnd={onMoveEnd}
+          onResizeStart={onResizeStart}
+          onResize={onResize}
+          onResizeEnd={onResizeEnd}
+          onRotateStart={onRotateStart}
+          onRotate={onRotate}
+          onRotateEnd={onRotateEnd}
+        />
+      </>
+    ),
+    [
+      transform.x,
+      transform.y,
+      transform.width,
+      transform.height,
+      transform.rotation,
+      onMoveStart,
+      onMove,
+      onMoveEnd,
+      onResizeStart,
+      onResize,
+      onResizeEnd,
+      onRotateStart,
+      onRotate,
+      onRotateEnd,
+    ],
+  );
+
+  return (
+    <Canvas
+      viewport={viewport}
+      onViewportChange={setViewport}
+      width={600}
+      height={400}
+      svgLayers={svgLayers}
+    />
+  );
+});
+
+// Transform state display - only re-renders when transform changes
+const TransformDisplay = memo(function TransformDisplay({
+  transform,
+}: {
+  transform: TransformState;
+}) {
+  return (
+    <DemoMutedText size={12}>
+      <div>X: {transform.x.toFixed(1)}</div>
+      <div>Y: {transform.y.toFixed(1)}</div>
+      <div>Width: {transform.width.toFixed(1)}</div>
+      <div>Height: {transform.height.toFixed(1)}</div>
+      <div>Rotation: {transform.rotation.toFixed(1)}°</div>
+    </DemoMutedText>
+  );
+});
+
+// Event log display - only re-renders when log changes
+const EventLogDisplay = memo(function EventLogDisplay({
+  logs,
+}: {
+  logs: string[];
+}) {
+  return (
+    <div
+      style={{
+        fontSize: 10,
+        fontFamily: "monospace",
+        background: "var(--rei-color-surface-overlay)",
+        padding: 8,
+        borderRadius: 4,
+        minHeight: 80,
+      }}
+    >
+      {logs.length === 0 ? (
+        <span style={{ color: "var(--rei-color-text-muted)" }}>
+          Interact with the box...
+        </span>
+      ) : (
+        logs.map((log, i) => <div key={i}>{log}</div>)
+      )}
+    </div>
+  );
+});
+
+// ============================================================================
+// INTERACTIVE SECTION - Static wrapper with state management
+// ============================================================================
+const InteractiveBoundingBoxSection = memo(function InteractiveBoundingBoxSection() {
   const [transform, setTransform] = useState<TransformState>({
     x: 100,
     y: 100,
@@ -145,33 +294,32 @@ export function BoundingBoxDemo() {
     height: 150,
     rotation: 0,
   });
-
   const [interactionLog, setInteractionLog] = useState<string[]>([]);
 
-  const addLog = (message: string) => {
+  const addLog = useCallback((message: string) => {
     setInteractionLog((prev) => [...prev.slice(-4), message]);
-  };
+  }, []);
 
-  const handleMove = (deltaX: number, deltaY: number) => {
+  const handleMove = useCallback((deltaX: number, deltaY: number) => {
     setTransform((prev) => ({
       ...prev,
       x: prev.x + deltaX,
       y: prev.y + deltaY,
     }));
-  };
+  }, []);
 
-  const handleResize = (handle: HandlePosition, deltaX: number, deltaY: number) => {
+  const handleResize = useCallback((handle: HandlePosition, deltaX: number, deltaY: number) => {
     setTransform((prev) => applyResize(prev, handle, deltaX, deltaY));
-  };
+  }, []);
 
-  const handleRotate = (angle: number) => {
+  const handleRotate = useCallback((angle: number) => {
     setTransform((prev) => ({
       ...prev,
       rotation: angle,
     }));
-  };
+  }, []);
 
-  const resetTransform = () => {
+  const resetTransform = useCallback(() => {
     setTransform({
       x: 100,
       y: 100,
@@ -180,8 +328,182 @@ export function BoundingBoxDemo() {
       rotation: 0,
     });
     setInteractionLog([]);
-  };
+  }, []);
 
+  const handleMoveStart = useCallback(() => addLog("Move started"), [addLog]);
+  const handleMoveEnd = useCallback(() => addLog("Move ended"), [addLog]);
+  const handleResizeStart = useCallback((h: HandlePosition) => addLog(`Resize started: ${h}`), [addLog]);
+  const handleResizeEnd = useCallback((h: HandlePosition) => addLog(`Resize ended: ${h}`), [addLog]);
+  const handleRotateStart = useCallback(() => addLog("Rotate started"), [addLog]);
+  const handleRotateEnd = useCallback(() => addLog("Rotate ended"), [addLog]);
+
+  return (
+    <DemoSection label="Interactive BoundingBox">
+      <DemoMutedText>
+        Drag to move, use corner/edge handles to resize, hover outside corners to rotate.
+        Works with mouse and touch. Handles stay consistent size when zooming.
+      </DemoMutedText>
+      <div style={{ display: "flex", gap: 16 }}>
+        <InteractiveCanvas
+          transform={transform}
+          onMove={handleMove}
+          onResize={handleResize}
+          onRotate={handleRotate}
+          onMoveStart={handleMoveStart}
+          onMoveEnd={handleMoveEnd}
+          onResizeStart={handleResizeStart}
+          onResizeEnd={handleResizeEnd}
+          onRotateStart={handleRotateStart}
+          onRotateEnd={handleRotateEnd}
+        />
+        <div style={{ flex: "0 0 200px" }}>
+          <h4 style={{ margin: "0 0 8px" }}>Transform State</h4>
+          <TransformDisplay transform={transform} />
+          <div style={{ marginTop: 12 }}>
+            <Button variant="secondary" size="sm" onClick={resetTransform}>
+              Reset
+            </Button>
+          </div>
+          <h4 style={{ margin: "16px 0 8px" }}>Event Log</h4>
+          <EventLogDisplay logs={interactionLog} />
+        </div>
+      </div>
+    </DemoSection>
+  );
+});
+
+// ============================================================================
+// STATIC SECTIONS - Each fully isolated
+// ============================================================================
+
+// Pre-computed static svgLayers to avoid re-creation
+const NO_ROTATION_SVG_LAYERS = (
+  <BoundingBox
+    x={80}
+    y={60}
+    width={150}
+    height={100}
+    showRotationHandle={false}
+  />
+);
+
+const CORNER_ONLY_SVG_LAYERS = (
+  <BoundingBox
+    x={80}
+    y={60}
+    width={150}
+    height={100}
+    showEdgeHandles={false}
+    showRotationHandle={false}
+  />
+);
+
+const formatCustomLabel = (w: number, h: number) => `${Math.round(w)}px × ${Math.round(h)}px`;
+
+const CUSTOM_STYLING_SVG_LAYERS = (
+  <BoundingBox
+    x={80}
+    y={60}
+    width={180}
+    height={120}
+    strokeColor="#f59e0b"
+    handleFill="#fef3c7"
+    handleStroke="#f59e0b"
+    labelBackground="#f59e0b"
+    formatLabel={formatCustomLabel}
+  />
+);
+
+const NON_INTERACTIVE_SVG_LAYERS = (
+  <BoundingBox
+    x={80}
+    y={60}
+    width={160}
+    height={100}
+    interactive={false}
+  />
+);
+
+const NoRotationSection = memo(function NoRotationSection() {
+  const [viewport, setViewport] = useState<ViewportState>({ x: 0, y: 0, scale: 1 });
+
+  return (
+    <DemoSection label="Without Rotation Zones">
+      <DemoMutedText>Bounding box without corner rotation zones (resize only).</DemoMutedText>
+      <Canvas
+        viewport={viewport}
+        onViewportChange={setViewport}
+        width={400}
+        height={250}
+        showGrid
+        gridSize={50}
+        svgLayers={NO_ROTATION_SVG_LAYERS}
+      />
+    </DemoSection>
+  );
+});
+
+const CornerOnlySection = memo(function CornerOnlySection() {
+  const [viewport, setViewport] = useState<ViewportState>({ x: 0, y: 0, scale: 1 });
+
+  return (
+    <DemoSection label="Corner Handles Only">
+      <DemoMutedText>Bounding box with only corner handles (no edge handles).</DemoMutedText>
+      <Canvas
+        viewport={viewport}
+        onViewportChange={setViewport}
+        width={400}
+        height={250}
+        showGrid
+        gridSize={50}
+        svgLayers={CORNER_ONLY_SVG_LAYERS}
+      />
+    </DemoSection>
+  );
+});
+
+const CustomStylingSection = memo(function CustomStylingSection() {
+  const [viewport, setViewport] = useState<ViewportState>({ x: 0, y: 0, scale: 1 });
+
+  return (
+    <DemoSection label="Custom Styling">
+      <DemoMutedText>Custom stroke color, handle colors, and label formatter.</DemoMutedText>
+      <Canvas
+        viewport={viewport}
+        onViewportChange={setViewport}
+        width={400}
+        height={250}
+        showGrid
+        gridSize={50}
+        svgLayers={CUSTOM_STYLING_SVG_LAYERS}
+      />
+    </DemoSection>
+  );
+});
+
+const NonInteractiveSection = memo(function NonInteractiveSection() {
+  const [viewport, setViewport] = useState<ViewportState>({ x: 0, y: 0, scale: 1 });
+
+  return (
+    <DemoSection label="Non-interactive">
+      <DemoMutedText>Display-only bounding box (no pointer events).</DemoMutedText>
+      <Canvas
+        viewport={viewport}
+        onViewportChange={setViewport}
+        width={400}
+        height={250}
+        showGrid
+        gridSize={50}
+        svgLayers={NON_INTERACTIVE_SVG_LAYERS}
+      />
+    </DemoSection>
+  );
+});
+
+// ============================================================================
+// MAIN COMPONENT - Just a static container now
+// ============================================================================
+export function BoundingBoxDemo() {
   return (
     <DemoContainer title="BoundingBox">
       <DemoMutedText>
@@ -189,200 +511,11 @@ export function BoundingBoxDemo() {
         Supports mouse and touch interactions.
       </DemoMutedText>
 
-      <DemoSection label="Interactive BoundingBox">
-        <DemoMutedText>
-          Drag to move, use corner/edge handles to resize, hover outside corners to rotate.
-          Works with mouse and touch. Handles stay consistent size when zooming.
-        </DemoMutedText>
-        <div style={{ display: "flex", gap: 16 }}>
-          <Canvas
-            viewport={viewport}
-            onViewportChange={setViewport}
-            width={600}
-            height={400}
-            svgLayers={
-              <>
-                <CanvasCheckerboard size={8} />
-                <CanvasGridLayer minorSize={10} majorSize={100} showOrigin />
-                {/* Visual element rendered in SVG layer using foreignObject */}
-                <g transform={`rotate(${transform.rotation} ${transform.x + transform.width / 2} ${transform.y + transform.height / 2})`}>
-                  <foreignObject
-                    x={transform.x}
-                    y={transform.y}
-                    width={transform.width}
-                    height={transform.height}
-                  >
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        background: "var(--rei-color-primary)",
-                        borderRadius: 8,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontWeight: 600,
-                        boxSizing: "border-box",
-                      }}
-                    >
-                      Selected
-                    </div>
-                  </foreignObject>
-                </g>
-                {/* BoundingBox on top of the visual element */}
-                <BoundingBox
-                  x={transform.x}
-                  y={transform.y}
-                  width={transform.width}
-                  height={transform.height}
-                  rotation={transform.rotation}
-                  onMoveStart={() => addLog("Move started")}
-                  onMove={handleMove}
-                  onMoveEnd={() => addLog("Move ended")}
-                  onResizeStart={(h) => addLog(`Resize started: ${h}`)}
-                  onResize={handleResize}
-                  onResizeEnd={(h) => addLog(`Resize ended: ${h}`)}
-                  onRotateStart={() => addLog("Rotate started")}
-                  onRotate={handleRotate}
-                  onRotateEnd={() => addLog("Rotate ended")}
-                />
-              </>
-            }
-          />
-          <div style={{ flex: "0 0 200px" }}>
-            <h4 style={{ margin: "0 0 8px" }}>Transform State</h4>
-            <DemoMutedText size={12}>
-              <div>X: {transform.x.toFixed(1)}</div>
-              <div>Y: {transform.y.toFixed(1)}</div>
-              <div>Width: {transform.width.toFixed(1)}</div>
-              <div>Height: {transform.height.toFixed(1)}</div>
-              <div>Rotation: {transform.rotation.toFixed(1)}°</div>
-            </DemoMutedText>
-            <div style={{ marginTop: 12 }}>
-              <Button variant="secondary" size="sm" onClick={resetTransform}>
-                Reset
-              </Button>
-            </div>
-            <h4 style={{ margin: "16px 0 8px" }}>Event Log</h4>
-            <div
-              style={{
-                fontSize: 10,
-                fontFamily: "monospace",
-                background: "var(--rei-color-surface-overlay)",
-                padding: 8,
-                borderRadius: 4,
-                minHeight: 80,
-              }}
-            >
-              {interactionLog.length === 0 ? (
-                <span style={{ color: "var(--rei-color-text-muted)" }}>
-                  Interact with the box...
-                </span>
-              ) : (
-                interactionLog.map((log, i) => <div key={i}>{log}</div>)
-              )}
-            </div>
-          </div>
-        </div>
-      </DemoSection>
-
-      <DemoSection label="Without Rotation Zones">
-        <DemoMutedText>
-          Bounding box without corner rotation zones (resize only).
-        </DemoMutedText>
-        <Canvas
-          viewport={viewport}
-          onViewportChange={setViewport}
-          width={400}
-          height={250}
-          showGrid
-          gridSize={50}
-          svgLayers={
-            <BoundingBox
-              x={80}
-              y={60}
-              width={150}
-              height={100}
-              showRotationHandle={false}
-            />
-          }
-        />
-      </DemoSection>
-
-      <DemoSection label="Corner Handles Only">
-        <DemoMutedText>
-          Bounding box with only corner handles (no edge handles).
-        </DemoMutedText>
-        <Canvas
-          viewport={viewport}
-          onViewportChange={setViewport}
-          width={400}
-          height={250}
-          showGrid
-          gridSize={50}
-          svgLayers={
-            <BoundingBox
-              x={80}
-              y={60}
-              width={150}
-              height={100}
-              showEdgeHandles={false}
-              showRotationHandle={false}
-            />
-          }
-        />
-      </DemoSection>
-
-      <DemoSection label="Custom Styling">
-        <DemoMutedText>
-          Custom stroke color, handle colors, and label formatter.
-        </DemoMutedText>
-        <Canvas
-          viewport={viewport}
-          onViewportChange={setViewport}
-          width={400}
-          height={250}
-          showGrid
-          gridSize={50}
-          svgLayers={
-            <BoundingBox
-              x={80}
-              y={60}
-              width={180}
-              height={120}
-              strokeColor="#f59e0b"
-              handleFill="#fef3c7"
-              handleStroke="#f59e0b"
-              labelBackground="#f59e0b"
-              formatLabel={(w, h) => `${Math.round(w)}px × ${Math.round(h)}px`}
-            />
-          }
-        />
-      </DemoSection>
-
-      <DemoSection label="Non-interactive">
-        <DemoMutedText>
-          Display-only bounding box (no pointer events).
-        </DemoMutedText>
-        <Canvas
-          viewport={viewport}
-          onViewportChange={setViewport}
-          width={400}
-          height={250}
-          showGrid
-          gridSize={50}
-          svgLayers={
-            <BoundingBox
-              x={80}
-              y={60}
-              width={160}
-              height={100}
-              interactive={false}
-            />
-          }
-        />
-      </DemoSection>
+      <InteractiveBoundingBoxSection />
+      <NoRotationSection />
+      <CornerOnlySection />
+      <CustomStylingSection />
+      <NonInteractiveSection />
     </DemoContainer>
   );
 }

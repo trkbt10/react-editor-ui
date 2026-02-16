@@ -5,8 +5,7 @@
  * They receive viewport state directly via props.
  */
 
-import type { ReactNode, CSSProperties } from "react";
-import { useMemo } from "react";
+import { memo, useMemo, type ReactNode, type CSSProperties } from "react";
 import {
   COLOR_CANVAS_RULER_BG,
   COLOR_CANVAS_RULER_TEXT,
@@ -301,7 +300,7 @@ function getContainerStyle(params: ContainerStyleParams): CSSProperties {
 /**
  * Horizontal ruler (top)
  */
-export function CanvasHorizontalRuler({
+export const CanvasHorizontalRuler = memo(function CanvasHorizontalRuler({
   viewport,
   width,
   rulerOffset = 0,
@@ -371,12 +370,12 @@ export function CanvasHorizontalRuler({
       </svg>
     </div>
   );
-}
+});
 
 /**
  * Vertical ruler (left)
  */
-export function CanvasVerticalRuler({
+export const CanvasVerticalRuler = memo(function CanvasVerticalRuler({
   viewport,
   height,
   size = DEFAULT_RULER_CONFIG.size,
@@ -445,23 +444,26 @@ export function CanvasVerticalRuler({
       </svg>
     </div>
   );
-}
+});
 
 /**
  * Corner piece connecting horizontal and vertical rulers
  */
-export function CanvasRulerCorner({
+export const CanvasRulerCorner = memo(function CanvasRulerCorner({
   size = DEFAULT_RULER_CONFIG.size,
 }: CanvasRulerCornerProps): ReactNode {
-  const style: CSSProperties = {
-    width: size,
-    height: size,
-    background: COLOR_CANVAS_RULER_BG,
-    borderRight: `1px solid ${COLOR_BORDER}`,
-    borderBottom: `1px solid ${COLOR_BORDER}`,
-    boxSizing: "border-box",
-    flexShrink: 0,
-  };
+  const style: CSSProperties = useMemo(
+    () => ({
+      width: size,
+      height: size,
+      background: COLOR_CANVAS_RULER_BG,
+      borderRight: `1px solid ${COLOR_BORDER}`,
+      borderBottom: `1px solid ${COLOR_BORDER}`,
+      boxSizing: "border-box",
+      flexShrink: 0,
+    }),
+    [size],
+  );
 
   return <div style={style} data-testid="canvas-ruler-corner" />;
-}
+});

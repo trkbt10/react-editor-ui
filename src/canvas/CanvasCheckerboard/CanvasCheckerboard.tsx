@@ -5,8 +5,7 @@
  * Use as an SVG layer in Canvas.
  */
 
-import type { ReactNode } from "react";
-import { useId } from "react";
+import { memo, useId, type ReactNode } from "react";
 import {
   COLOR_CANVAS_CHECKER_LIGHT,
   COLOR_CANVAS_CHECKER_DARK,
@@ -28,7 +27,7 @@ export type CanvasCheckerboardProps = {
  * Renders a checkerboard pattern using SVG pattern.
  * Use with Canvas svgLayers prop.
  */
-export function CanvasCheckerboard({
+export const CanvasCheckerboard = memo(function CanvasCheckerboard({
   size = 10,
   lightColor = COLOR_CANVAS_CHECKER_LIGHT,
   darkColor = COLOR_CANVAS_CHECKER_DARK,
@@ -70,4 +69,4 @@ export function CanvasCheckerboard({
       />
     </g>
   );
-}
+});

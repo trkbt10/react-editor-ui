@@ -160,6 +160,19 @@ export function useGestures(config: UseGesturesConfig): UseGesturesResult {
   // Panning state (reactive for cursor updates)
   const [isPanning, setIsPanning] = useState(false);
 
+  // Keep viewport and config in refs for stable callbacks
+  const viewportRef = useRef(viewport);
+  viewportRef.current = viewport;
+
+  const onViewportChangeRef = useRef(onViewportChange);
+  onViewportChangeRef.current = onViewportChange;
+
+  const gestureConfigRef = useRef(gestureConfig);
+  gestureConfigRef.current = gestureConfig;
+
+  const constraintsRef = useRef(constraints);
+  constraintsRef.current = constraints;
+
   // Pointer state for single-pointer pan (non-reactive for performance)
   const pointerState = useRef<PointerState>({
     isPanning: false,
@@ -182,11 +195,14 @@ export function useGestures(config: UseGesturesConfig): UseGesturesResult {
 
   const handlePointerDown = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
+      const vp = viewportRef.current;
+      const config = gestureConfigRef.current;
+
       // Track pointer for pinch
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
       // Check for pinch start (2 pointers)
-      if (pointers.current.size === 2 && gestureConfig.pinchZoom) {
+      if (pointers.current.size === 2 && config.pinchZoom) {
         // Cancel any ongoing pan when switching to pinch
         if (pointerState.current.isPanning) {
           pointerState.current.isPanning = false;
@@ -202,7 +218,7 @@ export function useGestures(config: UseGesturesConfig): UseGesturesResult {
           pinchState.current = {
             active: true,
             initialDistance: distance,
-            initialScale: viewport.scale,
+            initialScale: vp.scale,
             centerX: (pts[0].x + pts[1].x) / 2 - rect.left,
             centerY: (pts[0].y + pts[1].y) / 2 - rect.top,
           };
@@ -211,24 +227,28 @@ export function useGestures(config: UseGesturesConfig): UseGesturesResult {
       }
 
       // Check for pan
-      if (shouldPan(e, gestureConfig, isSpacePanning)) {
+      if (shouldPan(e, config, isSpacePanning)) {
         e.currentTarget.setPointerCapture(e.pointerId);
         pointerState.current = {
           isPanning: true,
           pointerId: e.pointerId,
           startX: e.clientX,
           startY: e.clientY,
-          startViewportX: viewport.x,
-          startViewportY: viewport.y,
+          startViewportX: vp.x,
+          startViewportY: vp.y,
         };
         setIsPanning(true);
       }
     },
-    [viewport, gestureConfig, isSpacePanning, containerRef],
+    [isSpacePanning, containerRef],
   );
 
   const handlePointerMove = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
+      const vp = viewportRef.current;
+      const cons = constraintsRef.current;
+      const onVpChange = onViewportChangeRef.current;
+
       // Update pointer position for pinch
       if (pointers.current.has(e.pointerId)) {
         pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -239,32 +259,32 @@ export function useGestures(config: UseGesturesConfig): UseGesturesResult {
         const pts = Array.from(pointers.current.values());
         const newDistance = getDistance(pts[0].x, pts[1].y, pts[1].x, pts[1].y);
         const scale = pinchState.current.initialScale * (newDistance / pinchState.current.initialDistance);
-        const clampedScale = clamp(scale, constraints.minScale, constraints.maxScale);
+        const clampedScale = clamp(scale, cons.minScale, cons.maxScale);
 
         const newViewport = zoomToPoint(
-          { ...viewport, scale: pinchState.current.initialScale },
+          { ...vp, scale: pinchState.current.initialScale },
           pinchState.current.centerX,
           pinchState.current.centerY,
           clampedScale,
         );
 
-        onViewportChange(newViewport);
+        onVpChange(newViewport);
         return;
       }
 
       // Handle pan
       if (pointerState.current.isPanning && pointerState.current.pointerId === e.pointerId) {
-        const dx = (e.clientX - pointerState.current.startX) / viewport.scale;
-        const dy = (e.clientY - pointerState.current.startY) / viewport.scale;
+        const dx = (e.clientX - pointerState.current.startX) / vp.scale;
+        const dy = (e.clientY - pointerState.current.startY) / vp.scale;
 
-        onViewportChange({
-          ...viewport,
+        onVpChange({
+          ...vp,
           x: pointerState.current.startViewportX - dx,
           y: pointerState.current.startViewportY - dy,
         });
       }
     },
-    [viewport, onViewportChange, constraints],
+    [],
   );
 
   const handlePointerUp = useCallback(
