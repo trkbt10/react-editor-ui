@@ -11,19 +11,29 @@ export function StrokeAlignCenterIcon({
   const resolvedSize = resolveSize(size);
   return (
     <svg
-      width={resolvedSize}
-      height={resolvedSize}
-      viewBox="0 0 24 24"
+      viewBox="0 0 16 16"
       fill="none"
-      stroke={color}
-      strokeWidth="1"
-      style={style}
+      style={{ width: resolvedSize, height: resolvedSize, ...style }}
       className={className}
       aria-hidden={!ariaLabel}
       aria-label={ariaLabel}
     >
-      <rect x="6" y="6" width="12" height="12" strokeDasharray="2 2" />
-      <rect x="6" y="6" width="12" height="12" strokeWidth="3" />
+      {/* Shape boundary (L-shape corner) - centered on stroke */}
+      <path
+        d="M3.5 12.5V3.5h9"
+        stroke={color}
+        strokeWidth="1"
+        opacity="0.35"
+        fill="none"
+      />
+      {/* Thick stroke CENTERED on the shape boundary */}
+      <path
+        d="M3.5 12.5V3.5h9"
+        stroke={color}
+        strokeWidth="4"
+        strokeLinecap="square"
+        fill="none"
+      />
     </svg>
   );
 }

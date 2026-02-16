@@ -503,7 +503,7 @@ export function LayerItem({
         {/* Drag Handle */}
         {showDragHandle && (
           <span style={dragHandleStyle} data-testid="drag-handle">
-            <DragHandleIcon />
+            <DragHandleIcon size={10} />
           </span>
         )}
 
@@ -535,7 +535,7 @@ export function LayerItem({
                 style={visible ? actionButtonStyle : hiddenActionStyle}
                 data-testid="visibility-toggle"
               >
-                <EyeIcon visible={visible} />
+                <EyeIcon visible={visible} size={14} />
               </button>
             )}
 
@@ -552,7 +552,7 @@ export function LayerItem({
                 style={locked ? activeActionStyle : actionButtonStyle}
                 data-testid="lock-toggle"
               >
-                <LockIcon locked={locked} />
+                <LockIcon locked={locked} size={14} />
               </button>
             )}
           </>

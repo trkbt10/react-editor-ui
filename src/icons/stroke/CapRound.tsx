@@ -11,18 +11,15 @@ export function CapRoundIcon({
   const resolvedSize = resolveSize(size);
   return (
     <svg
-      width={resolvedSize}
-      height={resolvedSize}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      style={style}
+      viewBox="0 0 16 16"
+      fill={color}
+      style={{ width: resolvedSize, height: resolvedSize, ...style }}
       className={className}
       aria-hidden={!ariaLabel}
       aria-label={ariaLabel}
     >
-      <line x1="6" y1="12" x2="18" y2="12" strokeLinecap="round" strokeWidth="4" />
+      {/* Thick stroke with rounded ends */}
+      <rect x="2" y="5" width="12" height="6" rx="3" />
     </svg>
   );
 }

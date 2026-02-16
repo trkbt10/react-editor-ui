@@ -18,13 +18,11 @@ export function LockIcon({
   if (locked) {
     return (
       <svg
-        width={resolvedSize}
-        height={resolvedSize}
         viewBox="0 0 24 24"
         fill="none"
         stroke={color}
         strokeWidth="2"
-        style={style}
+        style={{ width: resolvedSize, height: resolvedSize, ...style }}
         className={className}
         aria-hidden={!ariaLabel}
         aria-label={ariaLabel}
@@ -37,13 +35,11 @@ export function LockIcon({
 
   return (
     <svg
-      width={resolvedSize}
-      height={resolvedSize}
       viewBox="0 0 24 24"
       fill="none"
       stroke={color}
       strokeWidth="2"
-      style={style}
+      style={{ width: resolvedSize, height: resolvedSize, ...style }}
       className={className}
       aria-hidden={!ariaLabel}
       aria-label={ariaLabel}

@@ -11,13 +11,11 @@ export function RotationIcon({
   const resolvedSize = resolveSize(size);
   return (
     <svg
-      width={resolvedSize}
-      height={resolvedSize}
       viewBox="0 0 12 12"
       fill="none"
       stroke={color}
       strokeWidth="1.5"
-      style={style}
+      style={{ width: resolvedSize, height: resolvedSize, ...style }}
       className={className}
       aria-hidden={!ariaLabel}
       aria-label={ariaLabel}

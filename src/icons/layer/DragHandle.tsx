@@ -1,21 +1,20 @@
 import type { IconProps } from "../types";
-import { resolveSize } from "../utils";
 
 export function DragHandleIcon({
-  size,
+  size = 10,
   color = "currentColor",
   style,
   className,
   "aria-label": ariaLabel,
 }: IconProps) {
-  const resolvedSize = resolveSize(size);
+  // Preserve 10:14 aspect ratio
+  const width = typeof size === "number" ? size : 10;
+  const height = Math.round(width * 1.4);
   return (
     <svg
-      width={resolvedSize}
-      height={resolvedSize}
       viewBox="0 0 10 14"
       fill={color}
-      style={style}
+      style={{ width, height, ...style }}
       className={className}
       aria-hidden={!ariaLabel}
       aria-label={ariaLabel}

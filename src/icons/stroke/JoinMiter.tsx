@@ -11,19 +11,15 @@ export function JoinMiterIcon({
   const resolvedSize = resolveSize(size);
   return (
     <svg
-      width={resolvedSize}
-      height={resolvedSize}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.5"
-      style={style}
+      viewBox="0 0 16 16"
+      fill={color}
+      style={{ width: resolvedSize, height: resolvedSize, ...style }}
       className={className}
       aria-hidden={!ariaLabel}
       aria-label={ariaLabel}
     >
-      <path d="M4 20L4 4L20 4" strokeLinejoin="miter" strokeDasharray="2 2" />
-      <path d="M6 18L6 6L18 6" strokeLinejoin="miter" />
+      {/* Two thick strokes meeting at sharp corner (miter join) */}
+      <path d="M3 14V3h11v3H6v8H3z" />
     </svg>
   );
 }

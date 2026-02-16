@@ -11,19 +11,29 @@ export function StrokeAlignInsideIcon({
   const resolvedSize = resolveSize(size);
   return (
     <svg
-      width={resolvedSize}
-      height={resolvedSize}
-      viewBox="0 0 24 24"
+      viewBox="0 0 16 16"
       fill="none"
-      stroke={color}
-      strokeWidth="1"
-      style={style}
+      style={{ width: resolvedSize, height: resolvedSize, ...style }}
       className={className}
       aria-hidden={!ariaLabel}
       aria-label={ariaLabel}
     >
-      <rect x="4" y="4" width="16" height="16" strokeDasharray="2 2" />
-      <rect x="6" y="6" width="12" height="12" strokeWidth="3" />
+      {/* Shape boundary (L-shape corner) */}
+      <path
+        d="M2 14V2h12"
+        stroke={color}
+        strokeWidth="1"
+        opacity="0.35"
+        fill="none"
+      />
+      {/* Thick stroke INSIDE the shape boundary */}
+      <path
+        d="M5 11V5h6"
+        stroke={color}
+        strokeWidth="4"
+        strokeLinecap="square"
+        fill="none"
+      />
     </svg>
   );
 }

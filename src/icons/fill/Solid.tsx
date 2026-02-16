@@ -11,11 +11,9 @@ export function FillSolidIcon({
   const resolvedSize = resolveSize(size);
   return (
     <svg
-      width={resolvedSize}
-      height={resolvedSize}
       viewBox="0 0 14 14"
       fill={color}
-      style={{ display: "block", ...style }}
+      style={{ width: resolvedSize, height: resolvedSize, display: "block", ...style }}
       className={className}
       aria-hidden={!ariaLabel}
       aria-label={ariaLabel}

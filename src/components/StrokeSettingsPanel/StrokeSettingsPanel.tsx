@@ -2,6 +2,7 @@
  * @file StrokeSettingsPanel component - Comprehensive stroke settings panel
  */
 
+import { memo, useCallback } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Panel } from "../Panel/Panel";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
@@ -14,30 +15,16 @@ import {
   SIZE_FONT_SM,
   SPACE_SM,
 } from "../../constants/styles";
+import {
+  FlipHorizontalIcon,
+  JoinMiterIcon,
+  JoinRoundIcon,
+  JoinBevelIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "../../icons";
 
-// Icons
-const FlipIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M8 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h3" />
-    <path d="M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3" />
-    <line x1="12" y1="20" x2="12" y2="4" />
-  </svg>
-);
-
-const ArrowLeftIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
-  </svg>
-);
-
-const ArrowRightIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="5" y1="12" x2="19" y2="12" />
-    <polyline points="12 5 19 12 12 19" />
-  </svg>
-);
-
+// Icons for input fields
 const FrequencyIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M4 12h4l3-9 6 18 3-9h4" />
@@ -56,31 +43,9 @@ const SmoothIcon = () => (
   </svg>
 );
 
-const MiterIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M4 20V4h16" strokeLinejoin="miter" />
-  </svg>
-);
-
-// Join icons
-const JoinMiterIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M4 20L4 4L20 4" strokeLinejoin="miter" strokeDasharray="2 2" />
-    <path d="M6 18L6 6L18 6" strokeLinejoin="miter" />
-  </svg>
-);
-
-const JoinRoundIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M4 20L4 8C4 5.79 5.79 4 8 4L20 4" strokeDasharray="2 2" />
-    <path d="M6 18L6 8C6 6.9 6.9 6 8 6L18 6" />
-  </svg>
-);
-
-const JoinBevelIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M4 20L4 8L8 4L20 4" strokeDasharray="2 2" />
-    <path d="M6 18L6 8L10 6L18 6" />
+const MiterAngleIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M3 14V3h11v3H6v8H3z" />
   </svg>
 );
 
@@ -244,18 +209,23 @@ function PropertyRow({ label, children }: { label: string; children: ReactNode }
   );
 }
 
-export function StrokeSettingsPanel({
+
+
+
+
+
+export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
   settings,
   onChange,
   onClose,
   className,
 }: StrokeSettingsPanelProps) {
-  const updateSetting = <K extends keyof StrokeSettings>(
-    key: K,
-    value: StrokeSettings[K],
-  ) => {
-    onChange({ ...settings, [key]: value });
-  };
+  const updateSetting = useCallback(
+    <K extends keyof StrokeSettings>(key: K, value: StrokeSettings[K]) => {
+      onChange({ ...settings, [key]: value });
+    },
+    [onChange, settings],
+  );
 
   const tabOptions = [
     { value: "basic" as const, label: "Basic" },
@@ -300,14 +270,14 @@ export function StrokeSettingsPanel({
   ];
 
   const joinOptions = [
-    { value: "miter" as const, icon: <JoinMiterIcon />, "aria-label": "Miter join" },
-    { value: "round" as const, icon: <JoinRoundIcon />, "aria-label": "Round join" },
-    { value: "bevel" as const, icon: <JoinBevelIcon />, "aria-label": "Bevel join" },
+    { value: "miter" as const, icon: <JoinMiterIcon size={20} />, "aria-label": "Miter join" },
+    { value: "round" as const, icon: <JoinRoundIcon size={20} />, "aria-label": "Round join" },
+    { value: "bevel" as const, icon: <JoinBevelIcon size={20} />, "aria-label": "Bevel join" },
   ];
 
   const directionOptions = [
-    { value: "left" as const, icon: <ArrowLeftIcon />, "aria-label": "Left direction" },
-    { value: "right" as const, icon: <ArrowRightIcon />, "aria-label": "Right direction" },
+    { value: "left" as const, icon: <ChevronLeftIcon size={18} />, "aria-label": "Left direction" },
+    { value: "right" as const, icon: <ChevronRightIcon size={18} />, "aria-label": "Right direction" },
   ];
 
   const renderBasicTab = () => (
@@ -333,9 +303,9 @@ export function StrokeSettingsPanel({
           />
         </div>
         <IconButton
-          icon={<FlipIcon />}
+          icon={<FlipHorizontalIcon size={16} />}
           aria-label="Flip width profile"
-          size="sm"
+          size="md"
         />
       </PropertyRow>
 
@@ -344,7 +314,7 @@ export function StrokeSettingsPanel({
           options={joinOptions}
           value={settings.join}
           onChange={(v) => updateSetting("join", v as JoinType)}
-          size="sm"
+          size="md"
           aria-label="Join type"
         />
       </PropertyRow>
@@ -355,7 +325,7 @@ export function StrokeSettingsPanel({
             value={settings.miterAngle}
             onChange={(v) => updateSetting("miterAngle", v)}
             type="number"
-            iconStart={<MiterIcon />}
+            iconStart={<MiterAngleIcon />}
             suffix="°"
             aria-label="Miter angle"
           />
@@ -424,7 +394,7 @@ export function StrokeSettingsPanel({
           options={directionOptions}
           value={settings.brushDirection}
           onChange={(v) => updateSetting("brushDirection", v as BrushDirection)}
-          size="sm"
+          size="md"
           aria-label="Brush direction"
         />
       </PropertyRow>
@@ -439,9 +409,9 @@ export function StrokeSettingsPanel({
           />
         </div>
         <IconButton
-          icon={<FlipIcon />}
+          icon={<FlipHorizontalIcon size={16} />}
           aria-label="Flip brush width profile"
-          size="sm"
+          size="md"
         />
       </PropertyRow>
     </>
@@ -475,4 +445,4 @@ export function StrokeSettingsPanel({
       {renderTabContent()}
     </Panel>
   );
-}
+});
