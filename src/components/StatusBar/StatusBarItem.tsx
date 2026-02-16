@@ -2,6 +2,7 @@
  * @file StatusBarItem component - Individual status bar item
  */
 
+import { memo, useMemo, useCallback } from "react";
 import type { ReactNode, CSSProperties, PointerEvent } from "react";
 import {
   COLOR_HOVER,
@@ -22,43 +23,48 @@ export type StatusBarItemProps = {
 };
 
 /** Individual clickable status bar item with hover effect */
-export function StatusBarItem({
+export const StatusBarItem = memo(function StatusBarItem({
   children,
   onClick,
   className,
 }: StatusBarItemProps) {
-  const style: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_XS,
-    padding: `${SPACE_XS} ${SPACE_SM}`,
-    backgroundColor: "transparent",
-    color: COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_XS,
-    border: "none",
-    borderRadius: RADIUS_SM,
-    cursor: onClick ? "pointer" : "default",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}, color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    whiteSpace: "nowrap",
-  };
+  const style = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      gap: SPACE_XS,
+      padding: `${SPACE_XS} ${SPACE_SM}`,
+      backgroundColor: "transparent",
+      color: COLOR_TEXT_MUTED,
+      fontSize: SIZE_FONT_XS,
+      border: "none",
+      borderRadius: RADIUS_SM,
+      cursor: onClick ? "pointer" : "default",
+      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}, color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      whiteSpace: "nowrap",
+    }),
+    [onClick],
+  );
 
-  const handlePointerEnter = (
-    e: PointerEvent<HTMLButtonElement | HTMLSpanElement>,
-  ) => {
-    if (onClick) {
-      e.currentTarget.style.backgroundColor = COLOR_HOVER;
-      e.currentTarget.style.color = COLOR_TEXT;
-    }
-  };
+  const handlePointerEnter = useCallback(
+    (e: PointerEvent<HTMLButtonElement | HTMLSpanElement>) => {
+      if (onClick) {
+        e.currentTarget.style.backgroundColor = COLOR_HOVER;
+        e.currentTarget.style.color = COLOR_TEXT;
+      }
+    },
+    [onClick],
+  );
 
-  const handlePointerLeave = (
-    e: PointerEvent<HTMLButtonElement | HTMLSpanElement>,
-  ) => {
-    if (onClick) {
-      e.currentTarget.style.backgroundColor = "transparent";
-      e.currentTarget.style.color = COLOR_TEXT_MUTED;
-    }
-  };
+  const handlePointerLeave = useCallback(
+    (e: PointerEvent<HTMLButtonElement | HTMLSpanElement>) => {
+      if (onClick) {
+        e.currentTarget.style.backgroundColor = "transparent";
+        e.currentTarget.style.color = COLOR_TEXT_MUTED;
+      }
+    },
+    [onClick],
+  );
 
   if (onClick) {
     return (
@@ -80,4 +86,4 @@ export function StatusBarItem({
       {children}
     </span>
   );
-}
+});

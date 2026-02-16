@@ -2,7 +2,7 @@
  * @file VideoFillEditor component - Editor for video fill settings
  */
 
-import type { CSSProperties } from "react";
+import { memo, useMemo, useCallback, type CSSProperties } from "react";
 import { Input } from "../Input/Input";
 import { Checkbox } from "../Checkbox/Checkbox";
 import { Slider } from "../Slider/Slider";
@@ -66,95 +66,118 @@ function renderPreview(
   );
 }
 
+// Static styles
+const previewContainerStyle: CSSProperties = {
+  position: "relative",
+  width: "100%",
+  height: "120px",
+  borderRadius: RADIUS_SM,
+  border: `1px solid ${COLOR_BORDER}`,
+  overflow: "hidden",
+  backgroundColor: "#000",
+};
+
+const videoStyle: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+};
+
+const placeholderStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "100%",
+  gap: SPACE_SM,
+};
+
+const iconStyle: CSSProperties = {
+  color: COLOR_TEXT_MUTED,
+};
+
+const textStyle: CSSProperties = {
+  fontSize: SIZE_FONT_SM,
+  color: COLOR_TEXT_MUTED,
+};
+
+const checkboxGroupStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: SPACE_SM,
+};
+
+const opacityContainerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: SPACE_SM,
+  width: "100%",
+};
+
+const opacityValueStyle: CSSProperties = {
+  width: "32px",
+  textAlign: "right",
+  fontSize: SIZE_FONT_SM,
+  color: COLOR_TEXT,
+  fontVariantNumeric: "tabular-nums",
+};
+
+const sliderContainerStyle: CSSProperties = {
+  flex: 1,
+};
+
 /** Video fill editor with URL input, sizing, and playback controls */
-export function VideoFillEditor({
+export const VideoFillEditor = memo(function VideoFillEditor({
   value,
   onChange,
   disabled = false,
 }: VideoFillEditorProps) {
   const hasVideo = Boolean(value.url);
 
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_MD,
-    opacity: disabled ? 0.5 : 1,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_MD,
+      opacity: disabled ? 0.5 : 1,
+    }),
+    [disabled],
+  );
 
-  const previewContainerStyle: CSSProperties = {
-    position: "relative",
-    width: "100%",
-    height: "120px",
-    borderRadius: RADIUS_SM,
-    border: `1px solid ${COLOR_BORDER}`,
-    overflow: "hidden",
-    backgroundColor: "#000",
-  };
+  const handleUrlChange = useCallback(
+    (url: string) => {
+      onChange({ ...value, url });
+    },
+    [onChange, value],
+  );
 
-  const videoStyle: CSSProperties = {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  };
+  const handleLoopChange = useCallback(
+    (loop: boolean) => {
+      onChange({ ...value, loop });
+    },
+    [onChange, value],
+  );
 
-  const placeholderStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    gap: SPACE_SM,
-  };
+  const handleAutoplayChange = useCallback(
+    (autoplay: boolean) => {
+      onChange({ ...value, autoplay });
+    },
+    [onChange, value],
+  );
 
-  const iconStyle: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-  };
+  const handleMutedChange = useCallback(
+    (muted: boolean) => {
+      onChange({ ...value, muted });
+    },
+    [onChange, value],
+  );
 
-  const textStyle: CSSProperties = {
-    fontSize: SIZE_FONT_SM,
-    color: COLOR_TEXT_MUTED,
-  };
-
-  const checkboxGroupStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_SM,
-  };
-
-  const opacityContainerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_SM,
-    width: "100%",
-  };
-
-  const opacityValueStyle: CSSProperties = {
-    width: "32px",
-    textAlign: "right",
-    fontSize: SIZE_FONT_SM,
-    color: COLOR_TEXT,
-    fontVariantNumeric: "tabular-nums",
-  };
-
-  const handleUrlChange = (url: string) => {
-    onChange({ ...value, url });
-  };
-
-  const handleLoopChange = (loop: boolean) => {
-    onChange({ ...value, loop });
-  };
-
-  const handleAutoplayChange = (autoplay: boolean) => {
-    onChange({ ...value, autoplay });
-  };
-
-  const handleMutedChange = (muted: boolean) => {
-    onChange({ ...value, muted });
-  };
-
-  const handleOpacityChange = (opacity: number) => {
-    onChange({ ...value, opacity: Math.round(opacity * 100) });
-  };
+  const handleOpacityChange = useCallback(
+    (opacity: number) => {
+      onChange({ ...value, opacity: Math.round(opacity * 100) });
+    },
+    [onChange, value],
+  );
 
   return (
     <div style={containerStyle}>
@@ -211,7 +234,7 @@ export function VideoFillEditor({
 
       <PropertyRow label="Opacity">
         <div style={opacityContainerStyle}>
-          <div style={{ flex: 1 }}>
+          <div style={sliderContainerStyle}>
             <Slider
               value={value.opacity / 100}
               onChange={handleOpacityChange}
@@ -225,4 +248,4 @@ export function VideoFillEditor({
       </PropertyRow>
     </div>
   );
-}
+});

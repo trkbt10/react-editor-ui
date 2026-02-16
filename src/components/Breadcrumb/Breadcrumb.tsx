@@ -65,6 +65,22 @@ const DefaultSeparator = memo(function DefaultSeparator() {
   );
 });
 
+type EllipsisItemProps = {
+  size: "sm" | "md";
+};
+
+const EllipsisItem = memo(function EllipsisItem({ size }: EllipsisItemProps) {
+  const style = useMemo<CSSProperties>(
+    () => ({
+      color: COLOR_TEXT_MUTED,
+      fontSize: size === "sm" ? SIZE_FONT_XS : SIZE_FONT_SM,
+    }),
+    [size],
+  );
+
+  return <span style={style}>...</span>;
+});
+
 type BreadcrumbItemButtonProps = {
   item: BreadcrumbItem;
   index: number;
@@ -167,12 +183,21 @@ export const Breadcrumb = memo(function Breadcrumb({
     [],
   );
 
-  const separatorStyle = useMemo<CSSProperties>(
+  const separatorWrapperStyle = useMemo<CSSProperties>(
     () => ({
       display: "flex",
       alignItems: "center",
       color: COLOR_ICON,
       flexShrink: 0,
+      margin: `0 ${SPACE_XS}`,
+    }),
+    [],
+  );
+
+  const itemWrapperStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
     }),
     [],
   );
@@ -188,50 +213,42 @@ export const Breadcrumb = memo(function Breadcrumb({
     return [firstItem, { label: "...", isEllipsis: true } as BreadcrumbItem & { isEllipsis?: boolean }, ...lastItems];
   }, [items, maxItems]);
 
-  const getOriginalIndex = (index: number): number => {
-    const isOverflowing = maxItems && items.length > maxItems && index > 1;
-    return isOverflowing ? items.length - (displayItems.length - index) : index;
-  };
-
-  const renderSeparator = () => (
-    <span style={{ ...separatorStyle, margin: `0 ${SPACE_XS}` }}>
-      {separator ?? <DefaultSeparator />}
-    </span>
+  const getOriginalIndex = useCallback(
+    (index: number): number => {
+      const isOverflowing = maxItems && items.length > maxItems && index > 1;
+      return isOverflowing ? items.length - (displayItems.length - index) : index;
+    },
+    [maxItems, items.length, displayItems.length],
   );
-
-  const renderEllipsis = () => {
-    const fontSize = size === "sm" ? SIZE_FONT_XS : SIZE_FONT_SM;
-    return <span style={{ color: COLOR_TEXT_MUTED, fontSize }}>...</span>;
-  };
-
-  const renderItem = (item: BreadcrumbItem, index: number) => {
-    const isLast = index === displayItems.length - 1;
-    const originalIndex = getOriginalIndex(index);
-    const typedItem = item as BreadcrumbItem & { isEllipsis?: boolean };
-
-    if (typedItem.isEllipsis) {
-      return renderEllipsis();
-    }
-
-    return (
-      <BreadcrumbItemButton
-        item={item}
-        index={originalIndex}
-        isLast={isLast}
-        size={size}
-        onClick={onItemClick}
-      />
-    );
-  };
 
   return (
     <nav aria-label="Breadcrumb" className={className} style={containerStyle}>
-      {displayItems.map((item, index) => (
-        <span key={`${item.label}-${index}`} style={{ display: "flex", alignItems: "center" }}>
-          {index > 0 ? renderSeparator() : null}
-          {renderItem(item, index)}
-        </span>
-      ))}
+      {displayItems.map((item, index) => {
+        const typedItem = item as BreadcrumbItem & { isEllipsis?: boolean };
+        const isLast = index === displayItems.length - 1;
+        const originalIndex = getOriginalIndex(index);
+
+        return (
+          <span key={`${item.label}-${index}`} style={itemWrapperStyle}>
+            {index > 0 ? (
+              <span style={separatorWrapperStyle}>
+                {separator ?? <DefaultSeparator />}
+              </span>
+            ) : null}
+            {typedItem.isEllipsis ? (
+              <EllipsisItem size={size} />
+            ) : (
+              <BreadcrumbItemButton
+                item={item}
+                index={originalIndex}
+                isLast={isLast}
+                size={size}
+                onClick={onItemClick}
+              />
+            )}
+          </span>
+        );
+      })}
     </nav>
   );
 });

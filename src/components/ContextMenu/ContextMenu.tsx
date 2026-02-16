@@ -130,6 +130,21 @@ const MenuItem = memo(function MenuItem({
     [],
   );
 
+  const contentContainerStyle = useMemo<CSSProperties>(
+    () => ({ display: "flex", alignItems: "center", gap: SPACE_MD, overflow: "hidden" }),
+    [],
+  );
+
+  const iconWrapperStyle = useMemo<CSSProperties>(
+    () => ({ display: "flex", flexShrink: 0 }),
+    [],
+  );
+
+  const labelStyle = useMemo<CSSProperties>(
+    () => ({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }),
+    [],
+  );
+
   return (
     <button
       ref={buttonRef}
@@ -143,9 +158,9 @@ const MenuItem = memo(function MenuItem({
       style={itemStyle}
       data-testid={`context-menu-item-${item.id}`}
     >
-      <span style={{ display: "flex", alignItems: "center", gap: SPACE_MD, overflow: "hidden" }}>
-        {item.icon ? <span style={{ display: "flex", flexShrink: 0 }}>{item.icon}</span> : null}
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <span style={contentContainerStyle}>
+        {item.icon ? <span style={iconWrapperStyle}>{item.icon}</span> : null}
+        <span style={labelStyle}>
           {item.label}
         </span>
       </span>

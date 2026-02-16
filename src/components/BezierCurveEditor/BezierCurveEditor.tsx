@@ -51,6 +51,55 @@ function clamp(value: number, min: number, max: number): number {
 
 type DragHandle = "p1" | "p2";
 
+type ControlPointHandleProps = {
+  cx: number;
+  cy: number;
+  handleId: DragHandle;
+  disabled: boolean;
+  onPointerDown: (e: PointerEvent<SVGCircleElement>, handle: DragHandle) => void;
+};
+
+const hitAreaStyle: CSSProperties = { cursor: "grab" };
+const hitAreaDisabledStyle: CSSProperties = { cursor: "not-allowed" };
+const visualHandleStyle: CSSProperties = { pointerEvents: "none" };
+
+const ControlPointHandle = memo(function ControlPointHandle({
+  cx,
+  cy,
+  handleId,
+  disabled,
+  onPointerDown,
+}: ControlPointHandleProps) {
+  const handlePointerDown = useCallback(
+    (e: PointerEvent<SVGCircleElement>) => {
+      onPointerDown(e, handleId);
+    },
+    [onPointerDown, handleId],
+  );
+
+  return (
+    <>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={HANDLE_HIT_RADIUS}
+        fill="transparent"
+        style={disabled ? hitAreaDisabledStyle : hitAreaStyle}
+        onPointerDown={handlePointerDown}
+      />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={HANDLE_RADIUS}
+        fill={COLOR_PRIMARY}
+        stroke={COLOR_SURFACE}
+        strokeWidth={2}
+        style={visualHandleStyle}
+      />
+    </>
+  );
+});
+
 export const BezierCurveEditor = memo(function BezierCurveEditor({
   value,
   onChange,
@@ -184,14 +233,17 @@ export const BezierCurveEditor = memo(function BezierCurveEditor({
     return lines;
   }, [showGrid, toSvgX, toSvgY]);
 
-  const containerStyle: CSSProperties = {
-    borderRadius: RADIUS_SM,
-    border: `1px solid ${COLOR_BORDER}`,
-    backgroundColor: COLOR_SURFACE,
-    touchAction: "none",
-    cursor: disabled ? "not-allowed" : "default",
-    opacity: disabled ? 0.5 : 1,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      borderRadius: RADIUS_SM,
+      border: `1px solid ${COLOR_BORDER}`,
+      backgroundColor: COLOR_SURFACE,
+      touchAction: "none",
+      cursor: disabled ? "not-allowed" : "default",
+      opacity: disabled ? 0.5 : 1,
+    }),
+    [disabled],
+  );
 
   return (
     <svg
@@ -271,42 +323,19 @@ export const BezierCurveEditor = memo(function BezierCurveEditor({
       />
 
       {/* Control point handles */}
-      {/* P1 handle */}
-      <circle
+      <ControlPointHandle
         cx={p1.x}
         cy={p1.y}
-        r={HANDLE_HIT_RADIUS}
-        fill="transparent"
-        style={{ cursor: disabled ? "not-allowed" : "grab" }}
-        onPointerDown={(e) => handlePointerDown(e, "p1")}
+        handleId="p1"
+        disabled={disabled}
+        onPointerDown={handlePointerDown}
       />
-      <circle
-        cx={p1.x}
-        cy={p1.y}
-        r={HANDLE_RADIUS}
-        fill={COLOR_PRIMARY}
-        stroke={COLOR_SURFACE}
-        strokeWidth={2}
-        style={{ pointerEvents: "none" }}
-      />
-
-      {/* P2 handle */}
-      <circle
+      <ControlPointHandle
         cx={p2.x}
         cy={p2.y}
-        r={HANDLE_HIT_RADIUS}
-        fill="transparent"
-        style={{ cursor: disabled ? "not-allowed" : "grab" }}
-        onPointerDown={(e) => handlePointerDown(e, "p2")}
-      />
-      <circle
-        cx={p2.x}
-        cy={p2.y}
-        r={HANDLE_RADIUS}
-        fill={COLOR_PRIMARY}
-        stroke={COLOR_SURFACE}
-        strokeWidth={2}
-        style={{ pointerEvents: "none" }}
+        handleId="p2"
+        disabled={disabled}
+        onPointerDown={handlePointerDown}
       />
     </svg>
   );

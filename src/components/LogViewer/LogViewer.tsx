@@ -5,8 +5,8 @@
  * Uses virtual scrolling to render only visible items.
  */
 
-import type { CSSProperties, ReactNode, RefObject } from "react";
-import { useRef, useCallback, useLayoutEffect, useState, useMemo, useImperativeHandle } from "react";
+import type { CSSProperties, ReactNode, RefObject, PointerEvent } from "react";
+import { useRef, useCallback, useLayoutEffect, useState, useMemo, useImperativeHandle, memo } from "react";
 import { useVirtualScroll, type VirtualItem } from "./useVirtualScroll";
 import { LogEntry, type LogEntryProps } from "../LogEntry/LogEntry";
 import {
@@ -231,20 +231,35 @@ export function LogViewer({
     [calculateScrollTarget, totalHeight, virtualItems, pagination, page, pageSize, onPageChange],
   );
 
-  const containerStyle: CSSProperties = {
-    height,
-    overflow: "auto",
-    backgroundColor: COLOR_SURFACE,
-    borderRadius: RADIUS_MD,
-    border: `1px solid ${COLOR_BORDER}`,
-    position: "relative",
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      height,
+      overflow: "auto",
+      backgroundColor: COLOR_SURFACE,
+      borderRadius: RADIUS_MD,
+      border: `1px solid ${COLOR_BORDER}`,
+      position: "relative",
+    }),
+    [height],
+  );
 
-  const innerStyle: CSSProperties = {
-    height: totalHeight,
-    width: "100%",
-    position: "relative",
-  };
+  const innerStyle = useMemo<CSSProperties>(
+    () => ({
+      height: totalHeight,
+      width: "100%",
+      position: "relative",
+    }),
+    [totalHeight],
+  );
+
+  const wrapperStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_SM,
+    }),
+    [],
+  );
 
   const renderItem = (virtualItem: VirtualItem): ReactNode => {
     const item = paginatedItems[virtualItem.index];
@@ -302,7 +317,7 @@ export function LogViewer({
   };
 
   return (
-    <div className={className} style={{ display: "flex", flexDirection: "column", gap: SPACE_SM }}>
+    <div className={className} style={wrapperStyle}>
       {showCount && (
         <LogViewerHeader
           totalCount={items.length}
@@ -327,7 +342,20 @@ export function LogViewer({
 }
 
 // Header component showing counts
-function LogViewerHeader({
+const headerStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  fontSize: SIZE_FONT_XS,
+  color: COLOR_TEXT_MUTED,
+  padding: `0 ${SPACE_SM}`,
+};
+
+const searchHighlightStyle: CSSProperties = {
+  color: COLOR_TEXT,
+};
+
+const LogViewerHeader = memo(function LogViewerHeader({
   totalCount,
   filteredCount,
   visibleStart,
@@ -340,15 +368,6 @@ function LogViewerHeader({
   visibleEnd: number;
   searchQuery?: string;
 }) {
-  const headerStyle: CSSProperties = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    fontSize: SIZE_FONT_XS,
-    color: COLOR_TEXT_MUTED,
-    padding: `0 ${SPACE_SM}`,
-  };
-
   const isFiltered = filteredCount !== totalCount;
 
   return (
@@ -359,15 +378,87 @@ function LogViewerHeader({
       </span>
       {searchQuery && (
         <span>
-          Search: <strong style={{ color: COLOR_TEXT }}>{searchQuery}</strong>
+          Search: <strong style={searchHighlightStyle}>{searchQuery}</strong>
         </span>
       )}
     </div>
   );
-}
+});
+
+// Pagination styles
+const paginationContainerStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: SPACE_SM,
+  padding: SPACE_SM,
+};
+
+const paginationButtonStyle: CSSProperties = {
+  height: SIZE_HEIGHT_SM,
+  padding: `0 ${SPACE_MD}`,
+  fontSize: SIZE_FONT_SM,
+  border: `1px solid ${COLOR_BORDER}`,
+  borderRadius: RADIUS_MD,
+  backgroundColor: COLOR_SURFACE,
+  color: COLOR_TEXT,
+  cursor: "pointer",
+  transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+};
+
+const paginationButtonDisabledStyle: CSSProperties = {
+  ...paginationButtonStyle,
+  opacity: 0.5,
+  cursor: "not-allowed",
+};
+
+const pageInfoStyle: CSSProperties = {
+  fontSize: SIZE_FONT_SM,
+  color: COLOR_TEXT_MUTED,
+  minWidth: "100px",
+  textAlign: "center",
+};
+
+type PaginationButtonProps = {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+};
+
+const PaginationButton = memo(function PaginationButton({
+  label,
+  disabled,
+  onClick,
+}: PaginationButtonProps) {
+  const handlePointerEnter = useCallback(
+    (e: PointerEvent<HTMLButtonElement>) => {
+      if (!disabled) {
+        e.currentTarget.style.backgroundColor = COLOR_HOVER;
+      }
+    },
+    [disabled],
+  );
+
+  const handlePointerLeave = useCallback((e: PointerEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = COLOR_SURFACE;
+  }, []);
+
+  return (
+    <button
+      type="button"
+      style={disabled ? paginationButtonDisabledStyle : paginationButtonStyle}
+      onClick={onClick}
+      disabled={disabled}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+    >
+      {label}
+    </button>
+  );
+});
 
 // Pagination component
-function LogViewerPagination({
+const LogViewerPagination = memo(function LogViewerPagination({
   currentPage,
   totalPages,
   onPageChange,
@@ -376,131 +467,41 @@ function LogViewerPagination({
   totalPages: number;
   onPageChange?: (page: number) => void;
 }) {
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: SPACE_SM,
-    padding: SPACE_SM,
-  };
-
-  const buttonStyle: CSSProperties = {
-    height: SIZE_HEIGHT_SM,
-    padding: `0 ${SPACE_MD}`,
-    fontSize: SIZE_FONT_SM,
-    border: `1px solid ${COLOR_BORDER}`,
-    borderRadius: RADIUS_MD,
-    backgroundColor: COLOR_SURFACE,
-    color: COLOR_TEXT,
-    cursor: "pointer",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-  };
-
-  const disabledButtonStyle: CSSProperties = {
-    ...buttonStyle,
-    opacity: 0.5,
-    cursor: "not-allowed",
-  };
-
-  const pageInfoStyle: CSSProperties = {
-    fontSize: SIZE_FONT_SM,
-    color: COLOR_TEXT_MUTED,
-    minWidth: "100px",
-    textAlign: "center",
-  };
-
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (currentPage > 0) {
       onPageChange?.(currentPage - 1);
     }
-  };
+  }, [currentPage, onPageChange]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentPage < totalPages - 1) {
       onPageChange?.(currentPage + 1);
     }
-  };
+  }, [currentPage, totalPages, onPageChange]);
 
-  const handleFirst = () => {
+  const handleFirst = useCallback(() => {
     onPageChange?.(0);
-  };
+  }, [onPageChange]);
 
-  const handleLast = () => {
+  const handleLast = useCallback(() => {
     onPageChange?.(totalPages - 1);
-  };
+  }, [totalPages, onPageChange]);
+
+  const isAtStart = currentPage === 0;
+  const isAtEnd = currentPage >= totalPages - 1;
 
   return (
-    <div style={containerStyle}>
-      <button
-        type="button"
-        style={currentPage === 0 ? disabledButtonStyle : buttonStyle}
-        onClick={handleFirst}
-        disabled={currentPage === 0}
-        onPointerEnter={(e) => {
-          if (currentPage !== 0) {
-            e.currentTarget.style.backgroundColor = COLOR_HOVER;
-          }
-        }}
-        onPointerLeave={(e) => {
-          e.currentTarget.style.backgroundColor = COLOR_SURFACE;
-        }}
-      >
-        First
-      </button>
-      <button
-        type="button"
-        style={currentPage === 0 ? disabledButtonStyle : buttonStyle}
-        onClick={handlePrev}
-        disabled={currentPage === 0}
-        onPointerEnter={(e) => {
-          if (currentPage !== 0) {
-            e.currentTarget.style.backgroundColor = COLOR_HOVER;
-          }
-        }}
-        onPointerLeave={(e) => {
-          e.currentTarget.style.backgroundColor = COLOR_SURFACE;
-        }}
-      >
-        Prev
-      </button>
+    <div style={paginationContainerStyle}>
+      <PaginationButton label="First" disabled={isAtStart} onClick={handleFirst} />
+      <PaginationButton label="Prev" disabled={isAtStart} onClick={handlePrev} />
       <span style={pageInfoStyle}>
         {currentPage + 1} / {totalPages}
       </span>
-      <button
-        type="button"
-        style={currentPage >= totalPages - 1 ? disabledButtonStyle : buttonStyle}
-        onClick={handleNext}
-        disabled={currentPage >= totalPages - 1}
-        onPointerEnter={(e) => {
-          if (currentPage < totalPages - 1) {
-            e.currentTarget.style.backgroundColor = COLOR_HOVER;
-          }
-        }}
-        onPointerLeave={(e) => {
-          e.currentTarget.style.backgroundColor = COLOR_SURFACE;
-        }}
-      >
-        Next
-      </button>
-      <button
-        type="button"
-        style={currentPage >= totalPages - 1 ? disabledButtonStyle : buttonStyle}
-        onClick={handleLast}
-        disabled={currentPage >= totalPages - 1}
-        onPointerEnter={(e) => {
-          if (currentPage < totalPages - 1) {
-            e.currentTarget.style.backgroundColor = COLOR_HOVER;
-          }
-        }}
-        onPointerLeave={(e) => {
-          e.currentTarget.style.backgroundColor = COLOR_SURFACE;
-        }}
-      >
-        Last
-      </button>
+      <PaginationButton label="Next" disabled={isAtEnd} onClick={handleNext} />
+      <PaginationButton label="Last" disabled={isAtEnd} onClick={handleLast} />
     </div>
   );
-}
+});
 
 // =============================================================================
 // Re-exports for module entry point

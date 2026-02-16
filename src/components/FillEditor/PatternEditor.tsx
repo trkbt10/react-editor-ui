@@ -2,7 +2,7 @@
  * @file PatternEditor component - Editor for pattern fill settings
  */
 
-import type { CSSProperties, PointerEvent } from "react";
+import { memo, useMemo, useCallback, type CSSProperties, type PointerEvent, type KeyboardEvent } from "react";
 import { Button } from "../Button/Button";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import type { SegmentedControlOption } from "../SegmentedControl/SegmentedControl";
@@ -56,7 +56,117 @@ function FolderIcon() {
   );
 }
 
-function AlignmentGrid({
+// Static styles for AlignmentGrid
+const gridStyle: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: "2px",
+  width: "60px",
+  height: "60px",
+  padding: "2px",
+  borderRadius: RADIUS_SM,
+  backgroundColor: COLOR_SURFACE,
+  border: `1px solid ${COLOR_BORDER}`,
+};
+
+const dotBaseStyle: CSSProperties = {
+  width: "6px",
+  height: "6px",
+  borderRadius: "50%",
+  backgroundColor: "currentColor",
+};
+
+const dotSelectedStyle: CSSProperties = {
+  ...dotBaseStyle,
+  color: "#fff",
+};
+
+const dotUnselectedStyle: CSSProperties = {
+  ...dotBaseStyle,
+  color: COLOR_TEXT_MUTED,
+};
+
+type AlignmentCellProps = {
+  alignment: AlignmentType;
+  isSelected: boolean;
+  disabled: boolean;
+  onSelect: (alignment: AlignmentType) => void;
+};
+
+const AlignmentCell = memo(function AlignmentCell({
+  alignment,
+  isSelected,
+  disabled,
+  onSelect,
+}: AlignmentCellProps) {
+  const style = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: isSelected ? COLOR_PRIMARY : "transparent",
+      borderRadius: "2px",
+      cursor: disabled ? "not-allowed" : "pointer",
+      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      opacity: disabled ? 0.5 : 1,
+    }),
+    [isSelected, disabled],
+  );
+
+  const handleClick = useCallback(() => {
+    if (!disabled) {
+      onSelect(alignment);
+    }
+  }, [disabled, onSelect, alignment]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (!disabled && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        onSelect(alignment);
+      }
+    },
+    [disabled, onSelect, alignment],
+  );
+
+  const handlePointerEnter = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      if (disabled || isSelected) {
+        return;
+      }
+      e.currentTarget.style.backgroundColor = COLOR_HOVER;
+    },
+    [disabled, isSelected],
+  );
+
+  const handlePointerLeave = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      if (disabled) {
+        return;
+      }
+      e.currentTarget.style.backgroundColor = isSelected ? COLOR_PRIMARY : "transparent";
+    },
+    [disabled, isSelected],
+  );
+
+  return (
+    <div
+      role="radio"
+      aria-checked={isSelected}
+      aria-label={alignment.replace("-", " ")}
+      tabIndex={disabled ? -1 : 0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      style={style}
+    >
+      <div style={isSelected ? dotSelectedStyle : dotUnselectedStyle} />
+    </div>
+  );
+});
+
+const AlignmentGrid = memo(function AlignmentGrid({
   value,
   onChange,
   disabled,
@@ -65,50 +175,6 @@ function AlignmentGrid({
   onChange: (value: AlignmentType) => void;
   disabled: boolean;
 }) {
-  const gridStyle: CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "2px",
-    width: "60px",
-    height: "60px",
-    padding: "2px",
-    borderRadius: RADIUS_SM,
-    backgroundColor: COLOR_SURFACE,
-    border: `1px solid ${COLOR_BORDER}`,
-  };
-
-  const getCellStyle = (alignment: AlignmentType): CSSProperties => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: value === alignment ? COLOR_PRIMARY : "transparent",
-    borderRadius: "2px",
-    cursor: disabled ? "not-allowed" : "pointer",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    opacity: disabled ? 0.5 : 1,
-  });
-
-  const dotStyle: CSSProperties = {
-    width: "6px",
-    height: "6px",
-    borderRadius: "50%",
-    backgroundColor: "currentColor",
-  };
-
-  const handlePointerEnter = (e: PointerEvent<HTMLDivElement>, alignment: AlignmentType) => {
-    if (disabled || value === alignment) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = COLOR_HOVER;
-  };
-
-  const handlePointerLeave = (e: PointerEvent<HTMLDivElement>, alignment: AlignmentType) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = value === alignment ? COLOR_PRIMARY : "transparent";
-  };
-
   return (
     <div
       role="group"
@@ -116,38 +182,17 @@ function AlignmentGrid({
       style={gridStyle}
     >
       {alignmentOptions.map((alignment) => (
-        <div
+        <AlignmentCell
           key={alignment}
-          role="radio"
-          aria-checked={value === alignment}
-          aria-label={alignment.replace("-", " ")}
-          tabIndex={disabled ? -1 : 0}
-          onClick={() => {
-            if (!disabled) {
-              onChange(alignment);
-            }
-          }}
-          onKeyDown={(e) => {
-            if (!disabled && (e.key === "Enter" || e.key === " ")) {
-              e.preventDefault();
-              onChange(alignment);
-            }
-          }}
-          onPointerEnter={(e) => handlePointerEnter(e, alignment)}
-          onPointerLeave={(e) => handlePointerLeave(e, alignment)}
-          style={getCellStyle(alignment)}
-        >
-          <div
-            style={{
-              ...dotStyle,
-              color: value === alignment ? "#fff" : COLOR_TEXT_MUTED,
-            }}
-          />
-        </div>
+          alignment={alignment}
+          isSelected={value === alignment}
+          disabled={disabled}
+          onSelect={onChange}
+        />
       ))}
     </div>
   );
-}
+});
 
 function renderPreview(
   hasSource: boolean,
@@ -181,8 +226,56 @@ function renderPreview(
   );
 }
 
+// Static styles for PatternEditor
+const previewContainerStyle: CSSProperties = {
+  position: "relative",
+  width: "100%",
+  height: "80px",
+  borderRadius: RADIUS_SM,
+  border: `1px solid ${COLOR_BORDER}`,
+  overflow: "hidden",
+  background: checkerboardBackground,
+  backgroundSize: "12px 12px",
+  backgroundPosition: "0 0, 0 6px, 6px -6px, -6px 0",
+};
+
+const previewImageStyle: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
+};
+
+const placeholderStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "100%",
+  gap: SPACE_SM,
+};
+
+const iconStyle: CSSProperties = {
+  color: COLOR_TEXT_MUTED,
+};
+
+const textStyle: CSSProperties = {
+  fontSize: SIZE_FONT_SM,
+  color: COLOR_TEXT_MUTED,
+};
+
+const rowStyle: CSSProperties = {
+  display: "flex",
+  gap: SPACE_SM,
+  minWidth: 0,
+};
+
+const inputContainerStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+};
+
 /** Pattern fill editor with tiling, scale, rotation, and offset controls */
-export function PatternEditor({
+export const PatternEditor = memo(function PatternEditor({
   value,
   onChange,
   onSelectSource,
@@ -190,91 +283,62 @@ export function PatternEditor({
 }: PatternEditorProps) {
   const hasSource = Boolean(value.sourceUrl);
 
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_MD,
-    opacity: disabled ? 0.5 : 1,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_MD,
+      opacity: disabled ? 0.5 : 1,
+    }),
+    [disabled],
+  );
 
-  const previewContainerStyle: CSSProperties = {
-    position: "relative",
-    width: "100%",
-    height: "80px",
-    borderRadius: RADIUS_SM,
-    border: `1px solid ${COLOR_BORDER}`,
-    overflow: "hidden",
-    background: checkerboardBackground,
-    backgroundSize: "12px 12px",
-    backgroundPosition: "0 0, 0 6px, 6px -6px, -6px 0",
-  };
+  const handleTileTypeChange = useCallback(
+    (tileType: TileType | TileType[]) => {
+      if (Array.isArray(tileType)) {
+        return;
+      }
+      onChange({ ...value, tileType });
+    },
+    [onChange, value],
+  );
 
-  const previewImageStyle: CSSProperties = {
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-  };
+  const handleScaleChange = useCallback(
+    (scaleStr: string) => {
+      const scale = parseInt(scaleStr, 10);
+      if (!isNaN(scale) && scale >= 1 && scale <= 1000) {
+        onChange({ ...value, scale });
+      }
+    },
+    [onChange, value],
+  );
 
-  const placeholderStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    gap: SPACE_SM,
-  };
+  const handleSpacingXChange = useCallback(
+    (spacingStr: string) => {
+      const spacingX = parseInt(spacingStr, 10);
+      if (!isNaN(spacingX) && spacingX >= 0) {
+        onChange({ ...value, spacingX });
+      }
+    },
+    [onChange, value],
+  );
 
-  const iconStyle: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-  };
+  const handleSpacingYChange = useCallback(
+    (spacingStr: string) => {
+      const spacingY = parseInt(spacingStr, 10);
+      if (!isNaN(spacingY) && spacingY >= 0) {
+        onChange({ ...value, spacingY });
+      }
+    },
+    [onChange, value],
+  );
 
-  const textStyle: CSSProperties = {
-    fontSize: SIZE_FONT_SM,
-    color: COLOR_TEXT_MUTED,
-  };
-
-  const rowStyle: CSSProperties = {
-    display: "flex",
-    gap: SPACE_SM,
-    minWidth: 0,
-  };
-
-  const inputContainerStyle: CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-  };
-
-  const handleTileTypeChange = (tileType: TileType | TileType[]) => {
-    if (Array.isArray(tileType)) {
-      return;
-    }
-    onChange({ ...value, tileType });
-  };
-
-  const handleScaleChange = (scaleStr: string) => {
-    const scale = parseInt(scaleStr, 10);
-    if (!isNaN(scale) && scale >= 1 && scale <= 1000) {
-      onChange({ ...value, scale });
-    }
-  };
-
-  const handleSpacingXChange = (spacingStr: string) => {
-    const spacingX = parseInt(spacingStr, 10);
-    if (!isNaN(spacingX) && spacingX >= 0) {
-      onChange({ ...value, spacingX });
-    }
-  };
-
-  const handleSpacingYChange = (spacingStr: string) => {
-    const spacingY = parseInt(spacingStr, 10);
-    if (!isNaN(spacingY) && spacingY >= 0) {
-      onChange({ ...value, spacingY });
-    }
-  };
-
-  const handleAlignmentChange = (alignment: AlignmentType) => {
-    onChange({ ...value, alignment });
-  };
+  const handleAlignmentChange = useCallback(
+    (alignment: AlignmentType) => {
+      onChange({ ...value, alignment });
+    },
+    [onChange, value],
+  );
 
   return (
     <div style={containerStyle}>
@@ -355,4 +419,4 @@ export function PatternEditor({
       </PropertyRow>
     </div>
   );
-}
+});

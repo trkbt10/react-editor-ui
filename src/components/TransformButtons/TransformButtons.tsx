@@ -3,7 +3,8 @@
  * Provides rotate, flip, align, distribute and custom operations via actions array
  */
 
-import type { ReactNode, CSSProperties } from "react";
+import { memo, useMemo, useCallback } from "react";
+import type { ReactNode, CSSProperties, MouseEvent } from "react";
 import { Tooltip } from "../Tooltip/Tooltip";
 import { IconButton } from "../IconButton/IconButton";
 import { ToolbarGroup } from "../Toolbar/ToolbarGroup";
@@ -41,6 +42,39 @@ export type TransformButtonsProps = {
   className?: string;
 };
 
+type TransformActionButtonProps = {
+  action: TransformAction;
+  size: "sm" | "md" | "lg";
+  disabled: boolean;
+  onAction: (actionId: string) => void;
+};
+
+const TransformActionButton = memo(function TransformActionButton({
+  action,
+  size,
+  disabled,
+  onAction,
+}: TransformActionButtonProps) {
+  const handleClick = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      onAction(action.id);
+    },
+    [onAction, action.id],
+  );
+
+  return (
+    <Tooltip content={action.label}>
+      <IconButton
+        icon={action.icon}
+        aria-label={action.label}
+        size={size}
+        disabled={disabled || action.disabled}
+        onClick={handleClick}
+      />
+    </Tooltip>
+  );
+});
+
 /**
  * TransformButtons displays groups of icon buttons with tooltips.
  * Each group is separated by a divider.
@@ -67,36 +101,45 @@ export type TransformButtonsProps = {
  * />
  * ```
  */
-export function TransformButtons({
+export const TransformButtons = memo(function TransformButtons({
   groups,
   onAction,
   disabled = false,
   size = "md",
   className,
 }: TransformButtonsProps) {
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_XS,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      gap: SPACE_XS,
+    }),
+    [],
+  );
 
-  const nonEmptyGroups = groups.filter((group) => group.actions.length > 0);
+  const contentsStyle = useMemo<CSSProperties>(
+    () => ({ display: "contents" }),
+    [],
+  );
+
+  const nonEmptyGroups = useMemo(
+    () => groups.filter((group) => group.actions.length > 0),
+    [groups],
+  );
 
   return (
     <div className={className} style={containerStyle}>
       {nonEmptyGroups.map((group, groupIndex) => (
-        <span key={group.id} style={{ display: "contents" }}>
+        <span key={group.id} style={contentsStyle}>
           <ToolbarGroup>
             {group.actions.map((action) => (
-              <Tooltip key={action.id} content={action.label}>
-                <IconButton
-                  icon={action.icon}
-                  aria-label={action.label}
-                  size={size}
-                  disabled={disabled || action.disabled}
-                  onClick={() => onAction(action.id)}
-                />
-              </Tooltip>
+              <TransformActionButton
+                key={action.id}
+                action={action}
+                size={size}
+                disabled={disabled}
+                onAction={onAction}
+              />
             ))}
           </ToolbarGroup>
           {groupIndex < nonEmptyGroups.length - 1 ? <ToolbarDivider /> : null}
@@ -104,4 +147,4 @@ export function TransformButtons({
       ))}
     </div>
   );
-}
+});

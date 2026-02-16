@@ -8,7 +8,7 @@
  * - Position calculation based on anchor element
  */
 
-import { useRef, useEffect, type CSSProperties, type RefObject } from "react";
+import { memo, useRef, useEffect, useMemo, useCallback, type CSSProperties, type RefObject } from "react";
 import {
   COLOR_INPUT_BORDER,
   COLOR_TEXT,
@@ -52,11 +52,53 @@ function calculatePosition(anchorRef: RefObject<HTMLElement | null>): DropdownPo
   };
 }
 
+type UnitOptionItemProps = {
+  option: UnitOption;
+  isSelected: boolean;
+  fontSize: string;
+  onSelect: (value: string) => void;
+};
+
+const UnitOptionItem = memo(function UnitOptionItem({
+  option,
+  isSelected,
+  fontSize,
+  onSelect,
+}: UnitOptionItemProps) {
+  const style = useMemo<CSSProperties>(
+    () => ({
+      padding: SPACE_SM,
+      fontSize,
+      color: COLOR_TEXT,
+      cursor: "pointer",
+      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      backgroundColor: isSelected ? COLOR_SELECTED : "transparent",
+    }),
+    [fontSize, isSelected],
+  );
+
+  const handleClick = useCallback(() => {
+    onSelect(option.value);
+  }, [onSelect, option.value]);
+
+  return (
+    <div
+      onClick={handleClick}
+      style={style}
+      role="option"
+      aria-selected={isSelected}
+      data-testid={`unit-option-${option.value}`}
+    >
+      {option.label}
+    </div>
+  );
+});
+
 /**
  * Dropdown component for selecting units.
  * Renders in a Portal and handles click outside / escape to close.
  */
-export function UnitDropdown({
+export const UnitDropdown = memo(function UnitDropdown({
   options,
   selectedValue,
   onSelect,
@@ -96,28 +138,23 @@ export function UnitDropdown({
     };
   }, [anchorRef, onClose]);
 
-  const dropdownStyle: CSSProperties = {
-    position: "fixed",
-    top: position.top,
-    left: position.left,
-    minWidth: position.width,
-    backgroundColor: COLOR_SURFACE_RAISED,
-    border: `1px solid ${COLOR_INPUT_BORDER}`,
-    borderRadius: RADIUS_SM,
-    boxShadow: SHADOW_MD,
-    zIndex: Z_DROPDOWN,
-    padding: `${SPACE_SM} 0`,
-    maxHeight: 200,
-    overflowY: "auto",
-  };
-
-  const itemStyle: CSSProperties = {
-    padding: SPACE_SM,
-    fontSize,
-    color: COLOR_TEXT,
-    cursor: "pointer",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-  };
+  const dropdownStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "fixed",
+      top: position.top,
+      left: position.left,
+      minWidth: position.width,
+      backgroundColor: COLOR_SURFACE_RAISED,
+      border: `1px solid ${COLOR_INPUT_BORDER}`,
+      borderRadius: RADIUS_SM,
+      boxShadow: SHADOW_MD,
+      zIndex: Z_DROPDOWN,
+      padding: `${SPACE_SM} 0`,
+      maxHeight: 200,
+      overflowY: "auto",
+    }),
+    [position.top, position.left, position.width],
+  );
 
   return (
     <Portal>
@@ -131,22 +168,16 @@ export function UnitDropdown({
         {options.map((option) => {
           const isSelected = option.value.toLowerCase() === selectedValue.toLowerCase();
           return (
-            <div
+            <UnitOptionItem
               key={option.value}
-              onClick={() => onSelect(option.value)}
-              style={{
-                ...itemStyle,
-                backgroundColor: isSelected ? COLOR_SELECTED : "transparent",
-              }}
-              role="option"
-              aria-selected={isSelected}
-              data-testid={`unit-option-${option.value}`}
-            >
-              {option.label}
-            </div>
+              option={option}
+              isSelected={isSelected}
+              fontSize={fontSize}
+              onSelect={onSelect}
+            />
           );
         })}
       </div>
     </Portal>
   );
-}
+});

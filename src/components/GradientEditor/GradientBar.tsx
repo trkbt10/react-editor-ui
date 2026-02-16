@@ -46,8 +46,58 @@ function getHandleBorderColor(isSelected: boolean): string {
 
 const CHECKERBOARD_SIZE = 6;
 
+type StopHandleProps = {
+  stop: GradientStop;
+  isSelected: boolean;
+  disabled: boolean;
+  onPointerDown: (e: PointerEvent<HTMLDivElement>, stopId: string) => void;
+};
 
+const StopHandle = memo(function StopHandle({
+  stop,
+  isSelected,
+  disabled,
+  onPointerDown,
+}: StopHandleProps) {
+  const style = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      left: `${stop.position}%`,
+      top: "50%",
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      border: `2px solid ${getHandleBorderColor(isSelected)}`,
+      boxShadow: getHandleBoxShadow(isSelected),
+      transform: "translate(-50%, -50%)",
+      backgroundColor: stop.color.hex,
+      cursor: getHandleCursor(disabled),
+      zIndex: isSelected ? 10 : 1,
+    }),
+    [stop.position, stop.color.hex, isSelected, disabled],
+  );
 
+  const handlePointerDown = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      onPointerDown(e, stop.id);
+    },
+    [onPointerDown, stop.id],
+  );
+
+  return (
+    <div
+      data-stop-id={stop.id}
+      onPointerDown={handlePointerDown}
+      style={style}
+      role="slider"
+      aria-label={`Stop at ${stop.position}%`}
+      aria-valuenow={stop.position}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      tabIndex={disabled ? -1 : 0}
+    />
+  );
+});
 
 
 
@@ -140,17 +190,20 @@ export const GradientBar = memo(function GradientBar({
     draggingStopId.current = null;
   };
 
-  const containerStyle: CSSProperties = {
-    position: "relative",
-    width: "100%",
-    height,
-    borderRadius: RADIUS_SM,
-    border: `1px solid ${COLOR_BORDER}`,
-    overflow: "visible",
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
-    touchAction: "none",
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "relative",
+      width: "100%",
+      height,
+      borderRadius: RADIUS_SM,
+      border: `1px solid ${COLOR_BORDER}`,
+      overflow: "visible",
+      cursor: disabled ? "not-allowed" : "pointer",
+      opacity: disabled ? 0.5 : 1,
+      touchAction: "none",
+    }),
+    [height, disabled],
+  );
 
   const checkerboardStyle = useMemo<CSSProperties>(
     () => ({
@@ -163,32 +216,14 @@ export const GradientBar = memo(function GradientBar({
     [],
   );
 
-  const gradientStyle: CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    borderRadius: RADIUS_SM,
-    background: gradientToLinearCss(value),
-  };
-
-  const getHandleStyle = useCallback(
-    (stop: GradientStop): CSSProperties => {
-      const isSelected = stop.id === selectedStopId;
-      return {
-        position: "absolute",
-        left: `${stop.position}%`,
-        top: "50%",
-        width: 12,
-        height: 12,
-        borderRadius: "50%",
-        border: `2px solid ${getHandleBorderColor(isSelected)}`,
-        boxShadow: getHandleBoxShadow(isSelected),
-        transform: "translate(-50%, -50%)",
-        backgroundColor: stop.color.hex,
-        cursor: getHandleCursor(disabled),
-        zIndex: isSelected ? 10 : 1,
-      };
-    },
-    [selectedStopId, disabled],
+  const gradientStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      inset: 0,
+      borderRadius: RADIUS_SM,
+      background: gradientToLinearCss(value),
+    }),
+    [value],
   );
 
   return (
@@ -204,17 +239,12 @@ export const GradientBar = memo(function GradientBar({
       <div style={checkerboardStyle} />
       <div style={gradientStyle} />
       {value.stops.map((stop) => (
-        <div
+        <StopHandle
           key={stop.id}
-          data-stop-id={stop.id}
-          onPointerDown={(e) => handleHandlePointerDown(e, stop.id)}
-          style={getHandleStyle(stop)}
-          role="slider"
-          aria-label={`Stop at ${stop.position}%`}
-          aria-valuenow={stop.position}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          tabIndex={disabled ? -1 : 0}
+          stop={stop}
+          isSelected={stop.id === selectedStopId}
+          disabled={disabled}
+          onPointerDown={handleHandlePointerDown}
         />
       ))}
     </div>

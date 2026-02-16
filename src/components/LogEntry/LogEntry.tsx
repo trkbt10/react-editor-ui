@@ -2,6 +2,7 @@
  * @file LogEntry component - Log message display
  */
 
+import { memo, useMemo, useCallback } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import {
   COLOR_HOVER,
@@ -86,7 +87,7 @@ function formatTimestamp(timestamp: string | Date): string {
 }
 
 /** Single log entry row with timestamp, level indicator, and message */
-export function LogEntry({
+export const LogEntry = memo(function LogEntry({
   message,
   level = "info",
   timestamp,
@@ -96,65 +97,92 @@ export function LogEntry({
   onClick,
   className,
 }: LogEntryProps) {
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_XS,
-    padding: `${SPACE_SM} ${SPACE_MD}`,
-    backgroundColor: selected ? COLOR_SELECTED : "transparent",
-    cursor: onClick ? "pointer" : "default",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    fontFamily: "monospace",
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_XS,
+      padding: `${SPACE_SM} ${SPACE_MD}`,
+      backgroundColor: selected ? COLOR_SELECTED : "transparent",
+      cursor: onClick ? "pointer" : "default",
+      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      fontFamily: "monospace",
+    }),
+    [selected, onClick],
+  );
 
-  const headerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_SM,
-    fontSize: SIZE_FONT_SM,
-  };
+  const headerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      gap: SPACE_SM,
+      fontSize: SIZE_FONT_SM,
+    }),
+    [],
+  );
 
-  const levelStyle: CSSProperties = {
-    color: levelColors[level],
-    fontWeight: FONT_WEIGHT_SEMIBOLD,
-    minWidth: "45px",
-  };
+  const levelStyle = useMemo<CSSProperties>(
+    () => ({
+      color: levelColors[level],
+      fontWeight: FONT_WEIGHT_SEMIBOLD,
+      minWidth: "45px",
+    }),
+    [level],
+  );
 
-  const timestampStyle: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_XS,
-  };
+  const timestampStyle = useMemo<CSSProperties>(
+    () => ({
+      color: COLOR_TEXT_MUTED,
+      fontSize: SIZE_FONT_XS,
+    }),
+    [],
+  );
 
-  const sourceStyle: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_XS,
-  };
+  const sourceStyle = useMemo<CSSProperties>(
+    () => ({
+      color: COLOR_TEXT_MUTED,
+      fontSize: SIZE_FONT_XS,
+    }),
+    [],
+  );
 
-  const messageStyle: CSSProperties = {
-    flex: 1,
-    color: COLOR_TEXT,
-    wordBreak: "break-word",
-  };
+  const messageStyle = useMemo<CSSProperties>(
+    () => ({
+      flex: 1,
+      color: COLOR_TEXT,
+      wordBreak: "break-word",
+    }),
+    [],
+  );
 
-  const detailsStyle: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_XS,
-    paddingLeft: SPACE_MD,
-    whiteSpace: "pre-wrap",
-    wordBreak: "break-word",
-  };
+  const detailsStyle = useMemo<CSSProperties>(
+    () => ({
+      color: COLOR_TEXT_MUTED,
+      fontSize: SIZE_FONT_XS,
+      paddingLeft: SPACE_MD,
+      whiteSpace: "pre-wrap",
+      wordBreak: "break-word",
+    }),
+    [],
+  );
 
-  const handlePointerEnter = (e: PointerEvent<HTMLDivElement>) => {
-    if (onClick && !selected) {
-      e.currentTarget.style.backgroundColor = COLOR_HOVER;
-    }
-  };
+  const handlePointerEnter = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      if (onClick && !selected) {
+        e.currentTarget.style.backgroundColor = COLOR_HOVER;
+      }
+    },
+    [onClick, selected],
+  );
 
-  const handlePointerLeave = (e: PointerEvent<HTMLDivElement>) => {
-    if (onClick && !selected) {
-      e.currentTarget.style.backgroundColor = "transparent";
-    }
-  };
+  const handlePointerLeave = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      if (onClick && !selected) {
+        e.currentTarget.style.backgroundColor = "transparent";
+      }
+    },
+    [onClick, selected],
+  );
 
   return (
     <div
@@ -175,4 +203,4 @@ export function LogEntry({
       {renderDetails(details, detailsStyle)}
     </div>
   );
-}
+});

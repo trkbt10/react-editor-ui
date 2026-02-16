@@ -2,7 +2,7 @@
  * @file ImageFillEditor component - Editor for image fill settings
  */
 
-import type { CSSProperties } from "react";
+import { memo, useMemo, useCallback, type CSSProperties } from "react";
 import { Button } from "../Button/Button";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import type { SegmentedControlOption } from "../SegmentedControl/SegmentedControl";
@@ -106,8 +106,69 @@ function renderPlaceholder(
   );
 }
 
+// Static styles
+const previewContainerStyle: CSSProperties = {
+  position: "relative",
+  width: "100%",
+  height: "120px",
+  borderRadius: RADIUS_SM,
+  border: `1px solid ${COLOR_BORDER}`,
+  overflow: "hidden",
+  background: checkerboardBackground,
+  backgroundSize: "12px 12px",
+  backgroundPosition: "0 0, 0 6px, 6px -6px, -6px 0",
+};
+
+const previewImageStyle: CSSProperties = {
+  width: "100%",
+  height: "100%",
+};
+
+const placeholderStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "100%",
+  gap: SPACE_SM,
+};
+
+const iconStyle: CSSProperties = {
+  color: COLOR_TEXT_MUTED,
+};
+
+const textStyle: CSSProperties = {
+  fontSize: SIZE_FONT_SM,
+  color: COLOR_TEXT_MUTED,
+};
+
+const controlsStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: SPACE_SM,
+};
+
+const opacityContainerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: SPACE_SM,
+  width: "100%",
+};
+
+const opacityValueStyle: CSSProperties = {
+  width: "32px",
+  textAlign: "right",
+  fontSize: SIZE_FONT_SM,
+  color: COLOR_TEXT,
+  fontVariantNumeric: "tabular-nums",
+};
+
+const sliderContainerStyle: CSSProperties = {
+  flex: 1,
+};
+
 /** Image fill editor with sizing, positioning, and exposure/tint adjustments */
-export function ImageFillEditor({
+export const ImageFillEditor = memo(function ImageFillEditor({
   value,
   onChange,
   onUpload,
@@ -115,114 +176,49 @@ export function ImageFillEditor({
 }: ImageFillEditorProps) {
   const hasImage = Boolean(value.url);
 
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_MD,
-    opacity: disabled ? 0.5 : 1,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_MD,
+      opacity: disabled ? 0.5 : 1,
+    }),
+    [disabled],
+  );
 
-  const previewContainerStyle: CSSProperties = {
-    position: "relative",
-    width: "100%",
-    height: "120px",
-    borderRadius: RADIUS_SM,
-    border: `1px solid ${COLOR_BORDER}`,
-    overflow: "hidden",
-    background: checkerboardBackground,
-    backgroundSize: "12px 12px",
-    backgroundPosition: "0 0, 0 6px, 6px -6px, -6px 0",
-  };
+  const handleModeChange = useCallback(
+    (mode: ImageFillMode | ImageFillMode[]) => {
+      if (Array.isArray(mode)) {
+        return;
+      }
+      onChange({ ...value, mode });
+    },
+    [onChange, value],
+  );
 
-  const previewImageStyle: CSSProperties = {
-    width: "100%",
-    height: "100%",
-  };
+  const handleOpacityChange = useCallback(
+    (opacity: number) => {
+      onChange({ ...value, opacity: Math.round(opacity * 100) });
+    },
+    [onChange, value],
+  );
 
-  const placeholderStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    gap: SPACE_SM,
-  };
+  const handleAdjustmentsChange = useCallback(
+    (adjustments: typeof value.adjustments) => {
+      onChange({ ...value, adjustments });
+    },
+    [onChange, value],
+  );
 
-  const iconStyle: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-  };
-
-  const textStyle: CSSProperties = {
-    fontSize: SIZE_FONT_SM,
-    color: COLOR_TEXT_MUTED,
-  };
-
-  const controlsStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_SM,
-  };
-
-  const opacityContainerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_SM,
-    width: "100%",
-  };
-
-  const opacityValueStyle: CSSProperties = {
-    width: "32px",
-    textAlign: "right",
-    fontSize: SIZE_FONT_SM,
-    color: COLOR_TEXT,
-    fontVariantNumeric: "tabular-nums",
-  };
-
-  const handleModeChange = (mode: ImageFillMode | ImageFillMode[]) => {
-    if (Array.isArray(mode)) {
-      return;
-    }
-    onChange({ ...value, mode });
-  };
-
-  const handleOpacityChange = (opacity: number) => {
-    onChange({ ...value, opacity: Math.round(opacity * 100) });
-  };
-
-  const handleAdjustmentsChange = (adjustments: typeof value.adjustments) => {
-    onChange({ ...value, adjustments });
-  };
-
-  function getPreviewContent() {
-    if (hasImage) {
-      return renderImagePreview(value.url, value.mode, previewImageStyle);
-    }
-    return renderPlaceholder(placeholderStyle, iconStyle, textStyle);
-  }
-
-  function getButtonLabel(): string {
-    if (hasImage) {
-      return "Replace image";
-    }
-    return "Upload image";
-  }
-
-  function renderAdjustmentsSection() {
-    if (!hasImage) {
-      return null;
-    }
-    return (
-      <ImageAdjustments
-        value={value.adjustments}
-        onChange={handleAdjustmentsChange}
-        disabled={disabled}
-      />
-    );
-  }
+  const buttonLabel = hasImage ? "Replace image" : "Upload image";
 
   return (
     <div style={containerStyle}>
-      <div style={previewContainerStyle}>{getPreviewContent()}</div>
+      <div style={previewContainerStyle}>
+        {hasImage
+          ? renderImagePreview(value.url, value.mode, previewImageStyle)
+          : renderPlaceholder(placeholderStyle, iconStyle, textStyle)}
+      </div>
 
       <Button
         onClick={onUpload}
@@ -231,7 +227,7 @@ export function ImageFillEditor({
         size="sm"
         iconStart={<UploadIcon />}
       >
-        {getButtonLabel()}
+        {buttonLabel}
       </Button>
 
       <div style={controlsStyle}>
@@ -246,7 +242,7 @@ export function ImageFillEditor({
 
         <PropertyRow label="Opacity">
           <div style={opacityContainerStyle}>
-            <div style={{ flex: 1 }}>
+            <div style={sliderContainerStyle}>
               <Slider
                 value={value.opacity / 100}
                 onChange={handleOpacityChange}
@@ -260,7 +256,13 @@ export function ImageFillEditor({
         </PropertyRow>
       </div>
 
-      {renderAdjustmentsSection()}
+      {hasImage && (
+        <ImageAdjustments
+          value={value.adjustments}
+          onChange={handleAdjustmentsChange}
+          disabled={disabled}
+        />
+      )}
     </div>
   );
-}
+});

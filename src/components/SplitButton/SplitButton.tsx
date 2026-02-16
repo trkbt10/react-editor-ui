@@ -8,6 +8,9 @@ import {
   useEffect,
   useEffectEvent,
   useLayoutEffect,
+  useCallback,
+  useMemo,
+  memo,
   type ReactNode,
   type CSSProperties,
   type PointerEvent,
@@ -85,11 +88,118 @@ type DropdownPosition = {
   width: number;
 };
 
+const checkIconWrapperStyle: CSSProperties = {
+  width: "16px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+  color: COLOR_TEXT,
+};
+
+const optionIconWrapperStyle: CSSProperties = {
+  width: "16px",
+  height: "16px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+  color: COLOR_ICON,
+};
+
+const optionLabelStyle: CSSProperties = {
+  flex: 1,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const optionShortcutStyle: CSSProperties = {
+  marginLeft: SPACE_LG,
+  color: COLOR_TEXT_MUTED,
+  fontSize: SIZE_FONT_SM,
+  flexShrink: 0,
+};
+
+type SplitButtonOptionItemProps<T extends string> = {
+  option: SplitButtonOption<T>;
+  isSelected: boolean;
+  isFocused: boolean;
+  index: number;
+  onOptionClick: (option: SplitButtonOption<T>) => void;
+  onPointerEnter: (index: number) => void;
+};
+
+const SplitButtonOptionItem = memo(function SplitButtonOptionItem<T extends string>({
+  option,
+  isSelected,
+  isFocused,
+  index,
+  onOptionClick,
+  onPointerEnter,
+}: SplitButtonOptionItemProps<T>) {
+  const isDisabled = option.disabled ?? false;
+
+  const style = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      gap: SPACE_MD,
+      padding: `${SPACE_SM} ${SPACE_MD}`,
+      backgroundColor: isFocused ? COLOR_HOVER : "transparent",
+      color: isDisabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
+      fontSize: SIZE_FONT_SM,
+      cursor: isDisabled ? "not-allowed" : "pointer",
+      opacity: isDisabled ? 0.5 : 1,
+      borderRadius: RADIUS_SM,
+      border: "none",
+      width: "100%",
+      textAlign: "left",
+    }),
+    [isFocused, isDisabled],
+  );
+
+  const handleClick = useCallback(() => {
+    onOptionClick(option);
+  }, [onOptionClick, option]);
+
+  const handlePointerEnter = useCallback(() => {
+    onPointerEnter(index);
+  }, [onPointerEnter, index]);
+
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={isSelected}
+      aria-disabled={isDisabled}
+      onClick={handleClick}
+      onPointerEnter={handlePointerEnter}
+      style={style}
+    >
+      <span style={checkIconWrapperStyle}>
+        {isSelected && <CheckIcon />}
+      </span>
+      <span style={optionIconWrapperStyle}>
+        {option.icon}
+      </span>
+      <span style={optionLabelStyle}>
+        {option.label}
+      </span>
+      {option.shortcut && (
+        <span style={optionShortcutStyle}>
+          {option.shortcut}
+        </span>
+      )}
+    </button>
+  );
+}) as <T extends string>(props: SplitButtonOptionItemProps<T>) => React.ReactElement;
+
 /**
  * SplitButton displays a main action button with a dropdown for additional options.
  * The main button executes the selected action, while the dropdown allows changing the selection.
  */
-export function SplitButton<T extends string = string>({
+function SplitButtonInner<T extends string = string>({
   options,
   value,
   onChange,
@@ -154,57 +264,60 @@ export function SplitButton<T extends string = string>({
     }
   }, [isOpen]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (disabled) {
-      return;
-    }
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (disabled) {
+        return;
+      }
 
-    switch (e.key) {
-      case "Enter":
-      case " ":
-        e.preventDefault();
-        if (isOpen && focusedIndex >= 0) {
-          const option = options[focusedIndex];
-          if (option && !option.disabled) {
-            onChange(option.value);
-            setIsOpen(false);
+      switch (e.key) {
+        case "Enter":
+        case " ":
+          e.preventDefault();
+          if (isOpen && focusedIndex >= 0) {
+            const option = options[focusedIndex];
+            if (option && !option.disabled) {
+              onChange(option.value);
+              setIsOpen(false);
+            }
+          } else {
+            setIsOpen(true);
+            setFocusedIndex(options.findIndex((o) => o.value === value));
           }
-        } else {
-          setIsOpen(true);
-          setFocusedIndex(options.findIndex((o) => o.value === value));
-        }
-        break;
-      case "Escape":
-        setIsOpen(false);
-        break;
-      case "ArrowDown":
-        e.preventDefault();
-        if (!isOpen) {
-          setIsOpen(true);
-          setFocusedIndex(options.findIndex((o) => o.value === value));
-        } else {
-          setFocusedIndex((prev) => Math.min(prev + 1, options.length - 1));
-        }
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        if (isOpen) {
-          setFocusedIndex((prev) => Math.max(prev - 1, 0));
-        }
-        break;
-    }
-  };
+          break;
+        case "Escape":
+          setIsOpen(false);
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          if (!isOpen) {
+            setIsOpen(true);
+            setFocusedIndex(options.findIndex((o) => o.value === value));
+          } else {
+            setFocusedIndex((prev) => Math.min(prev + 1, options.length - 1));
+          }
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          if (isOpen) {
+            setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          }
+          break;
+      }
+    },
+    [disabled, isOpen, focusedIndex, options, onChange, value],
+  );
 
-  const handleMainButtonClick = () => {
+  const handleMainButtonClick = useCallback(() => {
     if (disabled) {
       return;
     }
     if (onAction) {
       onAction();
     }
-  };
+  }, [disabled, onAction]);
 
-  const handleDropdownToggle = () => {
+  const handleDropdownToggle = useCallback(() => {
     if (disabled) {
       return;
     }
@@ -212,154 +325,167 @@ export function SplitButton<T extends string = string>({
     if (!isOpen) {
       setFocusedIndex(options.findIndex((o) => o.value === value));
     }
-  };
+  }, [disabled, isOpen, options, value]);
 
-  const handleOptionClick = (option: SplitButtonOption<T>) => {
-    if (option.disabled) {
-      return;
-    }
-    onChange(option.value);
-    setIsOpen(false);
-  };
+  const handleOptionClick = useCallback(
+    (option: SplitButtonOption<T>) => {
+      if (option.disabled) {
+        return;
+      }
+      onChange(option.value);
+      setIsOpen(false);
+    },
+    [onChange],
+  );
 
-  const containerStyle: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "stretch",
-    height: sizeConfig.height,
-    borderRadius: RADIUS_SM,
-    overflow: "hidden",
-  };
+  const handleOptionPointerEnter = useCallback((index: number) => {
+    setFocusedIndex(index);
+  }, []);
 
-  const mainButtonStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: `0 ${sizeConfig.padding}`,
-    border: `1px solid ${COLOR_BORDER}`,
-    borderRight: "none",
-    borderRadius: `${RADIUS_SM} 0 0 ${RADIUS_SM}`,
-    backgroundColor: "transparent",
-    color: COLOR_ICON,
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}, color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    outline: "none",
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "inline-flex",
+      alignItems: "stretch",
+      height: sizeConfig.height,
+      borderRadius: RADIUS_SM,
+      overflow: "hidden",
+    }),
+    [sizeConfig.height],
+  );
 
-  const dropdownButtonStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 0,
-    border: `1px solid ${COLOR_BORDER}`,
-    borderRadius: `0 ${RADIUS_SM} ${RADIUS_SM} 0`,
-    backgroundColor: "transparent",
-    color: COLOR_ICON,
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    outline: "none",
-  };
+  const mainButtonStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: `0 ${sizeConfig.padding}`,
+      border: `1px solid ${COLOR_BORDER}`,
+      borderRight: "none",
+      borderRadius: `${RADIUS_SM} 0 0 ${RADIUS_SM}`,
+      backgroundColor: "transparent",
+      color: COLOR_ICON,
+      cursor: disabled ? "not-allowed" : "pointer",
+      opacity: disabled ? 0.5 : 1,
+      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}, color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      outline: "none",
+    }),
+    [sizeConfig.padding, disabled],
+  );
 
-  const iconStyle: CSSProperties = {
-    width: sizeConfig.iconSize,
-    height: sizeConfig.iconSize,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  };
+  const dropdownButtonStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 0,
+      border: `1px solid ${COLOR_BORDER}`,
+      borderRadius: `0 ${RADIUS_SM} ${RADIUS_SM} 0`,
+      backgroundColor: "transparent",
+      color: COLOR_ICON,
+      cursor: disabled ? "not-allowed" : "pointer",
+      opacity: disabled ? 0.5 : 1,
+      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      outline: "none",
+    }),
+    [disabled],
+  );
 
-  const dropdownStyle: CSSProperties = {
-    position: "absolute",
-    top: dropdownPosition.top,
-    left: dropdownPosition.left,
-    minWidth: dropdownPosition.width,
-    backgroundColor: COLOR_SURFACE_RAISED,
-    border: `1px solid ${COLOR_BORDER}`,
-    borderRadius: RADIUS_SM,
-    boxShadow: SHADOW_MD,
-    zIndex: Z_DROPDOWN,
-    padding: SPACE_SM,
-  };
+  const iconStyle = useMemo<CSSProperties>(
+    () => ({
+      width: sizeConfig.iconSize,
+      height: sizeConfig.iconSize,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }),
+    [sizeConfig.iconSize],
+  );
 
-  const getOptionBackground = (isSelected: boolean, isFocused: boolean) => {
-    if (isFocused) {
-      return COLOR_HOVER;
-    }
-    return "transparent";
-  };
+  const dropdownStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      top: dropdownPosition.top,
+      left: dropdownPosition.left,
+      minWidth: dropdownPosition.width,
+      backgroundColor: COLOR_SURFACE_RAISED,
+      border: `1px solid ${COLOR_BORDER}`,
+      borderRadius: RADIUS_SM,
+      boxShadow: SHADOW_MD,
+      zIndex: Z_DROPDOWN,
+      padding: SPACE_SM,
+    }),
+    [dropdownPosition.top, dropdownPosition.left, dropdownPosition.width],
+  );
 
-  const getOptionStyle = (
-    isSelected: boolean,
-    isFocused: boolean,
-    isDisabled: boolean
-  ): CSSProperties => ({
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_MD,
-    padding: `${SPACE_SM} ${SPACE_MD}`,
-    backgroundColor: getOptionBackground(isSelected, isFocused),
-    color: isDisabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
-    fontSize: SIZE_FONT_SM,
-    cursor: isDisabled ? "not-allowed" : "pointer",
-    opacity: isDisabled ? 0.5 : 1,
-    borderRadius: RADIUS_SM,
-    border: "none",
-    width: "100%",
-    textAlign: "left",
-  });
+  const handleMainPointerEnter = useCallback(
+    (e: PointerEvent<HTMLButtonElement>) => {
+      if (disabled) {
+        return;
+      }
+      e.currentTarget.style.backgroundColor = COLOR_HOVER;
+      e.currentTarget.style.color = COLOR_ICON_HOVER;
+    },
+    [disabled],
+  );
 
-  const handleMainPointerEnter = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = COLOR_HOVER;
-    e.currentTarget.style.color = COLOR_ICON_HOVER;
-  };
+  const handleMainPointerLeave = useCallback(
+    (e: PointerEvent<HTMLButtonElement>) => {
+      if (disabled) {
+        return;
+      }
+      e.currentTarget.style.backgroundColor = "transparent";
+      e.currentTarget.style.color = COLOR_ICON;
+    },
+    [disabled],
+  );
 
-  const handleMainPointerLeave = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = "transparent";
-    e.currentTarget.style.color = COLOR_ICON;
-  };
+  const handleMainPointerDown = useCallback(
+    (e: PointerEvent<HTMLButtonElement>) => {
+      if (disabled) {
+        return;
+      }
+      e.currentTarget.style.backgroundColor = COLOR_ACTIVE;
+    },
+    [disabled],
+  );
 
-  const handleMainPointerDown = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = COLOR_ACTIVE;
-  };
+  const handleMainPointerUp = useCallback(
+    (e: PointerEvent<HTMLButtonElement>) => {
+      if (disabled) {
+        return;
+      }
+      e.currentTarget.style.backgroundColor = COLOR_HOVER;
+    },
+    [disabled],
+  );
 
-  const handleMainPointerUp = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = COLOR_HOVER;
-  };
+  const handleDropdownPointerEnter = useCallback(
+    (e: PointerEvent<HTMLButtonElement>) => {
+      if (disabled || isOpen) {
+        return;
+      }
+      e.currentTarget.style.backgroundColor = COLOR_HOVER;
+    },
+    [disabled, isOpen],
+  );
 
-  const handleDropdownPointerEnter = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled || isOpen) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = COLOR_HOVER;
-  };
+  const handleDropdownPointerLeave = useCallback(
+    (e: PointerEvent<HTMLButtonElement>) => {
+      if (disabled || isOpen) {
+        return;
+      }
+      e.currentTarget.style.backgroundColor = "transparent";
+    },
+    [disabled, isOpen],
+  );
 
-  const handleDropdownPointerLeave = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled || isOpen) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = "transparent";
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLButtonElement>) => {
+  const handleFocus = useCallback((e: React.FocusEvent<HTMLButtonElement>) => {
     e.currentTarget.style.boxShadow = `0 0 0 2px ${COLOR_FOCUS_RING}`;
-  };
+  }, []);
 
-  const handleBlur = (e: React.FocusEvent<HTMLButtonElement>) => {
+  const handleBlur = useCallback((e: React.FocusEvent<HTMLButtonElement>) => {
     e.currentTarget.style.boxShadow = "none";
-  };
+  }, []);
 
   return (
     <div
@@ -403,75 +529,23 @@ export function SplitButton<T extends string = string>({
       {isOpen && (
         <Portal>
           <div ref={dropdownRef} role="listbox" style={dropdownStyle}>
-            {options.map((option, index) => {
-              const isSelected = option.value === value;
-              const isFocused = index === focusedIndex;
-              const isDisabled = option.disabled ?? false;
-
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="option"
-                  aria-selected={isSelected}
-                  aria-disabled={isDisabled}
-                  onClick={() => handleOptionClick(option)}
-                  onPointerEnter={() => setFocusedIndex(index)}
-                  style={getOptionStyle(isSelected, isFocused, isDisabled)}
-                >
-                  <span
-                    style={{
-                      width: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      color: COLOR_TEXT,
-                    }}
-                  >
-                    {isSelected && <CheckIcon />}
-                  </span>
-                  <span
-                    style={{
-                      width: "16px",
-                      height: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      color: COLOR_ICON,
-                    }}
-                  >
-                    {option.icon}
-                  </span>
-                  <span
-                    style={{
-                      flex: 1,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {option.label}
-                  </span>
-                  {option.shortcut && (
-                    <span
-                      style={{
-                        marginLeft: SPACE_LG,
-                        color: COLOR_TEXT_MUTED,
-                        fontSize: SIZE_FONT_SM,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {option.shortcut}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {options.map((option, index) => (
+              <SplitButtonOptionItem
+                key={option.value}
+                option={option}
+                isSelected={option.value === value}
+                isFocused={index === focusedIndex}
+                index={index}
+                onOptionClick={handleOptionClick}
+                onPointerEnter={handleOptionPointerEnter}
+              />
+            ))}
           </div>
         </Portal>
       )}
     </div>
   );
 }
+
+// Memo wrapper with generic type support
+export const SplitButton = memo(SplitButtonInner) as typeof SplitButtonInner;

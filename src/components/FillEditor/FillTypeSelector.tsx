@@ -2,6 +2,7 @@
  * @file FillTypeSelector component - Icon-based fill type selector
  */
 
+import { memo, useCallback } from "react";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import type { SegmentedControlOption } from "../SegmentedControl/SegmentedControl";
 import type { FillType } from "./fillTypes";
@@ -29,18 +30,21 @@ const fillTypeOptions: SegmentedControlOption<FillType>[] = [
 ];
 
 /** Segmented control for selecting between solid, gradient, image, pattern, and video fills */
-export function FillTypeSelector({
+export const FillTypeSelector = memo(function FillTypeSelector({
   value,
   onChange,
   disabled = false,
   "aria-label": ariaLabel = "Fill type",
 }: FillTypeSelectorProps) {
-  const handleChange = (newValue: FillType | FillType[]) => {
-    if (Array.isArray(newValue)) {
-      return;
-    }
-    onChange(newValue);
-  };
+  const handleChange = useCallback(
+    (newValue: FillType | FillType[]) => {
+      if (Array.isArray(newValue)) {
+        return;
+      }
+      onChange(newValue);
+    },
+    [onChange],
+  );
 
   return (
     <SegmentedControl
@@ -52,4 +56,4 @@ export function FillTypeSelector({
       aria-label={ariaLabel}
     />
   );
-}
+});

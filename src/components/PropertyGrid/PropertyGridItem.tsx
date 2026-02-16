@@ -2,6 +2,7 @@
  * @file PropertyGridItem component - Grid item with span support
  */
 
+import { memo, useMemo } from "react";
 import type { ReactNode, CSSProperties, HTMLAttributes } from "react";
 
 export type PropertyGridItemProps = HTMLAttributes<HTMLDivElement> & {
@@ -18,21 +19,24 @@ function getGridColumn(span: 1 | 2 | 3 | 4 | "full"): string {
 }
 
 /** Grid cell item that can span 1-4 columns for property row layouts */
-export function PropertyGridItem({
+export const PropertyGridItem = memo(function PropertyGridItem({
   children,
   span = 1,
   className,
   ...rest
 }: PropertyGridItemProps) {
-  const style: CSSProperties = {
-    gridColumn: getGridColumn(span),
-    minWidth: 0,
-    boxSizing: "border-box",
-  };
+  const style = useMemo<CSSProperties>(
+    () => ({
+      gridColumn: getGridColumn(span),
+      minWidth: 0,
+      boxSizing: "border-box",
+    }),
+    [span],
+  );
 
   return (
     <div className={className} style={style} {...rest}>
       {children}
     </div>
   );
-}
+});

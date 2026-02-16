@@ -10,7 +10,7 @@
  * - Supports "Auto" value
  */
 
-import { memo, useState, useRef, useCallback, type CSSProperties, type KeyboardEvent } from "react";
+import { memo, useState, useRef, useCallback, useMemo, type CSSProperties, type KeyboardEvent } from "react";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
@@ -76,6 +76,11 @@ const sizeMap = {
 const defaultUnits: UnitOption[] = [
   { value: "px", label: "px" },
 ];
+
+const chevronIconStyle: React.CSSProperties = {
+  marginLeft: 2,
+  opacity: 0.6,
+};
 
 
 
@@ -271,7 +276,7 @@ export const UnitInput = memo(function UnitInput({
     }
   }, [disabled, useDropdown, isDropdownOpen, closeDropdown, openDropdown, cycleUnit]);
 
-  const containerStyle: CSSProperties = {
+  const containerStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     width: "100%",
@@ -285,16 +290,16 @@ export const UnitInput = memo(function UnitInput({
     boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
     opacity: disabled ? 0.5 : 1,
     boxSizing: "border-box",
-  };
+  }), [sizeConfig.height, sizeConfig.paddingX, isFocused, disabled]);
 
-  const iconStyle: CSSProperties = {
+  const iconStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     color: COLOR_ICON,
     flexShrink: 0,
-  };
+  }), []);
 
-  const inputStyle: CSSProperties = {
+  const inputStyle = useMemo<CSSProperties>(() => ({
     flex: 1,
     minWidth: 0,
     height: "100%",
@@ -304,9 +309,9 @@ export const UnitInput = memo(function UnitInput({
     color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
     fontSize: sizeConfig.fontSize,
     outline: "none",
-  };
+  }), [disabled, sizeConfig.fontSize]);
 
-  const unitStyle: CSSProperties = {
+  const unitStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     color: isUnitHovered && !disabled ? COLOR_TEXT : COLOR_TEXT_MUTED,
@@ -315,7 +320,10 @@ export const UnitInput = memo(function UnitInput({
     userSelect: "none",
     transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
     flexShrink: 0,
-  };
+  }), [isUnitHovered, disabled, sizeConfig.fontSize]);
+
+  const handleUnitPointerEnter = useCallback(() => setIsUnitHovered(true), []);
+  const handleUnitPointerLeave = useCallback(() => setIsUnitHovered(false), []);
 
   const getDisplayUnit = () => {
     if (parsed.isAuto) {
@@ -360,8 +368,8 @@ export const UnitInput = memo(function UnitInput({
         <span
           ref={unitButtonRef}
           onClick={handleUnitClick}
-          onPointerEnter={() => setIsUnitHovered(true)}
-          onPointerLeave={() => setIsUnitHovered(false)}
+          onPointerEnter={handleUnitPointerEnter}
+          onPointerLeave={handleUnitPointerLeave}
           style={unitStyle}
           role="button"
           tabIndex={disabled ? -1 : 0}
@@ -377,7 +385,7 @@ export const UnitInput = memo(function UnitInput({
               height="8"
               viewBox="0 0 8 8"
               fill="currentColor"
-              style={{ marginLeft: 2, opacity: 0.6 }}
+              style={chevronIconStyle}
             >
               <path d="M1 2.5L4 5.5L7 2.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
             </svg>

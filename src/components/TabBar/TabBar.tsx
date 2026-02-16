@@ -150,12 +150,12 @@ const sizeMap = {
   },
 };
 
-// Close button for file tabs
+// Close button for file tabs (uses span to avoid nested button)
 const CloseButton = memo(function CloseButton({
-  onClick,
+  onClose,
   isDirty,
 }: {
-  onClick: (e: React.MouseEvent) => void;
+  onClose: () => void;
   isDirty?: boolean;
 }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -169,38 +169,70 @@ const CloseButton = memo(function CloseButton({
       height: 16,
       marginLeft: SPACE_SM,
       borderRadius: RADIUS_SM,
-      border: "none",
       backgroundColor: isHovered ? COLOR_HOVER : "transparent",
       color: isHovered ? COLOR_ICON_HOVER : COLOR_ICON,
       cursor: "pointer",
-      padding: 0,
       transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
     }),
     [isHovered],
   );
 
+  const dirtyDotStyle = useMemo<CSSProperties>(
+    () => ({
+      width: 8,
+      height: 8,
+      marginLeft: SPACE_SM,
+      borderRadius: "50%",
+      backgroundColor: COLOR_TEXT_MUTED,
+      cursor: "pointer",
+    }),
+    [],
+  );
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClose();
+  }, [onClose]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onClose();
+    }
+  }, [onClose]);
+
+  const handlePointerEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handlePointerLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
+
   if (isDirty && !isHovered) {
     return (
       <span
-        style={{
-          width: 8,
-          height: 8,
-          marginLeft: SPACE_SM,
-          borderRadius: "50%",
-          backgroundColor: COLOR_TEXT_MUTED,
-        }}
-        onPointerEnter={() => setIsHovered(true)}
-        onPointerLeave={() => setIsHovered(false)}
+        role="button"
+        tabIndex={0}
+        style={dirtyDotStyle}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        aria-label="Close tab"
       />
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      onPointerEnter={() => setIsHovered(true)}
-      onPointerLeave={() => setIsHovered(false)}
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onKeyDown={handleKeyDown}
       style={style}
       aria-label="Close tab"
     >
@@ -208,7 +240,7 @@ const CloseButton = memo(function CloseButton({
         <line x1="18" y1="6" x2="6" y2="18" />
         <line x1="6" y1="6" x2="18" y2="18" />
       </svg>
-    </button>
+    </span>
   );
 });
 
@@ -226,20 +258,25 @@ const TabButton = memo(function TabButton({
   const [isFocused, setIsFocused] = useState(false);
   const isDisabled = tab.disabled ?? false;
 
+  const iconWrapperStyle = useMemo<CSSProperties>(
+    () => ({ marginRight: SPACE_SM, display: "flex" }),
+    [],
+  );
+
   const buttonStyle = useMemo<CSSProperties>(() => {
     // Pills variant (default)
     if (variant === "pills") {
       const getBackgroundColor = (): string => {
-        if (active) return COLOR_SURFACE;
-        if (isDisabled) return "transparent";
-        if (isPressed) return COLOR_ACTIVE;
-        if (isHovered) return COLOR_HOVER;
+        if (active) { return COLOR_SURFACE; }
+        if (isDisabled) { return "transparent"; }
+        if (isPressed) { return COLOR_ACTIVE; }
+        if (isHovered) { return COLOR_HOVER; }
         return "transparent";
       };
 
       const getBoxShadow = (): string => {
-        if (isFocused) return `0 0 0 2px ${COLOR_FOCUS_RING}`;
-        if (active) return SHADOW_SM;
+        if (isFocused) { return `0 0 0 2px ${COLOR_FOCUS_RING}`; }
+        if (active) { return SHADOW_SM; }
         return "none";
       };
 
@@ -314,8 +351,7 @@ const TabButton = memo(function TabButton({
   }, [onClick, tab.id, isDisabled]);
 
   const handleClose = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
+    () => {
       onClose?.(tab.id);
     },
     [onClose, tab.id],
@@ -358,9 +394,9 @@ const TabButton = memo(function TabButton({
     if (variant === "files") {
       return (
         <>
-          {tab.icon ? <span style={{ marginRight: SPACE_SM, display: "flex" }}>{tab.icon}</span> : null}
+          {tab.icon ? <span style={iconWrapperStyle}>{tab.icon}</span> : null}
           <span>{tab.label}</span>
-          {tab.closable ? <CloseButton onClick={handleClose} isDirty={tab.isDirty} /> : null}
+          {tab.closable ? <CloseButton onClose={handleClose} isDirty={tab.isDirty} /> : null}
         </>
       );
     }
