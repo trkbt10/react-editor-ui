@@ -27,8 +27,7 @@ import { useFontMetrics } from "../core/useFontMetrics";
 import { useLineIndex } from "../core/useLineIndex";
 import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTextTokenCache } from "./useTextTokenCache";
-import { SvgRenderer } from "../renderers/SvgRenderer";
-import { CanvasRenderer } from "../renderers/CanvasRenderer";
+import { BlockRenderer } from "../renderers/BlockRenderer";
 import { DEFAULT_PADDING_PX } from "../styles/tokens";
 
 // =============================================================================
@@ -173,8 +172,9 @@ export const BlockTextEditor = memo(function BlockTextEditor(
     padding: DEFAULT_PADDING_PX,
   });
 
-  // Render
-  const Renderer = renderer === "canvas" ? CanvasRenderer : SvgRenderer;
+  // Render (BlockRenderer always uses SVG internally)
+  // Note: The 'renderer' prop is kept for API compatibility but both render as SVG
+  void renderer; // Acknowledge the prop to satisfy TypeScript
 
   // Only render content when font metrics are ready
   const isReady = fontMetrics.isReady;
@@ -194,11 +194,11 @@ export const BlockTextEditor = memo(function BlockTextEditor(
         onScroll={core.handleScroll}
       >
         {isReady && (
-          <Renderer
-            lines={lineIndex.lines}
-            visibleRange={core.virtualScroll.state.visibleRange}
-            topSpacerHeight={core.virtualScroll.state.topSpacerHeight}
-            bottomSpacerHeight={core.virtualScroll.state.bottomSpacerHeight}
+          <BlockRenderer
+            blocks={document.blocks}
+            visibleRange={core.visibleBlockInfo.visibleRange}
+            topSpacerHeight={core.visibleBlockInfo.topSpacerHeight}
+            bottomSpacerHeight={core.visibleBlockInfo.bottomSpacerHeight}
             tokenCache={tokenCache}
             lineHeight={editorConfig.lineHeight}
             padding={DEFAULT_PADDING_PX}
@@ -208,7 +208,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
             cursor={core.cursorState}
             fontFamily={editorConfig.fontFamily}
             fontSize={editorConfig.fontSize}
-            lineOffsets={lineIndex.lineOffsets}
+            startLineNumber={core.visibleBlockInfo.startLineNumber}
           />
         )}
       </div>

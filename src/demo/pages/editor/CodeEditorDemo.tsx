@@ -9,8 +9,9 @@ import {
   DemoRow,
 } from "../../components";
 import { CodeEditor } from "../../../components/Editor/code/CodeEditor";
+import { createBlockDocument } from "../../../components/Editor/core/blockDocument";
 import { Button } from "../../../components/Button/Button";
-import type { Token, Tokenizer } from "../../../components/Editor/code/types";
+import type { Token, Tokenizer, BlockDocument } from "../../../components/Editor";
 
 // Simple JSON tokenizer for demo purposes
 const jsonTokenizer: Tokenizer = {
@@ -103,7 +104,7 @@ const sampleJson = `{
 }`;
 
 export function CodeEditorDemo() {
-  const [code, setCode] = useState(sampleJson);
+  const [doc, setDoc] = useState<BlockDocument>(() => createBlockDocument(sampleJson));
   const [renderer, setRenderer] = useState<"svg" | "canvas">("svg");
 
   return (
@@ -129,8 +130,8 @@ export function CodeEditorDemo() {
 
       <DemoSection label="With JSON Tokenizer">
         <CodeEditor
-          value={code}
-          onChange={setCode}
+          document={doc}
+          onDocumentChange={setDoc}
           tokenizer={jsonTokenizer}
           tokenStyles={jsonTokenStyles}
           renderer={renderer}
@@ -145,8 +146,8 @@ export function CodeEditorDemo() {
 
       <DemoSection label="Read Only">
         <CodeEditor
-          value={code}
-          onChange={() => {}}
+          document={doc}
+          onDocumentChange={() => {}}
           tokenizer={jsonTokenizer}
           tokenStyles={jsonTokenStyles}
           renderer={renderer}

@@ -81,9 +81,6 @@ export {
 } from "./editorState";
 
 // Hooks
-export { useComposition } from "./useComposition";
-export { useEditorCore } from "./useEditorCore";
-export type { UseEditorCoreConfig, UseEditorCoreResult, GetOffsetFromPositionFn } from "./useEditorCore";
 export {
   calculateSelectionRects,
   coordinatesToPosition,
@@ -195,4 +192,5 @@ export { useBlockEditorCore } from "./useBlockEditorCore";
 export type {
   UseBlockEditorCoreConfig,
   UseBlockEditorCoreResult,
+  GetOffsetFromPositionFn,
 } from "./useBlockEditorCore";

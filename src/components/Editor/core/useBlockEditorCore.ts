@@ -74,7 +74,6 @@ import { useCursorRestoration } from "./useCursorRestoration";
 import { useKeyHandlers } from "../user-actions/useKeyHandlers";
 import { injectCursorAnimation } from "../styles/useEditorStyles";
 import { useSelectionChange } from "./useSelectionChange";
-import { INITIAL_COMPOSITION_STATE } from "./types";
 
 // =============================================================================
 // Types
@@ -507,35 +506,9 @@ export function useBlockEditorCore(
     [readOnly, document.styleDefinitions, history, setCursorNow, updateCursorPosition]
   );
 
-  // Key handlers (reuse existing)
-  // Convert BlockCompositionState to CompositionState for compatibility
-  const legacyComposition = useMemo(() => {
-    if (!composition.isComposing) {
-      return INITIAL_COMPOSITION_STATE;
-    }
-
-    const computeStartOffset = (): number => {
-      if (!composition.blockId) {
-        return 0;
-      }
-      const offset = blockPositionToGlobalOffset(document, {
-        blockId: composition.blockId,
-        offset: composition.localOffset,
-      });
-      return offset ?? 0;
-    };
-
-    return {
-      isComposing: true,
-      text: composition.text,
-      startOffset: computeStartOffset(),
-      replacedLength: composition.replacedLength,
-      baseValue: textValue,
-    };
-  }, [composition, document, textValue]);
-
+  // Key handlers
   const { handleKeyDown } = useKeyHandlers({
-    composition: legacyComposition,
+    isComposing: composition.isComposing,
     canUndo: history.canUndo,
     canRedo: history.canRedo,
     tabSize,

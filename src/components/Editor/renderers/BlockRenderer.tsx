@@ -28,11 +28,16 @@ import type {
   HighlightRange,
   MeasureTextFn,
 } from "../core/types";
-import type { TokenCache, TokenStyleMap, LineHighlight } from "./types";
-import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE } from "./types";
+import type { Token, TokenCache, TokenStyleMap, LineHighlight } from "./types";
+import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_LINE_NUMBER_WIDTH } from "./types";
 import { getLineHighlights, HIGHLIGHT_COLORS } from "./utils";
 import { assertMeasureText } from "../core/invariant";
-import { EDITOR_CURSOR_COLOR } from "../styles/tokens";
+import {
+  EDITOR_CURSOR_COLOR,
+  EDITOR_LINE_NUMBER_BG,
+  EDITOR_LINE_NUMBER_COLOR,
+  EDITOR_LINE_NUMBER_BORDER,
+} from "../styles/tokens";
 
 // =============================================================================
 // Types
@@ -57,6 +62,10 @@ export type BlockRendererProps = {
   readonly width?: number;
   /** Function to measure text width */
   readonly measureText?: MeasureTextFn;
+  /** Show line numbers */
+  readonly showLineNumbers?: boolean;
+  /** Line number gutter width in pixels */
+  readonly lineNumberWidth?: number;
   /** Highlight ranges (selection, composition, search matches) */
   readonly highlights?: readonly HighlightRange[];
   /** Cursor state */
@@ -90,6 +99,64 @@ type BlockRenderInfo = {
 // =============================================================================
 
 const MIN_HIGHLIGHT_WIDTH = 8;
+
+// =============================================================================
+// Style-Aware Position Calculation
+// =============================================================================
+
+/**
+ * Parse font size to ratio relative to base size.
+ * Handles both string ("16px", "1.2em", "120%") and number (16) values.
+ */
+function parseFontSizeRatio(size: string | number, baseSize: number): number {
+  if (typeof size === "number") {
+    return size / baseSize;
+  }
+  if (size.endsWith("px")) {
+    return parseFloat(size) / baseSize;
+  }
+  if (size.endsWith("em")) {
+    return parseFloat(size);
+  }
+  if (size.endsWith("%")) {
+    return parseFloat(size) / 100;
+  }
+  const num = parseFloat(size);
+  return Number.isNaN(num) ? 1 : num / baseSize;
+}
+
+/**
+ * Calculate token X positions considering individual token styles.
+ * Returns array of X positions for each token.
+ */
+function calculateTokenPositions(
+  tokens: readonly Token[],
+  tokenStyles: TokenStyleMap | undefined,
+  baseXOffset: number,
+  baseFontSize: number,
+  measureText: (text: string) => number
+): readonly number[] {
+  const positions: number[] = [];
+  const acc = { x: baseXOffset };
+
+  for (const token of tokens) {
+    positions.push(acc.x);
+
+    // Calculate token width using actual text measurement
+    const style = tokenStyles?.[token.type];
+    const tokenFontSize = style?.fontSize;
+
+    // If token has custom font size, apply font size ratio
+    const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, baseFontSize) : 1;
+
+    // Measure actual text width (handles CJK correctly)
+    const baseWidth = measureText(token.text);
+    const tokenWidth = baseWidth * fontSizeRatio;
+    acc.x += tokenWidth;
+  }
+
+  return positions;
+}
 
 // =============================================================================
 // Styles
@@ -173,6 +240,8 @@ type BlockLineProps = {
   readonly y: number;
   readonly xOffset: number;
   readonly lineHeight: number;
+  readonly showLineNumbers: boolean;
+  readonly lineNumberWidth: number;
   readonly highlights: readonly LineHighlight[];
   readonly cursor?: { column: number; blinking: boolean };
   readonly measureText: MeasureTextFn;
@@ -187,11 +256,13 @@ type BlockLineProps = {
 const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
   const {
     lineText,
-    // lineNumber is passed for future use (e.g., line number gutter)
+    lineNumber,
     lineIndex,
     y,
     xOffset,
     lineHeight,
+    showLineNumbers,
+    lineNumberWidth,
     highlights,
     cursor,
     measureText,
@@ -201,22 +272,98 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     fontSize,
     // localStyles and localOffset are passed for future styled text rendering
   } = props;
+
+  // Calculate code X offset (after line numbers if shown)
+  const codeXOffset = showLineNumbers ? xOffset + lineNumberWidth : xOffset;
   const textY = y + lineHeight * 0.75;
 
   // Get tokens for this line
   const tokens = tokenCache.getTokens(lineText, lineIndex);
 
-  // Calculate column X position
-  const getColumnX = (col: number): number => {
-    const textBeforeCol = lineText.slice(0, col - 1);
-    return xOffset + measureText(textBeforeCol);
+  // Calculate token positions using style-aware measurement
+  const tokenPositions = useMemo(
+    () => calculateTokenPositions(tokens, tokenStyles, codeXOffset, fontSize, measureText),
+    [tokens, tokenStyles, codeXOffset, fontSize, measureText]
+  );
+
+  // Get X position for any column using style-aware calculation
+  const getStyledColumnX = (col: number): number => {
+    // Use token positions for accurate positioning with variable font styles
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (col <= token.start + 1) {
+        return tokenPositions[i];
+      }
+      if (col <= token.end + 1) {
+        // Position is within this token - measure actual text width
+        const charOffset = col - token.start - 1;
+        const textWithinToken = token.text.slice(0, charOffset);
+
+        // Measure actual text width (handles CJK characters correctly)
+        const widthWithinToken = measureText(textWithinToken);
+
+        // Apply font size ratio if token has custom font size
+        const style = tokenStyles?.[token.type];
+        const tokenFontSize = style?.fontSize;
+        const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, fontSize) : 1;
+
+        return tokenPositions[i] + widthWithinToken * fontSizeRatio;
+      }
+    }
+    // Position is at or past end of line
+    if (tokens.length > 0) {
+      const lastIdx = tokens.length - 1;
+      const lastToken = tokens[lastIdx];
+      const style = tokenStyles?.[lastToken.type];
+      const tokenFontSize = style?.fontSize;
+      const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, fontSize) : 1;
+      const baseWidth = measureText(lastToken.text);
+      return tokenPositions[lastIdx] + baseWidth * fontSizeRatio;
+    }
+    // Empty line - use measureText for cursor position
+    return codeXOffset + measureText(lineText.slice(0, col - 1));
+  };
+
+  // Render line number
+  const renderLineNumber = (): ReactNode => {
+    if (!showLineNumbers) {
+      return null;
+    }
+    return (
+      <>
+        <rect
+          x={xOffset}
+          y={y}
+          width={lineNumberWidth}
+          height={lineHeight}
+          fill={EDITOR_LINE_NUMBER_BG}
+        />
+        <text
+          x={xOffset + lineNumberWidth - 8}
+          y={textY}
+          fontFamily={fontFamily}
+          fontSize={fontSize}
+          fill={EDITOR_LINE_NUMBER_COLOR}
+          textAnchor="end"
+        >
+          {lineNumber}
+        </text>
+        <line
+          x1={xOffset + lineNumberWidth}
+          y1={y}
+          x2={xOffset + lineNumberWidth}
+          y2={y + lineHeight}
+          stroke={EDITOR_LINE_NUMBER_BORDER}
+        />
+      </>
+    );
   };
 
   // Render highlights
   const renderHighlights = (): ReactNode => {
     return highlights.map((h, i) => {
-      const startX = getColumnX(h.startColumn);
-      const endX = getColumnX(h.endColumn);
+      const startX = getStyledColumnX(h.startColumn);
+      const endX = getStyledColumnX(h.endColumn);
       const width = Math.max(endX - startX, MIN_HIGHLIGHT_WIDTH);
 
       if (h.type === "composition") {
@@ -263,25 +410,25 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
       return <tspan fill="transparent">{"\u00A0"}</tspan>;
     }
 
-    const state = { x: xOffset };
-
     return tokens.map((token, i) => {
-      const tokenX = state.x;
-      const tokenWidth = measureText(token.text);
-      state.x += tokenWidth;
-
       const style = tokenStyles?.[token.type];
       const fill = (style?.color as string) ?? "inherit";
       const fontWeight = style?.fontWeight as string | undefined;
       const fontStyle = style?.fontStyle as string | undefined;
+      const textDecoration = style?.textDecoration as string | undefined;
+      const tokenFontSize = style?.fontSize as string | undefined;
+      const tokenFontFamily = style?.fontFamily as string | undefined;
 
       return (
         <tspan
           key={i}
-          x={tokenX}
+          x={tokenPositions[i]}
           fill={fill}
           fontWeight={fontWeight}
           fontStyle={fontStyle}
+          textDecoration={textDecoration}
+          fontSize={tokenFontSize}
+          fontFamily={tokenFontFamily}
         >
           {token.text}
         </tspan>
@@ -295,7 +442,7 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
       return null;
     }
 
-    const cursorX = getColumnX(cursor.column);
+    const cursorX = getStyledColumnX(cursor.column);
 
     return (
       <rect
@@ -313,8 +460,9 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
 
   return (
     <g>
+      {renderLineNumber()}
       {renderHighlights()}
-      <text x={xOffset} y={textY} fontFamily={fontFamily} fontSize={fontSize}>
+      <text x={codeXOffset} y={textY} fontFamily={fontFamily} fontSize={fontSize}>
         {renderTokens()}
       </text>
       {renderCursor()}
@@ -330,6 +478,8 @@ type SingleBlockProps = {
   readonly info: BlockRenderInfo;
   readonly padding: number;
   readonly lineHeight: number;
+  readonly showLineNumbers: boolean;
+  readonly lineNumberWidth: number;
   readonly highlights: readonly HighlightRange[];
   readonly cursor?: CursorState;
   readonly measureText: MeasureTextFn;
@@ -343,6 +493,8 @@ const SingleBlock = memo(function SingleBlock({
   info,
   padding,
   lineHeight,
+  showLineNumbers,
+  lineNumberWidth,
   highlights,
   cursor,
   measureText,
@@ -405,6 +557,8 @@ const SingleBlock = memo(function SingleBlock({
           y={lineY}
           xOffset={padding}
           lineHeight={lineHeight}
+          showLineNumbers={showLineNumbers}
+          lineNumberWidth={lineNumberWidth}
           highlights={lineHighlights}
           cursor={lineCursor}
           measureText={measureText}
@@ -443,6 +597,8 @@ export const BlockRenderer = memo(function BlockRenderer({
   padding,
   width,
   measureText: measureTextProp,
+  showLineNumbers = false,
+  lineNumberWidth = DEFAULT_LINE_NUMBER_WIDTH,
   highlights = [],
   cursor,
   tokenStyles,
@@ -479,6 +635,8 @@ export const BlockRenderer = memo(function BlockRenderer({
             info={info}
             padding={padding}
             lineHeight={lineHeight}
+            showLineNumbers={showLineNumbers}
+            lineNumberWidth={lineNumberWidth}
             highlights={highlights}
             cursor={cursor}
             measureText={measureText}

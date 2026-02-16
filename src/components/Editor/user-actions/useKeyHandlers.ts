@@ -5,14 +5,14 @@
  */
 
 import { useCallback, type KeyboardEvent } from "react";
-import type { CompositionState } from "../core/types";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 type UseKeyHandlersArgs = {
-  readonly composition: CompositionState;
+  /** Whether IME composition is active */
+  readonly isComposing: boolean;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
   readonly tabSize: number;
@@ -38,7 +38,7 @@ type UseKeyHandlersResult = {
  * - Tab: Insert spaces
  */
 export function useKeyHandlers({
-  composition,
+  isComposing,
   canUndo,
   canRedo,
   tabSize,
@@ -49,7 +49,7 @@ export function useKeyHandlers({
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
       // Skip during IME composition
-      if (composition.isComposing) {
+      if (isComposing) {
         return;
       }
 
@@ -99,7 +99,7 @@ export function useKeyHandlers({
 
       // Let other keys pass through to textarea
     },
-    [composition.isComposing, canUndo, canRedo, tabSize, onUndo, onRedo, onInsert]
+    [isComposing, canUndo, canRedo, tabSize, onUndo, onRedo, onInsert]
   );
 
   return {

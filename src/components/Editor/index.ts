@@ -3,23 +3,26 @@
  *
  * @description
  * Unified exports for all Editor components including CodeEditor and TextEditor.
+ * Both editors use BlockDocument for consistent architecture.
  * Provides syntax highlighting, virtual scrolling, and rich text editing.
  *
  * @example
  * ```tsx
- * import { CodeEditor, TextEditor } from "react-editor-ui/Editor";
+ * import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/Editor";
+ *
+ * const [doc, setDoc] = useState(() => createBlockDocument(code));
  *
  * // Code editor with syntax highlighting
  * <CodeEditor
- *   value={code}
- *   onChange={setCode}
- *   language="typescript"
+ *   document={doc}
+ *   onDocumentChange={setDoc}
+ *   tokenizer={myTokenizer}
  * />
  *
  * // Rich text editor
  * <TextEditor
- *   value={text}
- *   onChange={setText}
+ *   document={doc}
+ *   onDocumentChange={setDoc}
  * />
  * ```
  */
@@ -46,12 +49,15 @@ export type {
   TextStyle,
   TextStyleSegment,
   VirtualScrollState,
+  // Block-based types
+  BlockDocument,
+  Block,
+  BlockId,
 } from "./core";
 
 export {
   DEFAULT_EDITOR_CONFIG,
   INITIAL_COMPOSITION_STATE,
-  useComposition,
   useFontMetrics,
   useHistory,
   useLineIndex,
@@ -63,6 +69,9 @@ export {
   lineColumnToCoordinates,
   lineColumnToOffset,
   offsetToLineColumn,
+  // Block-based functions
+  createBlockDocument,
+  getBlockDocumentText,
 } from "./core";
 
 // =============================================================================
@@ -81,8 +90,7 @@ export type {
 } from "./renderers";
 
 export {
-  SvgRenderer,
-  CanvasRenderer,
+  BlockRenderer,
   getLineHighlights,
   HIGHLIGHT_COLORS,
 } from "./renderers";

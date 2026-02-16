@@ -2,20 +2,21 @@
  * @file Code Editor Component
  *
  * Code editor with syntax highlighting.
- * Uses the shared useEditorCore hook for IME, cursor, selection, and history.
+ * Uses block-based architecture for stable IME handling and efficient editing.
  */
 
 import { useMemo, memo, type ReactNode } from "react";
 import type { CodeEditorProps } from "./types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
-import { useEditorCore, type GetOffsetFromPositionFn } from "../core/useEditorCore";
+import { getBlockDocumentText } from "../core/blockDocument";
+import { useBlockEditorCore, type GetOffsetFromPositionFn } from "../core/useBlockEditorCore";
 import { useFontMetrics } from "../core/useFontMetrics";
+import { useLineIndex } from "../core/useLineIndex";
 import { coordinatesToPosition } from "../core/coordinates";
 import { assertMeasureText } from "../core/invariant";
 import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTokenCache } from "./useTokenCache";
-import { SvgRenderer } from "../renderers/SvgRenderer";
-import { CanvasRenderer } from "../renderers/CanvasRenderer";
+import { BlockRenderer } from "../renderers/BlockRenderer";
 import { DEFAULT_PADDING_PX, DEFAULT_LINE_NUMBER_WIDTH_PX } from "../styles/tokens";
 
 // =============================================================================
@@ -28,12 +29,16 @@ import { DEFAULT_PADDING_PX, DEFAULT_LINE_NUMBER_WIDTH_PX } from "../styles/toke
  * Features:
  * - Syntax highlighting via external tokenizer
  * - Undo/redo with debounced history
- * - IME composition support
+ * - IME composition support (block-based for stability)
  * - Virtual scrolling for large files
  * - Selection and cursor rendering
  *
  * @example
  * ```tsx
+ * import { createBlockDocument } from "react-editor-ui/Editor";
+ *
+ * const [doc, setDoc] = useState(() => createBlockDocument(code));
+ *
  * const myTokenizer: Tokenizer = {
  *   tokenize: (line) => {
  *     // Your tokenization logic
@@ -42,8 +47,8 @@ import { DEFAULT_PADDING_PX, DEFAULT_LINE_NUMBER_WIDTH_PX } from "../styles/toke
  * };
  *
  * <CodeEditor
- *   value={code}
- *   onChange={setCode}
+ *   document={doc}
+ *   onDocumentChange={setDoc}
  *   tokenizer={myTokenizer}
  *   tokenStyles={{
  *     keyword: { color: '#0000ff' },
@@ -53,8 +58,8 @@ import { DEFAULT_PADDING_PX, DEFAULT_LINE_NUMBER_WIDTH_PX } from "../styles/toke
  * ```
  */
 export const CodeEditor = memo(function CodeEditor({
-  value,
-  onChange,
+  document: blockDocument,
+  onDocumentChange,
   tokenizer,
   tokenStyles,
   renderer = "svg",
@@ -70,12 +75,16 @@ export const CodeEditor = memo(function CodeEditor({
   // Merge config with defaults
   const editorConfig = { ...DEFAULT_EDITOR_CONFIG, ...config };
 
-  // Font metrics ref (needs containerRef, initialized after useEditorCore)
+  // Font metrics ref (needs containerRef, initialized after useBlockEditorCore)
   const fontMetricsRef = useMemo(() => ({ current: null as ReturnType<typeof useFontMetrics> | null }), []);
+
+  // Get text value for line index
+  const textValue = useMemo(() => getBlockDocumentText(blockDocument), [blockDocument]);
+  const lineIndex = useLineIndex(textValue);
 
   // Position calculation function for this editor type
   const getOffsetFromPosition: GetOffsetFromPositionFn = useMemo(() => {
-    return (x, y, scrollTop, lineIndex) => {
+    return (x, y, scrollTop, lineCount, lineHeight) => {
       const metrics = fontMetricsRef.current;
 
       // Require measureText - throw if not ready
@@ -86,7 +95,7 @@ export const CodeEditor = memo(function CodeEditor({
         y,
         lines: lineIndex.lines,
         scrollTop,
-        lineHeight: editorConfig.lineHeight,
+        lineHeight,
         paddingLeft: DEFAULT_PADDING_PX,
         paddingTop: DEFAULT_PADDING_PX,
         measureText,
@@ -94,12 +103,12 @@ export const CodeEditor = memo(function CodeEditor({
 
       return lineIndex.getOffsetAtLineColumn(position.line, position.column);
     };
-  }, [editorConfig.lineHeight, showLineNumbers, fontMetricsRef]);
+  }, [editorConfig.lineHeight, showLineNumbers, fontMetricsRef, lineIndex]);
 
-  // Core editor logic (IME, cursor, selection, history)
-  const core = useEditorCore(
-    value,
-    onChange,
+  // Core editor logic using block-based architecture
+  const core = useBlockEditorCore(
+    blockDocument,
+    onDocumentChange,
     {
       lineHeight: editorConfig.lineHeight,
       overscan: editorConfig.overscan,
@@ -132,8 +141,9 @@ export const CodeEditor = memo(function CodeEditor({
     return [...core.allHighlights, ...highlights];
   }, [core.allHighlights, highlights]);
 
-  // Render
-  const Renderer = renderer === "canvas" ? CanvasRenderer : SvgRenderer;
+  // Render (BlockRenderer always uses SVG internally)
+  // Note: The 'renderer' prop is kept for API compatibility but both render as SVG
+  void renderer; // Acknowledge the prop to satisfy TypeScript
 
   // Only render content when font metrics are ready (no fallbacks)
   const isReady = fontMetrics.isReady;
@@ -153,11 +163,11 @@ export const CodeEditor = memo(function CodeEditor({
         onScroll={core.handleScroll}
       >
         {isReady && (
-          <Renderer
-            lines={core.lineIndex.lines}
-            visibleRange={core.virtualScroll.state.visibleRange}
-            topSpacerHeight={core.virtualScroll.state.topSpacerHeight}
-            bottomSpacerHeight={core.virtualScroll.state.bottomSpacerHeight}
+          <BlockRenderer
+            blocks={blockDocument.blocks}
+            visibleRange={core.visibleBlockInfo.visibleRange}
+            topSpacerHeight={core.visibleBlockInfo.topSpacerHeight}
+            bottomSpacerHeight={core.visibleBlockInfo.bottomSpacerHeight}
             tokenCache={tokenCache}
             lineHeight={editorConfig.lineHeight}
             padding={DEFAULT_PADDING_PX}
@@ -169,13 +179,14 @@ export const CodeEditor = memo(function CodeEditor({
             tokenStyles={tokenStyles}
             fontFamily={editorConfig.fontFamily}
             fontSize={editorConfig.fontSize}
+            startLineNumber={core.visibleBlockInfo.startLineNumber}
           />
         )}
       </div>
 
       <textarea
         ref={core.textareaRef}
-        value={value}
+        value={textValue}
         onChange={core.handleChange}
         onKeyDown={core.handleKeyDown}
         onFocus={core.updateCursorPosition}

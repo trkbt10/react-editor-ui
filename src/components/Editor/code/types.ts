@@ -12,6 +12,7 @@ import type {
   HighlightRange,
   SelectionRange,
 } from "../core/types";
+import type { BlockDocument } from "../core/blockDocument";
 
 // =============================================================================
 // Token Types
@@ -72,17 +73,20 @@ export type TokenCache = {
 
 /**
  * Code editor component props.
+ *
+ * Uses BlockDocument for consistent architecture with TextEditor.
+ * Provides syntax highlighting via external tokenizer.
  */
 export type CodeEditorProps = {
-  /** Text value */
-  readonly value: string;
-  /** Called when value changes */
-  readonly onChange: (value: string) => void;
+  /** Block document to edit */
+  readonly document: BlockDocument;
+  /** Called when document changes */
+  readonly onDocumentChange: (doc: BlockDocument) => void;
   /** Tokenizer for syntax highlighting (required) */
   readonly tokenizer: Tokenizer;
   /** Token styles for syntax highlighting */
   readonly tokenStyles?: TokenStyleMap;
-  /** Renderer type */
+  /** Renderer type (currently both render as SVG) */
   readonly renderer?: "svg" | "canvas";
   /** Editor configuration */
   readonly config?: Partial<EditorConfig>;
