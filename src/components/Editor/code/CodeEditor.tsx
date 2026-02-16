@@ -141,10 +141,6 @@ export const CodeEditor = memo(function CodeEditor({
     return [...core.allHighlights, ...highlights];
   }, [core.allHighlights, highlights]);
 
-  // Render (BlockRenderer always uses SVG internally)
-  // Note: The 'renderer' prop is kept for API compatibility but both render as SVG
-  void renderer; // Acknowledge the prop to satisfy TypeScript
-
   // Only render content when font metrics are ready (no fallbacks)
   const isReady = fontMetrics.isReady;
 
@@ -180,6 +176,7 @@ export const CodeEditor = memo(function CodeEditor({
             fontFamily={editorConfig.fontFamily}
             fontSize={editorConfig.fontSize}
             startLineNumber={core.visibleBlockInfo.startLineNumber}
+            renderer={renderer}
           />
         )}
       </div>

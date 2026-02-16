@@ -123,6 +123,34 @@ export const HIGHLIGHT_COLORS = {
 } as const;
 
 // =============================================================================
+// Raw Color Values (for Canvas rendering)
+// =============================================================================
+
+/** Line number background (raw) */
+export const EDITOR_LINE_NUMBER_BG_RAW = "#f8f9fa";
+
+/** Line number text color (raw) */
+export const EDITOR_LINE_NUMBER_COLOR_RAW = "#9aa0a6";
+
+/** Line number border color (raw) */
+export const EDITOR_LINE_NUMBER_BORDER_RAW = "rgba(0, 0, 0, 0.08)";
+
+/** Cursor color (raw) */
+export const EDITOR_CURSOR_COLOR_RAW = "#000000";
+
+/** Selection background (raw) */
+export const EDITOR_SELECTION_BG_RAW = "rgba(51, 144, 255, 0.3)";
+
+/** Search match background (raw) */
+export const EDITOR_MATCH_BG_RAW = "rgba(255, 213, 0, 0.4)";
+
+/** Current match background (raw) */
+export const EDITOR_CURRENT_MATCH_BG_RAW = "rgba(255, 140, 0, 0.6)";
+
+/** Composition background (raw) */
+export const EDITOR_COMPOSITION_BG_RAW = "rgba(100, 100, 255, 0.2)";
+
+// =============================================================================
 // Numeric Defaults (for calculations)
 // =============================================================================
 

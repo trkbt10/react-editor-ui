@@ -172,10 +172,6 @@ export const BlockTextEditor = memo(function BlockTextEditor(
     padding: DEFAULT_PADDING_PX,
   });
 
-  // Render (BlockRenderer always uses SVG internally)
-  // Note: The 'renderer' prop is kept for API compatibility but both render as SVG
-  void renderer; // Acknowledge the prop to satisfy TypeScript
-
   // Only render content when font metrics are ready
   const isReady = fontMetrics.isReady;
 
@@ -209,6 +205,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
             fontFamily={editorConfig.fontFamily}
             fontSize={editorConfig.fontSize}
             startLineNumber={core.visibleBlockInfo.startLineNumber}
+            renderer={renderer}
           />
         )}
       </div>

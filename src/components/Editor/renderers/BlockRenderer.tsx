@@ -20,7 +20,7 @@
  * ```
  */
 
-import { useMemo, memo, type ReactNode, type CSSProperties } from "react";
+import { useMemo, useRef, useEffect, useEffectEvent, memo, type ReactNode, type CSSProperties } from "react";
 import type { Block, LocalStyleSegment } from "../block/blockDocument";
 import type { BlockCompositionState } from "../block/useBlockComposition";
 import type {
@@ -28,15 +28,19 @@ import type {
   HighlightRange,
   MeasureTextFn,
 } from "../core/types";
-import type { Token, TokenCache, TokenStyleMap, LineHighlight } from "./types";
+import type { Token, TokenCache, TokenStyleMap, LineHighlight, RendererType } from "./types";
 import { DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE, DEFAULT_LINE_NUMBER_WIDTH } from "./types";
-import { getLineHighlights, HIGHLIGHT_COLORS } from "./utils";
+import { getLineHighlights, HIGHLIGHT_COLORS, HIGHLIGHT_COLORS_RAW } from "./utils";
 import { assertMeasureText } from "../core/invariant";
 import {
   EDITOR_CURSOR_COLOR,
   EDITOR_LINE_NUMBER_BG,
   EDITOR_LINE_NUMBER_COLOR,
   EDITOR_LINE_NUMBER_BORDER,
+  EDITOR_LINE_NUMBER_BG_RAW,
+  EDITOR_LINE_NUMBER_COLOR_RAW,
+  EDITOR_LINE_NUMBER_BORDER_RAW,
+  EDITOR_CURSOR_COLOR_RAW,
 } from "../styles/tokens";
 
 // =============================================================================
@@ -80,6 +84,8 @@ export type BlockRendererProps = {
   readonly composition?: BlockCompositionState;
   /** Starting line number for first visible block */
   readonly startLineNumber?: number;
+  /** Renderer type: svg (default) or canvas */
+  readonly renderer?: RendererType;
 };
 
 /**
@@ -166,6 +172,237 @@ const blockContainerStyle: CSSProperties = {
   position: "relative",
   minHeight: "100%",
 };
+
+// =============================================================================
+// Canvas Drawing Context
+// =============================================================================
+
+type CanvasDrawContext = {
+  readonly ctx: CanvasRenderingContext2D;
+  readonly lineHeight: number;
+  readonly padding: number;
+  readonly showLineNumbers: boolean;
+  readonly lineNumberWidth: number;
+  readonly tokenStyles?: TokenStyleMap;
+  readonly fontFamily: string;
+  readonly fontSize: number;
+};
+
+// =============================================================================
+// Canvas Drawing Functions
+// =============================================================================
+
+/**
+ * Parse fontSize string to number (e.g., "16px" -> 16, "1.5em" -> baseSize * 1.5)
+ */
+function parseFontSize(size: string | undefined, baseSize: number): number {
+  if (!size) return baseSize;
+  if (size.endsWith("px")) return parseFloat(size);
+  if (size.endsWith("em")) return parseFloat(size) * baseSize;
+  if (size.endsWith("%")) return (parseFloat(size) / 100) * baseSize;
+  const num = parseFloat(size);
+  return Number.isNaN(num) ? baseSize : num;
+}
+
+/**
+ * Draw line number background and text.
+ */
+function drawCanvasLineNumber(
+  context: CanvasDrawContext,
+  lineNumber: number,
+  y: number
+): void {
+  const { ctx, padding, lineHeight, lineNumberWidth, fontFamily, fontSize } = context;
+  const textY = y + lineHeight * 0.75;
+
+  // Background
+  ctx.fillStyle = EDITOR_LINE_NUMBER_BG_RAW;
+  ctx.fillRect(padding, y, lineNumberWidth, lineHeight);
+
+  // Border
+  ctx.strokeStyle = EDITOR_LINE_NUMBER_BORDER_RAW;
+  ctx.beginPath();
+  ctx.moveTo(padding + lineNumberWidth, y);
+  ctx.lineTo(padding + lineNumberWidth, y + lineHeight);
+  ctx.stroke();
+
+  // Number text
+  ctx.fillStyle = EDITOR_LINE_NUMBER_COLOR_RAW;
+  ctx.textAlign = "right";
+  ctx.font = `${fontSize}px ${fontFamily}`;
+  ctx.fillText(String(lineNumber), padding + lineNumberWidth - 8, textY);
+  ctx.textAlign = "left";
+}
+
+/**
+ * Draw a highlight rect.
+ */
+function drawCanvasHighlight(
+  context: CanvasDrawContext,
+  highlight: LineHighlight,
+  y: number,
+  startX: number,
+  endX: number
+): void {
+  const { ctx, lineHeight } = context;
+  const width = Math.max(endX - startX, MIN_HIGHLIGHT_WIDTH);
+
+  ctx.fillStyle = HIGHLIGHT_COLORS_RAW[highlight.type];
+  ctx.beginPath();
+  ctx.roundRect(startX, y, width, lineHeight, 2);
+  ctx.fill();
+
+  // Draw composition underline
+  if (highlight.type === "composition") {
+    ctx.strokeStyle = EDITOR_CURSOR_COLOR_RAW;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(startX, y + lineHeight - 2);
+    ctx.lineTo(startX + width, y + lineHeight - 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+/**
+ * Draw cursor.
+ */
+function drawCanvasCursor(
+  context: CanvasDrawContext,
+  x: number,
+  y: number
+): void {
+  const { ctx, lineHeight } = context;
+  ctx.fillStyle = EDITOR_CURSOR_COLOR_RAW;
+  ctx.fillRect(x, y, 2, lineHeight);
+}
+
+/**
+ * Draw a token on canvas.
+ */
+function drawCanvasToken(
+  context: CanvasDrawContext,
+  token: Token,
+  x: number,
+  y: number
+): void {
+  const { ctx, lineHeight, tokenStyles, fontFamily, fontSize } = context;
+  const textY = y + lineHeight * 0.75;
+
+  const style = tokenStyles?.[token.type];
+  const color = (style?.color as string) ?? "#000000";
+  const fontWeight = (style?.fontWeight as string) ?? "normal";
+  const fontStyle = (style?.fontStyle as string) ?? "normal";
+  const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
+  const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+
+  ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+  ctx.fillStyle = color;
+  ctx.fillText(token.text, x, textY);
+
+  // Handle text decoration
+  const textDecoration = style?.textDecoration as string | undefined;
+  if (textDecoration === "underline" || textDecoration === "line-through") {
+    const textWidth = ctx.measureText(token.text).width;
+    const decorationY = textDecoration === "underline" ? textY + 2 : textY - tokenFontSize * 0.3;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, decorationY);
+    ctx.lineTo(x + textWidth, decorationY);
+    ctx.stroke();
+  }
+
+  // Reset font
+  ctx.font = `normal normal ${fontSize}px ${fontFamily}`;
+}
+
+/**
+ * Calculate token X positions for canvas.
+ */
+function calculateCanvasTokenPositions(
+  ctx: CanvasRenderingContext2D,
+  tokens: readonly Token[],
+  tokenStyles: TokenStyleMap | undefined,
+  baseXOffset: number,
+  baseFontSize: number,
+  baseFontFamily: string
+): readonly number[] {
+  const positions: number[] = [];
+  const acc = { x: baseXOffset };
+
+  for (const token of tokens) {
+    positions.push(acc.x);
+
+    const style = tokenStyles?.[token.type];
+    const fontWeight = (style?.fontWeight as string) ?? "normal";
+    const fontStyle = (style?.fontStyle as string) ?? "normal";
+    const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, baseFontSize);
+    const tokenFontFamily = (style?.fontFamily as string) ?? baseFontFamily;
+
+    ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+    acc.x += ctx.measureText(token.text).width;
+  }
+
+  ctx.font = `normal normal ${baseFontSize}px ${baseFontFamily}`;
+  return positions;
+}
+
+/**
+ * Get X position for a column using canvas measurement.
+ */
+function getCanvasColumnX(
+  ctx: CanvasRenderingContext2D,
+  column: number,
+  tokens: readonly Token[],
+  tokenPositions: readonly number[],
+  tokenStyles: TokenStyleMap | undefined,
+  fontSize: number,
+  fontFamily: string,
+  codeXOffset: number,
+  lineText: string
+): number {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (column <= token.start + 1) {
+      return tokenPositions[i];
+    }
+    if (column <= token.end + 1) {
+      const charOffset = column - token.start - 1;
+      const textWithinToken = token.text.slice(0, charOffset);
+
+      const style = tokenStyles?.[token.type];
+      const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
+      const fontWeight = (style?.fontWeight as string) ?? "normal";
+      const fontStyle = (style?.fontStyle as string) ?? "normal";
+      const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+
+      ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+      const widthWithinToken = ctx.measureText(textWithinToken).width;
+
+      return tokenPositions[i] + widthWithinToken;
+    }
+  }
+
+  // Position at or past end of line
+  if (tokens.length > 0 && tokenPositions.length > 0) {
+    const lastIdx = tokens.length - 1;
+    const lastToken = tokens[lastIdx];
+    const style = tokenStyles?.[lastToken.type];
+    const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
+    const fontWeight = (style?.fontWeight as string) ?? "normal";
+    const fontStyle = (style?.fontStyle as string) ?? "normal";
+    const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+
+    ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+    return tokenPositions[lastIdx] + ctx.measureText(lastToken.text).width;
+  }
+
+  // Empty line
+  ctx.font = `normal normal ${fontSize}px ${fontFamily}`;
+  return codeXOffset + ctx.measureText(lineText.slice(0, column - 1)).width;
+}
 
 // =============================================================================
 // Helper Functions
@@ -577,6 +814,166 @@ const SingleBlock = memo(function SingleBlock({
 });
 
 // =============================================================================
+// Canvas Block Renderer
+// =============================================================================
+
+type CanvasBlockRendererProps = {
+  readonly blockInfos: readonly BlockRenderInfo[];
+  readonly padding: number;
+  readonly lineHeight: number;
+  readonly showLineNumbers: boolean;
+  readonly lineNumberWidth: number;
+  readonly highlights: readonly HighlightRange[];
+  readonly cursor?: CursorState;
+  readonly tokenCache: TokenCache;
+  readonly tokenStyles?: TokenStyleMap;
+  readonly fontFamily: string;
+  readonly fontSize: number;
+  readonly width: number;
+  readonly totalHeight: number;
+};
+
+const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
+  blockInfos,
+  padding,
+  lineHeight,
+  showLineNumbers,
+  lineNumberWidth,
+  highlights,
+  cursor,
+  tokenCache,
+  tokenStyles,
+  fontFamily,
+  fontSize,
+  width,
+  totalHeight,
+}: CanvasBlockRendererProps): ReactNode {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Draw function wrapped in useEffectEvent for stable reference
+  const draw = useEffectEvent(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Handle device pixel ratio for sharp rendering
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = totalHeight * dpr;
+    ctx.scale(dpr, dpr);
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, totalHeight);
+
+    const drawContext: CanvasDrawContext = {
+      ctx,
+      lineHeight,
+      padding,
+      showLineNumbers,
+      lineNumberWidth,
+      tokenStyles,
+      fontFamily,
+      fontSize,
+    };
+
+    const codeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
+
+    // Draw each block
+    for (const info of blockInfos) {
+      const { block, startLine, y: blockY } = info;
+      const lines = block.content.split("\n");
+
+      // Get block highlights
+      const blockHighlights = getBlockHighlights(startLine, lines.length, highlights);
+
+      // Calculate line local offsets
+      const lineLocalOffsets: number[] = [0];
+      for (let i = 0; i < lines.length - 1; i++) {
+        lineLocalOffsets.push(lineLocalOffsets[i] + lines[i].length + 1);
+      }
+
+      // Draw each line
+      for (let i = 0; i < lines.length; i++) {
+        const lineText = lines[i];
+        const lineNumber = startLine + i;
+        const lineY = blockY + i * lineHeight;
+        const lineIndex = startLine + i - 1;
+
+        // Draw line number
+        if (showLineNumbers) {
+          drawCanvasLineNumber(drawContext, lineNumber, lineY);
+        }
+
+        // Get tokens for this line
+        const tokens = tokenCache.getTokens(lineText, lineIndex);
+
+        // Calculate token positions
+        const tokenPositions = calculateCanvasTokenPositions(
+          ctx,
+          tokens,
+          tokenStyles,
+          codeXOffset,
+          fontSize,
+          fontFamily
+        );
+
+        // Get column X position helper
+        const getColX = (col: number) => getCanvasColumnX(
+          ctx,
+          col,
+          tokens,
+          tokenPositions,
+          tokenStyles,
+          fontSize,
+          fontFamily,
+          codeXOffset,
+          lineText
+        );
+
+        // Get highlights for this line
+        const lineHighlights = getLineHighlights(lineNumber, lineText.length, blockHighlights);
+
+        // Draw highlights
+        for (const h of lineHighlights) {
+          const startX = getColX(h.startColumn);
+          const endX = getColX(h.endColumn);
+          drawCanvasHighlight(drawContext, h, lineY, startX, endX);
+        }
+
+        // Draw tokens
+        for (let j = 0; j < tokens.length; j++) {
+          drawCanvasToken(drawContext, tokens[j], tokenPositions[j], lineY);
+        }
+
+        // Draw cursor
+        if (cursor?.visible && cursor.line === lineNumber) {
+          const cursorX = getColX(cursor.column);
+          drawCanvasCursor(drawContext, cursorX, lineY);
+        }
+      }
+    }
+  });
+
+  // Redraw when dependencies change
+  useEffect(() => {
+    draw();
+  }, [blockInfos, highlights, cursor, tokenCache, tokenStyles, width, totalHeight]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        display: "block",
+        width,
+        height: totalHeight,
+      }}
+    />
+  );
+});
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -605,8 +1002,9 @@ export const BlockRenderer = memo(function BlockRenderer({
   fontFamily = DEFAULT_FONT_FAMILY,
   fontSize = DEFAULT_FONT_SIZE,
   startLineNumber = 1,
+  renderer = "svg",
 }: BlockRendererProps): ReactNode {
-  // Require measureText
+  // Require measureText (for SVG; Canvas uses ctx.measureText)
   const measureText = assertMeasureText(measureTextProp, "BlockRenderer");
 
   // Compute render info for visible blocks
@@ -620,10 +1018,30 @@ export const BlockRenderer = memo(function BlockRenderer({
     return blockInfos.reduce((sum, info) => sum + info.height, 0);
   }, [blockInfos]);
 
-  return (
-    <div style={blockContainerStyle}>
-      {topSpacerHeight > 0 && <div style={{ height: topSpacerHeight }} />}
+  // Default width for canvas
+  const canvasWidth = width ?? 800;
 
+  const renderContent = (): ReactNode => {
+    if (renderer === "canvas") {
+      return (
+        <CanvasBlockRenderer
+          blockInfos={blockInfos}
+          padding={padding}
+          lineHeight={lineHeight}
+          showLineNumbers={showLineNumbers}
+          lineNumberWidth={lineNumberWidth}
+          highlights={highlights}
+          cursor={cursor}
+          tokenCache={tokenCache}
+          tokenStyles={tokenStyles}
+          fontFamily={fontFamily}
+          fontSize={fontSize}
+          width={canvasWidth}
+          totalHeight={totalHeight}
+        />
+      );
+    }
+    return (
       <svg
         width={width ?? "100%"}
         height={totalHeight}
@@ -647,7 +1065,13 @@ export const BlockRenderer = memo(function BlockRenderer({
           />
         ))}
       </svg>
+    );
+  };
 
+  return (
+    <div style={blockContainerStyle}>
+      {topSpacerHeight > 0 && <div style={{ height: topSpacerHeight }} />}
+      {renderContent()}
       {bottomSpacerHeight > 0 && <div style={{ height: bottomSpacerHeight }} />}
     </div>
   );
