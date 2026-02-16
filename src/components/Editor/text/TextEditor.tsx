@@ -11,7 +11,9 @@ import type { TextStyleSegment } from "../core/types";
 import {
   DEFAULT_EDITOR_CONFIG,
   adjustStyleForComposition,
+  computeDisplayText,
 } from "../core/types";
+import { useLineIndex } from "../core/useLineIndex";
 import {
   getDocumentText,
   toFlatSegments,
@@ -176,6 +178,14 @@ export const TextEditor = memo(function TextEditor(props: TextEditorProps): Reac
   // Text styles management
   const { tokenizer, tokenStyles } = useTextStyles(adjustedStyles);
 
+  // Compute display text and line index for rendering during IME composition
+  // During IME, styles are adjusted to display text coordinates, so lineIndex must also use display text
+  const displayText = useMemo(
+    () => computeDisplayText(value, core.composition),
+    [value, core.composition]
+  );
+  const displayLineIndex = useLineIndex(displayText);
+
   // Style version for cache invalidation
   const styleVersion = useMemo(() => {
     const baseStyles = adjustedStyles;
@@ -188,8 +198,8 @@ export const TextEditor = memo(function TextEditor(props: TextEditorProps): Reac
     return baseStyles.length * 1000 + first.start + last.end + compositionHash;
   }, [adjustedStyles, core.composition.isComposing, core.composition.text.length]);
 
-  // Token cache
-  const tokenCache = useTextTokenCache(tokenizer, core.lineIndex, styleVersion);
+  // Token cache - use displayLineIndex for consistent style positioning during IME
+  const tokenCache = useTextTokenCache(tokenizer, displayLineIndex, styleVersion);
 
   // Editor styles
   const editorStyles = useEditorStyles({
@@ -221,7 +231,7 @@ export const TextEditor = memo(function TextEditor(props: TextEditorProps): Reac
       >
         {isReady && (
           <Renderer
-            lines={core.lineIndex.lines}
+            lines={displayLineIndex.lines}
             visibleRange={core.virtualScroll.state.visibleRange}
             topSpacerHeight={core.virtualScroll.state.topSpacerHeight}
             bottomSpacerHeight={core.virtualScroll.state.bottomSpacerHeight}
@@ -235,7 +245,7 @@ export const TextEditor = memo(function TextEditor(props: TextEditorProps): Reac
             tokenStyles={tokenStyles}
             fontFamily={editorConfig.fontFamily}
             fontSize={editorConfig.fontSize}
-            lineOffsets={core.lineIndex.lineOffsets}
+            lineOffsets={displayLineIndex.lineOffsets}
           />
         )}
       </div>

@@ -40,7 +40,8 @@ async function setEditorContent(page: Page, locators: EditorLocators, content: s
   } else {
     await page.keyboard.type(content);
   }
-  await page.waitForTimeout(100);
+  // Wait for debounce to complete (300ms) + buffer
+  await page.waitForTimeout(400);
 }
 
 async function getEditorContent(locators: EditorLocators): Promise<string> {
@@ -111,6 +112,8 @@ function defineUndoCursorTests(editorType: EditorType, route: string): void {
       for (let i = 0; i < 6; i++) {
         await page.keyboard.press("ArrowRight");
       }
+      // Small delay to ensure selection change is processed
+      await page.waitForTimeout(50);
       expect(await getCursorPosition(locators)).toBe(6);
 
       // Type new word
@@ -124,7 +127,8 @@ function defineUndoCursorTests(editorType: EditorType, route: string): void {
       await page.keyboard.press("Meta+z");
       await page.waitForTimeout(200);
 
-      // Cursor should NOT be at the end
+      // Cursor should NOT be at the end - it should be at position 6
+      // where the user was before they started typing
       const cursorAfterUndo = await getCursorPosition(locators);
       const content = await getEditorContent(locators);
       expect(cursorAfterUndo).toBeLessThan(content.length);
@@ -208,6 +212,8 @@ function defineUndoCursorTests(editorType: EditorType, route: string): void {
       await page.keyboard.press("ArrowRight");
       await page.keyboard.press("ArrowRight");
       await page.keyboard.press("ArrowRight");
+      // Small delay to ensure selection change is processed
+      await page.waitForTimeout(50);
 
       // Delete 2 characters
       await page.keyboard.press("Delete");
@@ -221,7 +227,7 @@ function defineUndoCursorTests(editorType: EditorType, route: string): void {
       await page.keyboard.press("Meta+z");
       await page.waitForTimeout(200);
 
-      // Cursor should be near position 4
+      // Cursor should be near position 4 (where editing started)
       const cursorAfterUndo = await getCursorPosition(locators);
       expect(cursorAfterUndo).toBeLessThanOrEqual(6);
     });

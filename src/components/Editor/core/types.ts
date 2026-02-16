@@ -73,18 +73,27 @@ export const INITIAL_COMPOSITION_STATE: CompositionState = {
 /**
  * Compute the display text during IME composition.
  *
- * During IME input, the browser updates textarea.value directly with composition text.
- * We simply use the current value for display, as it already contains the IME input.
+ * During IME input, the visual display should show:
+ * baseValue with composition text inserted at startOffset.
  *
- * @param value - The current value (already contains IME text during composition)
- * @param _composition - Current composition state (unused, kept for API compatibility)
- * @returns The text to display
+ * Display text = baseValue.slice(0, startOffset) + text + baseValue.slice(startOffset + replacedLength)
+ *
+ * @param value - The base value (document text, not containing IME text)
+ * @param composition - Current composition state
+ * @returns The text to display (with IME composition text inserted)
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Kept for API compatibility
-export function computeDisplayText(value: string, _composition: CompositionState): string {
-  // Browser handles IME text insertion into value via onChange
-  // Simply return value as-is
-  return value;
+export function computeDisplayText(value: string, composition: CompositionState): string {
+  if (!composition.isComposing) {
+    return value;
+  }
+
+  const { baseValue, startOffset, replacedLength, text } = composition;
+  // Use baseValue for display text calculation (this is the frozen value at composition start)
+  return (
+    baseValue.slice(0, startOffset) +
+    text +
+    baseValue.slice(startOffset + replacedLength)
+  );
 }
 
 /**

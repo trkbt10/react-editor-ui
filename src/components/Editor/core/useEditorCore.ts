@@ -329,6 +329,10 @@ export function useEditorCore(
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
+  // Track cursor position before changes for better undo UX
+  // This allows undo to restore cursor to where the user was when they started editing
+  const lastCursorOffsetRef = useRef(value.length);
+
   // Inject cursor animation on mount
   useEffect(() => {
     injectCursorAnimation();
@@ -354,12 +358,13 @@ export function useEditorCore(
   });
 
   // History management
-  const history = useHistory(value, 0, { debounceMs: HISTORY_DEBOUNCE_MS });
+  // Initialize cursor at end of text for better UX when undoing to initial state
+  const history = useHistory(value, value.length, { debounceMs: HISTORY_DEBOUNCE_MS });
 
   // Composition handlers
   const handleCompositionConfirm = useCallback(
     (finalValue: string, cursorOffset: number) => {
-      history.push(finalValue, cursorOffset);
+      history.push(finalValue, cursorOffset, lastCursorOffsetRef.current);
       onChangeRef.current(finalValue);
     },
     [history]
@@ -380,8 +385,16 @@ export function useEditorCore(
     onSelectionChange,
   });
 
-  // Selection change listener
-  useSelectionChange(textareaRef, updateCursorPosition);
+  // Selection change listener - also tracks cursor position for undo
+  const handleSelectionChangeWithTracking = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      lastCursorOffsetRef.current = textarea.selectionEnd;
+    }
+    updateCursorPosition();
+  }, [updateCursorPosition]);
+
+  useSelectionChange(textareaRef, handleSelectionChangeWithTracking);
 
   // Value change handler
   const handleChange = useCallback(
@@ -394,8 +407,29 @@ export function useEditorCore(
       const cursorOffset = e.target.selectionEnd;
 
       // Skip history during IME composition
-      if (!composition.isComposing) {
-        history.push(newValue, cursorOffset);
+      // Check both React composition state and native event's isComposing
+      // The native event check handles cases like CDP-simulated IME input
+      const inputEvent = e.nativeEvent as InputEvent;
+      const nativeIsComposing = inputEvent.isComposing ?? false;
+      const isComposing = composition.isComposing || nativeIsComposing;
+
+      if (!isComposing) {
+        // Clipboard operations (paste/cut) should always create a new undo point
+        // This improves UX: each paste/cut is a separate undo action
+        const inputType = inputEvent.inputType ?? "";
+        const isClipboardOperation =
+          inputType === "insertFromPaste" ||
+          inputType === "insertFromPasteAsQuotation" ||
+          inputType === "deleteByCut";
+
+        if (isClipboardOperation) {
+          // Flush pending debounce to ensure this becomes a new undo point
+          history.flush();
+        }
+
+        // Pass the cursor position before the change for better undo UX
+        // This allows undo to restore cursor to where editing started
+        history.push(newValue, cursorOffset, lastCursorOffsetRef.current);
       }
 
       onChangeRef.current(newValue);
@@ -436,7 +470,7 @@ export function useEditorCore(
       if (readOnly) {
         return;
       }
-      history.push(newValue, cursorOffset);
+      history.push(newValue, cursorOffset, lastCursorOffsetRef.current);
       onChangeRef.current(newValue);
       const textarea = textareaRef.current;
       if (textarea) {

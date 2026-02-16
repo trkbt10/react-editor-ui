@@ -31,8 +31,13 @@ export type UseHistoryResult<T> = {
   readonly current: T;
   /** Current cursor offset */
   readonly cursorOffset: number;
-  /** Push new state (creates undo point if debounced) */
-  readonly push: (state: T, cursorOffset: number) => void;
+  /**
+   * Push new state (creates undo point if debounced)
+   * @param state - New state value
+   * @param cursorOffset - Cursor position after the change
+   * @param beforeCursorOffset - Cursor position before the change (used when creating new undo point)
+   */
+  readonly push: (state: T, cursorOffset: number, beforeCursorOffset?: number) => void;
   /** Undo to previous state, returns the restored entry or undefined if none */
   readonly undo: () => HistoryEntry<T> | undefined;
   /** Redo to next state, returns the restored entry or undefined if none */
@@ -52,6 +57,66 @@ export type UseHistoryResult<T> = {
 // =============================================================================
 
 const DEFAULT_MAX_HISTORY = 100;
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+/**
+ * Updates entry's cursor position if beforeCursorOffset is provided.
+ */
+function getPreviousEntry<T>(
+  entry: HistoryEntry<T>,
+  beforeCursorOffset: number | undefined
+): HistoryEntry<T> {
+  if (beforeCursorOffset === undefined) {
+    return entry;
+  }
+  return { ...entry, cursorOffset: beforeCursorOffset };
+}
+
+/**
+ * Computes new history state for a push operation.
+ * If createUndoPoint is true, creates a new undo entry from the previous present.
+ * Otherwise, just updates the present entry (within the same undo batch).
+ *
+ * @param prev - Previous history state
+ * @param entry - New entry to push
+ * @param createUndoPoint - Whether to create a new undo point
+ * @param maxHistory - Maximum history size
+ * @param beforeCursorOffset - Cursor position before the change (used to update previous entry)
+ */
+function computePushState<T>(
+  prev: HistoryState<T>,
+  entry: HistoryEntry<T>,
+  createUndoPoint: boolean,
+  maxHistory: number,
+  beforeCursorOffset?: number
+): HistoryState<T> {
+  if (!createUndoPoint) {
+    // Subsequent changes - just update present
+    return {
+      ...prev,
+      present: entry,
+      future: [], // Clear redo stack on new changes
+    };
+  }
+
+  // First change in batch - create undo point
+  // Update the previous present's cursor position to where the user was before editing
+  const previousEntry = getPreviousEntry(prev.present, beforeCursorOffset);
+
+  const newPast = [...prev.past, previousEntry];
+  // Trim history if exceeds max
+  if (newPast.length > maxHistory) {
+    newPast.shift();
+  }
+  return {
+    past: newPast,
+    present: entry,
+    future: [], // Clear redo stack on new changes
+  };
+}
 
 // =============================================================================
 // Hook
@@ -116,40 +181,29 @@ export function useHistory<T>(
   }, []);
 
   const push = useCallback(
-    (state: T, cursorOffset: number) => {
+    (state: T, cursorOffset: number, beforeCursorOffset?: number) => {
       // Clear existing timer
       if (timerRef.current !== null) {
         clearTimeout(timerRef.current);
       }
 
-      const computeNextState = (
-        prev: HistoryState<T>,
-        entry: { state: T; cursorOffset: number }
-      ): HistoryState<T> => {
-        if (!batchStartedRef.current) {
-          // First change in batch - create undo point
-          batchStartedRef.current = true;
-          const newPast = [...prev.past, prev.present];
-          // Trim history if exceeds max
-          if (newPast.length > maxHistory) {
-            newPast.shift();
-          }
-          return {
-            past: newPast,
-            present: entry,
-            future: [], // Clear redo stack on new changes
-          };
-        }
-        // Subsequent changes - just update present
-        return {
-          ...prev,
-          present: entry,
-          future: [], // Clear redo stack on new changes
-        };
-      };
+      // Capture whether this is a new batch BEFORE setState
+      // This avoids issues with React Strict Mode double-invocation
+      const shouldCreateUndoPoint = !batchStartedRef.current;
+      if (shouldCreateUndoPoint) {
+        batchStartedRef.current = true;
+      }
+
+      const entry = { state, cursorOffset };
 
       setHistoryState((prev) => {
-        const newState = computeNextState(prev, { state, cursorOffset });
+        const newState = computePushState(
+          prev,
+          entry,
+          shouldCreateUndoPoint,
+          maxHistory,
+          beforeCursorOffset
+        );
         // Synchronously update ref so undo/redo can read latest state
         historyStateRef.current = newState;
         return newState;
