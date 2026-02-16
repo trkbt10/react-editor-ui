@@ -1,0 +1,215 @@
+{
+  "generatedAt": "2026-02-16T07:14:10.317Z",
+  "components": [
+    {
+      "name": "Badge",
+      "entryType": "named",
+      "relativePath": "src/components/Badge/Badge.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Button",
+      "entryType": "named",
+      "relativePath": "src/components/Button/Button.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Canvas",
+      "entryType": "named",
+      "relativePath": "src/components/Canvas/Canvas.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Checkbox",
+      "entryType": "named",
+      "relativePath": "src/components/Checkbox/Checkbox.tsx",
+      "category": "component"
+    },
+    {
+      "name": "ColorInput",
+      "entryType": "named",
+      "relativePath": "src/components/ColorInput/ColorInput.tsx",
+      "category": "component"
+    },
+    {
+      "name": "ColorPicker",
+      "entryType": "named",
+      "relativePath": "src/components/ColorPicker/ColorPicker.tsx",
+      "category": "component"
+    },
+    {
+      "name": "ContextMenu",
+      "entryType": "named",
+      "relativePath": "src/components/ContextMenu/ContextMenu.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Editor",
+      "entryType": "index",
+      "relativePath": "src/components/Editor/index.ts",
+      "category": "component"
+    },
+    {
+      "name": "FillEditor",
+      "entryType": "named",
+      "relativePath": "src/components/FillEditor/FillEditor.tsx",
+      "category": "component"
+    },
+    {
+      "name": "FontsPanel",
+      "entryType": "named",
+      "relativePath": "src/panels/FontsPanel/FontsPanel.tsx",
+      "category": "panel"
+    },
+    {
+      "name": "GradientEditor",
+      "entryType": "named",
+      "relativePath": "src/components/GradientEditor/GradientEditor.tsx",
+      "category": "component"
+    },
+    {
+      "name": "IconButton",
+      "entryType": "named",
+      "relativePath": "src/components/IconButton/IconButton.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Input",
+      "entryType": "named",
+      "relativePath": "src/components/Input/Input.tsx",
+      "category": "component"
+    },
+    {
+      "name": "LayerItem",
+      "entryType": "named",
+      "relativePath": "src/components/LayerItem/LayerItem.tsx",
+      "category": "component"
+    },
+    {
+      "name": "LogEntry",
+      "entryType": "named",
+      "relativePath": "src/components/LogEntry/LogEntry.tsx",
+      "category": "component"
+    },
+    {
+      "name": "LogViewer",
+      "entryType": "named",
+      "relativePath": "src/components/LogViewer/LogViewer.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Panel",
+      "entryType": "named",
+      "relativePath": "src/panels/Panel/Panel.tsx",
+      "category": "panel"
+    },
+    {
+      "name": "Portal",
+      "entryType": "named",
+      "relativePath": "src/components/Portal/Portal.tsx",
+      "category": "component"
+    },
+    {
+      "name": "PositionPanel",
+      "entryType": "named",
+      "relativePath": "src/panels/PositionPanel/PositionPanel.tsx",
+      "category": "panel"
+    },
+    {
+      "name": "PropertyGrid",
+      "entryType": "named",
+      "relativePath": "src/components/PropertyGrid/PropertyGrid.tsx",
+      "category": "component"
+    },
+    {
+      "name": "PropertyRow",
+      "entryType": "named",
+      "relativePath": "src/components/PropertyRow/PropertyRow.tsx",
+      "category": "component"
+    },
+    {
+      "name": "PropertySection",
+      "entryType": "named",
+      "relativePath": "src/components/PropertySection/PropertySection.tsx",
+      "category": "component"
+    },
+    {
+      "name": "SectionHeader",
+      "entryType": "named",
+      "relativePath": "src/components/SectionHeader/SectionHeader.tsx",
+      "category": "component"
+    },
+    {
+      "name": "SegmentedControl",
+      "entryType": "named",
+      "relativePath": "src/components/SegmentedControl/SegmentedControl.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Select",
+      "entryType": "named",
+      "relativePath": "src/components/Select/Select.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Slider",
+      "entryType": "named",
+      "relativePath": "src/components/Slider/Slider.tsx",
+      "category": "component"
+    },
+    {
+      "name": "SplitButton",
+      "entryType": "named",
+      "relativePath": "src/components/SplitButton/SplitButton.tsx",
+      "category": "component"
+    },
+    {
+      "name": "StatusBar",
+      "entryType": "named",
+      "relativePath": "src/components/StatusBar/StatusBar.tsx",
+      "category": "component"
+    },
+    {
+      "name": "StrokeSettingsPanel",
+      "entryType": "named",
+      "relativePath": "src/panels/StrokeSettingsPanel/StrokeSettingsPanel.tsx",
+      "category": "panel"
+    },
+    {
+      "name": "Toolbar",
+      "entryType": "named",
+      "relativePath": "src/components/Toolbar/Toolbar.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Tooltip",
+      "entryType": "named",
+      "relativePath": "src/components/Tooltip/Tooltip.tsx",
+      "category": "component"
+    },
+    {
+      "name": "TransformButtons",
+      "entryType": "named",
+      "relativePath": "src/components/TransformButtons/TransformButtons.tsx",
+      "category": "component"
+    },
+    {
+      "name": "TreeItem",
+      "entryType": "named",
+      "relativePath": "src/components/TreeItem/TreeItem.tsx",
+      "category": "component"
+    },
+    {
+      "name": "TypographyPanel",
+      "entryType": "named",
+      "relativePath": "src/panels/TypographyPanel/TypographyPanel.tsx",
+      "category": "panel"
+    },
+    {
+      "name": "UnitInput",
+      "entryType": "named",
+      "relativePath": "src/components/UnitInput/UnitInput.tsx",
+      "category": "component"
+    }
+  ]
+}
