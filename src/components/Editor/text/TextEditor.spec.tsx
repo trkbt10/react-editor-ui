@@ -447,6 +447,68 @@ describe("TextEditor", () => {
       // Bold style should still exist on "Hello"
       expect(segments.some(s => s.start === 0 && s.end === 5 && s.style.fontWeight === "bold")).toBe(true);
     });
+
+    it("preserves styles after undo", async () => {
+      // Start with styled document
+      const initialDoc = createStyledBlockDocument(
+        "Hello",
+        { strong: { fontWeight: "bold" } },
+        [{ start: 0, end: 5, tag: "strong" }] // "Hello" is bold
+      );
+
+      // Track current document state using ref pattern
+      const docRef = { current: initialDoc };
+      const onDocumentChange = vi.fn((newDoc: BlockDocument) => {
+        docRef.current = newDoc;
+      });
+
+      const { rerender } = render(
+        <TextEditor
+          document={docRef.current}
+          onDocumentChange={onDocumentChange}
+        />
+      );
+
+      const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+      // Type some text
+      fireEvent.change(textarea, { target: { value: "HelloX", selectionEnd: 6 } });
+
+      // Re-render with new document
+      rerender(
+        <TextEditor
+          document={docRef.current}
+          onDocumentChange={onDocumentChange}
+        />
+      );
+
+      expect(getBlockDocumentText(docRef.current)).toBe("HelloX");
+
+      // Wait for debounce (history creates undo point after 300ms)
+      await act(async () => {
+        vi.useFakeTimers();
+        vi.advanceTimersByTime(400);
+        vi.useRealTimers();
+      });
+
+      // Trigger undo (Ctrl+Z / Cmd+Z)
+      fireEvent.keyDown(textarea, { key: "z", ctrlKey: true });
+
+      // Re-render with undone document
+      rerender(
+        <TextEditor
+          document={docRef.current}
+          onDocumentChange={onDocumentChange}
+        />
+      );
+
+      // Text should be restored
+      expect(getBlockDocumentText(docRef.current)).toBe("Hello");
+
+      // Styles should be preserved after undo
+      const segments = toGlobalSegments(docRef.current);
+      expect(segments.some(s => s.start === 0 && s.end === 5 && s.style.fontWeight === "bold")).toBe(true);
+    });
   });
 
   describe("IME composition", () => {

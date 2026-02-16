@@ -294,8 +294,8 @@ export function useBlockEditorCore(
     composition.isComposing
   );
 
-  // History management (using text representation)
-  const history = useHistory(textValue, textValue.length, {
+  // History management (using BlockDocument to preserve styles)
+  const history = useHistory<BlockDocument>(document, textValue.length, {
     debounceMs: HISTORY_DEBOUNCE_MS,
   });
 
@@ -314,10 +314,10 @@ export function useBlockEditorCore(
 
       // Only push to history if we can calculate the offset
       if (globalOffset !== undefined) {
-        history.push(textValue, globalOffset, beforeCursor);
+        history.push(document, globalOffset, beforeCursor);
       }
     },
-    [document, history, textValue]
+    [document, history]
   );
 
   const baseCompositionHandlers = useBlockComposition({
@@ -449,7 +449,7 @@ export function useBlockEditorCore(
           history.flush();
         }
 
-        history.push(newValue, cursorOffset, lastCursorOffsetRef.current);
+        history.push(newDoc, cursorOffset, lastCursorOffsetRef.current);
       }
 
       onDocumentChangeRef.current(newDoc);
@@ -465,12 +465,12 @@ export function useBlockEditorCore(
     }
     const restored = history.undo();
     if (restored) {
-      const newDoc = createBlockDocument(restored.state, document.styleDefinitions);
+      // restored.state is a BlockDocument, use it directly to preserve styles
       queueCursorRestoration(restored.cursorOffset);
-      onDocumentChangeRef.current(newDoc);
+      onDocumentChangeRef.current(restored.state);
       requestAnimationFrame(updateCursorPosition);
     }
-  }, [readOnly, document.styleDefinitions, history, queueCursorRestoration, updateCursorPosition]);
+  }, [readOnly, history, queueCursorRestoration, updateCursorPosition]);
 
   // Redo handler
   const handleRedo = useCallback(() => {
@@ -479,12 +479,12 @@ export function useBlockEditorCore(
     }
     const restored = history.redo();
     if (restored) {
-      const newDoc = createBlockDocument(restored.state, document.styleDefinitions);
+      // restored.state is a BlockDocument, use it directly to preserve styles
       queueCursorRestoration(restored.cursorOffset);
-      onDocumentChangeRef.current(newDoc);
+      onDocumentChangeRef.current(restored.state);
       requestAnimationFrame(updateCursorPosition);
     }
-  }, [readOnly, document.styleDefinitions, history, queueCursorRestoration, updateCursorPosition]);
+  }, [readOnly, history, queueCursorRestoration, updateCursorPosition]);
 
   // Insert handler (tab, etc.)
   const handleInsert = useCallback(
@@ -492,8 +492,10 @@ export function useBlockEditorCore(
       if (readOnly) {
         return;
       }
+      // Note: tab insertion currently loses styles on the inserted line
+      // This is acceptable for now since tabs are typically at line start
       const newDoc = createBlockDocument(newValue, document.styleDefinitions);
-      history.push(newValue, cursorOffset, lastCursorOffsetRef.current);
+      history.push(newDoc, cursorOffset, lastCursorOffsetRef.current);
       onDocumentChangeRef.current(newDoc);
       const textarea = textareaRef.current;
       if (textarea) {

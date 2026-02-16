@@ -62,6 +62,11 @@ import { TextEditorDemo } from "./pages/editor/TextEditorDemo";
 
 // Canvas demos
 import { CanvasDemo } from "./pages/canvas/CanvasDemo";
+import { BoundingBoxDemo } from "./pages/canvas/BoundingBoxDemo";
+import { CanvasGridLayerDemo } from "./pages/canvas/CanvasGridLayerDemo";
+import { CanvasRulerDemo } from "./pages/canvas/CanvasRulerDemo";
+import { CanvasGuideDemo } from "./pages/canvas/CanvasGuideDemo";
+import { CanvasCheckerboardDemo } from "./pages/canvas/CanvasCheckerboardDemo";
 
 // Dev/Test demos
 import { IconGallery } from "./pages/IconGallery";
@@ -351,6 +356,36 @@ export const demoCategories: DemoCategory[] = [
         label: "Canvas",
         path: "canvas",
         element: <CanvasDemo />,
+      },
+      {
+        id: "bounding-box",
+        label: "BoundingBox",
+        path: "bounding-box",
+        element: <BoundingBoxDemo />,
+      },
+      {
+        id: "canvas-grid-layer",
+        label: "CanvasGridLayer",
+        path: "canvas-grid-layer",
+        element: <CanvasGridLayerDemo />,
+      },
+      {
+        id: "canvas-ruler",
+        label: "CanvasRuler",
+        path: "canvas-ruler",
+        element: <CanvasRulerDemo />,
+      },
+      {
+        id: "canvas-guide",
+        label: "CanvasGuide",
+        path: "canvas-guide",
+        element: <CanvasGuideDemo />,
+      },
+      {
+        id: "canvas-checkerboard",
+        label: "CanvasCheckerboard",
+        path: "canvas-checkerboard",
+        element: <CanvasCheckerboardDemo />,
       },
     ],
   },
