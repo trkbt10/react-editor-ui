@@ -4,17 +4,20 @@
 
 import type { ReactNode, CSSProperties } from "react";
 import { SPACE_SM } from "../../constants/styles";
+import { useToolbarOrientation } from "./Toolbar";
 
 export type ToolbarGroupProps = {
   children: ReactNode;
   className?: string;
 };
 
-
-
 export function ToolbarGroup({ children, className }: ToolbarGroupProps) {
+  const toolbarOrientation = useToolbarOrientation();
+  const isVertical = toolbarOrientation === "vertical";
+
   const style: CSSProperties = {
     display: "flex",
+    flexDirection: isVertical ? "column" : "row",
     alignItems: "center",
     gap: SPACE_SM,
   };

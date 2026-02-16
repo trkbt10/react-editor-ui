@@ -622,6 +622,55 @@ function ToolbarDemo() {
           </Toolbar>
         </div>
       </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Floating Toolbar with fitContent</div>
+        <div style={{ padding: "16px", backgroundColor: "var(--rei-color-surface-overlay, #f5f5f5)" }}>
+          <Toolbar variant="floating" fitContent>
+            <ToolbarGroup>
+              <IconButton icon={<CursorIcon />} aria-label="Select" size="lg" variant="selected" />
+              <IconButton icon={<GridIcon />} aria-label="Grid" size="lg" variant="minimal" />
+              <IconButton icon={<RectangleIcon />} aria-label="Rectangle" size="lg" variant="minimal" />
+            </ToolbarGroup>
+          </Toolbar>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Vertical Toolbar</div>
+        <div style={{ display: "flex", gap: "16px" }}>
+          <Toolbar orientation="vertical">
+            <ToolbarGroup>
+              <IconButton icon={<CursorIcon />} aria-label="Select" />
+              <IconButton icon={<GridIcon />} aria-label="Grid" />
+              <IconButton icon={<RectangleIcon />} aria-label="Rectangle" />
+            </ToolbarGroup>
+            <ToolbarDivider />
+            <ToolbarGroup>
+              <IconButton icon={<PenToolIcon />} aria-label="Pen" />
+              <IconButton icon={<TextIcon />} aria-label="Text" />
+            </ToolbarGroup>
+          </Toolbar>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Vertical Floating Toolbar with fitContent</div>
+        <div style={{ padding: "16px", backgroundColor: "var(--rei-color-surface-overlay, #f5f5f5)" }}>
+          <Toolbar variant="floating" orientation="vertical" fitContent>
+            <ToolbarGroup>
+              <IconButton icon={<CursorIcon />} aria-label="Select" size="lg" variant="selected" />
+              <IconButton icon={<GridIcon />} aria-label="Grid" size="lg" variant="minimal" />
+              <IconButton icon={<RectangleIcon />} aria-label="Rectangle" size="lg" variant="minimal" />
+            </ToolbarGroup>
+            <ToolbarDivider />
+            <ToolbarGroup>
+              <IconButton icon={<PenToolIcon />} aria-label="Pen" size="lg" variant="minimal" />
+              <IconButton icon={<TextIcon />} aria-label="Text" size="lg" variant="minimal" />
+            </ToolbarGroup>
+          </Toolbar>
+        </div>
+      </div>
     </div>
   );
 }

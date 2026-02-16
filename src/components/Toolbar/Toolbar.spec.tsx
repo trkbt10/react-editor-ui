@@ -52,6 +52,71 @@ describe("Toolbar", () => {
     // Floating variant should not have bottom border
     expect(toolbar.style.borderBottom).toBe("");
   });
+
+  it("applies fitContent prop with inline-flex and fit-content width", () => {
+    render(
+      <Toolbar fitContent>
+        <button>Button</button>
+      </Toolbar>,
+    );
+
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.style.display).toBe("inline-flex");
+    expect(toolbar.style.width).toBe("fit-content");
+  });
+
+  it("can combine floating variant with fitContent", () => {
+    render(
+      <Toolbar variant="floating" fitContent>
+        <button>Button</button>
+      </Toolbar>,
+    );
+
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.style.display).toBe("inline-flex");
+    expect(toolbar.style.width).toBe("fit-content");
+    expect(toolbar.style.borderRadius).toBe("var(--rei-radius-lg, 10px)");
+  });
+
+  it("applies vertical orientation with column direction", () => {
+    render(
+      <Toolbar orientation="vertical">
+        <button>Button</button>
+      </Toolbar>,
+    );
+
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.style.flexDirection).toBe("column");
+    expect(toolbar).toHaveAttribute("aria-orientation", "vertical");
+    expect(toolbar.style.borderRight).toContain("solid");
+  });
+
+  it("applies vertical orientation with fitContent", () => {
+    render(
+      <Toolbar orientation="vertical" fitContent>
+        <button>Button</button>
+      </Toolbar>,
+    );
+
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.style.flexDirection).toBe("column");
+    expect(toolbar.style.height).toBe("fit-content");
+  });
+
+  it("can combine vertical orientation with floating variant", () => {
+    render(
+      <Toolbar orientation="vertical" variant="floating" fitContent>
+        <button>Button</button>
+      </Toolbar>,
+    );
+
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.style.flexDirection).toBe("column");
+    expect(toolbar.style.borderRadius).toBe("var(--rei-radius-lg, 10px)");
+    expect(toolbar.style.boxShadow).toBe(
+      "var(--rei-shadow-md, 0 4px 6px rgba(0, 0, 0, 0.07))",
+    );
+  });
 });
 
 describe("ToolbarGroup", () => {

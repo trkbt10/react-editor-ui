@@ -147,8 +147,8 @@ export { Panel } from "./Panel/Panel";
 export type { PanelProps } from "./Panel/Panel";
 
 
-export { Toolbar } from "./Toolbar/Toolbar";
-export type { ToolbarProps } from "./Toolbar/Toolbar";
+export { Toolbar, useToolbarOrientation } from "./Toolbar/Toolbar";
+export type { ToolbarProps, ToolbarOrientation } from "./Toolbar/Toolbar";
 
 export { ToolbarGroup } from "./Toolbar/ToolbarGroup";
 export type { ToolbarGroupProps } from "./Toolbar/ToolbarGroup";
