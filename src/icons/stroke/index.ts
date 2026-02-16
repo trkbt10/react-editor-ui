@@ -25,3 +25,9 @@ export { ArrowCircleIcon } from "./ArrowCircle";
 export { ArrowSquareIcon } from "./ArrowSquare";
 export { ArrowDiamondIcon } from "./ArrowDiamond";
 export { ArrowBarIcon } from "./ArrowBar";
+
+// Dynamic stroke icons
+export { FrequencyIcon } from "./Frequency";
+export { WiggleIcon } from "./Wiggle";
+export { SmoothIcon } from "./Smooth";
+export { MiterAngleIcon } from "./MiterAngle";

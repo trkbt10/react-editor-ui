@@ -17,6 +17,8 @@ export {
   ChevronUpIcon,
   ChevronRightIcon,
   ChevronLeftIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
 } from "./navigation";
 
 // Action icons
@@ -29,6 +31,7 @@ export {
   RefreshIcon,
   SwapIcon,
   LinkIcon,
+  GridIcon,
 } from "./action";
 
 // Transform icons
@@ -47,6 +50,8 @@ export {
   AlignMiddleIcon,
   AlignBottomIcon,
   ConstraintToggleIcon,
+  AlignStartIcon,
+  AlignEndIcon,
 } from "./alignment";
 
 // Layer icons (with state)
@@ -79,6 +84,11 @@ export {
   ArrowSquareIcon,
   ArrowDiamondIcon,
   ArrowBarIcon,
+  // Dynamic stroke
+  FrequencyIcon,
+  WiggleIcon,
+  SmoothIcon,
+  MiterAngleIcon,
 } from "./stroke";
 
 // Fill icons
@@ -95,3 +105,13 @@ export {
   GradientAngularIcon,
   GradientDiamondIcon,
 } from "./fill";
+
+// Typography icons
+export {
+  TextAlignLeftIcon,
+  TextAlignCenterIcon,
+  TextAlignRightIcon,
+  TextAlignTopIcon,
+  TextAlignMiddleIcon,
+  TextAlignBottomIcon,
+} from "./typography";

@@ -24,6 +24,13 @@ import {
   SPACE_SM,
   SPACE_MD,
 } from "../../constants/styles";
+import {
+  FrequencyIcon,
+  WiggleIcon,
+  SmoothIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+} from "../../icons";
 
 export type StrokeLineStyle = "solid" | "dashed" | "dotted";
 export type BrushStyle = "smooth" | "rough" | "spray";
@@ -85,49 +92,6 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
       <span style={labelStyle}>{label}</span>
       <div style={controlStyle}>{children}</div>
     </div>
-  );
-}
-
-// Dynamic icons
-function FrequencyIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 12h4l3-9 6 18 3-9h4" />
-    </svg>
-  );
-}
-
-function WiggleIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0 4 4 6 0" />
-    </svg>
-  );
-}
-
-function SmoothIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 17c3.5-6 8-6 10.5 0s7-6 7.5-6" />
-    </svg>
-  );
-}
-
-function ArrowLeftIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="19" y1="12" x2="5" y2="12" />
-      <polyline points="12 19 5 12 12 5" />
-    </svg>
-  );
-}
-
-function ArrowRightIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
   );
 }
 

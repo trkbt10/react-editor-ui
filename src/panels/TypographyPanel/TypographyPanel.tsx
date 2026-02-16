@@ -17,6 +17,16 @@ import {
   SPACE_MD,
   SIZE_FONT_SM,
 } from "../../constants/styles";
+import {
+  TextAlignLeftIcon,
+  TextAlignCenterIcon,
+  TextAlignRightIcon,
+  TextAlignTopIcon,
+  TextAlignMiddleIcon,
+  TextAlignBottomIcon,
+  SettingsIcon,
+  GridIcon,
+} from "../../icons";
 
 export type TextAlign = "left" | "center" | "right" | "justify";
 export type VerticalAlign = "top" | "middle" | "bottom";
@@ -120,79 +130,6 @@ function FontIcon({ isMissing }: { isMissing: boolean }) {
     </span>
   );
 }
-
-const AlignLeftIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="17" y1="10" x2="3" y2="10" />
-    <line x1="21" y1="6" x2="3" y2="6" />
-    <line x1="21" y1="14" x2="3" y2="14" />
-    <line x1="17" y1="18" x2="3" y2="18" />
-  </svg>
-);
-
-const AlignCenterIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="18" y1="10" x2="6" y2="10" />
-    <line x1="21" y1="6" x2="3" y2="6" />
-    <line x1="21" y1="14" x2="3" y2="14" />
-    <line x1="18" y1="18" x2="6" y2="18" />
-  </svg>
-);
-
-const AlignRightIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="21" y1="10" x2="7" y2="10" />
-    <line x1="21" y1="6" x2="3" y2="6" />
-    <line x1="21" y1="14" x2="3" y2="14" />
-    <line x1="21" y1="18" x2="7" y2="18" />
-  </svg>
-);
-
-const AlignTopIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="12" y1="3" x2="12" y2="15" />
-    <polyline points="8 7 12 3 16 7" />
-  </svg>
-);
-
-const AlignMiddleIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="12" y1="3" x2="12" y2="9" />
-    <line x1="12" y1="15" x2="12" y2="21" />
-    <polyline points="8 6 12 3 16 6" />
-    <polyline points="16 18 12 21 8 18" />
-  </svg>
-);
-
-const AlignBottomIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="12" y1="9" x2="12" y2="21" />
-    <polyline points="16 17 12 21 8 17" />
-  </svg>
-);
-
-const SettingsIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="4" y1="21" x2="4" y2="14" />
-    <line x1="4" y1="10" x2="4" y2="3" />
-    <line x1="12" y1="21" x2="12" y2="12" />
-    <line x1="12" y1="8" x2="12" y2="3" />
-    <line x1="20" y1="21" x2="20" y2="16" />
-    <line x1="20" y1="12" x2="20" y2="3" />
-    <line x1="1" y1="14" x2="7" y2="14" />
-    <line x1="9" y1="8" x2="15" y2="8" />
-    <line x1="17" y1="16" x2="23" y2="16" />
-  </svg>
-);
-
-const GridIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="3" width="7" height="7" />
-    <rect x="14" y="3" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" />
-    <rect x="3" y="14" width="7" height="7" />
-  </svg>
-);
 
 function FontFamilyRow({
   value,
@@ -351,15 +288,15 @@ export function TypographyPanel({
   }));
 
   const horizontalAlignOptions = [
-    { value: "left" as const, icon: <AlignLeftIcon />, "aria-label": "Align left" },
-    { value: "center" as const, icon: <AlignCenterIcon />, "aria-label": "Align center" },
-    { value: "right" as const, icon: <AlignRightIcon />, "aria-label": "Align right" },
+    { value: "left" as const, icon: <TextAlignLeftIcon />, "aria-label": "Align left" },
+    { value: "center" as const, icon: <TextAlignCenterIcon />, "aria-label": "Align center" },
+    { value: "right" as const, icon: <TextAlignRightIcon />, "aria-label": "Align right" },
   ];
 
   const verticalAlignOptions = [
-    { value: "top" as const, icon: <AlignTopIcon />, "aria-label": "Align top" },
-    { value: "middle" as const, icon: <AlignMiddleIcon />, "aria-label": "Align middle" },
-    { value: "bottom" as const, icon: <AlignBottomIcon />, "aria-label": "Align bottom" },
+    { value: "top" as const, icon: <TextAlignTopIcon />, "aria-label": "Align top" },
+    { value: "middle" as const, icon: <TextAlignMiddleIcon />, "aria-label": "Align middle" },
+    { value: "bottom" as const, icon: <TextAlignBottomIcon />, "aria-label": "Align bottom" },
   ];
 
   const headerAction = (

@@ -17,6 +17,8 @@ import {
   ArrowDiamondIcon,
   ArrowBarIcon,
   SwapIcon,
+  AlignStartIcon,
+  AlignEndIcon,
 } from "../../icons";
 import {
   COLOR_TEXT_MUTED,
@@ -68,25 +70,6 @@ const labelStyle: CSSProperties = {
   color: COLOR_TEXT_MUTED,
   fontSize: SIZE_FONT_SM,
 };
-
-// Align icons
-function AlignStartIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="4" y1="4" x2="4" y2="20" />
-      <polygon points="8,8 18,12 8,16" fill="currentColor" />
-    </svg>
-  );
-}
-
-function AlignEndIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="20" y1="4" x2="20" y2="20" />
-      <polygon points="16,8 6,12 16,16" fill="currentColor" />
-    </svg>
-  );
-}
 
 const alignOptions = [
   { value: "start" as const, icon: <AlignStartIcon />, "aria-label": "Align to path start" },

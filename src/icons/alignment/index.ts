@@ -9,3 +9,7 @@ export { AlignTopIcon } from "./AlignTop";
 export { AlignMiddleIcon } from "./AlignMiddle";
 export { AlignBottomIcon } from "./AlignBottom";
 export { ConstraintToggleIcon } from "./ConstraintToggle";
+
+// Path/arrow alignment icons
+export { AlignStartIcon } from "./AlignStart";
+export { AlignEndIcon } from "./AlignEnd";

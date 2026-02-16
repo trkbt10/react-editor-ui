@@ -21,32 +21,11 @@ import {
   JoinBevelIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  FrequencyIcon,
+  WiggleIcon,
+  SmoothIcon,
+  MiterAngleIcon,
 } from "../../icons";
-
-// Icons for input fields
-const FrequencyIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M4 12h4l3-9 6 18 3-9h4" />
-  </svg>
-);
-
-const WiggleIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0 4 4 6 0" />
-  </svg>
-);
-
-const SmoothIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M3 17c3.5-6 8-6 10.5 0s7-6 7.5-6" />
-  </svg>
-);
-
-const MiterAngleIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-    <path d="M3 14V3h11v3H6v8H3z" />
-  </svg>
-);
 
 // Width profile preview
 function WidthProfilePreview({ variant = "uniform" }: { variant?: "uniform" | "taper-end" | "taper-both" }) {

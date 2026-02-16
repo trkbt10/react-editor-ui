@@ -10,3 +10,4 @@ export { ResetIcon } from "./Reset";
 export { RefreshIcon } from "./Refresh";
 export { SwapIcon } from "./Swap";
 export { LinkIcon } from "./Link";
+export { GridIcon } from "./Grid";
