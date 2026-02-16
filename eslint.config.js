@@ -56,6 +56,7 @@ export default [
         "custom/no-parent-reexport": "error",
         "custom/no-demo-import": "error",
         "custom/no-parent-type-reexport": "error",
+        "custom/no-barrel-import": "error",
         "import/no-cycle": ["error", { maxDepth: 10 }],
         "custom/no-use-state-in-use-effect": "error",
         "custom/prefer-pointer-events": "warn",
@@ -98,7 +99,14 @@ export default [
           // Suites/bench (Vitest-compatible)
           suite: "readonly",
           bench: "readonly",
+          // Vitest mocking (allowed in tests)
+          vi: "readonly",
         },
+      },
+      rules: {
+        // Allow mock APIs in test files
+        "no-restricted-globals": "off",
+        "no-restricted-properties": "off",
       },
     },
 

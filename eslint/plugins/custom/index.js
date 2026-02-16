@@ -14,6 +14,7 @@ import preferPointerEvents from "./rules/prefer-pointer-events.js";
 import noIife from "./rules/no-iife.js";
 import noDemoImport from "./rules/no-demo-import.js";
 import noParentTypeReexport from "./rules/no-parent-type-reexport.js";
+import noBarrelImport from "./rules/no-barrel-import.js";
 
 export default {
   rules: {
@@ -30,5 +31,6 @@ export default {
     "no-iife": noIife,
     "no-demo-import": noDemoImport,
     "no-parent-type-reexport": noParentTypeReexport,
+    "no-barrel-import": noBarrelImport,
   },
 };
