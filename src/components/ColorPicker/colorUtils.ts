@@ -42,6 +42,20 @@ export function rgbToHex(rgb: RGB): string {
   return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
 }
 
+/** Compute hue from RGB components */
+function computeHue(r: number, g: number, b: number, max: number, diff: number): number {
+  if (diff === 0) {
+    return 0;
+  }
+  if (max === r) {
+    return 60 * (((g - b) / diff) % 6);
+  }
+  if (max === g) {
+    return 60 * ((b - r) / diff + 2);
+  }
+  return 60 * ((r - g) / diff + 4);
+}
+
 /**
  * Convert RGB to HSV
  * h: 0-360, s: 0-100, v: 0-100
@@ -55,25 +69,32 @@ export function rgbToHsv(rgb: RGB): HSV {
   const min = Math.min(r, g, b);
   const diff = max - min;
 
-  let h = 0;
+  const rawHue = computeHue(r, g, b, max, diff);
+  const h = rawHue < 0 ? rawHue + 360 : rawHue;
   const s = max === 0 ? 0 : (diff / max) * 100;
   const v = max * 100;
 
-  if (diff !== 0) {
-    if (max === r) {
-      h = 60 * (((g - b) / diff) % 6);
-    } else if (max === g) {
-      h = 60 * ((b - r) / diff + 2);
-    } else {
-      h = 60 * ((r - g) / diff + 4);
-    }
-  }
-
-  if (h < 0) {
-    h += 360;
-  }
-
   return { h, s, v };
+}
+
+/** Get RGB components based on hue sector */
+function rgbComponentsFromHue(h: number, c: number, x: number): { r: number; g: number; b: number } {
+  if (h >= 0 && h < 60) {
+    return { r: c, g: x, b: 0 };
+  }
+  if (h >= 60 && h < 120) {
+    return { r: x, g: c, b: 0 };
+  }
+  if (h >= 120 && h < 180) {
+    return { r: 0, g: c, b: x };
+  }
+  if (h >= 180 && h < 240) {
+    return { r: 0, g: x, b: c };
+  }
+  if (h >= 240 && h < 300) {
+    return { r: x, g: 0, b: c };
+  }
+  return { r: c, g: 0, b: x };
 }
 
 /**
@@ -89,35 +110,7 @@ export function hsvToRgb(hsv: HSV): RGB {
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
   const m = v - c;
 
-  let r = 0;
-  let g = 0;
-  let b = 0;
-
-  if (h >= 0 && h < 60) {
-    r = c;
-    g = x;
-    b = 0;
-  } else if (h >= 60 && h < 120) {
-    r = x;
-    g = c;
-    b = 0;
-  } else if (h >= 120 && h < 180) {
-    r = 0;
-    g = c;
-    b = x;
-  } else if (h >= 180 && h < 240) {
-    r = 0;
-    g = x;
-    b = c;
-  } else if (h >= 240 && h < 300) {
-    r = x;
-    g = 0;
-    b = c;
-  } else {
-    r = c;
-    g = 0;
-    b = x;
-  }
+  const { r, g, b } = rgbComponentsFromHue(h, c, x);
 
   return {
     r: Math.round((r + m) * 255),

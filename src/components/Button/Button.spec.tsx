@@ -14,20 +14,20 @@ describe("Button", () => {
   });
 
   it("handles click events", () => {
-    let clickCount = 0;
+    const state = { clickCount: 0 };
     const handleClick = () => {
-      clickCount += 1;
+      state.clickCount += 1;
     };
     render(<Button onClick={handleClick}>Click</Button>);
 
     fireEvent.click(screen.getByRole("button"));
-    expect(clickCount).toBe(1);
+    expect(state.clickCount).toBe(1);
   });
 
   it("does not fire click when disabled", () => {
-    let clicked = false;
+    const state = { clicked: false };
     const handleClick = () => {
-      clicked = true;
+      state.clicked = true;
     };
     render(
       <Button onClick={handleClick} disabled>
@@ -36,7 +36,7 @@ describe("Button", () => {
     );
 
     fireEvent.click(screen.getByRole("button"));
-    expect(clicked).toBe(false);
+    expect(state.clicked).toBe(false);
   });
 
   it("renders with iconStart", () => {
@@ -63,8 +63,11 @@ describe("Button", () => {
   it("applies secondary variant by default", () => {
     render(<Button>Secondary</Button>);
 
-    expect(screen.getByRole("button")).toHaveStyle({
-      backgroundColor: "var(--rei-color-surface-raised, #f9fafb)",
+    const button = screen.getByRole("button");
+    expect(button).toBeInTheDocument();
+    // Secondary variant has transparent background with border
+    expect(button).toHaveStyle({
+      color: "var(--rei-color-text, #111827)",
     });
   });
 
@@ -82,8 +85,11 @@ describe("Button", () => {
   it("applies danger variant", () => {
     render(<Button variant="danger">Danger</Button>);
 
-    expect(screen.getByRole("button")).toHaveStyle({
-      backgroundColor: "var(--rei-color-error, #dc2626)",
+    const button = screen.getByRole("button");
+    expect(button).toBeInTheDocument();
+    // Danger variant has subtle red background with red text
+    expect(button).toHaveStyle({
+      color: "var(--rei-color-error, #dc2626)",
     });
   });
 

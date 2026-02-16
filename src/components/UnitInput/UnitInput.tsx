@@ -183,7 +183,7 @@ export const UnitInput = memo(function UnitInput({
       }
     }
   }, [value, isEditing, parsed.isAuto, parsed.num]);
-  /* eslint-enable custom/no-use-state-in-use-effect */
+  /* eslint-enable custom/no-use-state-in-use-effect -- end of prop sync block */
 
   const commitValue = useCallback(
     (inputValue: string) => {
@@ -233,7 +233,7 @@ export const UnitInput = memo(function UnitInput({
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
-      if (disabled) return;
+      if (disabled) {return;}
 
       if (e.key === "Enter") {
         e.preventDefault();
@@ -272,7 +272,7 @@ export const UnitInput = memo(function UnitInput({
 
   const handleWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
-      if (disabled || !isFocused) return;
+      if (disabled || !isFocused) {return;}
 
       e.preventDefault();
       const actualStep = e.shiftKey ? shiftStep : step;
@@ -286,7 +286,7 @@ export const UnitInput = memo(function UnitInput({
   );
 
   const cycleUnit = useCallback(() => {
-    if (disabled) return;
+    if (disabled) {return;}
 
     if (parsed.isAuto) {
       const nextUnit = units[0]?.value ?? "px";
@@ -294,7 +294,7 @@ export const UnitInput = memo(function UnitInput({
       return;
     }
 
-    if (parsed.num === null) return;
+    if (parsed.num === null) {return;}
 
     const nextIndex = (currentUnitIndex + 1) % allOptions.length;
     const nextOption = allOptions[nextIndex];
@@ -307,7 +307,7 @@ export const UnitInput = memo(function UnitInput({
   }, [disabled, units, parsed, currentUnitIndex, onChange, allOptions]);
 
   const openDropdown = useCallback(() => {
-    if (disabled || !unitButtonRef.current) return;
+    if (disabled || !unitButtonRef.current) {return;}
 
     const rect = unitButtonRef.current.getBoundingClientRect();
     setDropdownPosition({
@@ -333,7 +333,7 @@ export const UnitInput = memo(function UnitInput({
   }, [parsed, onChange, closeDropdown]);
 
   const handleUnitClick = useCallback(() => {
-    if (disabled) return;
+    if (disabled) {return;}
 
     if (useDropdown) {
       if (isDropdownOpen) {
@@ -348,7 +348,7 @@ export const UnitInput = memo(function UnitInput({
 
   // Close dropdown on click outside
   useEffect(() => {
-    if (!isDropdownOpen) return;
+    if (!isDropdownOpen) {return;}
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;

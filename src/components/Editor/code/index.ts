@@ -2,21 +2,17 @@
  * @file Code module exports
  */
 
-// Types
+// Types from code layer
 export type {
   CodeEditorProps,
-  CompositionState,
-  CursorPosition,
-  CursorState,
-  EditorConfig,
-  HighlightRange,
   KeyAction,
-  SelectionRange,
   Token,
   TokenCache,
   Tokenizer,
   TokenStyleMap,
 } from "./types";
+
+// Note: Core types should be imported directly from ../core/types
 
 // Components
 export { CodeEditor } from "./CodeEditor";

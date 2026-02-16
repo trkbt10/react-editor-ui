@@ -2,11 +2,8 @@
  * @file Renderers module exports
  */
 
-// Types
+// Types from renderer layer
 export type {
-  CursorState,
-  HighlightRange,
-  HighlightType,
   LineHighlight,
   RendererComponent,
   RendererProps,
@@ -16,6 +13,8 @@ export type {
   Tokenizer,
   TokenStyleMap,
 } from "./types";
+
+// Note: Core types should be imported directly from ../core/types
 
 export {
   DEFAULT_FONT_FAMILY,

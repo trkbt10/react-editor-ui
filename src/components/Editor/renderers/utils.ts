@@ -4,7 +4,8 @@
  * Shared utility functions for SVG and Canvas renderers.
  */
 
-import type { HighlightRange, HighlightType, LineHighlight } from "./types";
+import type { HighlightRange, HighlightType } from "../core/types";
+import type { LineHighlight } from "./types";
 import {
   EDITOR_SELECTION_BG,
   EDITOR_MATCH_BG,
@@ -55,6 +56,19 @@ const HIGHLIGHT_PRIORITY: Record<HighlightType, number> = {
 // Line Highlights
 // =============================================================================
 
+/** Compute column range for a highlight on a specific line */
+function computeColumnRange(
+  h: HighlightRange,
+  lineNumber: number,
+  lineLength: number
+): { startColumn: number; endColumn: number } {
+  const isStartLine = lineNumber === h.startLine;
+  const isEndLine = lineNumber === h.endLine;
+  const startColumn = isStartLine ? h.startColumn : 1;
+  const endColumn = isEndLine ? h.endColumn : lineLength + 1;
+  return { startColumn, endColumn };
+}
+
 /**
  * Get highlights that apply to a specific line.
  *
@@ -75,24 +89,8 @@ export function getLineHighlights(
       continue;
     }
 
-    let startCol: number;
-    let endCol: number;
-
-    if (lineNumber === h.startLine && lineNumber === h.endLine) {
-      startCol = h.startColumn;
-      endCol = h.endColumn;
-    } else if (lineNumber === h.startLine) {
-      startCol = h.startColumn;
-      endCol = lineLength + 1;
-    } else if (lineNumber === h.endLine) {
-      startCol = 1;
-      endCol = h.endColumn;
-    } else {
-      startCol = 1;
-      endCol = lineLength + 1;
-    }
-
-    result.push({ startColumn: startCol, endColumn: endCol, type: h.type });
+    const { startColumn, endColumn } = computeColumnRange(h, lineNumber, lineLength);
+    result.push({ startColumn, endColumn, type: h.type });
   }
 
   // Sort by priority (lower priority first, so higher priority draws on top)

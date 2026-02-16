@@ -162,7 +162,7 @@ describe("GradientEditor", () => {
       />,
     );
 
-    const removeButtons = screen.getAllByRole("button", { name: "Remove stop" });
+    const removeButtons = screen.getAllByRole("button", { name: "Remove color" });
     fireEvent.click(removeButtons[0]);
 
     expect(updatedGradient.stops.length).toBe(2);
@@ -182,7 +182,7 @@ describe("GradientEditor", () => {
       />,
     );
 
-    const removeButtons = screen.getAllByRole("button", { name: "Remove stop" });
+    const removeButtons = screen.getAllByRole("button", { name: "Remove color" });
     fireEvent.click(removeButtons[0]);
 
     expect(callCount).toBe(0);

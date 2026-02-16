@@ -153,50 +153,50 @@ export function useHistory<T>(
   const undo = useCallback((): HistoryEntry<T> | undefined => {
     flush(); // Ensure any pending changes are committed
 
-    let restoredEntry: HistoryEntry<T> | undefined;
+    if (historyState.past.length === 0) {
+      return undefined;
+    }
+
+    const restoredEntry = historyState.past[historyState.past.length - 1];
 
     setHistoryState((prev) => {
       if (prev.past.length === 0) {
         return prev;
       }
 
-      const newPast = [...prev.past];
-      const previousEntry = newPast.pop()!;
-      restoredEntry = previousEntry;
-
       return {
-        past: newPast,
-        present: previousEntry,
+        past: prev.past.slice(0, -1),
+        present: prev.past[prev.past.length - 1],
         future: [prev.present, ...prev.future],
       };
     });
 
     return restoredEntry;
-  }, [flush]);
+  }, [flush, historyState]);
 
   const redo = useCallback((): HistoryEntry<T> | undefined => {
     flush(); // Ensure any pending changes are committed
 
-    let restoredEntry: HistoryEntry<T> | undefined;
+    if (historyState.future.length === 0) {
+      return undefined;
+    }
+
+    const restoredEntry = historyState.future[0];
 
     setHistoryState((prev) => {
       if (prev.future.length === 0) {
         return prev;
       }
 
-      const newFuture = [...prev.future];
-      const nextEntry = newFuture.shift()!;
-      restoredEntry = nextEntry;
-
       return {
         past: [...prev.past, prev.present],
-        present: nextEntry,
-        future: newFuture,
+        present: prev.future[0],
+        future: prev.future.slice(1),
       };
     });
 
     return restoredEntry;
-  }, [flush]);
+  }, [flush, historyState]);
 
   const reset = useCallback((state: T, cursorOffset: number) => {
     flush();

@@ -93,6 +93,24 @@ export function gradientToLinearCss(gradient: GradientValue): string {
   return `linear-gradient(to right, ${colorStops})`;
 }
 
+/** Find stops that surround a given position */
+function findSurroundingStops(
+  sorted: GradientStop[],
+  position: number,
+): { left: GradientStop; right: GradientStop } {
+  const foundIndex = sorted.findIndex(
+    (stop, i) =>
+      i < sorted.length - 1 &&
+      stop.position <= position &&
+      sorted[i + 1].position >= position,
+  );
+
+  if (foundIndex >= 0) {
+    return { left: sorted[foundIndex], right: sorted[foundIndex + 1] };
+  }
+  return { left: sorted[0], right: sorted[sorted.length - 1] };
+}
+
 /**
  * Interpolate color at a given position between stops
  */
@@ -110,17 +128,7 @@ export function interpolateColor(
     return { ...sorted[0].color };
   }
 
-  // Find surrounding stops
-  let leftStop = sorted[0];
-  let rightStop = sorted[sorted.length - 1];
-
-  for (let i = 0; i < sorted.length - 1; i++) {
-    if (sorted[i].position <= position && sorted[i + 1].position >= position) {
-      leftStop = sorted[i];
-      rightStop = sorted[i + 1];
-      break;
-    }
-  }
+  const { left: leftStop, right: rightStop } = findSurroundingStops(sorted, position);
 
   // Handle edge cases
   if (position <= leftStop.position) {

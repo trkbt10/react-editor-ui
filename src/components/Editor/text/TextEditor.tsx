@@ -35,28 +35,34 @@ import { DEFAULT_PADDING_PX } from "../styles/tokens";
 /**
  * Compute text diff and return the change range.
  */
+/** Find length of common prefix between two strings */
+function findCommonPrefixLength(a: string, b: string): number {
+  const minLength = Math.min(a.length, b.length);
+  const firstDiff = [...Array(minLength)].findIndex((_, i) => a[i] !== b[i]);
+  return firstDiff === -1 ? minLength : firstDiff;
+}
+
+/** Find end indices after removing common suffix */
+function findSuffixBoundaries(
+  oldText: string,
+  newText: string,
+  start: number
+): { oldEnd: number; newEnd: number } {
+  const oldRest = oldText.slice(start);
+  const newRest = newText.slice(start);
+  const suffixLen = findCommonPrefixLength(
+    [...oldRest].reverse().join(""),
+    [...newRest].reverse().join("")
+  );
+  return { oldEnd: oldText.length - suffixLen, newEnd: newText.length - suffixLen };
+}
+
 function computeTextDiff(
   oldText: string,
   newText: string
 ): { start: number; oldEnd: number; newEnd: number } {
-  // Find common prefix
-  let start = 0;
-  while (start < oldText.length && start < newText.length && oldText[start] === newText[start]) {
-    start++;
-  }
-
-  // Find common suffix
-  let oldEnd = oldText.length;
-  let newEnd = newText.length;
-  while (
-    oldEnd > start &&
-    newEnd > start &&
-    oldText[oldEnd - 1] === newText[newEnd - 1]
-  ) {
-    oldEnd--;
-    newEnd--;
-  }
-
+  const start = findCommonPrefixLength(oldText, newText);
+  const { oldEnd, newEnd } = findSuffixBoundaries(oldText, newText, start);
   return { start, oldEnd, newEnd };
 }
 

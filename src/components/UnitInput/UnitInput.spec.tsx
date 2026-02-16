@@ -18,7 +18,7 @@ describe("UnitInput", () => {
   });
 
   it("calls onChange with full value when input changes", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -34,7 +34,7 @@ describe("UnitInput", () => {
   });
 
   it("allows typing value with unit to change both", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -53,7 +53,7 @@ describe("UnitInput", () => {
   });
 
   it("cycles through units when unit is clicked", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -76,7 +76,7 @@ describe("UnitInput", () => {
   });
 
   it("cycles back to first unit after last unit", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -107,7 +107,7 @@ describe("UnitInput", () => {
   });
 
   it("cycles to auto when allowAuto is true", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -131,7 +131,7 @@ describe("UnitInput", () => {
   });
 
   it("adjusts value with arrow up key", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -145,7 +145,7 @@ describe("UnitInput", () => {
   });
 
   it("adjusts value with arrow down key", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -159,7 +159,7 @@ describe("UnitInput", () => {
   });
 
   it("uses shiftStep with shift+arrow keys", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -173,7 +173,7 @@ describe("UnitInput", () => {
   });
 
   it("respects min value", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -189,7 +189,7 @@ describe("UnitInput", () => {
   });
 
   it("respects max value", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -223,7 +223,7 @@ describe("UnitInput", () => {
   });
 
   it("handles decimal values", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -237,7 +237,7 @@ describe("UnitInput", () => {
   });
 
   it("parses auto input correctly", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -253,7 +253,7 @@ describe("UnitInput", () => {
   });
 
   it("commits value on Enter key", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -269,7 +269,7 @@ describe("UnitInput", () => {
   });
 
   it("reverts value on Escape key", () => {
-    // eslint-disable-next-line no-restricted-syntax
+    // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
     let captured = "";
     const handleChange = (v: string) => {
       captured = v;
@@ -317,7 +317,7 @@ describe("UnitInput", () => {
     });
 
     it("selects unit from dropdown", () => {
-      // eslint-disable-next-line no-restricted-syntax
+      // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
       let captured = "";
       const handleChange = (v: string) => {
         captured = v;
@@ -348,7 +348,7 @@ describe("UnitInput", () => {
     });
 
     it("still cycles when units < 5", () => {
-      // eslint-disable-next-line no-restricted-syntax
+      // eslint-disable-next-line no-restricted-syntax -- let required for test callback capture
       let captured = "";
       const handleChange = (v: string) => {
         captured = v;

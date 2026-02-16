@@ -2,7 +2,7 @@
  * @file GradientEditor component - Full gradient editing interface
  */
 
-import { useState, useRef } from "react";
+import { memo, useState, useRef, useCallback, useMemo } from "react";
 import type { CSSProperties, ChangeEvent } from "react";
 import {
   COLOR_TEXT,
@@ -48,7 +48,12 @@ function PlusIcon() {
   );
 }
 
-export function GradientEditor({
+
+
+
+
+
+export const GradientEditor = memo(function GradientEditor({
   value,
   onChange,
   disabled = false,
@@ -58,6 +63,7 @@ export function GradientEditor({
     value.stops[0]?.id ?? null,
   );
   const [angleInput, setAngleInput] = useState(String(value.angle));
+  const [isAddButtonHovered, setIsAddButtonHovered] = useState(false);
 
   // Track last angle for syncing
   const lastAngleRef = useRef(value.angle);
@@ -68,9 +74,12 @@ export function GradientEditor({
     setAngleInput(String(value.angle));
   }
 
-  const handleTypeChange = (type: GradientType) => {
-    onChange({ ...value, type });
-  };
+  const handleTypeChange = useCallback(
+    (type: GradientType) => {
+      onChange({ ...value, type });
+    },
+    [onChange, value],
+  );
 
   const handleAngleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
@@ -89,53 +98,56 @@ export function GradientEditor({
     }
   };
 
-  const handleGradientChange = (newValue: GradientValue) => {
-    onChange(newValue);
-  };
+  const handleGradientChange = useCallback(
+    (newValue: GradientValue) => {
+      onChange(newValue);
+    },
+    [onChange],
+  );
 
-  const handleStopChange = (updatedStop: GradientStop) => {
-    const newStops = value.stops.map((stop) => {
-      if (stop.id === updatedStop.id) {
-        return updatedStop;
+  const handleStopChange = useCallback(
+    (updatedStop: GradientStop) => {
+      const newStops = value.stops.map((stop) => {
+        if (stop.id === updatedStop.id) {
+          return updatedStop;
+        }
+        return stop;
+      });
+      onChange({ ...value, stops: newStops });
+    },
+    [onChange, value],
+  );
+
+  const handleStopRemove = useCallback(
+    (stopId: string) => {
+      if (value.stops.length <= 2) {
+        return; // Keep at least 2 stops
       }
-      return stop;
-    });
-    onChange({ ...value, stops: newStops });
-  };
+      const newStops = value.stops.filter((stop) => stop.id !== stopId);
+      onChange({ ...value, stops: newStops });
 
-  const handleStopRemove = (stopId: string) => {
-    if (value.stops.length <= 2) {
-      return; // Keep at least 2 stops
-    }
-    const newStops = value.stops.filter((stop) => stop.id !== stopId);
-    onChange({ ...value, stops: newStops });
+      // Select another stop if the removed one was selected
+      if (selectedStopId === stopId) {
+        setSelectedStopId(newStops[0]?.id ?? null);
+      }
+    },
+    [onChange, selectedStopId, value],
+  );
 
-    // Select another stop if the removed one was selected
-    if (selectedStopId === stopId) {
-      setSelectedStopId(newStops[0]?.id ?? null);
-    }
-  };
-
-  const handleAddStop = () => {
+  const handleAddStop = useCallback(() => {
     // Add a new stop at 50% or find a gap
     const sortedStops = sortStopsByPosition(value.stops);
-    let newPosition = 50;
 
     // Find the largest gap between stops
-    let maxGap = 0;
-    let gapStart = 0;
+    const gaps = sortedStops.slice(0, -1).map((stop, i) => ({
+      size: sortedStops[i + 1].position - stop.position,
+      start: stop.position,
+    }));
+    const largestGap = gaps.reduce((max, gap) => (gap.size > max.size ? gap : max), { size: 0, start: 0 });
 
-    for (let i = 0; i < sortedStops.length - 1; i++) {
-      const gap = sortedStops[i + 1].position - sortedStops[i].position;
-      if (gap > maxGap) {
-        maxGap = gap;
-        gapStart = sortedStops[i].position;
-      }
-    }
-
-    if (maxGap > 0) {
-      newPosition = Math.round(gapStart + maxGap / 2);
-    }
+    const computePosition = (gap: { size: number; start: number }): number =>
+      gap.size > 0 ? Math.round(gap.start + gap.size / 2) : 50;
+    const newPosition = computePosition(largestGap);
 
     const newStop: GradientStop = {
       id: generateStopId(),
@@ -145,7 +157,17 @@ export function GradientEditor({
 
     onChange({ ...value, stops: [...value.stops, newStop] });
     setSelectedStopId(newStop.id);
-  };
+  }, [onChange, value]);
+
+  const handleAddButtonPointerEnter = useCallback(() => {
+    if (!disabled) {
+      setIsAddButtonHovered(true);
+    }
+  }, [disabled]);
+
+  const handleAddButtonPointerLeave = useCallback(() => {
+    setIsAddButtonHovered(false);
+  }, []);
 
   const showAngleInput = value.type === "linear" || value.type === "angular";
   const sortedStops = sortStopsByPosition(value.stops);
@@ -215,20 +237,23 @@ export function GradientEditor({
     fontWeight: 500,
   };
 
-  const addButtonStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 22,
-    height: 22,
-    padding: 0,
-    border: "none",
-    backgroundColor: "transparent",
-    color: COLOR_ICON,
-    cursor: disabled ? "not-allowed" : "pointer",
-    outline: "none",
-    transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
-  };
+  const addButtonStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 22,
+      height: 22,
+      padding: 0,
+      border: "none",
+      backgroundColor: "transparent",
+      color: isAddButtonHovered && !disabled ? COLOR_ICON_HOVER : COLOR_ICON,
+      cursor: disabled ? "not-allowed" : "pointer",
+      outline: "none",
+      transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
+    }),
+    [disabled, isAddButtonHovered],
+  );
 
   const stopsListStyle: CSSProperties = {
     display: "flex",
@@ -279,14 +304,8 @@ export function GradientEditor({
           disabled={disabled}
           aria-label="Add stop"
           style={addButtonStyle}
-          onPointerEnter={(e) => {
-            if (!disabled) {
-              e.currentTarget.style.color = COLOR_ICON_HOVER;
-            }
-          }}
-          onPointerLeave={(e) => {
-            e.currentTarget.style.color = COLOR_ICON;
-          }}
+          onPointerEnter={handleAddButtonPointerEnter}
+          onPointerLeave={handleAddButtonPointerLeave}
         >
           <PlusIcon />
         </button>
@@ -308,7 +327,7 @@ export function GradientEditor({
       </div>
     </div>
   );
-}
+});
 
 function renderAngleInput(
   show: boolean,
