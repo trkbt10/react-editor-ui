@@ -2,7 +2,7 @@
  * @file Hook for handling canvas gestures (pan, zoom, pinch)
  */
 
-import { useRef, useCallback, useState, type PointerEvent, type WheelEvent } from "react";
+import { useRef, useCallback, useState, useEffect, type PointerEvent } from "react";
 import type { ViewportState, ViewportConstraints, GestureConfig } from "./types";
 import { DEFAULT_CONSTRAINTS, DEFAULT_GESTURE_CONFIG } from "./types";
 import { useKeyboardPan } from "./useKeyboardPan";
@@ -27,7 +27,6 @@ export type UseGesturesResult = {
     readonly onPointerMove: (e: PointerEvent<HTMLDivElement>) => void;
     readonly onPointerUp: (e: PointerEvent<HTMLDivElement>) => void;
     readonly onPointerCancel: (e: PointerEvent<HTMLDivElement>) => void;
-    readonly onWheel: (e: WheelEvent<HTMLDivElement>) => void;
   };
   /** Whether currently panning */
   readonly isPanning: boolean;
@@ -294,19 +293,32 @@ export function useGestures(config: UseGesturesConfig): UseGesturesResult {
     [handlePointerUp],
   );
 
-  const handleWheel = useCallback(
-    (e: WheelEvent<HTMLDivElement>) => {
+  // Use ref to hold latest values for wheel handler (avoids re-attaching listener)
+  const wheelDepsRef = useRef({
+    viewport,
+    onViewportChange,
+    gestureConfig,
+    constraints,
+  });
+  wheelDepsRef.current = { viewport, onViewportChange, gestureConfig, constraints };
+
+  // Attach wheel listener with { passive: false } to allow preventDefault
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const handleWheel = (e: WheelEvent) => {
+      const { viewport, onViewportChange, gestureConfig, constraints } = wheelDepsRef.current;
+
       if (!gestureConfig.wheelZoom) {
         return;
       }
 
       e.preventDefault();
 
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) {
-        return;
-      }
-
+      const rect = container.getBoundingClientRect();
       const cursorX = e.clientX - rect.left;
       const cursorY = e.clientY - rect.top;
 
@@ -324,9 +336,13 @@ export function useGestures(config: UseGesturesConfig): UseGesturesResult {
 
       const newViewport = zoomToPoint(viewport, cursorX, cursorY, newScale);
       onViewportChange(newViewport);
-    },
-    [viewport, onViewportChange, gestureConfig, constraints, containerRef],
-  );
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+    };
+  }, [containerRef]);
 
   return {
     handlers: {
@@ -334,7 +350,6 @@ export function useGestures(config: UseGesturesConfig): UseGesturesResult {
       onPointerMove: handlePointerMove,
       onPointerUp: handlePointerUp,
       onPointerCancel: handlePointerCancel,
-      onWheel: handleWheel,
     },
     isPanning,
     isSpacePanning,
