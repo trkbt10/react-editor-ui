@@ -212,13 +212,16 @@ export const ImageFillEditor = memo(function ImageFillEditor({
 
   const buttonLabel = hasImage ? "Replace image" : "Upload image";
 
+  const renderPreviewContent = () => {
+    if (hasImage) {
+      return renderImagePreview(value.url, value.mode, previewImageStyle);
+    }
+    return renderPlaceholder(placeholderStyle, iconStyle, textStyle);
+  };
+
   return (
     <div style={containerStyle}>
-      <div style={previewContainerStyle}>
-        {hasImage
-          ? renderImagePreview(value.url, value.mode, previewImageStyle)
-          : renderPlaceholder(placeholderStyle, iconStyle, textStyle)}
-      </div>
+      <div style={previewContainerStyle}>{renderPreviewContent()}</div>
 
       <Button
         onClick={onUpload}

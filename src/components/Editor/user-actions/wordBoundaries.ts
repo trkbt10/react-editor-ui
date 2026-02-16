@@ -24,32 +24,32 @@ export function findWordBoundaries(
   // Clamp offset to valid range
   const clampedOffset = Math.max(0, Math.min(offset, text.length));
 
+  const bounds = { start: clampedOffset, end: clampedOffset };
+
   // Find word start (scan backwards)
-  let start = clampedOffset;
-  while (start > 0) {
-    const prevChar = text[start - 1];
+  while (bounds.start > 0) {
+    const prevChar = text[bounds.start - 1];
     if (WORD_SEPARATORS.test(prevChar)) {
       break;
     }
-    start--;
+    bounds.start--;
   }
 
   // Find word end (scan forwards)
-  let end = clampedOffset;
-  while (end < text.length) {
-    const currChar = text[end];
+  while (bounds.end < text.length) {
+    const currChar = text[bounds.end];
     if (WORD_SEPARATORS.test(currChar)) {
       break;
     }
-    end++;
+    bounds.end++;
   }
 
   // If start === end (cursor at separator), select just the separator
-  if (start === end && end < text.length) {
-    end = start + 1;
+  if (bounds.start === bounds.end && bounds.end < text.length) {
+    bounds.end = bounds.start + 1;
   }
 
-  return { start, end };
+  return bounds;
 }
 
 /**
@@ -66,22 +66,22 @@ export function findLineBoundaries(
   // Clamp offset to valid range
   const clampedOffset = Math.max(0, Math.min(offset, text.length));
 
+  const bounds = { start: clampedOffset, end: clampedOffset };
+
   // Find line start (scan backwards for newline)
-  let start = clampedOffset;
-  while (start > 0 && text[start - 1] !== "\n") {
-    start--;
+  while (bounds.start > 0 && text[bounds.start - 1] !== "\n") {
+    bounds.start--;
   }
 
   // Find line end (scan forwards for newline)
-  let end = clampedOffset;
-  while (end < text.length && text[end] !== "\n") {
-    end++;
+  while (bounds.end < text.length && text[bounds.end] !== "\n") {
+    bounds.end++;
   }
 
   // Include the newline character if present (for full line selection)
-  if (end < text.length && text[end] === "\n") {
-    end++;
+  if (bounds.end < text.length && text[bounds.end] === "\n") {
+    bounds.end++;
   }
 
-  return { start, end };
+  return bounds;
 }

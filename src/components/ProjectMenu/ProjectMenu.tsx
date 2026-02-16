@@ -236,11 +236,11 @@ export const ProjectMenu = memo(function ProjectMenu({
           <span style={nameStyle}>{name}</span>
           {isClickable ? <span style={chevronStyle}><ChevronIcon /></span> : null}
         </div>
-        {badges && badges.length > 0 ? (
+        {badges && badges.length > 0 && (
           <div style={badgesStyle}>
             {badges.map((badge, i) => <Badge key={`${badge.label}-${i}`} badge={badge} />)}
           </div>
-        ) : null}
+        )}
         {description ? <div style={descriptionStyle}>{description}</div> : null}
       </div>
       {action ? <span style={actionStyle} onClick={handleActionClick}>{action}</span> : null}

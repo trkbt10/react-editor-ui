@@ -12,7 +12,7 @@ import { PropertyGridItem } from "../../components/PropertyGrid/PropertyGridItem
 import {
   TextHorizontalAlignSelect,
   TextVerticalAlignSelect,
-} from "../../components/AlignmentSelect";
+} from "../../components/AlignmentSelect/AlignmentSelect";
 import {
   COLOR_TEXT_MUTED,
   COLOR_WARNING,

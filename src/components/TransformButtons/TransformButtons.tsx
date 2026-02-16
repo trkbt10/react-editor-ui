@@ -4,7 +4,7 @@
  */
 
 import { memo, useMemo, useCallback } from "react";
-import type { ReactNode, CSSProperties, MouseEvent } from "react";
+import type { ReactNode, CSSProperties } from "react";
 import { Tooltip } from "../Tooltip/Tooltip";
 import { IconButton } from "../IconButton/IconButton";
 import { ToolbarGroup } from "../Toolbar/ToolbarGroup";
@@ -55,12 +55,9 @@ const TransformActionButton = memo(function TransformActionButton({
   disabled,
   onAction,
 }: TransformActionButtonProps) {
-  const handleClick = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      onAction(action.id);
-    },
-    [onAction, action.id],
-  );
+  const handleClick = useCallback(() => {
+    onAction(action.id);
+  }, [onAction, action.id]);
 
   return (
     <Tooltip content={action.label}>

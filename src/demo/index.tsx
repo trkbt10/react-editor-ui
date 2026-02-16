@@ -17,7 +17,6 @@ if (import.meta.env.DEV) {
     enabled: true,
     log: true,
     showToolbar: true,
-    renderCountThreshold: 1,
   });
 }
 

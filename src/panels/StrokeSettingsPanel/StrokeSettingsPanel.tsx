@@ -2,7 +2,7 @@
  * @file StrokeSettingsPanel component - Comprehensive stroke settings panel
  */
 
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Panel } from "../../panels/Panel/Panel";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";

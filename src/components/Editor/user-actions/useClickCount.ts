@@ -32,6 +32,7 @@ type UseClickCountResult = {
   reset: () => void;
 };
 
+/** Hook to track consecutive clicks for multi-click detection (double/triple-click). */
 export function useClickCount(
   config: Partial<ClickCountConfig> = {}
 ): UseClickCountResult {

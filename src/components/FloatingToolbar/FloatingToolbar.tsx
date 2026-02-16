@@ -22,7 +22,7 @@
 
 import { memo, useState, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import type { CSSProperties, MouseEvent } from "react";
-import type { FloatingToolbarProps, FloatingToolbarOperation } from "./types";
+import type { FloatingToolbarProps } from "./types";
 import { useFloatingToolbarPosition } from "./useFloatingToolbarPosition";
 import { Portal } from "../Portal/Portal";
 import { Toolbar } from "../Toolbar/Toolbar";
@@ -43,12 +43,22 @@ const DEFAULT_TOOLBAR_HEIGHT = 36;
 // =============================================================================
 
 type OperationButtonProps = {
-  readonly operation: FloatingToolbarOperation;
+  readonly id: string;
+  readonly label: string;
+  readonly icon: React.ReactNode;
+  readonly shortcut?: string;
+  readonly active?: boolean;
+  readonly disabled?: boolean;
   readonly onSelect: (id: string) => void;
 };
 
 const OperationButton = memo(function OperationButton({
-  operation,
+  id,
+  label,
+  icon,
+  shortcut,
+  active,
+  disabled,
   onSelect,
 }: OperationButtonProps) {
   const handleClick = useCallback(
@@ -56,21 +66,21 @@ const OperationButton = memo(function OperationButton({
       // Prevent the click from propagating and potentially deselecting text
       e.preventDefault();
       e.stopPropagation();
-      onSelect(operation.id);
+      onSelect(id);
     },
-    [operation.id, onSelect],
+    [id, onSelect],
   );
 
-  const tooltipContent = operation.shortcut ? `${operation.label} (${operation.shortcut})` : operation.label;
+  const tooltipContent = shortcut ? `${label} (${shortcut})` : label;
 
   return (
     <Tooltip content={tooltipContent} placement="top" delay={400}>
       <IconButton
-        icon={operation.icon}
-        aria-label={operation.label}
+        icon={icon}
+        aria-label={label}
         size="sm"
-        variant={operation.active ? "selected" : "default"}
-        disabled={operation.disabled}
+        variant={active ? "selected" : "default"}
+        disabled={disabled}
         onClick={handleClick}
       />
     </Tooltip>
@@ -152,7 +162,12 @@ export const FloatingToolbar = memo(function FloatingToolbar({
           {operations.map((operation) => (
             <OperationButton
               key={operation.id}
-              operation={operation}
+              id={operation.id}
+              label={operation.label}
+              icon={operation.icon}
+              shortcut={operation.shortcut}
+              active={operation.active}
+              disabled={operation.disabled}
               onSelect={onOperationSelect}
             />
           ))}

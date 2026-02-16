@@ -95,7 +95,7 @@ describe("useVirtualScroll", () => {
 
       // Wait for microtask to complete (measureItem uses queueMicrotask)
       await act(async () => {
-        await new Promise((resolve) => queueMicrotask(resolve));
+        await new Promise<void>((resolve) => queueMicrotask(resolve));
       });
 
       expect(result.current.totalHeight).toBe(initialTotalHeight + 36); // +36 from the doubled item

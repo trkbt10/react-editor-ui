@@ -2,7 +2,6 @@
  * @file Click Count Hook Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useClickCount } from "./useClickCount";
 
@@ -18,11 +17,11 @@ describe("useClickCount", () => {
   it("returns 1 for first click", () => {
     const { result } = renderHook(() => useClickCount());
 
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(100, 100);
+      ref.count = result.current.getClickCount(100, 100);
     });
-    expect(count!).toBe(1);
+    expect(ref.count).toBe(1);
   });
 
   it("returns 2 for double-click within interval", () => {
@@ -34,11 +33,11 @@ describe("useClickCount", () => {
 
     vi.advanceTimersByTime(200);
 
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(100, 100);
+      ref.count = result.current.getClickCount(100, 100);
     });
-    expect(count!).toBe(2);
+    expect(ref.count).toBe(2);
   });
 
   it("returns 3 for triple-click within interval", () => {
@@ -54,30 +53,30 @@ describe("useClickCount", () => {
     });
     vi.advanceTimersByTime(200);
 
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(100, 100);
+      ref.count = result.current.getClickCount(100, 100);
     });
-    expect(count!).toBe(3);
+    expect(ref.count).toBe(3);
   });
 
   it("caps at 3 for more than triple-click", () => {
     const { result } = renderHook(() => useClickCount());
 
     // 4 rapid clicks
-    for (let i = 0; i < 4; i++) {
+    Array.from({ length: 4 }).forEach(() => {
       act(() => {
         result.current.getClickCount(100, 100);
       });
       vi.advanceTimersByTime(100);
-    }
+    });
 
     // Even 5th click should stay at 3
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(100, 100);
+      ref.count = result.current.getClickCount(100, 100);
     });
-    expect(count!).toBe(3);
+    expect(ref.count).toBe(3);
   });
 
   it("resets count after timeout", () => {
@@ -89,11 +88,11 @@ describe("useClickCount", () => {
 
     vi.advanceTimersByTime(500); // Exceed interval
 
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(100, 100);
+      ref.count = result.current.getClickCount(100, 100);
     });
-    expect(count!).toBe(1);
+    expect(ref.count).toBe(1);
   });
 
   it("resets count if click position changes significantly", () => {
@@ -105,11 +104,11 @@ describe("useClickCount", () => {
     vi.advanceTimersByTime(200);
 
     // Click 10 pixels away
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(110, 100);
+      ref.count = result.current.getClickCount(110, 100);
     });
-    expect(count!).toBe(1);
+    expect(ref.count).toBe(1);
   });
 
   it("allows click within distance tolerance", () => {
@@ -121,11 +120,11 @@ describe("useClickCount", () => {
     vi.advanceTimersByTime(200);
 
     // Click 5 pixels away (within tolerance)
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(103, 104);
+      ref.count = result.current.getClickCount(103, 104);
     });
-    expect(count!).toBe(2);
+    expect(ref.count).toBe(2);
   });
 
   it("reset clears the state", () => {
@@ -143,11 +142,11 @@ describe("useClickCount", () => {
       result.current.reset();
     });
 
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(100, 100);
+      ref.count = result.current.getClickCount(100, 100);
     });
-    expect(count!).toBe(1);
+    expect(ref.count).toBe(1);
   });
 
   it("handles custom config", () => {
@@ -161,10 +160,10 @@ describe("useClickCount", () => {
 
     vi.advanceTimersByTime(250); // Exceed custom interval
 
-    let count: number;
+    const ref = { count: 0 };
     act(() => {
-      count = result.current.getClickCount(100, 100);
+      ref.count = result.current.getClickCount(100, 100);
     });
-    expect(count!).toBe(1);
+    expect(ref.count).toBe(1);
   });
 });

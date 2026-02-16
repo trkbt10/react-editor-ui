@@ -8,25 +8,23 @@ import { LogViewer, type LogItem } from "./LogViewer";
 // Helper to flush microtasks scheduled by queueMicrotask
 async function flushMicrotasks(): Promise<void> {
   await act(async () => {
-    await new Promise((resolve) => queueMicrotask(resolve));
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
   });
 }
 
 // Mock ResizeObserver with no-op implementations
-const MockResizeObserver: typeof ResizeObserver = function MockResizeObserver(
-  this: ResizeObserver
-) {
-  // no-op constructor
-} as typeof ResizeObserver;
-MockResizeObserver.prototype.observe = function observe() {
-  // no-op for testing
-};
-MockResizeObserver.prototype.unobserve = function unobserve() {
-  // no-op for testing
-};
-MockResizeObserver.prototype.disconnect = function disconnect() {
-  // no-op for testing
-};
+// eslint-disable-next-line no-restricted-syntax -- class needed for ResizeObserver mock
+class MockResizeObserver implements ResizeObserver {
+  observe(): void {
+    // no-op for testing
+  }
+  unobserve(): void {
+    // no-op for testing
+  }
+  disconnect(): void {
+    // no-op for testing
+  }
+}
 global.ResizeObserver = MockResizeObserver;
 
 // Helper to create test log items

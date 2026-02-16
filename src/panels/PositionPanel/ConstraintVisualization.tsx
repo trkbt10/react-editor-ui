@@ -42,12 +42,12 @@ function ConstraintLine({ isActive, style, onClick, ariaLabel }: ConstraintLineP
         onClick={onClick}
         aria-label={ariaLabel}
         aria-pressed={isActive}
-        onMouseEnter={(e) => {
+        onPointerEnter={(e) => {
           if (!isActive) {
             e.currentTarget.style.backgroundColor = COLOR_HOVER;
           }
         }}
-        onMouseLeave={(e) => {
+        onPointerLeave={(e) => {
           e.currentTarget.style.backgroundColor = isActive ? COLOR_PRIMARY : COLOR_BORDER;
         }}
       />
@@ -113,7 +113,9 @@ export const ConstraintVisualization = memo(function ConstraintVisualization({
 
   // Toggle horizontal constraint when clicking left/right lines
   const handleLeftClick = useCallback(() => {
-    if (!onHorizontalChange) return;
+    if (!onHorizontalChange) {
+      return;
+    }
     if (horizontal === "left") {
       onHorizontalChange("center");
     } else if (horizontal === "left-right") {
@@ -124,7 +126,9 @@ export const ConstraintVisualization = memo(function ConstraintVisualization({
   }, [horizontal, onHorizontalChange]);
 
   const handleRightClick = useCallback(() => {
-    if (!onHorizontalChange) return;
+    if (!onHorizontalChange) {
+      return;
+    }
     if (horizontal === "right") {
       onHorizontalChange("center");
     } else if (horizontal === "left-right") {
@@ -135,7 +139,9 @@ export const ConstraintVisualization = memo(function ConstraintVisualization({
   }, [horizontal, onHorizontalChange]);
 
   const handleTopClick = useCallback(() => {
-    if (!onVerticalChange) return;
+    if (!onVerticalChange) {
+      return;
+    }
     if (vertical === "top") {
       onVerticalChange("center");
     } else if (vertical === "top-bottom") {
@@ -146,7 +152,9 @@ export const ConstraintVisualization = memo(function ConstraintVisualization({
   }, [vertical, onVerticalChange]);
 
   const handleBottomClick = useCallback(() => {
-    if (!onVerticalChange) return;
+    if (!onVerticalChange) {
+      return;
+    }
     if (vertical === "bottom") {
       onVerticalChange("center");
     } else if (vertical === "top-bottom") {
@@ -158,7 +166,9 @@ export const ConstraintVisualization = memo(function ConstraintVisualization({
 
   // Toggle center/scale when clicking center lines
   const handleCenterHClick = useCallback(() => {
-    if (!onHorizontalChange) return;
+    if (!onHorizontalChange) {
+      return;
+    }
     if (horizontal === "center") {
       onHorizontalChange("scale");
     } else if (horizontal === "scale") {
@@ -169,7 +179,9 @@ export const ConstraintVisualization = memo(function ConstraintVisualization({
   }, [horizontal, onHorizontalChange]);
 
   const handleCenterVClick = useCallback(() => {
-    if (!onVerticalChange) return;
+    if (!onVerticalChange) {
+      return;
+    }
     if (vertical === "center") {
       onVerticalChange("scale");
     } else if (vertical === "scale") {

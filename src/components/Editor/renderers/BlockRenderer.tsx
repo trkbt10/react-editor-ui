@@ -327,37 +327,6 @@ function drawCanvasToken(
 }
 
 /**
- * Calculate token X positions for canvas.
- */
-function calculateCanvasTokenPositions(
-  ctx: CanvasRenderingContext2D,
-  tokens: readonly Token[],
-  tokenStyles: TokenStyleMap | undefined,
-  baseXOffset: number,
-  baseFontSize: number,
-  baseFontFamily: string
-): readonly number[] {
-  const positions: number[] = [];
-  const acc = { x: baseXOffset };
-
-  for (const token of tokens) {
-    positions.push(acc.x);
-
-    const style = tokenStyles?.[token.type];
-    const fontWeight = (style?.fontWeight as string) ?? "normal";
-    const fontStyle = (style?.fontStyle as string) ?? "normal";
-    const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, baseFontSize);
-    const tokenFontFamily = (style?.fontFamily as string) ?? baseFontFamily;
-
-    ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
-    acc.x += ctx.measureText(token.text).width;
-  }
-
-  ctx.font = `normal normal ${baseFontSize}px ${baseFontFamily}`;
-  return positions;
-}
-
-/**
  * Calculate per-character cumulative positions for a token.
  * Returns array where positions[i] is the X position at the start of character i.
  */
@@ -367,12 +336,12 @@ function calculateCharacterPositions(
   startX: number
 ): readonly number[] {
   const positions: number[] = [startX];
-  let currentX = startX;
+  const acc = { x: startX };
 
-  for (let i = 0; i < text.length; i++) {
-    const charWidth = ctx.measureText(text[i]).width;
-    currentX += charWidth;
-    positions.push(currentX);
+  for (const char of text) {
+    const charWidth = ctx.measureText(char).width;
+    acc.x += charWidth;
+    positions.push(acc.x);
   }
 
   return positions;
@@ -408,7 +377,7 @@ function getColumnXFromCachedPositions(
   column: number,
   codeXOffset: number
 ): number {
-  const { tokens, charPositionsPerToken, lineEndX, lineText } = cached;
+  const { tokens, charPositionsPerToken, lineEndX } = cached;
 
   // Column is 1-based, token.start/end are 0-based
   const targetCol = column - 1;
@@ -459,15 +428,9 @@ function computeBlockRenderInfo(
   startLineNumber: number
 ): readonly BlockRenderInfo[] {
   const result: BlockRenderInfo[] = [];
+  // Start at y=0 (after top spacer) with the provided startLineNumber
+  // The top spacer already accounts for the height of all lines before the visible range
   const state = { currentLine: startLineNumber, y: 0 };
-
-  // Calculate starting position by accumulating heights of blocks before visible range
-  for (let i = 0; i < visibleRange.start; i++) {
-    const block = blocks[i];
-    const lineCount = block.content.split("\n").length;
-    state.currentLine += lineCount;
-    state.y += lineCount * lineHeight;
-  }
 
   // Compute info for visible blocks
   for (let i = visibleRange.start; i < visibleRange.end && i < blocks.length; i++) {
@@ -849,7 +812,9 @@ type SingleBlockProps = {
  * Check if cursor is within a block's line range.
  */
 function cursorInBlock(cursor: CursorState | undefined, startLine: number, lineCount: number): boolean {
-  if (!cursor?.visible) return false;
+  if (!cursor?.visible) {
+    return false;
+  }
   return cursor.line >= startLine && cursor.line < startLine + lineCount;
 }
 
@@ -1210,10 +1175,10 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
         // Calculate token positions and per-character positions
         const tokenPositions: number[] = [];
         const charPositionsPerToken: TokenCharPositions[] = [];
-        let currentX = codeXOffset;
+        const acc = { x: codeXOffset };
 
         for (const token of tokens) {
-          tokenPositions.push(currentX);
+          tokenPositions.push(acc.x);
 
           // Set font for this token
           const style = tokenStyles?.[token.type];
@@ -1224,18 +1189,18 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
           ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
 
           // Calculate per-character positions for this token
-          const charPositions = calculateCharacterPositions(ctx, token.text, currentX);
+          const charPositions = calculateCharacterPositions(ctx, token.text, acc.x);
           charPositionsPerToken.push({
             tokenStart: token.start,
             charPositions,
           });
 
-          // Update currentX to end of token
-          currentX = charPositions[charPositions.length - 1];
+          // Update acc.x to end of token
+          acc.x = charPositions[charPositions.length - 1];
         }
 
         // Calculate line end X (for cursor at end of line)
-        const lineEndX = tokens.length > 0 ? currentX : codeXOffset;
+        const lineEndX = tokens.length > 0 ? acc.x : codeXOffset;
 
         // Cache tokens and positions for overlay drawing
         lineTokenCacheRef.current.set(lineNumber, {

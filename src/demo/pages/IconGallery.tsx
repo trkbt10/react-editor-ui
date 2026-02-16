@@ -4,7 +4,14 @@
 
 import * as Icons from "../../icons";
 
-const iconList = [
+type IconEntry = {
+  name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Component: React.ComponentType<any>;
+  extraProps?: Record<string, unknown>;
+};
+
+const iconList: IconEntry[] = [
   // Transform
   { name: "FlipHorizontalIcon", Component: Icons.FlipHorizontalIcon },
   { name: "FlipVerticalIcon", Component: Icons.FlipVerticalIcon },
@@ -22,8 +29,8 @@ const iconList = [
   { name: "GradientDiamondIcon", Component: Icons.GradientDiamondIcon },
 
   // Layer
-  { name: "EyeIcon", Component: Icons.EyeIcon },
-  { name: "LockIcon", Component: Icons.LockIcon },
+  { name: "EyeIcon", Component: Icons.EyeIcon, extraProps: { visible: true } },
+  { name: "LockIcon", Component: Icons.LockIcon, extraProps: { locked: true } },
   { name: "DragHandleIcon", Component: Icons.DragHandleIcon },
 
   // Navigation
@@ -106,7 +113,7 @@ export function IconGallery() {
           gap: 16,
         }}
       >
-        {iconList.map(({ name, Component }) => (
+        {iconList.map(({ name, Component, extraProps }) => (
           <div
             key={name}
             data-icon={name}
@@ -130,7 +137,7 @@ export function IconGallery() {
                 color: "#fff",
               }}
             >
-              <Component size={24} />
+              <Component size={24} {...extraProps} />
             </div>
             <span
               style={{

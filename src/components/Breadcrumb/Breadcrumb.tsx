@@ -228,24 +228,32 @@ export const Breadcrumb = memo(function Breadcrumb({
         const isLast = index === displayItems.length - 1;
         const originalIndex = getOriginalIndex(index);
 
+        const renderSeparator = () => {
+          if (index <= 0) {
+            return null;
+          }
+          return <span style={separatorWrapperStyle}>{separator ?? <DefaultSeparator />}</span>;
+        };
+
+        const renderItem = () => {
+          if (typedItem.isEllipsis) {
+            return <EllipsisItem size={size} />;
+          }
+          return (
+            <BreadcrumbItemButton
+              item={item}
+              index={originalIndex}
+              isLast={isLast}
+              size={size}
+              onClick={onItemClick}
+            />
+          );
+        };
+
         return (
           <span key={`${item.label}-${index}`} style={itemWrapperStyle}>
-            {index > 0 ? (
-              <span style={separatorWrapperStyle}>
-                {separator ?? <DefaultSeparator />}
-              </span>
-            ) : null}
-            {typedItem.isEllipsis ? (
-              <EllipsisItem size={size} />
-            ) : (
-              <BreadcrumbItemButton
-                item={item}
-                index={originalIndex}
-                isLast={isLast}
-                size={size}
-                onClick={onItemClick}
-              />
-            )}
+            {renderSeparator()}
+            {renderItem()}
           </span>
         );
       })}

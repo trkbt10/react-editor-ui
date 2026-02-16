@@ -2,7 +2,6 @@
  * @file Word and Line Boundary Tests
  */
 
-import { describe, it, expect } from "vitest";
 import { findWordBoundaries, findLineBoundaries } from "./wordBoundaries";
 
 describe("findWordBoundaries", () => {

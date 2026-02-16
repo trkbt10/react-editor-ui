@@ -14,7 +14,7 @@ import { ControlGroup } from "../../components/ControlRow/ControlGroup";
 import {
   ObjectHorizontalAlignSelect,
   ObjectVerticalAlignSelect,
-} from "../../components/AlignmentSelect";
+} from "../../components/AlignmentSelect/AlignmentSelect";
 import { SPACE_MD } from "../../constants/styles";
 import { ConstraintVisualization } from "./ConstraintVisualization";
 import {
@@ -24,7 +24,7 @@ import {
   FlipHorizontalIcon,
   FlipVerticalIcon,
 } from "../../icons";
-import type { PositionSettings, PositionPanelProps, HorizontalAlign, VerticalAlign, HorizontalConstraint, VerticalConstraint } from "./positionTypes";
+import type { PositionPanelProps, HorizontalAlign, VerticalAlign, HorizontalConstraint, VerticalConstraint } from "./positionTypes";
 
 // Option arrays (moved outside component to prevent recreation)
 const horizontalConstraintOptions = [
