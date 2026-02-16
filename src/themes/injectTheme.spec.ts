@@ -53,6 +53,24 @@ describe("injectTheme", () => {
     expect(styles).toHaveLength(1);
     expect(styles[0]?.textContent).toContain("--rei-color-surface: #1e1f24");
   });
+
+  it("sets data-theme attribute on document element", () => {
+    injectTheme("dark");
+
+    expect(document.documentElement.dataset.theme).toBe("dark");
+  });
+
+  it("does not set data-theme for custom tokens", () => {
+    injectTheme({ "color-primary": "#ff0000" });
+
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+  });
+
+  it("does not set data-theme for non-root selectors", () => {
+    injectTheme("dark", ".my-container");
+
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+  });
 });
 
 describe("clearTheme", () => {
@@ -62,6 +80,14 @@ describe("clearTheme", () => {
 
     clearTheme();
     expect(document.getElementById("rei-theme-vars")).not.toBeInTheDocument();
+  });
+
+  it("removes data-theme attribute", () => {
+    injectTheme("dark");
+    expect(document.documentElement.dataset.theme).toBe("dark");
+
+    clearTheme();
+    expect(document.documentElement.dataset.theme).toBeUndefined();
   });
 
   it("does nothing if no theme injected", () => {

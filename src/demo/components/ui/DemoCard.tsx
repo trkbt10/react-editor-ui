@@ -10,12 +10,12 @@ export type DemoCardProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 const cardStyle: CSSProperties = {
-  background: "rgba(255, 255, 255, 0.8)",
+  background: "var(--rei-demo-card-bg)",
   backdropFilter: "blur(20px)",
   borderRadius: "var(--rei-demo-radius-xl)",
   padding: "var(--rei-demo-space-lg)",
   boxShadow: "var(--rei-demo-shadow-md)",
-  border: "1px solid rgba(0, 0, 0, 0.05)",
+  border: "1px solid var(--rei-demo-card-border)",
   transition: "var(--rei-demo-transition)",
   position: "relative",
   overflow: "hidden",

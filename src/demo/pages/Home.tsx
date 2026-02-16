@@ -72,12 +72,12 @@ const styles = {
     display: "inline-block",
     padding: "6px 12px",
     borderRadius: "20px",
-    background: "rgba(0,0,0,0.05)",
+    background: "var(--rei-demo-badge-bg)",
     backdropFilter: "blur(10px)",
     fontSize: "var(--rei-demo-font-size-sm)",
     fontWeight: 600,
     marginBottom: "var(--rei-demo-space-lg)",
-    border: "1px solid rgba(0,0,0,0.05)",
+    border: "1px solid var(--rei-demo-badge-border)",
   } satisfies CSSProperties,
   title: {
     fontSize: "var(--rei-demo-font-size-display)",
@@ -146,16 +146,16 @@ const styles = {
     width: "48px",
     height: "48px",
     borderRadius: "12px",
-    background: "rgba(0, 113, 227, 0.1)",
+    background: "var(--rei-demo-card-icon-bg)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     color: "var(--rei-demo-color-primary)",
     marginBottom: "16px",
   } satisfies CSSProperties,
-  darkCard: {
-    background: "#1d1d1f",
-    color: "#fff",
+  featureCard: {
+    background: "var(--rei-demo-feature-card-bg)",
+    color: "var(--rei-demo-feature-card-text)",
   } satisfies CSSProperties,
   categoryGrid: {
     display: "grid",
@@ -168,7 +168,7 @@ const styles = {
     alignItems: "center",
     gap: "6px",
     padding: "8px 12px",
-    background: "rgba(0, 0, 0, 0.03)",
+    background: "var(--rei-demo-control-bg)",
     borderRadius: "8px",
     color: "var(--rei-demo-text-secondary)",
     textDecoration: "none",
@@ -290,7 +290,6 @@ export const Home: FC = () => {
       <div style={gridStyle}>
         {/* Card 1: Component Stats (Wide) */}
         <DemoCard
-          hoverEffect
           style={{
             ...wideCardStyle,
             display: "flex",
@@ -335,11 +334,10 @@ export const Home: FC = () => {
           </div>
         </DemoCard>
 
-        {/* Card 2: Dark Theme */}
+        {/* Card 2: Theme Support */}
         <DemoCard
-          hoverEffect
           style={{
-            ...styles.darkCard,
+            ...styles.featureCard,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
@@ -352,26 +350,25 @@ export const Home: FC = () => {
               width: "64px",
               height: "64px",
               borderRadius: "50%",
-              background: "rgba(255, 255, 255, 0.1)",
+              background: "var(--rei-demo-feature-card-icon-bg)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               marginBottom: "16px",
             }}
           >
-            <LuMoon size={28} color="#fff" />
+            <LuMoon size={28} color="currentColor" />
           </div>
-          <h3 style={{ ...styles.cardTitle, color: "#fff" }}>
-            Dark Theme Ready
+          <h3 style={{ ...styles.cardTitle, color: "inherit" }}>
+            Theme Support
           </h3>
-          <p style={{ ...styles.cardDescription, color: "rgba(255,255,255,0.7)" }}>
+          <p style={{ ...styles.cardDescription, color: "var(--rei-demo-feature-card-text-muted)" }}>
             Built-in support for light, dark, and high contrast themes.
           </p>
         </DemoCard>
 
         {/* Card 3: TypeScript */}
         <DemoCard
-          hoverEffect
           style={{
             display: "flex",
             flexDirection: "column",
@@ -389,7 +386,6 @@ export const Home: FC = () => {
 
         {/* Card 4: Code Preview (Wide) */}
         <DemoCard
-          hoverEffect
           style={{
             ...wideCardStyle,
             display: "flex",
@@ -404,7 +400,6 @@ export const Home: FC = () => {
 
         {/* Card 5: Panel Integration */}
         <DemoCard
-          hoverEffect
           style={{
             display: "flex",
             flexDirection: "column",
@@ -423,7 +418,6 @@ export const Home: FC = () => {
         {/* Card 6: Browse Categories */}
         <DemoCard
           id="categories"
-          hoverEffect
           style={{
             ...wideCardStyle,
             display: "flex",
@@ -439,7 +433,7 @@ export const Home: FC = () => {
               const firstPage = category.pages[0];
               const href = `${category.base}/${firstPage?.path ?? ""}`;
               return (
-                <Link key={category.id} to={href} style={styles.categoryLink}>
+                <Link key={category.id} to={href} style={styles.categoryLink} className="category-link">
                   {category.icon}
                   <span>{category.label}</span>
                   <span style={{ marginLeft: "auto", opacity: 0.5 }}>

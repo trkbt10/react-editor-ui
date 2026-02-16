@@ -61,6 +61,11 @@ export function injectTheme(
 
   const style = getOrCreateStyleElement();
   style.textContent = buildCssText(tokens, selector);
+
+  // Set data-theme attribute on document element for CSS selectors
+  if (typeof theme === "string" && selector === ":root") {
+    document.documentElement.dataset.theme = theme;
+  }
 }
 
 /**
@@ -71,6 +76,7 @@ export function clearTheme(): void {
   if (style) {
     style.remove();
   }
+  delete document.documentElement.dataset.theme;
 }
 
 /**

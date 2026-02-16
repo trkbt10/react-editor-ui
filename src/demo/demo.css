@@ -71,6 +71,79 @@
 
   /* Blue accent for functional UI */
   --rei-demo-color-primary: #0071e3;
+
+  /* Card */
+  --rei-demo-card-bg: rgba(255, 255, 255, 0.8);
+  --rei-demo-card-border: rgba(0, 0, 0, 0.05);
+  --rei-demo-card-icon-bg: rgba(0, 113, 227, 0.1);
+
+  /* Feature card (inverted style) */
+  --rei-demo-feature-card-bg: #1d1d1f;
+  --rei-demo-feature-card-text: #ffffff;
+  --rei-demo-feature-card-text-muted: rgba(255, 255, 255, 0.7);
+  --rei-demo-feature-card-icon-bg: rgba(255, 255, 255, 0.1);
+
+  /* Badge */
+  --rei-demo-badge-bg: rgba(0, 0, 0, 0.05);
+  --rei-demo-badge-border: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark theme overrides */
+:root[data-theme="dark"] {
+  --rei-demo-bg: #1d1d1f;
+  --rei-demo-sidebar-bg: #1d1d1f;
+  --rei-demo-sidebar-border: rgba(255, 255, 255, 0.1);
+
+  --rei-demo-text-primary: #f5f5f7;
+  --rei-demo-text-secondary: #a1a1a6;
+  --rei-demo-text-tertiary: #6e6e73;
+
+  --rei-demo-accent: #ffffff;
+  --rei-demo-accent-hover: #e5e5e5;
+  --rei-demo-accent-contrast: #000000;
+
+  --rei-demo-gradient-hero: linear-gradient(
+    180deg,
+    rgba(29, 29, 31, 0) 0%,
+    #0a0a0a 100%
+  );
+  --rei-demo-gradient-text: linear-gradient(135deg, #ffffff 0%, #a1a1a6 100%);
+  --rei-demo-gradient-glow: radial-gradient(
+    circle at 50% 50%,
+    rgba(0, 113, 227, 0.25) 0%,
+    rgba(0, 0, 0, 0) 70%
+  );
+
+  --rei-demo-control-bg: rgba(255, 255, 255, 0.08);
+  --rei-demo-control-bg-hover: rgba(255, 255, 255, 0.12);
+  --rei-demo-control-bg-active: rgba(255, 255, 255, 0.16);
+
+  --rei-demo-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --rei-demo-shadow-md: 0 8px 16px rgba(0, 0, 0, 0.3);
+  --rei-demo-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.4);
+  --rei-demo-shadow-hero: 0 40px 80px rgba(0, 0, 0, 0.5);
+
+  --rei-demo-card-bg: rgba(45, 45, 48, 0.8);
+  --rei-demo-card-border: rgba(255, 255, 255, 0.08);
+  --rei-demo-card-icon-bg: rgba(0, 113, 227, 0.2);
+
+  /* Feature card inverts in dark mode */
+  --rei-demo-feature-card-bg: rgba(255, 255, 255, 0.95);
+  --rei-demo-feature-card-text: #1d1d1f;
+  --rei-demo-feature-card-text-muted: rgba(0, 0, 0, 0.6);
+  --rei-demo-feature-card-icon-bg: rgba(0, 0, 0, 0.08);
+
+  --rei-demo-badge-bg: rgba(255, 255, 255, 0.1);
+  --rei-demo-badge-border: rgba(255, 255, 255, 0.1);
+}
+
+/* High contrast theme overrides */
+:root[data-theme="high-contrast-light"] {
+  --rei-demo-text-primary: #000000;
+  --rei-demo-text-secondary: #333333;
+  --rei-demo-text-tertiary: #555555;
+
+  --rei-demo-sidebar-border: rgba(0, 0, 0, 0.2);
 }
 
 * {
@@ -88,4 +161,10 @@ body {
 #root {
   width: 100vw;
   height: 100vh;
+}
+
+/* Category link hover effect */
+.category-link:hover {
+  background: var(--rei-demo-control-bg-hover);
+  color: var(--rei-demo-text-primary);
 }
