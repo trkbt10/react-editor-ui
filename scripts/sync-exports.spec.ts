@@ -3,9 +3,9 @@
  */
 
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
-import { execSync } from "child_process";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { execSync } from "node:child_process";
 
 const ROOT_DIR = resolve(import.meta.dirname, "..");
 const TEST_COMPONENT_DIR = join(ROOT_DIR, "src/components/TestSyncComponent");

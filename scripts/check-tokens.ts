@@ -18,7 +18,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, extname } from "node:path";
 
-const PROJECT_ROOT = join(import.meta.dir, "..");
+const PROJECT_ROOT = join(import.meta.dirname, "..");
 const STYLES_PATH = join(PROJECT_ROOT, "src/constants/styles.ts");
 const SRC_PATH = join(PROJECT_ROOT, "src");
 

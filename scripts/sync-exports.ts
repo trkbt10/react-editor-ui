@@ -16,8 +16,8 @@
  *   bun scripts/sync-exports.ts --json   # Output as JSON
  */
 
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 
 const ROOT_DIR = resolve(import.meta.dirname, "..");
 const COMPONENTS_DIR = join(ROOT_DIR, "src/components");
@@ -30,7 +30,6 @@ type EntryCategory = "component" | "panel";
 interface ComponentEntry {
   name: string;
   entryType: "index" | "named";
-  entryPath: string;
   relativePath: string;
   category: EntryCategory;
 }
@@ -81,7 +80,6 @@ function detectEntryPoint(
     return {
       name,
       entryType: "named",
-      entryPath: namedTsPath,
       relativePath: `src/${categoryDir}/${name}/${name}.ts`,
       category,
     };
@@ -99,7 +97,6 @@ function detectEntryPoint(
     return {
       name,
       entryType: "named",
-      entryPath: namedTsxPath,
       relativePath: `src/${categoryDir}/${name}/${name}.tsx`,
       category,
     };
@@ -111,7 +108,6 @@ function detectEntryPoint(
       return {
         name,
         entryType: "index",
-        entryPath: indexPath,
         relativePath: `src/${categoryDir}/${name}/index.ts`,
         category,
       };

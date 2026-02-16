@@ -10,8 +10,8 @@
  *   bun scripts/build-readme.ts --json   # Output parsed data as JSON
  */
 
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
-import { join, resolve } from "path";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 
 const ROOT_DIR = resolve(import.meta.dirname, "..");
 const DOCS_DIR = join(ROOT_DIR, "docs");
