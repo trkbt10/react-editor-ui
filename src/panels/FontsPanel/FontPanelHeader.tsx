@@ -3,7 +3,7 @@
  */
 
 import type { CSSProperties } from "react";
-import { IconButton } from "../../components/IconButton/IconButton";
+import { TooltipIconButton } from "../../components/TooltipIconButton/TooltipIconButton";
 import { CloseIcon, SettingsIcon, RefreshIcon } from "../../icons";
 import {
   COLOR_BORDER,
@@ -48,9 +48,9 @@ const actionsStyle: CSSProperties = {
 
 function ReloadButton({ onReload }: { onReload: () => void }) {
   return (
-    <IconButton
+    <TooltipIconButton
       icon={<RefreshIcon size="sm" />}
-      aria-label="Reload fonts"
+      tooltip="Reload fonts"
       size="sm"
       onClick={onReload}
     />
@@ -59,9 +59,9 @@ function ReloadButton({ onReload }: { onReload: () => void }) {
 
 function SettingsButton({ onSettings }: { onSettings: () => void }) {
   return (
-    <IconButton
+    <TooltipIconButton
       icon={<SettingsIcon size="sm" />}
-      aria-label="Font settings"
+      tooltip="Font settings"
       size="sm"
       onClick={onSettings}
     />
@@ -70,9 +70,9 @@ function SettingsButton({ onSettings }: { onSettings: () => void }) {
 
 function CloseButton({ onClose }: { onClose: () => void }) {
   return (
-    <IconButton
+    <TooltipIconButton
       icon={<CloseIcon size="sm" />}
-      aria-label="Close"
+      tooltip="Close"
       size="sm"
       onClick={onClose}
     />

@@ -5,11 +5,14 @@
 import { useState, type CSSProperties } from "react";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { UnitInput } from "../../components/UnitInput/UnitInput";
-import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
-import { IconButton } from "../../components/IconButton/IconButton";
+import { TooltipIconButton } from "../../components/TooltipIconButton/TooltipIconButton";
 import { SectionHeader } from "../../components/SectionHeader/SectionHeader";
 import { PropertyGrid } from "../../components/PropertyGrid/PropertyGrid";
 import { PropertyGridItem } from "../../components/PropertyGrid/PropertyGridItem";
+import {
+  TextHorizontalAlignSelect,
+  TextVerticalAlignSelect,
+} from "../../components/AlignmentSelect";
 import {
   COLOR_TEXT_MUTED,
   COLOR_WARNING,
@@ -17,16 +20,7 @@ import {
   SPACE_MD,
   SIZE_FONT_SM,
 } from "../../constants/styles";
-import {
-  TextAlignLeftIcon,
-  TextAlignCenterIcon,
-  TextAlignRightIcon,
-  TextAlignTopIcon,
-  TextAlignMiddleIcon,
-  TextAlignBottomIcon,
-  SettingsIcon,
-  GridIcon,
-} from "../../icons";
+import { SettingsIcon, GridIcon } from "../../icons";
 
 export type TextAlign = "left" | "center" | "right" | "justify";
 export type VerticalAlign = "top" | "middle" | "bottom";
@@ -287,22 +281,10 @@ export function TypographyPanel({
     label: w.label,
   }));
 
-  const horizontalAlignOptions = [
-    { value: "left" as const, icon: <TextAlignLeftIcon />, "aria-label": "Align left" },
-    { value: "center" as const, icon: <TextAlignCenterIcon />, "aria-label": "Align center" },
-    { value: "right" as const, icon: <TextAlignRightIcon />, "aria-label": "Align right" },
-  ];
-
-  const verticalAlignOptions = [
-    { value: "top" as const, icon: <TextAlignTopIcon />, "aria-label": "Align top" },
-    { value: "middle" as const, icon: <TextAlignMiddleIcon />, "aria-label": "Align middle" },
-    { value: "bottom" as const, icon: <TextAlignBottomIcon />, "aria-label": "Align bottom" },
-  ];
-
   const headerAction = (
-    <IconButton
+    <TooltipIconButton
       icon={<GridIcon />}
-      aria-label="Grid options"
+      tooltip="Grid options"
       size="sm"
       onClick={onOpenSettings}
     />
@@ -372,21 +354,17 @@ export function TypographyPanel({
         <div>
           <span style={alignmentLabelStyle}>Alignment</span>
           <div style={alignmentRowStyle}>
-            <SegmentedControl
-              options={horizontalAlignOptions}
-              value={settings.textAlign}
-              onChange={(v) => handleChange("textAlign", v as TextAlign)}
-              aria-label="Horizontal alignment"
+            <TextHorizontalAlignSelect
+              value={settings.textAlign as "left" | "center" | "right"}
+              onChange={(v) => handleChange("textAlign", v)}
             />
-            <SegmentedControl
-              options={verticalAlignOptions}
+            <TextVerticalAlignSelect
               value={settings.verticalAlign}
-              onChange={(v) => handleChange("verticalAlign", v as VerticalAlign)}
-              aria-label="Vertical alignment"
+              onChange={(v) => handleChange("verticalAlign", v)}
             />
-            <IconButton
+            <TooltipIconButton
               icon={<SettingsIcon />}
-              aria-label="Advanced settings"
+              tooltip="Advanced settings"
               size="sm"
               onClick={onOpenSettings}
             />

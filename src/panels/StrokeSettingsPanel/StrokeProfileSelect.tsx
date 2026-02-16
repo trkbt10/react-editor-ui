@@ -5,7 +5,7 @@
 import type { CSSProperties } from "react";
 import type { WidthProfile } from "./types";
 import { Select, type SelectOption } from "../../components/Select/Select";
-import { IconButton } from "../../components/IconButton/IconButton";
+import { TooltipIconButton } from "../../components/TooltipIconButton/TooltipIconButton";
 import { FlipVerticalIcon as FlipIcon } from "../../icons";
 import { SPACE_SM } from "../../constants/styles";
 
@@ -111,10 +111,10 @@ export function StrokeProfileSelect({
         />
       </div>
       {showFlip && (
-        <IconButton
+        <TooltipIconButton
           icon={<FlipIcon />}
           onClick={handleFlip}
-          aria-label="Flip profile"
+          tooltip="Flip profile"
           size="sm"
           disabled={disabled || value === "uniform" || value === "taper-both"}
         />

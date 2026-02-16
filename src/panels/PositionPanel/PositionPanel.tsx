@@ -5,34 +5,26 @@
 import { memo, useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
 import { Panel } from "../../panels/Panel/Panel";
-import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import { Input } from "../../components/Input/Input";
 import { Select } from "../../components/Select/Select";
 import { IconButton } from "../../components/IconButton/IconButton";
 import { TransformButtons } from "../../components/TransformButtons/TransformButtons";
 import { ControlRow } from "../../components/ControlRow/ControlRow";
 import { ControlGroup } from "../../components/ControlRow/ControlGroup";
+import {
+  ObjectHorizontalAlignSelect,
+  ObjectVerticalAlignSelect,
+} from "../../components/AlignmentSelect";
 import { SPACE_MD } from "../../constants/styles";
 import { ConstraintVisualization } from "./ConstraintVisualization";
 import {
-  AlignLeftIcon,
-  AlignCenterHIcon,
-  AlignRightIcon,
-  AlignTopIcon,
-  AlignMiddleIcon,
-  AlignBottomIcon,
   RotationIcon,
   ConstraintToggleIcon,
   ResetIcon,
   FlipHorizontalIcon,
   FlipVerticalIcon,
 } from "../../icons";
-import type {
-  PositionSettings,
-  PositionPanelProps,
-  HorizontalAlign,
-  VerticalAlign,
-} from "./positionTypes";
+import type { PositionSettings, PositionPanelProps } from "./positionTypes";
 
 // Re-export types and utilities for external use
 export type {
@@ -63,18 +55,6 @@ export const PositionPanel = memo(function PositionPanel({
     },
     [onChange, settings],
   );
-
-  const horizontalAlignOptions = [
-    { value: "left" as const, icon: <AlignLeftIcon />, "aria-label": "Align left" },
-    { value: "center" as const, icon: <AlignCenterHIcon />, "aria-label": "Align center" },
-    { value: "right" as const, icon: <AlignRightIcon />, "aria-label": "Align right" },
-  ];
-
-  const verticalAlignOptions = [
-    { value: "top" as const, icon: <AlignTopIcon />, "aria-label": "Align top" },
-    { value: "middle" as const, icon: <AlignMiddleIcon />, "aria-label": "Align middle" },
-    { value: "bottom" as const, icon: <AlignBottomIcon />, "aria-label": "Align bottom" },
-  ];
 
   const horizontalConstraintOptions = [
     { value: "left" as const, label: "Left" },
@@ -139,23 +119,19 @@ export const PositionPanel = memo(function PositionPanel({
     <Panel title="Position" onClose={onClose} width={width} className={className}>
       <ControlGroup label="Alignment">
         <ControlRow spacer>
-          <SegmentedControl
-            options={horizontalAlignOptions}
+          <ObjectHorizontalAlignSelect
             value={settings.horizontalAlign}
             onChange={(v) => {
-              updateSettings("horizontalAlign", v as HorizontalAlign);
+              updateSettings("horizontalAlign", v);
             }}
             fullWidth
-            aria-label="Horizontal alignment"
           />
-          <SegmentedControl
-            options={verticalAlignOptions}
+          <ObjectVerticalAlignSelect
             value={settings.verticalAlign}
             onChange={(v) => {
-              updateSettings("verticalAlign", v as VerticalAlign);
+              updateSettings("verticalAlign", v);
             }}
             fullWidth
-            aria-label="Vertical alignment"
           />
         </ControlRow>
       </ControlGroup>

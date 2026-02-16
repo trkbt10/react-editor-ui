@@ -6,7 +6,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { ArrowheadSettings, ArrowheadType, ArrowheadAlign } from "./types";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { Input } from "../../components/Input/Input";
-import { IconButton } from "../../components/IconButton/IconButton";
+import { TooltipIconButton } from "../../components/TooltipIconButton/TooltipIconButton";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import { ControlRow } from "../../components/ControlRow/ControlRow";
 import {
@@ -93,10 +93,10 @@ export function StrokeArrowheadSelect({
         label="Arrows:"
         gap="sm"
         action={
-          <IconButton
+          <TooltipIconButton
             icon={<SwapIcon />}
             onClick={handleSwap}
-            aria-label="Swap arrows"
+            tooltip="Swap arrows"
             size="sm"
             disabled={disabled}
           />
