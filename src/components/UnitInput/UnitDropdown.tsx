@@ -8,7 +8,7 @@
  * - Position calculation based on anchor element
  */
 
-import { useRef, useEffect, useCallback, type CSSProperties, type RefObject } from "react";
+import { useRef, useEffect, type CSSProperties, type RefObject } from "react";
 import {
   COLOR_INPUT_BORDER,
   COLOR_TEXT,
@@ -96,13 +96,6 @@ export function UnitDropdown({
     };
   }, [anchorRef, onClose]);
 
-  const handleSelect = useCallback(
-    (value: string) => {
-      onSelect(value);
-    },
-    [onSelect],
-  );
-
   const dropdownStyle: CSSProperties = {
     position: "fixed",
     top: position.top,
@@ -140,7 +133,7 @@ export function UnitDropdown({
           return (
             <div
               key={option.value}
-              onClick={() => handleSelect(option.value)}
+              onClick={() => onSelect(option.value)}
               style={{
                 ...itemStyle,
                 backgroundColor: isSelected ? COLOR_SELECTED : "transparent",
