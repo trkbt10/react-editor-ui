@@ -2,7 +2,10 @@
  * @file Text module exports
  */
 
-// Types
+// Types from text layer
+export type { StyleToken, TextEditorProps } from "./types";
+
+// Re-export core types for convenience
 export type {
   CompositionState,
   CursorPosition,
@@ -10,12 +13,12 @@ export type {
   EditorConfig,
   HighlightRange,
   SelectionRange,
-  StyledDocument,
-  StyleToken,
-  TextEditorProps,
   TextStyle,
   TextStyleSegment,
-} from "./types";
+} from "../core/types";
+
+// Re-export styledDocument types
+export type { StyledDocument } from "../core/styledDocument";
 
 // Components
 export { TextEditor } from "./TextEditor";

@@ -3,10 +3,6 @@
  *
  * Rich text editor supporting different styles for different parts of the text.
  * Uses the shared useEditorCore hook for IME, cursor, selection, and history.
- *
- * Supports two APIs:
- * 1. Legacy API: `value`, `onChange`, `styles` (deprecated)
- * 2. Document API: `document`, `onDocumentChange` (recommended)
  */
 
 import { useMemo, useCallback, memo, type ReactNode } from "react";
@@ -20,7 +16,6 @@ import {
   getDocumentText,
   toFlatSegments,
   replaceRange,
-  type StyledDocument,
 } from "../core/styledDocument";
 import { useEditorCore, type GetOffsetFromPositionFn } from "../core/useEditorCore";
 import { useFontMetrics } from "../core/useFontMetrics";
@@ -36,31 +31,6 @@ import { DEFAULT_PADDING_PX } from "../styles/tokens";
 // =============================================================================
 // Helpers
 // =============================================================================
-
-/**
- * Check if props use the document-based API.
- */
-function isDocumentProps(
-  props: TextEditorProps
-): props is TextEditorProps & { document: StyledDocument } {
-  return "document" in props && props.document !== undefined;
-}
-
-/** Extract text value from props based on API type */
-function extractValue(props: TextEditorProps, useDocumentApi: boolean): string {
-  if (useDocumentApi) {
-    return getDocumentText((props as TextEditorProps & { document: StyledDocument }).document);
-  }
-  return props.value as string;
-}
-
-/** Extract styles from props based on API type */
-function extractStyles(props: TextEditorProps, useDocumentApi: boolean): readonly TextStyleSegment[] {
-  if (useDocumentApi) {
-    return toFlatSegments((props as TextEditorProps & { document: StyledDocument }).document);
-  }
-  return props.styles ?? [];
-}
 
 /**
  * Compute text diff and return the change range.
@@ -104,18 +74,7 @@ function computeTextDiff(
  * - Virtual scrolling for large files
  * - Selection and cursor rendering
  *
- * @example Legacy API (deprecated)
- * ```tsx
- * <TextEditor
- *   value={text}
- *   onChange={setText}
- *   styles={[
- *     { start: 0, end: 5, style: { fontWeight: 'bold' } },
- *   ]}
- * />
- * ```
- *
- * @example Document API (recommended)
+ * @example
  * ```tsx
  * const [doc, setDoc] = useState(() => createDocument("Hello"));
  * <TextEditor document={doc} onDocumentChange={setDoc} />
@@ -123,6 +82,8 @@ function computeTextDiff(
  */
 export const TextEditor = memo(function TextEditor(props: TextEditorProps): ReactNode {
   const {
+    document,
+    onDocumentChange,
     renderer = "svg",
     config,
     style,
@@ -132,58 +93,38 @@ export const TextEditor = memo(function TextEditor(props: TextEditorProps): Reac
     tabSize = 4,
   } = props;
 
-  // Determine which API is being used
-  const useDocumentApi = isDocumentProps(props);
+  // Extract value and styles from document
+  const value = getDocumentText(document);
+  const styles = toFlatSegments(document);
 
-  // Extract value and styles from props (either from document or legacy props)
-  const value = extractValue(props, useDocumentApi);
-  const styles = extractStyles(props, useDocumentApi);
-
-  // Store the document reference for document API
+  // Store the document reference
   const documentRef = useMemo(
-    () => (useDocumentApi ? { current: props.document } : { current: null as StyledDocument | null }),
+    () => ({ current: document }),
     // Intentionally empty deps - captures reference only once
     []
   );
-  if (useDocumentApi) {
-    documentRef.current = props.document;
-  }
+  documentRef.current = document;
 
-  // Extract stable callback references to avoid re-creating handleChange on every render
+  // Extract stable callback reference to avoid re-creating handleChange on every render
   const onDocumentChangeRef = useMemo(
-    () => ({ current: useDocumentApi ? (props as { onDocumentChange: (doc: StyledDocument) => void }).onDocumentChange : null }),
+    () => ({ current: onDocumentChange }),
     // Intentionally empty deps - capture initial callback only
     []
   );
-  const onChangeRef = useMemo(
-    () => ({ current: !useDocumentApi ? (props as { onChange: (value: string) => void }).onChange : null }),
-    // Intentionally empty deps - capture initial callback only
-    []
-  );
+  onDocumentChangeRef.current = onDocumentChange;
 
-  // Update refs when callbacks change (but this won't trigger re-render)
-  if (useDocumentApi) {
-    onDocumentChangeRef.current = (props as { onDocumentChange: (doc: StyledDocument) => void }).onDocumentChange;
-  } else {
-    onChangeRef.current = (props as { onChange: (value: string) => void }).onChange;
-  }
-
-  // Create onChange handler that works with both APIs
+  // Create onChange handler
   const handleChange = useCallback(
     (newValue: string) => {
-      if (useDocumentApi && documentRef.current && onDocumentChangeRef.current) {
-        // Document API: compute diff and update document
+      if (documentRef.current && onDocumentChangeRef.current) {
         const oldText = getDocumentText(documentRef.current);
         const diff = computeTextDiff(oldText, newValue);
         const newText = newValue.slice(diff.start, diff.newEnd);
         const newDoc = replaceRange(documentRef.current, diff.start, diff.oldEnd, newText);
         onDocumentChangeRef.current(newDoc);
-      } else if (!useDocumentApi && onChangeRef.current) {
-        // Legacy API: just call onChange
-        onChangeRef.current(newValue);
       }
     },
-    [useDocumentApi, documentRef, onDocumentChangeRef, onChangeRef]
+    [documentRef, onDocumentChangeRef]
   );
 
   // Merge config with defaults

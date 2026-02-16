@@ -79,8 +79,8 @@ import type {
   PositionSettings,
   Token,
   Tokenizer,
-  TextStyleSegment,
 } from "../components";
+import { LogViewer, type LogItem } from "../components/LogViewer/LogViewer";
 import {
   CodeEditor,
   TextEditor,
@@ -94,6 +94,12 @@ import {
   CanvasCheckerboard,
 } from "../components";
 import type { ViewportState } from "../components";
+import {
+  createDocument,
+  wrapWithTag,
+  setStyleDefinition,
+  type StyledDocument,
+} from "../components/Editor/core/styledDocument";
 
 export type DemoPage = {
   id: string;
@@ -1769,6 +1775,115 @@ function LogEntryDemo() {
   );
 }
 
+// Generate large dataset for LogViewer demo
+function generateLogItems(count: number): LogItem[] {
+  const levels: LogItem["level"][] = ["info", "warning", "error", "debug", "success"];
+  const messages = [
+    "Application started successfully",
+    "Processing request from client",
+    "Database connection established",
+    "Cache miss, fetching from source",
+    "User authentication successful",
+    "File upload completed",
+    "Background job scheduled",
+    "API rate limit approaching",
+    "Memory usage above threshold",
+    "Unexpected error in handler",
+    "Connection timeout occurred",
+    "Retrying failed operation",
+    "Configuration reloaded",
+    "WebSocket connection established",
+    "Session expired for user",
+  ];
+  const sources = [
+    "app.tsx",
+    "api/handler.ts",
+    "db/connection.ts",
+    "cache/redis.ts",
+    "auth/middleware.ts",
+    "upload/processor.ts",
+    "jobs/scheduler.ts",
+    "api/rateLimit.ts",
+    "monitor/memory.ts",
+    "error/handler.ts",
+  ];
+
+  return Array.from({ length: count }, (_, i) => ({
+    message: `${messages[i % messages.length]} [${i + 1}]`,
+    level: levels[i % levels.length],
+    timestamp: new Date(Date.now() - i * 1000),
+    source: `${sources[i % sources.length]}:${(i % 200) + 1}`,
+    details: i % 10 === 0 ? `Stack trace or additional details for log entry ${i + 1}` : undefined,
+  }));
+}
+
+function LogViewerDemo() {
+  const [items] = useState(() => generateLogItems(10000));
+  const [selectedIndex, setSelectedIndex] = useState<number | undefined>(undefined);
+  const [page, setPage] = useState(0);
+  const [filterLevel, setFilterLevel] = useState<LogItem["level"] | "all">("all");
+
+  const filter = filterLevel === "all" ? undefined : (item: LogItem) => item.level === filterLevel;
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>LogViewer</h2>
+      <p style={{ margin: 0, color: "var(--rei-color-text-muted, #9ba1a6)", fontSize: "12px" }}>
+        High-performance log viewer with virtual scrolling. Displaying 10,000 log entries.
+      </p>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Virtual Scrolling (10,000 items)</div>
+        <div style={{ marginBottom: "8px", display: "flex", gap: "8px", alignItems: "center" }}>
+          <span style={{ color: "var(--rei-color-text-muted, #9ba1a6)", fontSize: "11px" }}>
+            Filter by level:
+          </span>
+          <select
+            value={filterLevel}
+            onChange={(e) => setFilterLevel(e.target.value as LogItem["level"] | "all")}
+            style={{
+              padding: "4px 8px",
+              fontSize: "11px",
+              borderRadius: "4px",
+              border: "1px solid var(--rei-color-border, #3a3b3e)",
+              backgroundColor: "var(--rei-color-surface, #1e1f24)",
+              color: "var(--rei-color-text, #e4e6eb)",
+            }}
+          >
+            <option value="all">All</option>
+            <option value="info">Info</option>
+            <option value="debug">Debug</option>
+            <option value="success">Success</option>
+            <option value="warning">Warning</option>
+            <option value="error">Error</option>
+          </select>
+        </div>
+        <LogViewer
+          items={items}
+          height={400}
+          selectedIndex={selectedIndex}
+          onItemClick={(index) => setSelectedIndex(index)}
+          filter={filter}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>With Pagination (100 items per page)</div>
+        <LogViewer
+          items={items}
+          height={300}
+          pagination
+          pageSize={100}
+          page={page}
+          onPageChange={setPage}
+          selectedIndex={selectedIndex}
+          onItemClick={(index) => setSelectedIndex(index)}
+        />
+      </div>
+    </div>
+  );
+}
+
 // Demo Icons for new components
 const AlignLeftIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3203,17 +3318,36 @@ This is a demonstration of the TextEditor component with rich text support.
 
 You can apply different styles to different parts of the text.`;
 
-const sampleTextStyles: readonly TextStyleSegment[] = [
-  { start: 0, end: 3, style: { fontWeight: "bold" } },
-  { start: 4, end: 9, style: { color: "#a52a2a", fontWeight: "bold" } },
-  { start: 10, end: 15, style: { color: "#8b4513", fontSize: "18px" } },
-  { start: 16, end: 19, style: { fontStyle: "italic" } },
-  { start: 20, end: 25, style: { fontSize: "10px", color: "#666666" } },
-  { start: 47, end: 51, style: { fontWeight: "bold", fontSize: "16px" } },
-  { start: 74, end: 84, style: { fontWeight: "bold", color: "#0066cc" } },
-  { start: 125, end: 142, style: { textDecoration: "underline" } },
-  { start: 143, end: 148, style: { fontFamily: "Georgia, serif", fontStyle: "italic" } },
-];
+/**
+ * Create a styled document with rich text formatting for the demo.
+ */
+function createSampleTextDocument(): StyledDocument {
+  let doc = createDocument(sampleText);
+
+  // Define styles for tags
+  doc = setStyleDefinition(doc, "bold", { fontWeight: "bold" });
+  doc = setStyleDefinition(doc, "brown-bold", { color: "#a52a2a", fontWeight: "bold" });
+  doc = setStyleDefinition(doc, "brown-large", { color: "#8b4513", fontSize: "18px" });
+  doc = setStyleDefinition(doc, "italic", { fontStyle: "italic" });
+  doc = setStyleDefinition(doc, "small-muted", { fontSize: "10px", color: "#666666" });
+  doc = setStyleDefinition(doc, "bold-large", { fontWeight: "bold", fontSize: "16px" });
+  doc = setStyleDefinition(doc, "bold-blue", { fontWeight: "bold", color: "#0066cc" });
+  doc = setStyleDefinition(doc, "underline", { textDecoration: "underline" });
+  doc = setStyleDefinition(doc, "serif-italic", { fontFamily: "Georgia, serif", fontStyle: "italic" });
+
+  // Apply styles to ranges
+  doc = wrapWithTag(doc, 0, 3, "bold");           // "The"
+  doc = wrapWithTag(doc, 4, 9, "brown-bold");     // "quick"
+  doc = wrapWithTag(doc, 10, 15, "brown-large");  // "brown"
+  doc = wrapWithTag(doc, 16, 19, "italic");       // "fox"
+  doc = wrapWithTag(doc, 20, 25, "small-muted");  // "jumps"
+  doc = wrapWithTag(doc, 47, 51, "bold-large");   // "This"
+  doc = wrapWithTag(doc, 74, 84, "bold-blue");    // "TextEditor"
+  doc = wrapWithTag(doc, 125, 142, "underline");  // "different styles"
+  doc = wrapWithTag(doc, 143, 148, "serif-italic"); // "to di"
+
+  return doc;
+}
 
 function CodeEditorDemo() {
   const [code, setCode] = useState(sampleJson);
@@ -3283,7 +3417,8 @@ function CodeEditorDemo() {
 }
 
 function TextEditorDemo() {
-  const [text, setText] = useState(sampleText);
+  const [doc, setDoc] = useState(() => createSampleTextDocument());
+  const [plainDoc, setPlainDoc] = useState(() => createDocument(sampleText));
   const [renderer, setRenderer] = useState<"svg" | "canvas">("svg");
 
   return (
@@ -3313,9 +3448,8 @@ function TextEditorDemo() {
       <div style={demoSectionStyle}>
         <div style={demoLabelStyle}>With Rich Text Styles</div>
         <TextEditor
-          value={text}
-          onChange={setText}
-          styles={sampleTextStyles}
+          document={doc}
+          onDocumentChange={setDoc}
           renderer={renderer}
           style={{
             height: 200,
@@ -3328,8 +3462,8 @@ function TextEditorDemo() {
       <div style={demoSectionStyle}>
         <div style={demoLabelStyle}>Plain Text (no styles)</div>
         <TextEditor
-          value={text}
-          onChange={setText}
+          document={plainDoc}
+          onDocumentChange={setPlainDoc}
           renderer={renderer}
           style={{
             height: 150,
@@ -3342,9 +3476,8 @@ function TextEditorDemo() {
       <div style={demoSectionStyle}>
         <div style={demoLabelStyle}>Read Only</div>
         <TextEditor
-          value={text}
-          onChange={() => {}}
-          styles={sampleTextStyles}
+          document={doc}
+          onDocumentChange={() => {}}
           renderer={renderer}
           readOnly
           style={{
@@ -3735,6 +3868,12 @@ export const demoCategories: DemoCategory[] = [
         label: "LogEntry",
         path: "log-entry",
         element: <LogEntryDemo />,
+      },
+      {
+        id: "log-viewer",
+        label: "LogViewer",
+        path: "log-viewer",
+        element: <LogViewerDemo />,
       },
     ],
   },

@@ -54,11 +54,14 @@ afterEach(() => {
 
 describe("TextEditor", () => {
   describe("CJK character support", () => {
-    it("renders with CJK text", () => {
+    it("renders with CJK text", async () => {
+      const { createDocument } = await import("../core/styledDocument");
+      const doc = createDocument("日本語テスト");
+
       render(
         <TextEditor
-          value="日本語テスト"
-          onChange={vi.fn()}
+          document={doc}
+          onDocumentChange={vi.fn()}
         />
       );
 
@@ -67,11 +70,14 @@ describe("TextEditor", () => {
       expect(textarea).toHaveValue("日本語テスト");
     });
 
-    it("renders with mixed ASCII and CJK text", () => {
+    it("renders with mixed ASCII and CJK text", async () => {
+      const { createDocument } = await import("../core/styledDocument");
+      const doc = createDocument("Hello日本語World");
+
       render(
         <TextEditor
-          value="Hello日本語World"
-          onChange={vi.fn()}
+          document={doc}
+          onDocumentChange={vi.fn()}
         />
       );
 
@@ -79,13 +85,16 @@ describe("TextEditor", () => {
       expect(textarea).toHaveValue("Hello日本語World");
     });
 
-    it("passes measureText to renderer", () => {
+    it("passes measureText to renderer", async () => {
+      const { createDocument } = await import("../core/styledDocument");
+      const doc = createDocument("テスト");
+
       // This test verifies that the TextEditor properly initializes
       // font metrics and passes measureText to the renderer
       const { container } = render(
         <TextEditor
-          value="テスト"
-          onChange={vi.fn()}
+          document={doc}
+          onDocumentChange={vi.fn()}
         />
       );
 
@@ -98,11 +107,14 @@ describe("TextEditor", () => {
       expect(textElement).not.toBeNull();
     });
 
-    it("handles empty value", () => {
+    it("handles empty value", async () => {
+      const { createDocument } = await import("../core/styledDocument");
+      const doc = createDocument("");
+
       render(
         <TextEditor
-          value=""
-          onChange={vi.fn()}
+          document={doc}
+          onDocumentChange={vi.fn()}
         />
       );
 
