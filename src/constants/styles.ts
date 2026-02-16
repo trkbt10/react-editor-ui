@@ -56,6 +56,8 @@ export const COLOR_SURFACE_OVERLAY = "var(--rei-color-surface-overlay, #f3f4f6)"
 export const COLOR_TEXT = "var(--rei-color-text, #111827)";
 export const COLOR_TEXT_MUTED = "var(--rei-color-text-muted, #6b7280)";
 export const COLOR_TEXT_DISABLED = "var(--rei-color-text-disabled, #9ca3af)";
+export const COLOR_TEXT_ON_EMPHASIS = "var(--rei-color-text-on-emphasis, #ffffff)";
+export const COLOR_TEXT_ON_WARNING = "var(--rei-color-text-on-warning, #000000)";
 
 /**
  * Border colors (Light theme default)
@@ -88,6 +90,7 @@ export const COLOR_BACKDROP = "var(--rei-color-backdrop, rgba(0, 0, 0, 0.4))";
 // SPACING
 // ========================================
 
+export const SPACE_2XS = "var(--rei-space-2xs, 1px)";
 export const SPACE_XS = "var(--rei-space-xs, 2px)";
 export const SPACE_SM = "var(--rei-space-sm, 4px)";
 export const SPACE_MD = "var(--rei-space-md, 8px)";
@@ -108,6 +111,14 @@ export const SIZE_FONT_MD = "var(--rei-size-font-md, 12px)";
 export const SIZE_FONT_LG = "var(--rei-size-font-lg, 14px)";
 
 /**
+ * Font weights
+ */
+export const FONT_WEIGHT_NORMAL = "var(--rei-font-weight-normal, 400)";
+export const FONT_WEIGHT_MEDIUM = "var(--rei-font-weight-medium, 500)";
+export const FONT_WEIGHT_SEMIBOLD = "var(--rei-font-weight-semibold, 600)";
+export const FONT_WEIGHT_BOLD = "var(--rei-font-weight-bold, 700)";
+
+/**
  * Icon sizes (Figma-style compact)
  */
 export const SIZE_ICON_SM = "var(--rei-size-icon-sm, 12px)";
@@ -118,10 +129,17 @@ export const SIZE_ICON_XL = "var(--rei-size-icon-xl, 24px)";
 /**
  * Component heights (Figma-style compact)
  */
+export const SIZE_HEIGHT_XS = "var(--rei-size-height-xs, 14px)";
 export const SIZE_HEIGHT_SM = "var(--rei-size-height-sm, 22px)";
 export const SIZE_HEIGHT_MD = "var(--rei-size-height-md, 28px)";
 export const SIZE_HEIGHT_LG = "var(--rei-size-height-lg, 32px)";
 export const SIZE_HEIGHT_XL = "var(--rei-size-height-xl, 40px)";
+
+/**
+ * Badge heights
+ */
+export const SIZE_BADGE_SM = "var(--rei-size-badge-sm, 14px)";
+export const SIZE_BADGE_MD = "var(--rei-size-badge-md, 18px)";
 
 // ========================================
 // BORDER RADIUS
@@ -139,6 +157,7 @@ export const RADIUS_FULL = "var(--rei-radius-full, 9999px)";
 export const SHADOW_SM = "var(--rei-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05))";
 export const SHADOW_MD = "var(--rei-shadow-md, 0 4px 6px rgba(0, 0, 0, 0.07))";
 export const SHADOW_LG = "var(--rei-shadow-lg, 0 10px 15px rgba(0, 0, 0, 0.1))";
+export const SHADOW_THUMB = "var(--rei-shadow-thumb, 0 1px 2px rgba(0, 0, 0, 0.2))";
 
 // ========================================
 // Z-INDEX

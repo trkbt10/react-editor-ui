@@ -10,10 +10,16 @@ import {
   COLOR_WARNING,
   COLOR_ERROR,
   COLOR_TEXT,
+  COLOR_TEXT_ON_EMPHASIS,
+  COLOR_TEXT_ON_WARNING,
   COLOR_SURFACE_RAISED,
+  FONT_WEIGHT_MEDIUM,
   RADIUS_SM,
   SIZE_FONT_XS,
   SIZE_FONT_SM,
+  SIZE_BADGE_SM,
+  SIZE_BADGE_MD,
+  SPACE_2XS,
   SPACE_XS,
   SPACE_SM,
 } from "../../constants/styles";
@@ -32,32 +38,32 @@ const variantStyles = {
   },
   primary: {
     bg: COLOR_PRIMARY,
-    color: "#ffffff",
+    color: COLOR_TEXT_ON_EMPHASIS,
   },
   success: {
     bg: COLOR_SUCCESS,
-    color: "#ffffff",
+    color: COLOR_TEXT_ON_EMPHASIS,
   },
   warning: {
     bg: COLOR_WARNING,
-    color: "#000000",
+    color: COLOR_TEXT_ON_WARNING,
   },
   error: {
     bg: COLOR_ERROR,
-    color: "#ffffff",
+    color: COLOR_TEXT_ON_EMPHASIS,
   },
 };
 
 const sizeStyles = {
   sm: {
     fontSize: SIZE_FONT_XS,
-    padding: `1px ${SPACE_XS}`,
-    minHeight: "14px",
+    padding: `${SPACE_2XS} ${SPACE_XS}`,
+    minHeight: SIZE_BADGE_SM,
   },
   md: {
     fontSize: SIZE_FONT_SM,
     padding: `${SPACE_XS} ${SPACE_SM}`,
-    minHeight: "18px",
+    minHeight: SIZE_BADGE_MD,
   },
 };
 
@@ -80,7 +86,7 @@ export const Badge = memo(function Badge({
       backgroundColor: variantConfig.bg,
       color: variantConfig.color,
       fontSize: sizeConfig.fontSize,
-      fontWeight: 500,
+      fontWeight: FONT_WEIGHT_MEDIUM,
       lineHeight: 1,
       borderRadius: RADIUS_SM,
       whiteSpace: "nowrap",

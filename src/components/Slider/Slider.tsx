@@ -24,9 +24,11 @@
 import { useRef, useCallback, memo, forwardRef, useMemo } from "react";
 import type { CSSProperties, PointerEvent, Ref } from "react";
 import {
+  COLOR_SURFACE,
   RADIUS_FULL,
   DURATION_FAST,
   EASING_DEFAULT,
+  SHADOW_THUMB,
 } from "../../constants/styles";
 
 export type SliderProps = {
@@ -143,8 +145,8 @@ export const Slider = memo(
         width: handleSize,
         height: handleSize,
         borderRadius: "50%",
-        border: "2px solid white",
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
+        border: `2px solid ${COLOR_SURFACE}`,
+        boxShadow: SHADOW_THUMB,
         transform: "translate(-50%, -50%)",
         pointerEvents: "none",
         transition: `box-shadow ${DURATION_FAST} ${EASING_DEFAULT}`,

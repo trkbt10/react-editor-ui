@@ -11,6 +11,7 @@ import {
   COLOR_INPUT_BORDER,
   COLOR_ICON,
   COLOR_ICON_HOVER,
+  FONT_WEIGHT_MEDIUM,
   RADIUS_SM,
   SIZE_FONT_SM,
   SPACE_SM,
@@ -234,7 +235,7 @@ export const GradientEditor = memo(function GradientEditor({
   const stopsLabelStyle: CSSProperties = {
     color: COLOR_TEXT,
     fontSize: SIZE_FONT_SM,
-    fontWeight: 500,
+    fontWeight: FONT_WEIGHT_MEDIUM,
   };
 
   const addButtonStyle = useMemo<CSSProperties>(

@@ -13,6 +13,7 @@ import {
   COLOR_LOG_ERROR,
   COLOR_LOG_DEBUG,
   COLOR_LOG_SUCCESS,
+  FONT_WEIGHT_SEMIBOLD,
   SIZE_FONT_SM,
   SIZE_FONT_XS,
   SPACE_XS,
@@ -115,7 +116,7 @@ export function LogEntry({
 
   const levelStyle: CSSProperties = {
     color: levelColors[level],
-    fontWeight: 600,
+    fontWeight: FONT_WEIGHT_SEMIBOLD,
     minWidth: "45px",
   };
 

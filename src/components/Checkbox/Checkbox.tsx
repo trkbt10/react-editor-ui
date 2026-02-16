@@ -26,6 +26,8 @@ import {
   COLOR_PRIMARY,
   COLOR_TEXT,
   COLOR_TEXT_DISABLED,
+  COLOR_TEXT_ON_EMPHASIS,
+  COLOR_SURFACE,
   COLOR_BORDER,
   COLOR_INPUT_BORDER_FOCUS,
   COLOR_FOCUS_RING,
@@ -37,6 +39,7 @@ import {
   SIZE_CHECKBOX_SM,
   SIZE_CHECKBOX_MD,
   SPACE_SM,
+  SHADOW_THUMB,
 } from "../../constants/styles";
 
 export type CheckboxProps = {
@@ -160,7 +163,7 @@ export const Checkbox = memo(function Checkbox({
       borderRadius: RADIUS_SM,
       border: `1px solid ${borderColor}`,
       backgroundColor: isActive ? COLOR_PRIMARY : "transparent",
-      color: "#ffffff",
+      color: COLOR_TEXT_ON_EMPHASIS,
       transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
       flexShrink: 0,
       boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
@@ -192,8 +195,8 @@ export const Checkbox = memo(function Checkbox({
       width: switchConfig.thumbSize,
       height: switchConfig.thumbSize,
       borderRadius: "50%",
-      backgroundColor: "#ffffff",
-      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+      backgroundColor: COLOR_SURFACE,
+      boxShadow: SHADOW_THUMB,
       transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
       transform: getThumbTransform(checked, switchConfig),
     }),
