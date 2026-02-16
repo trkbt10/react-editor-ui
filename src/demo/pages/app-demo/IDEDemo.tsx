@@ -40,6 +40,8 @@ import { ToolbarGroup } from "../../../components/Toolbar/ToolbarGroup";
 import { IconButton } from "../../../components/IconButton/IconButton";
 import { Select } from "../../../components/Select/Select";
 import { Checkbox } from "../../../components/Checkbox/Checkbox";
+import { Badge } from "../../../components/Badge/Badge";
+import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
 import { StatusBar } from "../../../components/StatusBar/StatusBar";
 import { StatusBarItem } from "../../../components/StatusBar/StatusBarItem";
@@ -286,29 +288,7 @@ function IDEToolbar({ isRunning, onRun, onStop, selectedDevice, onDeviceChange }
   const schemeGroupStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
-    gap: 4,
-    padding: "4px 8px",
-    backgroundColor: "var(--rei-color-surface-overlay)",
-    borderRadius: 6,
-    fontSize: 12,
-    color: "var(--rei-color-text)",
-  };
-
-  const schemeTextStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: 4,
-  };
-
-  const branchBadgeStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: 4,
-    padding: "2px 6px",
-    backgroundColor: "rgba(59, 130, 246, 0.2)",
-    borderRadius: 4,
-    fontSize: 11,
-    color: "#60a5fa",
+    gap: 8,
   };
 
   const statusGroupStyle: CSSProperties = {
@@ -316,14 +296,6 @@ function IDEToolbar({ isRunning, onRun, onStop, selectedDevice, onDeviceChange }
     alignItems: "center",
     gap: 8,
     marginLeft: "auto",
-  };
-
-  const statusTextStyle: CSSProperties = {
-    fontSize: 11,
-    color: "var(--rei-color-text-muted)",
-    display: "flex",
-    alignItems: "center",
-    gap: 4,
   };
 
   const utilityGroupStyle: CSSProperties = {
@@ -357,15 +329,20 @@ function IDEToolbar({ isRunning, onRun, onStop, selectedDevice, onDeviceChange }
       </ToolbarGroup>
 
       <div style={schemeGroupStyle}>
-        <span style={schemeTextStyle}>
+        <Button
+          variant="ghost"
+          size="sm"
+          iconEnd={<LuChevronDown size={12} />}
+          onClick={() => {}}
+        >
           MyApp
-          <LuChevronDown size={12} />
-        </span>
-        <span style={{ color: "var(--rei-color-text-muted)" }}>|</span>
-        <span style={branchBadgeStyle}>
-          <LuGitBranch size={12} />
-          main
-        </span>
+        </Button>
+        <Badge variant="primary" size="sm">
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <LuGitBranch size={12} />
+            main
+          </span>
+        </Badge>
       </div>
 
       <Select
@@ -376,19 +353,16 @@ function IDEToolbar({ isRunning, onRun, onStop, selectedDevice, onDeviceChange }
       />
 
       <div style={statusGroupStyle}>
-        <span style={statusTextStyle}>
-          {isRunning ? (
-            <>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#22c55e" }} />
-              Building MyApp...
-            </>
-          ) : (
-            <>
+        {isRunning ? (
+          <Badge variant="success" size="sm">Building MyApp...</Badge>
+        ) : (
+          <Badge variant="default" size="sm">
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <LuClock size={12} />
               Finished running MyApp
-            </>
-          )}
-        </span>
+            </span>
+          </Badge>
+        )}
       </div>
 
       <div style={utilityGroupStyle}>
