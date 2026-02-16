@@ -77,10 +77,8 @@ function defineAdvancedSelectionTests(editorType: EditorType, route: string): vo
   const editorName = editorType === "text" ? "TextEditor" : "CodeEditor";
 
   test.describe(`${editorName}: Advanced Selection`, () => {
-    // Note: Double-click word selection is not implemented in the editor
-    // These tests verify the expected behavior when implemented
     test.describe("Double-click Word Selection", () => {
-      test.skip("double-click selects word", async ({ page }) => {
+      test("double-click selects word", async ({ page }) => {
         const locators = await setupEditor(page, route, editorType);
         await setEditorContent(page, locators, "hello world test");
         await page.waitForTimeout(100);
@@ -95,7 +93,7 @@ function defineAdvancedSelectionTests(editorType: EditorType, route: string): vo
         expect(selected).not.toContain(" "); // Should not contain spaces
       });
 
-      test.skip("double-click at start selects first word", async ({ page }) => {
+      test("double-click at start selects first word", async ({ page }) => {
         const locators = await setupEditor(page, route, editorType);
         await setEditorContent(page, locators, "first second third");
         await page.waitForTimeout(100);
@@ -108,7 +106,7 @@ function defineAdvancedSelectionTests(editorType: EditorType, route: string): vo
         expect(selected.length).toBeGreaterThan(0);
       });
 
-      test.skip("double-click then type replaces word", async ({ page }) => {
+      test("double-click then type replaces word", async ({ page }) => {
         const locators = await setupEditor(page, route, editorType);
         await setEditorContent(page, locators, "hello world");
         await page.waitForTimeout(100);
@@ -123,6 +121,164 @@ function defineAdvancedSelectionTests(editorType: EditorType, route: string): vo
 
         const content = await getEditorContent(locators);
         expect(content).toContain("goodbye");
+      });
+    });
+
+    test.describe("Triple-click Line Selection", () => {
+      test("triple-click selects entire line", async ({ page }) => {
+        const locators = await setupEditor(page, route, editorType);
+        await setEditorContent(page, locators, "first line\nsecond line\nthird line");
+        await page.waitForTimeout(100);
+
+        // Triple-click on first line
+        await locators.container.click({ position: { x: 50, y: 10 }, clickCount: 3 });
+        await page.waitForTimeout(100);
+
+        const selected = await getSelectedText(locators);
+        // Should select the line (including newline)
+        expect(selected).toContain("first line");
+      });
+
+      test("triple-click on middle line selects that line", async ({ page }) => {
+        const locators = await setupEditor(page, route, editorType);
+        await setEditorContent(page, locators, "line one\nline two\nline three");
+        await page.waitForTimeout(100);
+
+        // Triple-click on second line (approximately y=30 for 20px line height)
+        await locators.container.click({ position: { x: 50, y: 30 }, clickCount: 3 });
+        await page.waitForTimeout(100);
+
+        const selected = await getSelectedText(locators);
+        expect(selected).toContain("line two");
+      });
+
+      test("triple-click then type replaces line", async ({ page }) => {
+        const locators = await setupEditor(page, route, editorType);
+        await setEditorContent(page, locators, "old line\nsecond line");
+        await page.waitForTimeout(100);
+
+        // Triple-click on first line
+        await locators.container.click({ position: { x: 30, y: 10 }, clickCount: 3 });
+        await page.waitForTimeout(100);
+
+        // Type to replace
+        await page.keyboard.type("new line");
+        await page.waitForTimeout(100);
+
+        const content = await getEditorContent(locators);
+        expect(content).toContain("new line");
+        expect(content).toContain("second line");
+      });
+    });
+
+    test.describe("Right-click Selection Preservation", () => {
+      test("right-click inside selection preserves it", async ({ page }) => {
+        const locators = await setupEditor(page, route, editorType);
+        await setEditorContent(page, locators, "hello world test");
+
+        // Double-click to select "hello" (more reliable than manual selection)
+        await locators.container.dblclick({ position: { x: 30, y: 10 } });
+        await page.waitForTimeout(100);
+
+        const selBefore = await getSelectedText(locators);
+        expect(selBefore.length).toBeGreaterThan(0);
+
+        // Dispatch a right-click pointer event manually to ensure button=2 is set
+        const selBeforeClick = await locators.container.evaluate((el) => {
+          const rect = el.getBoundingClientRect();
+          const event = new PointerEvent("pointerdown", {
+            bubbles: true,
+            cancelable: true,
+            clientX: rect.left + 30,
+            clientY: rect.top + 10,
+            button: 2, // Right button
+            buttons: 2,
+            pointerType: "mouse",
+          });
+          el.dispatchEvent(event);
+
+          // Get the selection after dispatching
+          const textarea = document.querySelector(
+            'textarea[aria-label="Text editor"], textarea[aria-label="Code editor"]'
+          ) as HTMLTextAreaElement;
+          return textarea?.value.substring(textarea.selectionStart, textarea.selectionEnd) ?? "";
+        });
+
+        // Selection should be preserved (same text selected)
+        expect(selBeforeClick).toBe(selBefore);
+      });
+
+      test("right-click outside selection moves cursor", async ({ page }) => {
+        const locators = await setupEditor(page, route, editorType);
+        await setEditorContent(page, locators, "hello world test");
+
+        // Double-click to select "hello"
+        await locators.container.dblclick({ position: { x: 30, y: 10 } });
+        await page.waitForTimeout(100);
+
+        const selBefore = await getSelection(locators);
+        expect(selBefore.end - selBefore.start).toBeGreaterThan(0);
+
+        // Dispatch right-click far from selection using PointerEvent
+        const selAfter = await locators.container.evaluate((el) => {
+          const rect = el.getBoundingClientRect();
+          const event = new PointerEvent("pointerdown", {
+            bubbles: true,
+            cancelable: true,
+            clientX: rect.left + 200, // Far from selection
+            clientY: rect.top + 10,
+            button: 2,
+            buttons: 2,
+            pointerType: "mouse",
+          });
+          el.dispatchEvent(event);
+
+          const textarea = document.querySelector(
+            'textarea[aria-label="Text editor"], textarea[aria-label="Code editor"]'
+          ) as HTMLTextAreaElement;
+          return {
+            start: textarea?.selectionStart ?? 0,
+            end: textarea?.selectionEnd ?? 0,
+          };
+        });
+
+        // Selection should be collapsed (cursor moved)
+        expect(selAfter.start).toBe(selAfter.end);
+      });
+
+      test("right-click with no selection sets cursor", async ({ page }) => {
+        const locators = await setupEditor(page, route, editorType);
+        await setEditorContent(page, locators, "hello world");
+
+        // Click once to ensure no selection
+        await locators.container.click({ position: { x: 150, y: 10 } });
+        await page.waitForTimeout(100);
+
+        // Dispatch right-click at a different position
+        const sel = await locators.container.evaluate((el) => {
+          const rect = el.getBoundingClientRect();
+          const event = new PointerEvent("pointerdown", {
+            bubbles: true,
+            cancelable: true,
+            clientX: rect.left + 60,
+            clientY: rect.top + 10,
+            button: 2,
+            buttons: 2,
+            pointerType: "mouse",
+          });
+          el.dispatchEvent(event);
+
+          const textarea = document.querySelector(
+            'textarea[aria-label="Text editor"], textarea[aria-label="Code editor"]'
+          ) as HTMLTextAreaElement;
+          return {
+            start: textarea?.selectionStart ?? 0,
+            end: textarea?.selectionEnd ?? 0,
+          };
+        });
+
+        // Should have collapsed selection (cursor only)
+        expect(sel.start).toBe(sel.end);
       });
     });
 

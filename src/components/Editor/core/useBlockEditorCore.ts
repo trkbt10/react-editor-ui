@@ -74,6 +74,11 @@ import { useCursorRestoration } from "../history/useCursorRestoration";
 import { useKeyHandlers } from "../user-actions/useKeyHandlers";
 import { injectCursorAnimation } from "../styles/useEditorStyles";
 import { useSelectionChange } from "../user-actions/useSelectionChange";
+import { useClickCount } from "../user-actions/useClickCount";
+import {
+  findWordBoundaries,
+  findLineBoundaries,
+} from "../user-actions/wordBoundaries";
 
 // =============================================================================
 // Types
@@ -520,6 +525,9 @@ export function useBlockEditorCore(
   // Pointer handlers
   const dragStartOffsetRef = useRef<number | null>(null);
 
+  // Click count tracking for multi-click detection (double/triple-click)
+  const clickCount = useClickCount();
+
   const getOffsetFromPointerEvent = useCallback(
     (e: ReactPointerEvent<HTMLDivElement> | PointerEvent): number => {
       const codeArea = codeAreaRef.current;
@@ -552,13 +560,56 @@ export function useBlockEditorCore(
       }
 
       const offset = getOffsetFromPointerEvent(e);
-      dragStartOffsetRef.current = offset;
+      const isRightClick = e.button === 2;
 
+      // Right-click: preserve selection if click is within it
+      if (isRightClick) {
+        const { selectionStart, selectionEnd } = textarea;
+        const hasSelection = selectionStart !== selectionEnd;
+        const isWithinSelection =
+          hasSelection && offset >= selectionStart && offset <= selectionEnd;
+
+        if (isWithinSelection) {
+          textarea.focus();
+          return; // Preserve selection for context menu
+        }
+        // Right-click outside selection: set cursor position
+        textarea.focus();
+        textarea.setSelectionRange(offset, offset);
+        requestAnimationFrame(updateCursorPosition);
+        return;
+      }
+
+      // Get click count for multi-click detection
+      const count = clickCount.getClickCount(e.clientX, e.clientY);
+
+      if (count === 3) {
+        // Triple-click: select line
+        const { start, end } = findLineBoundaries(textValue, offset);
+        textarea.focus();
+        textarea.setSelectionRange(start, end);
+        dragStartOffsetRef.current = null; // Disable drag selection after triple-click
+        requestAnimationFrame(updateCursorPosition);
+        return;
+      }
+
+      if (count === 2) {
+        // Double-click: select word
+        const { start, end } = findWordBoundaries(textValue, offset);
+        textarea.focus();
+        textarea.setSelectionRange(start, end);
+        dragStartOffsetRef.current = null; // Disable drag selection after double-click
+        requestAnimationFrame(updateCursorPosition);
+        return;
+      }
+
+      // Single click: normal cursor positioning
+      dragStartOffsetRef.current = offset;
       textarea.focus();
       textarea.setSelectionRange(offset, offset);
       requestAnimationFrame(updateCursorPosition);
     },
-    [getOffsetFromPointerEvent, updateCursorPosition]
+    [getOffsetFromPointerEvent, updateCursorPosition, clickCount, textValue]
   );
 
   const handleCodePointerMove = useCallback(

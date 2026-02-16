@@ -5,3 +5,5 @@
  */
 
 export { useKeyHandlers } from "./useKeyHandlers";
+export { useClickCount } from "./useClickCount";
+export { findWordBoundaries, findLineBoundaries } from "./wordBoundaries";
