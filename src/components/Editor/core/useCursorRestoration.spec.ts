@@ -5,7 +5,6 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useCursorRestoration } from "./useCursorRestoration";
 
 // =============================================================================
@@ -24,15 +23,15 @@ function createMockTextarea(): HTMLTextAreaElement {
 // =============================================================================
 
 describe("useCursorRestoration", () => {
-  let textarea: HTMLTextAreaElement;
+  const refs = { textarea: null as HTMLTextAreaElement | null };
 
   beforeEach(() => {
-    textarea = createMockTextarea();
+    refs.textarea = createMockTextarea();
   });
 
   describe("queueCursorRestoration", () => {
     it("queues cursor restoration", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "initial" } }
@@ -50,11 +49,11 @@ describe("useCursorRestoration", () => {
       rerender({ value: "changed" });
 
       // Should have applied restoration
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(5, 5);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(5, 5);
     });
 
     it("clamps offset to valid range when value is shorter", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "long content here" } }
@@ -69,11 +68,11 @@ describe("useCursorRestoration", () => {
       rerender({ value: "short" }); // length = 5
 
       // Should clamp to value length
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(5, 5);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(5, 5);
     });
 
     it("clamps negative offset to 0", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "content" } }
@@ -88,11 +87,11 @@ describe("useCursorRestoration", () => {
       rerender({ value: "new content" });
 
       // Should clamp to 0
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(0, 0);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(0, 0);
     });
 
     it("skips restoration during IME composition", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value, isComposing }) =>
           useCursorRestoration(textareaRef, value, isComposing),
@@ -111,11 +110,11 @@ describe("useCursorRestoration", () => {
       rerender({ value: "changed", isComposing: true });
 
       // Should not have called setSelectionRange
-      expect(textarea.setSelectionRange).not.toHaveBeenCalled();
+      expect(refs.textarea!.setSelectionRange).not.toHaveBeenCalled();
     });
 
     it("allows restoration after IME composition ends", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value, isComposing }) =>
           useCursorRestoration(textareaRef, value, isComposing),
@@ -140,13 +139,13 @@ describe("useCursorRestoration", () => {
       // Trigger value change
       rerender({ value: "changed", isComposing: false });
 
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(5, 5);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(5, 5);
     });
   });
 
   describe("hasPendingRestoration", () => {
     it("returns false initially", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result } = renderHook(() =>
         useCursorRestoration(textareaRef, "content", false)
       );
@@ -155,7 +154,7 @@ describe("useCursorRestoration", () => {
     });
 
     it("returns true after queueing", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result } = renderHook(() =>
         useCursorRestoration(textareaRef, "content", false)
       );
@@ -168,7 +167,7 @@ describe("useCursorRestoration", () => {
     });
 
     it("returns false after restoration is applied", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "initial" } }
@@ -187,7 +186,7 @@ describe("useCursorRestoration", () => {
 
   describe("setCursorNow", () => {
     it("sets cursor position immediately", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result } = renderHook(() =>
         useCursorRestoration(textareaRef, "content", false)
       );
@@ -196,12 +195,12 @@ describe("useCursorRestoration", () => {
         result.current.setCursorNow(3);
       });
 
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(3, 3);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(3, 3);
     });
 
     it("clamps offset to textarea value length", () => {
-      textarea.value = "short";
-      const textareaRef = { current: textarea };
+      refs.textarea!.value = "short";
+      const textareaRef = { current: refs.textarea };
       const { result } = renderHook(() =>
         useCursorRestoration(textareaRef, "content", false)
       );
@@ -211,11 +210,11 @@ describe("useCursorRestoration", () => {
       });
 
       // Should clamp to textarea.value.length (5)
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(5, 5);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(5, 5);
     });
 
     it("clamps negative offset to 0", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result } = renderHook(() =>
         useCursorRestoration(textareaRef, "content", false)
       );
@@ -224,11 +223,11 @@ describe("useCursorRestoration", () => {
         result.current.setCursorNow(-5);
       });
 
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(0, 0);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(0, 0);
     });
 
     it("skips during IME composition", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result } = renderHook(() =>
         useCursorRestoration(textareaRef, "content", true)
       );
@@ -237,7 +236,7 @@ describe("useCursorRestoration", () => {
         result.current.setCursorNow(5);
       });
 
-      expect(textarea.setSelectionRange).not.toHaveBeenCalled();
+      expect(refs.textarea!.setSelectionRange).not.toHaveBeenCalled();
     });
 
     it("handles null textarea ref", () => {
@@ -255,7 +254,7 @@ describe("useCursorRestoration", () => {
     });
 
     it("does not affect pending restoration", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "initial" } }
@@ -278,8 +277,8 @@ describe("useCursorRestoration", () => {
       rerender({ value: "changed" });
 
       // Both should have been called
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(3, 3);
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(7, 7); // clamped to "changed".length
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(3, 3);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(7, 7); // clamped to "changed".length
     });
   });
 
@@ -300,7 +299,7 @@ describe("useCursorRestoration", () => {
     });
 
     it("handles empty value", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "content" } }
@@ -314,11 +313,11 @@ describe("useCursorRestoration", () => {
       rerender({ value: "" });
 
       // Should clamp to 0
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(0, 0);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(0, 0);
     });
 
     it("handles multiple queued restorations (last one wins)", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "initial" } }
@@ -334,12 +333,12 @@ describe("useCursorRestoration", () => {
       rerender({ value: "changed" });
 
       // Last queued value should be used
-      expect(textarea.setSelectionRange).toHaveBeenCalledTimes(1);
-      expect(textarea.setSelectionRange).toHaveBeenCalledWith(3, 3);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledTimes(1);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledWith(3, 3);
     });
 
     it("does not restore if no queue happened", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "initial" } }
@@ -348,11 +347,11 @@ describe("useCursorRestoration", () => {
       // Change value without queuing
       rerender({ value: "changed" });
 
-      expect(textarea.setSelectionRange).not.toHaveBeenCalled();
+      expect(refs.textarea!.setSelectionRange).not.toHaveBeenCalled();
     });
 
     it("handles rapid value changes", () => {
-      const textareaRef = { current: textarea };
+      const textareaRef = { current: refs.textarea };
       const { result, rerender } = renderHook(
         ({ value }) => useCursorRestoration(textareaRef, value, false),
         { initialProps: { value: "initial" } }
@@ -368,7 +367,7 @@ describe("useCursorRestoration", () => {
       rerender({ value: "change3" });
 
       // Should only apply once (on first value change)
-      expect(textarea.setSelectionRange).toHaveBeenCalledTimes(1);
+      expect(refs.textarea!.setSelectionRange).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -122,8 +122,10 @@ export function useHistory<T>(
         clearTimeout(timerRef.current);
       }
 
-      setHistoryState((prev) => {
-        let newState: HistoryState<T>;
+      const computeNextState = (
+        prev: HistoryState<T>,
+        entry: { state: T; cursorOffset: number }
+      ): HistoryState<T> => {
         if (!batchStartedRef.current) {
           // First change in batch - create undo point
           batchStartedRef.current = true;
@@ -132,19 +134,22 @@ export function useHistory<T>(
           if (newPast.length > maxHistory) {
             newPast.shift();
           }
-          newState = {
+          return {
             past: newPast,
-            present: { state, cursorOffset },
-            future: [], // Clear redo stack on new changes
-          };
-        } else {
-          // Subsequent changes - just update present
-          newState = {
-            ...prev,
-            present: { state, cursorOffset },
+            present: entry,
             future: [], // Clear redo stack on new changes
           };
         }
+        // Subsequent changes - just update present
+        return {
+          ...prev,
+          present: entry,
+          future: [], // Clear redo stack on new changes
+        };
+      };
+
+      setHistoryState((prev) => {
+        const newState = computeNextState(prev, { state, cursorOffset });
         // Synchronously update ref so undo/redo can read latest state
         historyStateRef.current = newState;
         return newState;

@@ -5,7 +5,6 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useHistory, type HistoryEntry } from "./useHistory";
 
 // =============================================================================
@@ -68,12 +67,12 @@ describe("useHistory", () => {
       expect(result.current.cursorOffset).toBe(3);
 
       // Should only create one undo point
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
 
-      expect(restored?.state).toBe("initial");
+      expect(refs.restored?.state).toBe("initial");
       expect(result.current.current).toBe("initial");
       expect(result.current.canUndo).toBe(false);
     });
@@ -119,14 +118,14 @@ describe("useHistory", () => {
         result.current.push("modified", 8);
       });
 
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
 
-      expect(restored).toBeDefined();
-      expect(restored?.state).toBe("initial");
-      expect(restored?.cursorOffset).toBe(3);
+      expect(refs.restored).toBeDefined();
+      expect(refs.restored?.state).toBe("initial");
+      expect(refs.restored?.cursorOffset).toBe(3);
       expect(result.current.current).toBe("initial");
       expect(result.current.cursorOffset).toBe(3);
     });
@@ -136,12 +135,12 @@ describe("useHistory", () => {
         useHistory("initial", 0, { debounceMs: 300 })
       );
 
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
 
-      expect(restored).toBeUndefined();
+      expect(refs.restored).toBeUndefined();
     });
 
     it("enables redo after undo", () => {
@@ -177,14 +176,14 @@ describe("useHistory", () => {
         result.current.undo();
       });
 
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.redo();
+        refs.restored = result.current.redo();
       });
 
-      expect(restored).toBeDefined();
-      expect(restored?.state).toBe("modified");
-      expect(restored?.cursorOffset).toBe(8);
+      expect(refs.restored).toBeDefined();
+      expect(refs.restored?.state).toBe("modified");
+      expect(refs.restored?.cursorOffset).toBe(8);
       expect(result.current.current).toBe("modified");
     });
 
@@ -193,12 +192,12 @@ describe("useHistory", () => {
         useHistory("initial", 0, { debounceMs: 300 })
       );
 
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.redo();
+        refs.restored = result.current.redo();
       });
 
-      expect(restored).toBeUndefined();
+      expect(refs.restored).toBeUndefined();
     });
 
     it("clears redo stack on new push", () => {
@@ -262,16 +261,16 @@ describe("useHistory", () => {
         result.current.push("pasted content", 15);
       });
 
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
         // Called immediately after push (before debounce completes)
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
 
       // Should return the correct previous state
-      expect(restored).toBeDefined();
-      expect(restored?.state).toBe("initial");
-      expect(restored?.cursorOffset).toBe(0);
+      expect(refs.restored).toBeDefined();
+      expect(refs.restored?.state).toBe("initial");
+      expect(refs.restored?.cursorOffset).toBe(0);
       expect(result.current.current).toBe("initial");
     });
 
@@ -288,15 +287,15 @@ describe("useHistory", () => {
         result.current.undo();
       });
 
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
         // Immediately redo after undo
-        restored = result.current.redo();
+        refs.restored = result.current.redo();
       });
 
-      expect(restored).toBeDefined();
-      expect(restored?.state).toBe("modified");
-      expect(restored?.cursorOffset).toBe(8);
+      expect(refs.restored).toBeDefined();
+      expect(refs.restored?.state).toBe("modified");
+      expect(refs.restored?.cursorOffset).toBe(8);
     });
 
     it("handles multiple rapid push-undo cycles correctly", () => {
@@ -318,14 +317,14 @@ describe("useHistory", () => {
       });
 
       // Immediate undo (before debounce)
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
 
       // Should undo to "AB", not to "A"
-      expect(restored?.state).toBe("AB");
-      expect(restored?.cursorOffset).toBe(2);
+      expect(refs.restored?.state).toBe("AB");
+      expect(refs.restored?.cursorOffset).toBe(2);
       expect(result.current.current).toBe("AB");
     });
 
@@ -348,14 +347,14 @@ describe("useHistory", () => {
       });
 
       // Immediate undo
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
 
       // Should restore to "HELLO!" with cursor at 6
-      expect(restored?.state).toBe("HELLO!");
-      expect(restored?.cursorOffset).toBe(6);
+      expect(refs.restored?.state).toBe("HELLO!");
+      expect(refs.restored?.cursorOffset).toBe(6);
     });
   });
 
@@ -380,15 +379,18 @@ describe("useHistory", () => {
       }
 
       // Should only be able to undo 3 times (max history)
-      let undoCount = 0;
-      while (result.current.canUndo) {
-        act(() => {
-          result.current.undo();
-        });
-        undoCount++;
-      }
+      const countUndoOperations = (): number => {
+        const refs = { count: 0 };
+        while (result.current.canUndo) {
+          act(() => {
+            result.current.undo();
+          });
+          refs.count++;
+        }
+        return refs.count;
+      };
 
-      expect(undoCount).toBe(3);
+      expect(countUndoOperations()).toBe(3);
     });
   });
 
@@ -521,13 +523,13 @@ describe("useHistory", () => {
         result.current.push("content", 7);
       });
 
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
 
-      expect(restored?.state).toBe("");
-      expect(restored?.cursorOffset).toBe(0);
+      expect(refs.restored?.state).toBe("");
+      expect(refs.restored?.cursorOffset).toBe(0);
     });
 
     it("handles cursor offset at boundaries", () => {
@@ -540,13 +542,13 @@ describe("useHistory", () => {
         result.current.push("test!", 5);
       });
 
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
 
-      expect(restored?.state).toBe("test");
-      expect(restored?.cursorOffset).toBe(0);
+      expect(refs.restored?.state).toBe("test");
+      expect(refs.restored?.cursorOffset).toBe(0);
     });
   });
 
@@ -668,17 +670,17 @@ describe("useHistory", () => {
       });
 
       // Undo and check cursor
-      let restored: HistoryEntry<string> | undefined;
+      const refs = { restored: undefined as HistoryEntry<string> | undefined };
       act(() => {
-        restored = result.current.undo();
+        refs.restored = result.current.undo();
       });
-      expect(restored?.cursorOffset).toBe(6);
+      expect(refs.restored?.cursorOffset).toBe(6);
 
       // Redo and check cursor
       act(() => {
-        restored = result.current.redo();
+        refs.restored = result.current.redo();
       });
-      expect(restored?.cursorOffset).toBe(7);
+      expect(refs.restored?.cursorOffset).toBe(7);
     });
   });
 });
