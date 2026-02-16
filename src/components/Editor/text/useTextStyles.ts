@@ -6,7 +6,8 @@
  */
 
 import { useMemo, useCallback, type CSSProperties } from "react";
-import type { TextStyleSegment, TextStyle, StyleToken } from "./types";
+import type { TextStyleSegment, TextStyle } from "../core/types";
+import type { StyleToken } from "./types";
 import type { Token, Tokenizer, TokenStyleMap } from "../code/types";
 
 // =============================================================================

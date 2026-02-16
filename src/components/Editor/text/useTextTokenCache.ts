@@ -42,9 +42,9 @@ export function useTextTokenCache(
   styleVersion: number
 ): TokenCache {
   // Cache keyed by "lineIndex:lineContent" to properly invalidate on content changes
+  // Using content-based keys means we don't need to clear the entire cache on text changes
   const cacheRef = useRef<Map<string, readonly Token[]>>(new Map());
   const prevVersionRef = useRef(styleVersion);
-  const prevLinesRef = useRef<readonly string[]>(lineIndex.lines);
   const tokenizerRef = useRef(tokenizer);
   const lineIndexRef = useRef(lineIndex);
 
@@ -52,16 +52,25 @@ export function useTextTokenCache(
   tokenizerRef.current = tokenizer;
   lineIndexRef.current = lineIndex;
 
-  // Clear cache when styles change
+  // Clear cache when styles change (style version change means all tokens need re-tokenization)
   if (prevVersionRef.current !== styleVersion) {
     cacheRef.current.clear();
     prevVersionRef.current = styleVersion;
   }
 
-  // Clear cache when lines array reference changes (text content changed)
-  if (prevLinesRef.current !== lineIndex.lines) {
-    cacheRef.current.clear();
-    prevLinesRef.current = lineIndex.lines;
+  // Note: We no longer clear cache on text changes because the cache key includes
+  // both lineIndex and lineContent ("lineIdx:lineContent"), so:
+  // - Changed lines: will have new keys and get re-tokenized
+  // - Unchanged lines: will hit the cache (content hasn't changed, just position might have)
+  // - LRU eviction: limit cache size to prevent memory growth
+  const MAX_CACHE_SIZE = 1000;
+  if (cacheRef.current.size > MAX_CACHE_SIZE) {
+    // Simple eviction: clear half the cache when it gets too large
+    const keys = Array.from(cacheRef.current.keys());
+    const toDelete = keys.slice(0, Math.floor(MAX_CACHE_SIZE / 2));
+    for (const key of toDelete) {
+      cacheRef.current.delete(key);
+    }
   }
 
   // Create a getTokens function that uses line offset

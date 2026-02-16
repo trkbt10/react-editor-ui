@@ -7,8 +7,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo, type RefObject } from "react";
-import type { TextStyleSegment, TextStyle } from "./types";
-import type { CursorPosition } from "../core/types";
+import type { TextStyleSegment, TextStyle, CursorPosition } from "../core/types";
 import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "../core/useCoordinates";
 import { assertMeasureElement } from "../core/invariant";
 
