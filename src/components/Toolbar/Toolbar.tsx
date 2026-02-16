@@ -29,6 +29,7 @@ import {
   COLOR_SURFACE,
   COLOR_BORDER,
   SIZE_TOOLBAR_HEIGHT,
+  SPACE_XS,
   SPACE_SM,
   SPACE_MD,
   RADIUS_LG,
@@ -57,7 +58,7 @@ export function useToolbarOrientation(): ToolbarOrientation {
 
 export type ToolbarProps = {
   children: ReactNode;
-  variant?: "default" | "floating";
+  variant?: "default" | "floating" | "selection";
   /** Toolbar orientation */
   orientation?: "horizontal" | "vertical";
   /** When true, toolbar size fits its content instead of filling parent */
@@ -92,6 +93,19 @@ export const Toolbar = memo(function Toolbar({
         padding: SPACE_MD,
         borderRadius: RADIUS_LG,
         boxShadow: SHADOW_MD,
+      };
+    }
+
+    if (variant === "selection") {
+      // Selection variant: compact, minimal styling for floating selection toolbars
+      return {
+        ...baseStyles,
+        width: "auto",
+        height: "auto",
+        padding: SPACE_SM,
+        borderRadius: RADIUS_LG,
+        boxShadow: SHADOW_MD,
+        gap: SPACE_XS,
       };
     }
 

@@ -109,12 +109,25 @@ export { useKeyHandlers } from "./user-actions";
 
 export type {
   TextEditorProps,
+  TextEditorHandle,
+  TextSelectionEvent,
+  SelectionAnchorRect,
   StyleToken,
+  TextEditorCommand,
 } from "./text";
 
 export {
   TextEditor,
   useTextStyles,
+  // Commands
+  defaultCommands,
+  defaultCommandsMap,
+  getCommand,
+  executeCommand,
+  getActiveTagsAtRange,
+  // Default operations for FloatingToolbar
+  createInlineOperations,
+  defaultInlineOperations,
 } from "./text";
 
 // =============================================================================

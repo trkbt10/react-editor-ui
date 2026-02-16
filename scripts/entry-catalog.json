@@ -80,6 +80,12 @@
       "category": "component"
     },
     {
+      "name": "FloatingToolbar",
+      "entryType": "named",
+      "relativePath": "src/components/FloatingToolbar/FloatingToolbar.tsx",
+      "category": "component"
+    },
+    {
       "name": "FontsPanel",
       "entryType": "named",
       "relativePath": "src/panels/FontsPanel/FontsPanel.tsx",

@@ -5,8 +5,8 @@
  * Uses the shared useEditorCore hook for IME, cursor, selection, and history.
  */
 
-import { useMemo, useCallback, memo, type ReactNode } from "react";
-import type { TextEditorProps } from "./types";
+import { useMemo, useCallback, forwardRef, useImperativeHandle, useEffect, type ReactNode, type Ref } from "react";
+import type { TextEditorProps, TextEditorHandle, TextSelectionEvent } from "./types";
 import type { TextStyleSegment } from "../core/types";
 import {
   DEFAULT_EDITOR_CONFIG,
@@ -18,7 +18,10 @@ import {
   getDocumentText,
   toFlatSegments,
   replaceRange,
+  getTagsAtOffset,
 } from "../core/styledDocument";
+import { executeCommand } from "./commands";
+import { calculateSelectionRects } from "../core/coordinates";
 import { useEditorCore, type GetOffsetFromPositionFn } from "../core/useEditorCore";
 import { useFontMetrics } from "../core/useFontMetrics";
 import { invariant } from "../core/invariant";
@@ -44,14 +47,28 @@ import { computeTextDiff } from "./textDiff";
  * - IME composition support
  * - Virtual scrolling for large files
  * - Selection and cursor rendering
+ * - Exposes TextEditorHandle via ref for programmatic control
  *
  * @example
  * ```tsx
+ * const editorRef = useRef<TextEditorHandle>(null);
  * const [doc, setDoc] = useState(() => createDocument("Hello"));
- * <TextEditor document={doc} onDocumentChange={setDoc} />
+ *
+ * <TextEditor
+ *   ref={editorRef}
+ *   document={doc}
+ *   onDocumentChange={setDoc}
+ *   onTextSelectionChange={(event) => console.log(event)}
+ * />
+ *
+ * // Execute commands programmatically
+ * editorRef.current?.executeCommand("bold");
  * ```
  */
-export const TextEditor = memo(function TextEditor(props: TextEditorProps): ReactNode {
+export const TextEditor = forwardRef(function TextEditor(
+  props: TextEditorProps,
+  ref: Ref<TextEditorHandle>
+): ReactNode {
   const {
     document,
     onDocumentChange,
@@ -61,6 +78,7 @@ export const TextEditor = memo(function TextEditor(props: TextEditorProps): Reac
     readOnly = false,
     onCursorChange,
     onSelectionChange,
+    onTextSelectionChange,
     tabSize = 4,
   } = props;
 
@@ -208,6 +226,156 @@ export const TextEditor = memo(function TextEditor(props: TextEditorProps): Reac
     showLineNumbers: false,
     padding: DEFAULT_PADDING_PX,
   });
+
+  // =============================================================================
+  // Enhanced Selection Handling
+  // =============================================================================
+
+  // Emit enhanced selection event when selection highlight changes
+  useEffect(() => {
+    if (!onTextSelectionChange) {
+      return;
+    }
+
+    const selectionHighlight = core.selectionHighlight;
+
+    if (!selectionHighlight) {
+      onTextSelectionChange(null);
+      return;
+    }
+
+    const textarea = core.textareaRef.current;
+    const container = core.containerRef.current;
+
+    if (!textarea || !container || !fontMetrics.isReady) {
+      return;
+    }
+
+    const startOffset = textarea.selectionStart;
+    const endOffset = textarea.selectionEnd;
+
+    // Don't emit selection event if no actual selection
+    if (startOffset === endOffset) {
+      onTextSelectionChange(null);
+      return;
+    }
+
+    // Calculate selection rectangles for positioning
+    const lines = displayLineIndex.lines;
+    const selectionRects = calculateSelectionRects({
+      startLine: selectionHighlight.startLine,
+      startColumn: selectionHighlight.startColumn,
+      endLine: selectionHighlight.endLine,
+      endColumn: selectionHighlight.endColumn,
+      lines,
+      lineHeight: editorConfig.lineHeight,
+      paddingLeft: DEFAULT_PADDING_PX,
+      paddingTop: DEFAULT_PADDING_PX,
+      measureText: fontMetrics.measureText,
+    });
+
+    if (selectionRects.length === 0) {
+      onTextSelectionChange(null);
+      return;
+    }
+
+    // Get container's bounding rect to convert to viewport coordinates
+    const containerRect = container.getBoundingClientRect();
+
+    // Use the first selection rect for anchor positioning
+    const firstRect = selectionRects[0];
+    const lastRect = selectionRects[selectionRects.length - 1];
+
+    // Calculate bounding box of entire selection
+    const minX = Math.min(...selectionRects.map(r => r.x));
+    const maxX = Math.max(...selectionRects.map(r => r.x + r.width));
+    const minY = firstRect.y;
+    const maxY = lastRect.y + lastRect.height;
+
+    const anchorRect = {
+      x: containerRect.left + minX,
+      y: containerRect.top + minY - core.virtualScroll.state.scrollTop,
+      width: maxX - minX,
+      height: maxY - minY,
+    };
+
+    // Get selected text and active tags
+    const selectedText = value.slice(startOffset, endOffset);
+    const activeTags = getTagsAtOffset(documentRef.current, startOffset);
+
+    const selection = {
+      start: { line: selectionHighlight.startLine, column: selectionHighlight.startColumn },
+      end: { line: selectionHighlight.endLine, column: selectionHighlight.endColumn },
+    };
+
+    const event: TextSelectionEvent = {
+      range: selection,
+      startOffset,
+      endOffset,
+      anchorRect,
+      selectedText,
+      activeTags,
+    };
+
+    onTextSelectionChange(event);
+  }, [
+    onTextSelectionChange,
+    core.selectionHighlight,
+    core.textareaRef,
+    core.containerRef,
+    core.virtualScroll.state.scrollTop,
+    fontMetrics.isReady,
+    fontMetrics.measureText,
+    displayLineIndex.lines,
+    editorConfig.lineHeight,
+    value,
+    documentRef,
+  ]);
+
+  // =============================================================================
+  // Imperative Handle
+  // =============================================================================
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      executeCommand: (commandId: string) => {
+        const textarea = core.textareaRef.current;
+        if (!textarea || readOnly) {
+          return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+
+        // Don't execute if no selection
+        if (start === end) {
+          return;
+        }
+
+        const newDoc = executeCommand(documentRef.current, commandId, start, end);
+        if (newDoc !== documentRef.current) {
+          onDocumentChangeRef.current(newDoc);
+        }
+      },
+      focus: () => {
+        core.textareaRef.current?.focus();
+      },
+      getSelection: () => {
+        const textarea = core.textareaRef.current;
+        if (!textarea) {
+          return null;
+        }
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        if (start === end) {
+          return null;
+        }
+        return { start, end };
+      },
+    }),
+    [core.textareaRef, readOnly, documentRef, onDocumentChangeRef]
+  );
 
   // Render
   const Renderer = renderer === "canvas" ? CanvasRenderer : SvgRenderer;

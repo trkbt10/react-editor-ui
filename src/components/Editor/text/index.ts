@@ -3,12 +3,20 @@
  */
 
 // Types from text layer
-export type { StyleToken, TextEditorProps } from "./types";
+export type {
+  StyleToken,
+  TextEditorProps,
+  TextSelectionEvent,
+  TextEditorHandle,
+  SelectionAnchorRect,
+} from "./types";
 
 // Note: Core types should be imported directly from ../core/types and ../core/styledDocument
 
 // Components
 export { TextEditor } from "./TextEditor";
+export { BlockTextEditor } from "./BlockTextEditor";
+export type { BlockTextEditorProps } from "./BlockTextEditor";
 
 // Pure Functions - Text Diff
 export {
@@ -46,3 +54,19 @@ export type { TextTokenizer } from "./useTextTokenCache";
 
 export { useStyledMeasurement } from "./useStyledMeasurement";
 export type { StyledMeasurement, UseStyledMeasurementOptions } from "./useStyledMeasurement";
+
+// Commands
+export {
+  defaultCommands,
+  defaultCommandsMap,
+  getCommand,
+  executeCommand,
+  getActiveTagsAtRange,
+} from "./commands";
+export type { TextEditorCommand } from "./commands";
+
+// Default Operations for FloatingToolbar
+export {
+  createInlineOperations,
+  defaultInlineOperations,
+} from "./defaultOperations";
