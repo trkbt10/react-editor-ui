@@ -32,8 +32,6 @@ export {
 // Utility icons
 export {
   SwapIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
   LinkIcon,
 } from "../../icons";
 

@@ -8,7 +8,7 @@ import { Panel } from "../Panel/Panel";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import { ImageSelect, type ImageSelectOption } from "../ImageSelect/ImageSelect";
 import { Select, type SelectOption } from "../Select/Select";
-import { Input } from "../Input/Input";
+import { UnitInput } from "../UnitInput/UnitInput";
 import { IconButton } from "../IconButton/IconButton";
 import {
   COLOR_TEXT_MUTED,
@@ -321,12 +321,14 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
 
       <PropertyRow label="Miter angle">
         <div style={{ flex: 1 }}>
-          <Input
+          <UnitInput
             value={settings.miterAngle}
             onChange={(v) => updateSetting("miterAngle", v)}
-            type="number"
+            units={[{ value: "°", label: "°" }]}
             iconStart={<MiterAngleIcon />}
-            suffix="°"
+                        min={0}
+            max={180}
+            step={1}
             aria-label="Miter angle"
           />
         </div>
@@ -338,12 +340,14 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
     <>
       <PropertyRow label="Frequency">
         <div style={{ flex: 1 }}>
-          <Input
+          <UnitInput
             value={settings.frequency}
             onChange={(v) => updateSetting("frequency", v)}
-            type="number"
+            units={[{ value: "%", label: "%" }]}
             iconStart={<FrequencyIcon />}
-            suffix="%"
+                        min={0}
+            max={100}
+            step={1}
             aria-label="Frequency"
           />
         </div>
@@ -351,12 +355,14 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
 
       <PropertyRow label="Wiggle">
         <div style={{ flex: 1 }}>
-          <Input
+          <UnitInput
             value={settings.wiggle}
             onChange={(v) => updateSetting("wiggle", v)}
-            type="number"
+            units={[{ value: "%", label: "%" }]}
             iconStart={<WiggleIcon />}
-            suffix="%"
+                        min={0}
+            max={100}
+            step={1}
             aria-label="Wiggle"
           />
         </div>
@@ -364,12 +370,14 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
 
       <PropertyRow label="Smoothen">
         <div style={{ flex: 1 }}>
-          <Input
+          <UnitInput
             value={settings.smoothen}
             onChange={(v) => updateSetting("smoothen", v)}
-            type="number"
+            units={[{ value: "%", label: "%" }]}
             iconStart={<SmoothIcon />}
-            suffix="%"
+                        min={0}
+            max={100}
+            step={1}
             aria-label="Smoothen"
           />
         </div>

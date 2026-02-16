@@ -10,7 +10,7 @@
  * - Supports "Auto" value
  */
 
-import { useState, useRef, useCallback, useEffect, type CSSProperties, type WheelEvent, type KeyboardEvent } from "react";
+import { memo, useState, useRef, useCallback, useEffect, type CSSProperties, type WheelEvent, type KeyboardEvent } from "react";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
@@ -18,7 +18,7 @@ import {
   COLOR_TEXT,
   COLOR_TEXT_MUTED,
   COLOR_TEXT_DISABLED,
-  COLOR_HOVER,
+  COLOR_ICON,
   COLOR_FOCUS_RING,
   COLOR_SURFACE_RAISED,
   COLOR_SELECTED,
@@ -26,11 +26,13 @@ import {
   DURATION_FAST,
   EASING_DEFAULT,
   SIZE_FONT_SM,
+  SIZE_FONT_MD,
   SIZE_HEIGHT_SM,
   SIZE_HEIGHT_MD,
   SIZE_HEIGHT_LG,
-  SPACE_XS,
   SPACE_SM,
+  SPACE_MD,
+  SPACE_LG,
   SHADOW_MD,
   Z_DROPDOWN,
 } from "../../constants/styles";
@@ -56,14 +58,16 @@ export type UnitInputProps = {
   size?: "sm" | "md" | "lg";
   disabled?: boolean;
   placeholder?: string;
+  /** Icon to show at the start of the input */
+  iconStart?: React.ReactNode;
   "aria-label"?: string;
   className?: string;
 };
 
 const sizeMap = {
-  sm: { height: SIZE_HEIGHT_SM, fontSize: SIZE_FONT_SM },
-  md: { height: SIZE_HEIGHT_MD, fontSize: SIZE_FONT_SM },
-  lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_SM },
+  sm: { height: SIZE_HEIGHT_SM, fontSize: SIZE_FONT_SM, paddingX: SPACE_SM },
+  md: { height: SIZE_HEIGHT_MD, fontSize: SIZE_FONT_MD, paddingX: SPACE_MD },
+  lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_MD, paddingX: SPACE_LG },
 };
 
 const defaultUnits: UnitOption[] = [
@@ -129,7 +133,7 @@ function findUnitIndex(units: UnitOption[], currentUnit: string): number {
 
 
 
-export function UnitInput({
+export const UnitInput = memo(function UnitInput({
   value,
   onChange,
   units = defaultUnits,
@@ -141,6 +145,7 @@ export function UnitInput({
   size = "md",
   disabled = false,
   placeholder,
+  iconStart,
   "aria-label": ariaLabel,
   className,
 }: UnitInputProps) {
@@ -374,7 +379,9 @@ export function UnitInput({
     display: "flex",
     alignItems: "center",
     width: "100%",
+    gap: SPACE_SM,
     height: sizeConfig.height,
+    padding: `0 ${sizeConfig.paddingX}`,
     backgroundColor: COLOR_INPUT_BG,
     border: `1px solid ${isFocused ? COLOR_INPUT_BORDER_FOCUS : COLOR_INPUT_BORDER}`,
     borderRadius: RADIUS_SM,
@@ -382,36 +389,36 @@ export function UnitInput({
     boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
     opacity: disabled ? 0.5 : 1,
     boxSizing: "border-box",
-    overflow: "hidden",
+  };
+
+  const iconStyle: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    color: COLOR_ICON,
+    flexShrink: 0,
   };
 
   const inputStyle: CSSProperties = {
     flex: 1,
     minWidth: 0,
     height: "100%",
-    padding: `0 ${SPACE_SM}`,
+    padding: 0,
     border: "none",
     backgroundColor: "transparent",
     color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
     fontSize: sizeConfig.fontSize,
     outline: "none",
-    boxSizing: "border-box",
-    textAlign: "left",
   };
 
   const unitStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    padding: `0 ${SPACE_XS} 0 0`,
     color: isUnitHovered && !disabled ? COLOR_TEXT : COLOR_TEXT_MUTED,
     fontSize: sizeConfig.fontSize,
     cursor: disabled ? "not-allowed" : "pointer",
     userSelect: "none",
     transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
     flexShrink: 0,
-    minWidth: 20,
   };
 
   const getDisplayUnit = () => {
@@ -454,6 +461,11 @@ export function UnitInput({
       onWheel={handleWheel}
       data-testid="unit-input"
     >
+      {iconStart && (
+        <span style={iconStyle} data-testid="unit-input-icon">
+          {iconStart}
+        </span>
+      )}
       <input
         ref={inputRef}
         type="text"
@@ -530,4 +542,4 @@ export function UnitInput({
       )}
     </div>
   );
-}
+});
