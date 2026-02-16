@@ -1,0 +1,218 @@
+/**
+ * @file TransformButtons demo page
+ */
+
+import {
+  LuRotateCw,
+  LuRotateCcw,
+  LuFlipHorizontal,
+  LuFlipVertical,
+  LuAlignStartVertical,
+  LuAlignCenterVertical,
+  LuAlignEndVertical,
+  LuAlignStartHorizontal,
+  LuAlignCenterHorizontal,
+  LuAlignEndHorizontal,
+} from "react-icons/lu";
+import {
+  demoContainerStyle,
+  demoSectionStyle,
+  demoLabelStyle,
+} from "../../components";
+import { TransformButtons } from "../../../components/TransformButtons/TransformButtons";
+
+export function TransformButtonsDemo() {
+  const handleAction = (actionId: string) => {
+    console.log("Transform action:", actionId);
+  };
+
+  const fullGroups = [
+    {
+      id: "rotate",
+      actions: [
+        { id: "rotate-cw", icon: <LuRotateCw size={14} />, label: "Rotate 90° right" },
+        { id: "rotate-ccw", icon: <LuRotateCcw size={14} />, label: "Rotate 90° left" },
+      ],
+    },
+    {
+      id: "flip",
+      actions: [
+        { id: "flip-h", icon: <LuFlipHorizontal size={14} />, label: "Flip horizontal" },
+        { id: "flip-v", icon: <LuFlipVertical size={14} />, label: "Flip vertical" },
+      ],
+    },
+    {
+      id: "align",
+      actions: [
+        { id: "align-left", icon: <LuAlignStartVertical size={14} />, label: "Align left" },
+        { id: "align-center-h", icon: <LuAlignCenterVertical size={14} />, label: "Align center" },
+        { id: "align-right", icon: <LuAlignEndVertical size={14} />, label: "Align right" },
+        { id: "align-top", icon: <LuAlignStartHorizontal size={14} />, label: "Align top" },
+        { id: "align-center-v", icon: <LuAlignCenterHorizontal size={14} />, label: "Align middle" },
+        { id: "align-bottom", icon: <LuAlignEndHorizontal size={14} />, label: "Align bottom" },
+      ],
+    },
+  ];
+
+  return (
+    <div style={demoContainerStyle}>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>TransformButtons</h2>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Full Transform Toolbar (react-icons)</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons groups={fullGroups} onAction={handleAction} />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Rotate Only</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "rotate",
+                actions: [
+                  { id: "rotate-cw", icon: <LuRotateCw size={14} />, label: "Rotate 90° right" },
+                  { id: "rotate-ccw", icon: <LuRotateCcw size={14} />, label: "Rotate 90° left" },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Flip Only</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "flip",
+                actions: [
+                  { id: "flip-h", icon: <LuFlipHorizontal size={14} />, label: "Flip horizontal" },
+                  { id: "flip-v", icon: <LuFlipVertical size={14} />, label: "Flip vertical" },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Custom Actions</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "custom",
+                actions: [
+                  { id: "rotate-45", icon: <LuRotateCw size={14} />, label: "Rotate 45°" },
+                  { id: "rotate-180", icon: <LuRotateCw size={14} />, label: "Rotate 180°" },
+                ],
+              },
+              {
+                id: "scale",
+                actions: [
+                  { id: "scale-up", icon: <span style={{ fontSize: 12 }}>+</span>, label: "Scale up" },
+                  { id: "scale-down", icon: <span style={{ fontSize: 12 }}>-</span>, label: "Scale down" },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>Different Sizes</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+            <TransformButtons
+              groups={[
+                {
+                  id: "tools",
+                  actions: [
+                    { id: "rotate", icon: <LuRotateCw size={12} />, label: "Rotate" },
+                    { id: "flip", icon: <LuFlipHorizontal size={12} />, label: "Flip" },
+                  ],
+                },
+              ]}
+              onAction={handleAction}
+              size="sm"
+            />
+          </div>
+          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+            <TransformButtons
+              groups={[
+                {
+                  id: "tools",
+                  actions: [
+                    { id: "rotate", icon: <LuRotateCw size={14} />, label: "Rotate" },
+                    { id: "flip", icon: <LuFlipHorizontal size={14} />, label: "Flip" },
+                  ],
+                },
+              ]}
+              onAction={handleAction}
+              size="md"
+            />
+          </div>
+          <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+            <TransformButtons
+              groups={[
+                {
+                  id: "tools",
+                  actions: [
+                    { id: "rotate", icon: <LuRotateCw size={18} />, label: "Rotate" },
+                    { id: "flip", icon: <LuFlipHorizontal size={18} />, label: "Flip" },
+                  ],
+                },
+              ]}
+              onAction={handleAction}
+              size="lg"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>With Disabled Action</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "tools",
+                actions: [
+                  { id: "rotate", icon: <LuRotateCw size={14} />, label: "Rotate (enabled)" },
+                  { id: "flip", icon: <LuFlipHorizontal size={14} />, label: "Flip (disabled)", disabled: true },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+          />
+        </div>
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>All Disabled</div>
+        <div style={{ backgroundColor: "var(--rei-color-surface, #1e1f24)", borderRadius: "4px", padding: "8px" }}>
+          <TransformButtons
+            groups={[
+              {
+                id: "tools",
+                actions: [
+                  { id: "rotate", icon: <LuRotateCw size={14} />, label: "Rotate" },
+                  { id: "flip", icon: <LuFlipHorizontal size={14} />, label: "Flip" },
+                ],
+              },
+            ]}
+            onAction={handleAction}
+            disabled
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
