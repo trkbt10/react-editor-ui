@@ -15,6 +15,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   SIZE_FONT_SM,
+  SIZE_HEIGHT_SM,
 } from "../../constants/styles";
 import { ConstraintVisualization } from "./ConstraintVisualization";
 import {
@@ -219,6 +220,8 @@ export const PositionPanel = memo(function PositionPanel({
               aria-label="Vertical alignment"
             />
           </div>
+          {/* Spacer to align with Position row's IconButton */}
+          <div style={{ width: SIZE_HEIGHT_SM, flexShrink: 0 }} />
         </div>
       </div>
 
@@ -278,6 +281,12 @@ export const PositionPanel = memo(function PositionPanel({
           <ConstraintVisualization
             horizontal={settings.horizontalConstraint}
             vertical={settings.verticalConstraint}
+            onHorizontalChange={(v) => {
+              updateSettings("horizontalConstraint", v);
+            }}
+            onVerticalChange={(v) => {
+              updateSettings("verticalConstraint", v);
+            }}
           />
         </div>
       </div>
