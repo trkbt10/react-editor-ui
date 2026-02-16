@@ -259,6 +259,9 @@ export function useBlockEditorCore(
   // Track cursor position before changes for better undo UX
   const lastCursorOffsetRef = useRef(getBlockDocumentText(document).length);
 
+  // Track cursor position at composition start for undo
+  const compositionStartCursorRef = useRef<number | null>(null);
+
   // Text value (for textarea synchronization)
   const textValue = useMemo(() => getBlockDocumentText(document), [document]);
 
@@ -300,24 +303,39 @@ export function useBlockEditorCore(
   const handleCompositionConfirm = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- signature required by useBlockComposition
     (blockId: BlockId, localOffset: number, text: string, replacedLength: number) => {
-      // Get global offset for history
+      // Get global offset for history (cursor position AFTER composition)
       const globalOffset = blockPositionToGlobalOffset(document, {
         blockId,
         offset: localOffset + text.length,
       });
+      // Use the cursor position captured at composition start for proper undo
+      const beforeCursor = compositionStartCursorRef.current ?? lastCursorOffsetRef.current;
+      compositionStartCursorRef.current = null;
+
       // Only push to history if we can calculate the offset
       if (globalOffset !== undefined) {
-        history.push(textValue, globalOffset, lastCursorOffsetRef.current);
+        history.push(textValue, globalOffset, beforeCursor);
       }
     },
     [document, history, textValue]
   );
 
-  const compositionHandlers = useBlockComposition({
+  const baseCompositionHandlers = useBlockComposition({
     document,
     setComposition,
     onCompositionConfirm: handleCompositionConfirm,
   });
+
+  // Wrap composition handlers to capture cursor position at start
+  const compositionHandlers = useMemo(() => ({
+    handleCompositionStart: (e: React.CompositionEvent<HTMLTextAreaElement>) => {
+      // Capture cursor position before composition starts
+      compositionStartCursorRef.current = e.currentTarget.selectionStart;
+      baseCompositionHandlers.handleCompositionStart(e);
+    },
+    handleCompositionUpdate: baseCompositionHandlers.handleCompositionUpdate,
+    handleCompositionEnd: baseCompositionHandlers.handleCompositionEnd,
+  }), [baseCompositionHandlers]);
 
   // Cursor position (block-based)
   const cursorPosition = useMemo((): BlockPosition | null => {
