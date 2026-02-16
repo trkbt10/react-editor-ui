@@ -63,6 +63,9 @@ import { TextEditorDemo } from "./pages/editor/TextEditorDemo";
 // Canvas demos
 import { CanvasDemo } from "./pages/canvas/CanvasDemo";
 
+// Dev/Test demos
+import { IconGallery } from "./pages/IconGallery";
+
 export type DemoPage = {
   id: string;
   label: string;
@@ -348,6 +351,19 @@ export const demoCategories: DemoCategory[] = [
         label: "Canvas",
         path: "canvas",
         element: <CanvasDemo />,
+      },
+    ],
+  },
+  {
+    id: "dev",
+    label: "Dev",
+    base: "/dev",
+    pages: [
+      {
+        id: "icon-gallery",
+        label: "Icon Gallery",
+        path: "icon-gallery",
+        element: <IconGallery />,
       },
     ],
   },
