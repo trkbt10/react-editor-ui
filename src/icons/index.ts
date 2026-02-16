@@ -26,6 +26,7 @@ export {
   SearchIcon,
   SettingsIcon,
   ResetIcon,
+  RefreshIcon,
   SwapIcon,
   LinkIcon,
 } from "./action";

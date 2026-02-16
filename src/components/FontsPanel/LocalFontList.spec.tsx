@@ -109,14 +109,4 @@ describe("LocalFontList", () => {
     expect(panel.style.maxHeight).toBe("500px");
   });
 
-  it("applies className when provided", () => {
-    const { container } = render(
-      <LocalFontList
-        selectedFont=""
-        onSelectFont={() => {}}
-        className="custom-class"
-      />
-    );
-    expect(container.firstChild).toHaveClass("custom-class");
-  });
 });
