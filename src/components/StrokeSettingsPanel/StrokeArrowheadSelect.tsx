@@ -4,7 +4,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import type { ArrowheadSettings, ArrowheadType, ArrowheadAlign } from "./types";
-import { ImageSelect, type ImageSelectOption } from "../ImageSelect/ImageSelect";
+import { Select, type SelectOption } from "../Select/Select";
 import { Input } from "../Input/Input";
 import { IconButton } from "../IconButton/IconButton";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
@@ -38,15 +38,15 @@ function wrapIcon(icon: ReactNode, reversed: boolean) {
   return <span style={{ display: "flex", transform }}>{icon}</span>;
 }
 
-function createOptions(reversed: boolean): ImageSelectOption<ArrowheadType>[] {
+function createOptions(reversed: boolean): SelectOption<ArrowheadType>[] {
   return [
-    { value: "none", image: wrapIcon(<ArrowNoneIcon />, reversed) },
-    { value: "triangle", image: wrapIcon(<ArrowTriangleIcon />, reversed) },
-    { value: "triangle-open", image: wrapIcon(<ArrowOpenIcon />, reversed) },
-    { value: "circle", image: wrapIcon(<ArrowCircleIcon />, reversed) },
-    { value: "square", image: wrapIcon(<ArrowSquareIcon />, reversed) },
-    { value: "diamond", image: wrapIcon(<ArrowDiamondIcon />, reversed) },
-    { value: "bar", image: wrapIcon(<ArrowBarIcon />, reversed) },
+    { value: "none", preview: wrapIcon(<ArrowNoneIcon />, reversed) },
+    { value: "triangle", preview: wrapIcon(<ArrowTriangleIcon />, reversed) },
+    { value: "triangle-open", preview: wrapIcon(<ArrowOpenIcon />, reversed) },
+    { value: "circle", preview: wrapIcon(<ArrowCircleIcon />, reversed) },
+    { value: "square", preview: wrapIcon(<ArrowSquareIcon />, reversed) },
+    { value: "diamond", preview: wrapIcon(<ArrowDiamondIcon />, reversed) },
+    { value: "bar", preview: wrapIcon(<ArrowBarIcon />, reversed) },
   ];
 }
 
@@ -125,7 +125,7 @@ export function StrokeArrowheadSelect({
       <div style={rowStyle}>
         <span style={labelStyle}>Arrows:</span>
         <div style={{ flex: 1 }}>
-          <ImageSelect
+          <Select
             options={startOptions}
             value={value.start}
             onChange={(v) => update("start", v)}
@@ -134,7 +134,7 @@ export function StrokeArrowheadSelect({
           />
         </div>
         <div style={{ flex: 1 }}>
-          <ImageSelect
+          <Select
             options={endOptions}
             value={value.end}
             onChange={(v) => update("end", v)}

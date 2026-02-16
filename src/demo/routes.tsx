@@ -30,7 +30,6 @@ import {
   StatusBarItem,
   LogEntry,
   Panel,
-  ImageSelect,
   StrokeSettingsPanel,
   StrokePanelExpanded,
   StrokePanelCompact,
@@ -72,7 +71,7 @@ import type {
   StrokeSettings,
   StrokePanelExpandedSettings,
   StrokePanelCompactSettings,
-  ImageSelectOption,
+  SelectOption,
   GradientValue,
   FillValue,
   TypographySettings,
@@ -2452,35 +2451,35 @@ function BrushPreviewDemo({ type = "smooth" }: { type?: "smooth" | "rough" }) {
   );
 }
 
-function ImageSelectDemo() {
+function SelectWithPreviewDemo() {
   const [widthProfile, setWidthProfile] = useState("uniform");
   const [brushType, setBrushType] = useState("smooth");
   const [selectedFruit, setSelectedFruit] = useState("apple");
 
-  const widthOptions: ImageSelectOption<string>[] = [
-    { value: "uniform", image: <WidthProfilePreview variant="uniform" /> },
-    { value: "taper", image: <WidthProfilePreview variant="taper" /> },
+  const widthOptions: SelectOption<string>[] = [
+    { value: "uniform", preview: <WidthProfilePreview variant="uniform" /> },
+    { value: "taper", preview: <WidthProfilePreview variant="taper" /> },
   ];
 
-  const brushOptions: ImageSelectOption<string>[] = [
-    { value: "smooth", image: <BrushPreviewDemo type="smooth" /> },
-    { value: "rough", image: <BrushPreviewDemo type="rough" /> },
+  const brushOptions: SelectOption<string>[] = [
+    { value: "smooth", preview: <BrushPreviewDemo type="smooth" /> },
+    { value: "rough", preview: <BrushPreviewDemo type="rough" /> },
   ];
 
-  const fruitOptions: ImageSelectOption<string>[] = [
-    { value: "apple", label: "Apple", image: <span style={{ fontSize: "20px" }}>&#127822;</span> },
-    { value: "banana", label: "Banana", image: <span style={{ fontSize: "20px" }}>&#127820;</span> },
-    { value: "cherry", label: "Cherry", image: <span style={{ fontSize: "20px" }}>&#127826;</span> },
+  const fruitOptions: SelectOption<string>[] = [
+    { value: "apple", label: "Apple", preview: <span style={{ fontSize: "20px" }}>&#127822;</span> },
+    { value: "banana", label: "Banana", preview: <span style={{ fontSize: "20px" }}>&#127820;</span> },
+    { value: "cherry", label: "Cherry", preview: <span style={{ fontSize: "20px" }}>&#127826;</span> },
   ];
 
   return (
     <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>ImageSelect</h2>
+      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>Select with Preview</h2>
 
       <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Width Profile (Image Only)</div>
+        <div style={demoLabelStyle}>Width Profile (Preview Only)</div>
         <div style={{ width: "200px" }}>
-          <ImageSelect
+          <Select
             options={widthOptions}
             value={widthProfile}
             onChange={setWidthProfile}
@@ -2492,7 +2491,7 @@ function ImageSelectDemo() {
       <div style={demoSectionStyle}>
         <div style={demoLabelStyle}>Brush Type (Large Preview)</div>
         <div style={{ width: "250px" }}>
-          <ImageSelect
+          <Select
             options={brushOptions}
             value={brushType}
             onChange={setBrushType}
@@ -2503,9 +2502,9 @@ function ImageSelectDemo() {
       </div>
 
       <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>With Icon and Label</div>
+        <div style={demoLabelStyle}>With Preview and Label</div>
         <div style={{ width: "200px" }}>
-          <ImageSelect
+          <Select
             options={fruitOptions}
             value={selectedFruit}
             onChange={setSelectedFruit}
@@ -2517,7 +2516,7 @@ function ImageSelectDemo() {
       <div style={demoSectionStyle}>
         <div style={demoLabelStyle}>Disabled</div>
         <div style={{ width: "200px" }}>
-          <ImageSelect
+          <Select
             options={widthOptions}
             value="uniform"
             onChange={() => {}}
@@ -3586,10 +3585,10 @@ export const demoCategories: DemoCategory[] = [
         element: <FillEditorDemo />,
       },
       {
-        id: "image-select",
-        label: "ImageSelect",
-        path: "image-select",
-        element: <ImageSelectDemo />,
+        id: "select-preview",
+        label: "Select (Preview)",
+        path: "select-preview",
+        element: <SelectWithPreviewDemo />,
       },
       {
         id: "tooltip",

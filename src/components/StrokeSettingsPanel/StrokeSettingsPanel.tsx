@@ -6,7 +6,6 @@ import { memo, useCallback } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Panel } from "../Panel/Panel";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import { ImageSelect, type ImageSelectOption } from "../ImageSelect/ImageSelect";
 import { Select, type SelectOption } from "../Select/Select";
 import { UnitInput } from "../UnitInput/UnitInput";
 import { IconButton } from "../IconButton/IconButton";
@@ -239,33 +238,33 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
     { value: "dotted", label: "Dotted" },
   ];
 
-  const widthProfileOptions: ImageSelectOption<WidthProfile>[] = [
+  const widthProfileOptions: SelectOption<WidthProfile>[] = [
     {
       value: "uniform",
-      image: <WidthProfilePreview variant="uniform" />,
+      preview: <WidthProfilePreview variant="uniform" />,
     },
     {
       value: "taper-end",
-      image: <WidthProfilePreview variant="taper-end" />,
+      preview: <WidthProfilePreview variant="taper-end" />,
     },
     {
       value: "taper-both",
-      image: <WidthProfilePreview variant="taper-both" />,
+      preview: <WidthProfilePreview variant="taper-both" />,
     },
   ];
 
-  const brushOptions: ImageSelectOption<BrushType>[] = [
+  const brushOptions: SelectOption<BrushType>[] = [
     {
       value: "smooth",
-      image: <BrushPreview type="smooth" />,
+      preview: <BrushPreview type="smooth" />,
     },
     {
       value: "rough",
-      image: <BrushPreview type="rough" />,
+      preview: <BrushPreview type="rough" />,
     },
     {
       value: "spray",
-      image: <BrushPreview type="spray" />,
+      preview: <BrushPreview type="spray" />,
     },
   ];
 
@@ -295,7 +294,7 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
 
       <PropertyRow label="Width profile">
         <div style={{ flex: 1 }}>
-          <ImageSelect
+          <Select
             options={widthProfileOptions}
             value={settings.widthProfile}
             onChange={(v) => updateSetting("widthProfile", v)}
@@ -388,7 +387,7 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
   const renderBrushTab = () => (
     <>
       <div>
-        <ImageSelect
+        <Select
           options={brushOptions}
           value={settings.brushType}
           onChange={(v) => updateSetting("brushType", v)}
@@ -409,7 +408,7 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
 
       <PropertyRow label="Width profile">
         <div style={{ flex: 1 }}>
-          <ImageSelect
+          <Select
             options={widthProfileOptions}
             value={settings.brushWidthProfile}
             onChange={(v) => updateSetting("brushWidthProfile", v)}

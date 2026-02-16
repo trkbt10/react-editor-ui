@@ -124,12 +124,6 @@ export {
   isVideoFill,
 } from "./FillEditor/fillUtils";
 
-export { ImageSelect } from "./ImageSelect/ImageSelect";
-export type {
-  ImageSelectProps,
-  ImageSelectOption,
-} from "./ImageSelect/ImageSelect";
-
 export { Tooltip } from "./Tooltip/Tooltip";
 export type { TooltipProps, TooltipPlacement } from "./Tooltip/Tooltip";
 

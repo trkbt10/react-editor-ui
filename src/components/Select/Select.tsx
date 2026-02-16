@@ -2,7 +2,7 @@
  * @file Select component - Dropdown selection with portal rendering
  */
 
-import { useState, useRef, useEffect, useEffectEvent, useLayoutEffect, type CSSProperties } from "react";
+import { memo, useState, useRef, useEffect, useEffectEvent, useLayoutEffect, type CSSProperties, type ReactNode } from "react";
 import { Portal } from "../Portal/Portal";
 import {
   COLOR_INPUT_BG,
@@ -42,7 +42,8 @@ function getOptionBackground(isSelected: boolean, isFocused: boolean): string {
 
 export type SelectOption<T extends string = string> = {
   value: T;
-  label: string;
+  label?: string;
+  preview?: ReactNode;
   disabled?: boolean;
 };
 
@@ -74,7 +75,7 @@ type DropdownPosition = {
   width: number;
 };
 
-export function Select<T extends string = string>({
+export const Select = memo(function Select<T extends string = string>({
   options,
   value,
   onChange,
@@ -193,6 +194,16 @@ export function Select<T extends string = string>({
     transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
     outline: "none",
     boxShadow: isOpen ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+    gap: SPACE_SM,
+  };
+
+  const previewContainerStyle: CSSProperties = {
+    flex: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    minWidth: 0,
+    overflow: "hidden",
   };
 
   const dropdownStyle: CSSProperties = {
@@ -205,7 +216,7 @@ export function Select<T extends string = string>({
     borderRadius: RADIUS_SM,
     boxShadow: SHADOW_MD,
     zIndex: Z_DROPDOWN,
-    maxHeight: "200px",
+    maxHeight: "240px",
     overflowY: "auto",
   };
 
@@ -222,6 +233,7 @@ export function Select<T extends string = string>({
     fontSize: sizeConfig.fontSize,
     cursor: isDisabled ? "not-allowed" : "pointer",
     opacity: isDisabled ? 0.5 : 1,
+    gap: SPACE_SM,
   });
 
   return (
@@ -245,13 +257,17 @@ export function Select<T extends string = string>({
         onKeyDown={handleKeyDown}
         style={triggerStyle}
       >
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {selectedOption?.label ?? placeholder}
-        </span>
+        {selectedOption?.preview ? (
+          <div style={previewContainerStyle}>{selectedOption.preview}</div>
+        ) : (
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {selectedOption?.label ?? placeholder}
+          </span>
+        )}
         <span
           style={{
             display: "flex",
-            marginLeft: SPACE_SM,
+            flexShrink: 0,
             color: COLOR_ICON,
             transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
             transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
@@ -291,7 +307,12 @@ export function Select<T extends string = string>({
                   option.disabled ?? false,
                 )}
               >
-                {option.label}
+                {option.preview && (
+                  <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+                    {option.preview}
+                  </div>
+                )}
+                {option.label && <span>{option.label}</span>}
               </div>
             ))}
           </div>
@@ -299,4 +320,4 @@ export function Select<T extends string = string>({
       )}
     </div>
   );
-}
+}) as <T extends string = string>(props: SelectProps<T>) => React.ReactElement;

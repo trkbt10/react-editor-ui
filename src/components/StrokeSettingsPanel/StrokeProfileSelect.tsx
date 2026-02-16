@@ -4,7 +4,7 @@
 
 import type { CSSProperties } from "react";
 import type { WidthProfile } from "./types";
-import { ImageSelect, type ImageSelectOption } from "../ImageSelect/ImageSelect";
+import { Select, type SelectOption } from "../Select/Select";
 import { IconButton } from "../IconButton/IconButton";
 import { FlipIcon } from "./icons";
 import { SPACE_SM } from "../../constants/styles";
@@ -63,11 +63,11 @@ function ProfilePreview({ variant }: { variant: WidthProfile }) {
   }
 }
 
-const options: ImageSelectOption<WidthProfile>[] = [
-  { value: "uniform", image: <ProfilePreview variant="uniform" /> },
-  { value: "taper-start", image: <ProfilePreview variant="taper-start" /> },
-  { value: "taper-end", image: <ProfilePreview variant="taper-end" /> },
-  { value: "taper-both", image: <ProfilePreview variant="taper-both" /> },
+const options: SelectOption<WidthProfile>[] = [
+  { value: "uniform", preview: <ProfilePreview variant="uniform" /> },
+  { value: "taper-start", preview: <ProfilePreview variant="taper-start" /> },
+  { value: "taper-end", preview: <ProfilePreview variant="taper-end" /> },
+  { value: "taper-both", preview: <ProfilePreview variant="taper-both" /> },
 ];
 
 const containerStyle: CSSProperties = {
@@ -100,7 +100,7 @@ export function StrokeProfileSelect({
   return (
     <div style={containerStyle}>
       <div style={{ flex: 1 }}>
-        <ImageSelect
+        <Select
           options={options}
           value={value}
           onChange={onChange}

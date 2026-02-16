@@ -12,7 +12,6 @@ import type {
 } from "./types";
 import { Panel } from "../Panel/Panel";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import { ImageSelect, type ImageSelectOption } from "../ImageSelect/ImageSelect";
 import { Select, type SelectOption } from "../Select/Select";
 import { Input } from "../Input/Input";
 import { StrokeJoinSelect } from "./StrokeJoinSelect";
@@ -243,10 +242,10 @@ export function StrokePanelCompact({
     { value: "dotted", label: "Dotted" },
   ];
 
-  const brushOptions: ImageSelectOption<BrushStyle>[] = [
-    { value: "smooth", image: <BrushPreview style="smooth" /> },
-    { value: "rough", image: <BrushPreview style="rough" /> },
-    { value: "spray", image: <BrushPreview style="spray" /> },
+  const brushOptions: SelectOption<BrushStyle>[] = [
+    { value: "smooth", preview: <BrushPreview style="smooth" /> },
+    { value: "rough", preview: <BrushPreview style="rough" /> },
+    { value: "spray", preview: <BrushPreview style="spray" /> },
   ];
 
   const directionOptions = [
@@ -357,7 +356,7 @@ export function StrokePanelCompact({
   const renderBrushTab = () => (
     <>
       <div>
-        <ImageSelect
+        <Select
           options={brushOptions}
           value={settings.brushStyle}
           onChange={(v) => update("brushStyle", v)}
