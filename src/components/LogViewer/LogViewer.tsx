@@ -509,6 +509,7 @@ function LogViewerPagination({
 
 export { useVirtualScroll } from "./useVirtualScroll";
 export type { VirtualScrollOptions, VirtualScrollResult, VirtualItem } from "./useVirtualScroll";
-export { SegmentTree } from "./SegmentTree";
+export { createSegmentTree, SegmentTree } from "./SegmentTree";
+export type { SegmentTree as SegmentTreeType } from "./SegmentTree";
 export { createVirtualScrollEngine } from "./VirtualScrollEngine";
 export type { VirtualScrollCalculator, VisibleRange, EngineConfig } from "./VirtualScrollEngine";

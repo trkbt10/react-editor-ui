@@ -5,7 +5,7 @@
  * Uses curried functions for configuration and memoized calculations.
  */
 
-import { SegmentTree } from "./SegmentTree";
+import { createSegmentTree, type SegmentTree } from "./SegmentTree";
 
 // ============================================================================
 // Types
@@ -185,7 +185,7 @@ export function createVirtualScrollEngine(config: EngineConfig): (itemCount: num
    */
   return function createCalculator(itemCount: number): VirtualScrollCalculator {
     // Internal mutable state (scoped to this calculator instance)
-    const tree = new SegmentTree(new Array(itemCount).fill(estimatedItemHeight));
+    const tree = createSegmentTree(new Array(itemCount).fill(estimatedItemHeight) as number[]);
     const rangeCache = createMemoCache<VisibleRange>();
     // eslint-disable-next-line no-restricted-syntax -- version counter for cache invalidation
     let treeVersion = 0;

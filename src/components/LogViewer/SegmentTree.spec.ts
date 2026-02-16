@@ -2,18 +2,18 @@
  * @file SegmentTree tests
  */
 
-import { SegmentTree } from "./SegmentTree";
+import { createSegmentTree } from "./SegmentTree";
 
-describe("SegmentTree", () => {
-  describe("constructor", () => {
+describe("createSegmentTree", () => {
+  describe("factory", () => {
     it("creates empty tree", () => {
-      const tree = new SegmentTree();
+      const tree = createSegmentTree();
       expect(tree.length).toBe(0);
       expect(tree.total).toBe(0);
     });
 
     it("creates tree with initial values", () => {
-      const tree = new SegmentTree([10, 20, 30, 40]);
+      const tree = createSegmentTree([10, 20, 30, 40]);
       expect(tree.length).toBe(4);
       expect(tree.total).toBe(100);
     });
@@ -21,7 +21,7 @@ describe("SegmentTree", () => {
 
   describe("get", () => {
     it("returns value at index", () => {
-      const tree = new SegmentTree([10, 20, 30, 40]);
+      const tree = createSegmentTree([10, 20, 30, 40]);
       expect(tree.get(0)).toBe(10);
       expect(tree.get(1)).toBe(20);
       expect(tree.get(2)).toBe(30);
@@ -29,7 +29,7 @@ describe("SegmentTree", () => {
     });
 
     it("returns 0 for out of bounds index", () => {
-      const tree = new SegmentTree([10, 20]);
+      const tree = createSegmentTree([10, 20]);
       expect(tree.get(-1)).toBe(0);
       expect(tree.get(5)).toBe(0);
     });
@@ -37,7 +37,7 @@ describe("SegmentTree", () => {
 
   describe("update", () => {
     it("updates value and maintains correct sums", () => {
-      const tree = new SegmentTree([10, 20, 30, 40]);
+      const tree = createSegmentTree([10, 20, 30, 40]);
       tree.update(1, 50);
 
       expect(tree.get(1)).toBe(50);
@@ -45,7 +45,7 @@ describe("SegmentTree", () => {
     });
 
     it("ignores out of bounds updates", () => {
-      const tree = new SegmentTree([10, 20, 30]);
+      const tree = createSegmentTree([10, 20, 30]);
       tree.update(-1, 100);
       tree.update(5, 100);
 
@@ -55,7 +55,7 @@ describe("SegmentTree", () => {
 
   describe("prefixSum", () => {
     it("returns correct prefix sums", () => {
-      const tree = new SegmentTree([10, 20, 30, 40]);
+      const tree = createSegmentTree([10, 20, 30, 40]);
 
       expect(tree.prefixSum(0)).toBe(0);
       expect(tree.prefixSum(1)).toBe(10);
@@ -65,19 +65,19 @@ describe("SegmentTree", () => {
     });
 
     it("returns 0 for negative index", () => {
-      const tree = new SegmentTree([10, 20]);
+      const tree = createSegmentTree([10, 20]);
       expect(tree.prefixSum(-5)).toBe(0);
     });
 
     it("clamps to total for large index", () => {
-      const tree = new SegmentTree([10, 20]);
+      const tree = createSegmentTree([10, 20]);
       expect(tree.prefixSum(100)).toBe(30);
     });
   });
 
   describe("rangeSum", () => {
     it("returns correct range sums", () => {
-      const tree = new SegmentTree([10, 20, 30, 40]);
+      const tree = createSegmentTree([10, 20, 30, 40]);
 
       expect(tree.rangeSum(0, 2)).toBe(30); // 10 + 20
       expect(tree.rangeSum(1, 3)).toBe(50); // 20 + 30
@@ -85,7 +85,7 @@ describe("SegmentTree", () => {
     });
 
     it("returns 0 for empty range", () => {
-      const tree = new SegmentTree([10, 20, 30]);
+      const tree = createSegmentTree([10, 20, 30]);
       expect(tree.rangeSum(2, 2)).toBe(0);
     });
   });
@@ -94,7 +94,7 @@ describe("SegmentTree", () => {
     it("finds correct index for offset", () => {
       // Heights: 10, 20, 30, 40
       // Cumulative: 10, 30, 60, 100
-      const tree = new SegmentTree([10, 20, 30, 40]);
+      const tree = createSegmentTree([10, 20, 30, 40]);
 
       expect(tree.findIndexByOffset(0)).toBe(0);
       expect(tree.findIndexByOffset(5)).toBe(0); // Still in first item
@@ -106,19 +106,19 @@ describe("SegmentTree", () => {
     });
 
     it("returns 0 for negative offset", () => {
-      const tree = new SegmentTree([10, 20, 30]);
+      const tree = createSegmentTree([10, 20, 30]);
       expect(tree.findIndexByOffset(-10)).toBe(0);
     });
 
     it("returns length for offset beyond total", () => {
-      const tree = new SegmentTree([10, 20, 30]);
+      const tree = createSegmentTree([10, 20, 30]);
       expect(tree.findIndexByOffset(100)).toBe(3);
     });
   });
 
   describe("resize", () => {
     it("grows tree with default values", () => {
-      const tree = new SegmentTree([10, 20]);
+      const tree = createSegmentTree([10, 20]);
       tree.resize(5, 30);
 
       expect(tree.length).toBe(5);
@@ -131,7 +131,7 @@ describe("SegmentTree", () => {
     });
 
     it("shrinks tree", () => {
-      const tree = new SegmentTree([10, 20, 30, 40, 50]);
+      const tree = createSegmentTree([10, 20, 30, 40, 50]);
       tree.resize(3);
 
       expect(tree.length).toBe(3);
@@ -139,7 +139,7 @@ describe("SegmentTree", () => {
     });
 
     it("maintains correct sums after resize", () => {
-      const tree = new SegmentTree([10, 20, 30]);
+      const tree = createSegmentTree([10, 20, 30]);
       tree.resize(5, 15);
       tree.update(3, 25);
 
@@ -151,18 +151,18 @@ describe("SegmentTree", () => {
   describe("performance", () => {
     it("handles large arrays efficiently", () => {
       const size = 100000;
-      const values = new Array(size).fill(36);
-      const tree = new SegmentTree(values);
+      const values = new Array(size).fill(36) as number[];
+      const tree = createSegmentTree(values);
 
       expect(tree.length).toBe(size);
       expect(tree.total).toBe(size * 36);
 
       // Verify O(log n) operations are fast
       const start = performance.now();
-      for (let i = 0; i < 10000; i++) {
+      Array.from({ length: 10000 }).forEach(() => {
         tree.prefixSum(Math.floor(Math.random() * size));
         tree.findIndexByOffset(Math.random() * tree.total);
-      }
+      });
       const elapsed = performance.now() - start;
 
       // Should complete 20000 operations in under 100ms
