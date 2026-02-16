@@ -2,6 +2,7 @@
  * @file Badge component - Small status indicator
  */
 
+import { memo, useMemo } from "react";
 import type { ReactNode, CSSProperties } from "react";
 import {
   COLOR_PRIMARY,
@@ -60,7 +61,7 @@ const sizeStyles = {
   },
 };
 
-export function Badge({
+export const Badge = memo(function Badge({
   children,
   variant = "default",
   size = "sm",
@@ -69,24 +70,27 @@ export function Badge({
   const variantConfig = variantStyles[variant];
   const sizeConfig = sizeStyles[size];
 
-  const style: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: sizeConfig.padding,
-    minHeight: sizeConfig.minHeight,
-    backgroundColor: variantConfig.bg,
-    color: variantConfig.color,
-    fontSize: sizeConfig.fontSize,
-    fontWeight: 500,
-    lineHeight: 1,
-    borderRadius: RADIUS_SM,
-    whiteSpace: "nowrap",
-  };
+  const style = useMemo<CSSProperties>(
+    () => ({
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: sizeConfig.padding,
+      minHeight: sizeConfig.minHeight,
+      backgroundColor: variantConfig.bg,
+      color: variantConfig.color,
+      fontSize: sizeConfig.fontSize,
+      fontWeight: 500,
+      lineHeight: 1,
+      borderRadius: RADIUS_SM,
+      whiteSpace: "nowrap",
+    }),
+    [sizeConfig, variantConfig],
+  );
 
   return (
     <span className={className} style={style}>
       {children}
     </span>
   );
-}
+});

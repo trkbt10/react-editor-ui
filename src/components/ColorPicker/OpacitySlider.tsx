@@ -2,6 +2,7 @@
  * @file OpacitySlider component - Slider with checkerboard background for opacity selection
  */
 
+import { memo, useMemo, useCallback } from "react";
 import type { CSSProperties } from "react";
 import { Slider } from "../Slider/Slider";
 
@@ -29,32 +30,49 @@ function createCheckerboardPattern(): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-export function OpacitySlider({
+
+
+
+
+
+export const OpacitySlider = memo(function OpacitySlider({
   value,
   onChange,
   color,
   disabled = false,
   "aria-label": ariaLabel = "Opacity",
 }: OpacitySliderProps) {
-  const handleChange = (normalizedValue: number) => {
-    onChange(Math.round(normalizedValue * 100));
-  };
+  const handleChange = useCallback(
+    (normalizedValue: number) => {
+      onChange(Math.round(normalizedValue * 100));
+    },
+    [onChange],
+  );
 
-  const containerStyle: CSSProperties = {
-    position: "relative",
-    width: "100%",
-    height: 10,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "relative",
+      width: "100%",
+      height: 10,
+    }),
+    [],
+  );
 
-  const checkerboardStyle: CSSProperties = {
-    position: "absolute",
-    inset: 0,
-    borderRadius: "9999px",
-    backgroundImage: createCheckerboardPattern(),
-    backgroundSize: `${CHECKERBOARD_SIZE * 2}px ${CHECKERBOARD_SIZE * 2}px`,
-  };
+  const checkerboardStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      inset: 0,
+      borderRadius: "9999px",
+      backgroundImage: createCheckerboardPattern(),
+      backgroundSize: `${CHECKERBOARD_SIZE * 2}px ${CHECKERBOARD_SIZE * 2}px`,
+    }),
+    [],
+  );
 
-  const gradientBackground = `linear-gradient(to right, transparent, ${color})`;
+  const gradientBackground = useMemo(
+    () => `linear-gradient(to right, transparent, ${color})`,
+    [color],
+  );
 
   return (
     <div style={containerStyle}>
@@ -69,4 +87,4 @@ export function OpacitySlider({
       />
     </div>
   );
-}
+});

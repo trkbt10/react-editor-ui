@@ -2,7 +2,7 @@
  * @file ColorPicker component - Color selection with HSV area and hue slider
  */
 
-import { useState, useRef, useCallback } from "react";
+import { memo, useState, useRef, useCallback, useMemo } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import {
   COLOR_SURFACE,
@@ -51,7 +51,12 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-export function ColorPicker({
+
+
+
+
+
+export const ColorPicker = memo(function ColorPicker({
   value,
   onChange,
   opacity = 100,
@@ -66,6 +71,7 @@ export function ColorPicker({
   const hueRef = useRef<HTMLDivElement>(null);
   const isDraggingSaturation = useRef(false);
   const isDraggingHue = useRef(false);
+  const [isHexInputFocused, setIsHexInputFocused] = useState(false);
 
   // Track last committed external value for controlled input synchronization
   const lastExternalValueRef = useRef(value);
@@ -153,12 +159,23 @@ export function ColorPicker({
     }
   };
 
-  const handlePresetClick = (preset: string) => {
-    const normalizedHex = normalizeHex(preset);
-    setHsv(hexToHsv(normalizedHex));
-    setHexInput(normalizedHex.replace(/^#/, ""));
-    onChange(normalizedHex);
-  };
+  const handlePresetClick = useCallback(
+    (preset: string) => {
+      const normalizedHex = normalizeHex(preset);
+      setHsv(hexToHsv(normalizedHex));
+      setHexInput(normalizedHex.replace(/^#/, ""));
+      onChange(normalizedHex);
+    },
+    [onChange],
+  );
+
+  const handleHexInputFocus = useCallback(() => {
+    setIsHexInputFocused(true);
+  }, []);
+
+  const handleHexInputBlur = useCallback(() => {
+    setIsHexInputFocused(false);
+  }, []);
 
   const containerStyle: CSSProperties = {
     width: 200,
@@ -232,18 +249,22 @@ export function ColorPicker({
     fontWeight: 500,
   };
 
-  const hexInputStyle: CSSProperties = {
-    flex: 1,
-    height: 24,
-    padding: `0 ${SPACE_SM}`,
-    border: `1px solid ${COLOR_INPUT_BORDER}`,
-    borderRadius: RADIUS_SM,
-    backgroundColor: COLOR_INPUT_BG,
-    color: COLOR_TEXT,
-    fontSize: SIZE_FONT_SM,
-    outline: "none",
-    transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-  };
+  const hexInputStyle = useMemo<CSSProperties>(
+    () => ({
+      flex: 1,
+      height: 24,
+      padding: `0 ${SPACE_SM}`,
+      border: `1px solid ${isHexInputFocused ? COLOR_INPUT_BORDER_FOCUS : COLOR_INPUT_BORDER}`,
+      borderRadius: RADIUS_SM,
+      backgroundColor: COLOR_INPUT_BG,
+      color: COLOR_TEXT,
+      fontSize: SIZE_FONT_SM,
+      outline: "none",
+      transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      boxShadow: isHexInputFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+    }),
+    [isHexInputFocused],
+  );
 
   const presetContainerStyle: CSSProperties = {
     display: "flex",
@@ -309,21 +330,15 @@ export function ColorPicker({
           maxLength={6}
           aria-label="Hex color value"
           style={hexInputStyle}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = COLOR_INPUT_BORDER_FOCUS;
-            e.currentTarget.style.boxShadow = `0 0 0 2px ${COLOR_FOCUS_RING}`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLOR_INPUT_BORDER;
-            e.currentTarget.style.boxShadow = "none";
-          }}
+          onFocus={handleHexInputFocus}
+          onBlur={handleHexInputBlur}
         />
       </div>
 
       {renderPresets(presetColors, presetContainerStyle, handlePresetClick, getPresetStyle)}
     </div>
   );
-}
+});
 
 function renderOpacitySlider(
   show: boolean,

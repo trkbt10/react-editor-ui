@@ -2,7 +2,7 @@
  * @file GradientBar component - Visual gradient preview with draggable stop handles
  */
 
-import { useRef, useCallback } from "react";
+import { memo, useRef, useCallback } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import {
   COLOR_BORDER,
@@ -59,7 +59,12 @@ function createCheckerboardPattern(): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-export function GradientBar({
+
+
+
+
+
+export const GradientBar = memo(function GradientBar({
   value,
   onChange,
   selectedStopId,
@@ -221,4 +226,4 @@ export function GradientBar({
       ))}
     </div>
   );
-}
+});

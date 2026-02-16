@@ -2,7 +2,7 @@
  * @file PropertySection component - Section wrapper with collapsible header
  */
 
-import { useState } from "react";
+import { memo, useState, useMemo, useCallback } from "react";
 import type { ReactNode, CSSProperties } from "react";
 import { SectionHeader } from "../SectionHeader/SectionHeader";
 import { SPACE_SM, SPACE_MD } from "../../constants/styles";
@@ -25,7 +25,7 @@ const paddingMap = {
   md: SPACE_MD,
 };
 
-export function PropertySection({
+export const PropertySection = memo(function PropertySection({
   title,
   children,
   collapsible = false,
@@ -40,23 +40,24 @@ export function PropertySection({
   const isControlled = controlledExpanded !== undefined;
   const isExpanded = isControlled ? controlledExpanded : internalExpanded;
 
-  const handleToggle = (newExpanded: boolean) => {
-    if (!isControlled) {
-      setInternalExpanded(newExpanded);
-    }
-    onToggle?.(newExpanded);
-  };
+  const handleToggle = useCallback(
+    (newExpanded: boolean) => {
+      if (!isControlled) {
+        setInternalExpanded(newExpanded);
+      }
+      onToggle?.(newExpanded);
+    },
+    [isControlled, onToggle],
+  );
 
-  const contentStyle: CSSProperties = {
-    padding: `${paddingMap[contentPadding]} ${SPACE_MD}`,
-  };
+  const contentStyle = useMemo<CSSProperties>(
+    () => ({
+      padding: `${paddingMap[contentPadding]} ${SPACE_MD}`,
+    }),
+    [contentPadding],
+  );
 
-  const renderContent = () => {
-    if (collapsible && !isExpanded) {
-      return null;
-    }
-    return <div style={contentStyle}>{children}</div>;
-  };
+  const shouldShowContent = !collapsible || isExpanded;
 
   return (
     <div className={className}>
@@ -67,7 +68,7 @@ export function PropertySection({
         onToggle={handleToggle}
         action={action}
       />
-      {renderContent()}
+      {shouldShowContent ? <div style={contentStyle}>{children}</div> : null}
     </div>
   );
-}
+});

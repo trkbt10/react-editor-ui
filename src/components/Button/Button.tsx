@@ -1,20 +1,27 @@
 /**
  * @file Button component - Text button with optional icons
+ * Figma-style design with clean, minimal aesthetics
  */
 
-import type { ReactNode, MouseEvent, PointerEvent, CSSProperties } from "react";
+import {
+  memo,
+  useState,
+  useMemo,
+  useCallback,
+  forwardRef,
+} from "react";
+import type { ReactNode, MouseEvent, CSSProperties, Ref } from "react";
 import {
   COLOR_PRIMARY,
   COLOR_PRIMARY_HOVER,
   COLOR_PRIMARY_ACTIVE,
-  COLOR_SURFACE_RAISED,
   COLOR_HOVER,
   COLOR_ACTIVE,
   COLOR_ERROR,
   COLOR_TEXT,
   COLOR_TEXT_MUTED,
   COLOR_FOCUS_RING,
-  COLOR_BORDER,
+  COLOR_INPUT_BORDER,
   RADIUS_SM,
   DURATION_FAST,
   EASING_DEFAULT,
@@ -45,20 +52,23 @@ const sizeMap = {
   sm: {
     height: SIZE_HEIGHT_SM,
     fontSize: SIZE_FONT_SM,
-    paddingX: SPACE_SM,
+    paddingX: SPACE_MD,
     gap: SPACE_XS,
+    iconSize: "12px",
   },
   md: {
     height: SIZE_HEIGHT_MD,
-    fontSize: SIZE_FONT_MD,
-    paddingX: SPACE_MD,
+    fontSize: SIZE_FONT_SM,
+    paddingX: SPACE_LG,
     gap: SPACE_SM,
+    iconSize: "14px",
   },
   lg: {
     height: SIZE_HEIGHT_LG,
     fontSize: SIZE_FONT_MD,
     paddingX: SPACE_LG,
     gap: SPACE_SM,
+    iconSize: "16px",
   },
 };
 
@@ -69,117 +79,168 @@ const variantStyles = {
     bgActive: COLOR_PRIMARY_ACTIVE,
     color: "#ffffff",
     border: "none",
+    borderHover: "none",
   },
   secondary: {
-    bg: COLOR_SURFACE_RAISED,
+    bg: "transparent",
     bgHover: COLOR_HOVER,
     bgActive: COLOR_ACTIVE,
     color: COLOR_TEXT,
-    border: `1px solid ${COLOR_BORDER}`,
+    border: `1px solid ${COLOR_INPUT_BORDER}`,
+    borderHover: `1px solid ${COLOR_INPUT_BORDER}`,
   },
   ghost: {
     bg: "transparent",
     bgHover: COLOR_HOVER,
     bgActive: COLOR_ACTIVE,
     color: COLOR_TEXT_MUTED,
-    border: "none",
+    border: "1px solid transparent",
+    borderHover: "1px solid transparent",
   },
   danger: {
-    bg: COLOR_ERROR,
-    bgHover: "#dc2626",
-    bgActive: "#b91c1c",
-    color: "#ffffff",
-    border: "none",
+    bg: "var(--rei-color-error-bg, rgba(239, 68, 68, 0.1))",
+    bgHover: "var(--rei-color-error-bg-hover, rgba(239, 68, 68, 0.15))",
+    bgActive: "var(--rei-color-error-bg-active, rgba(239, 68, 68, 0.2))",
+    color: COLOR_ERROR,
+    border: `1px solid var(--rei-color-error-border, rgba(239, 68, 68, 0.3))`,
+    borderHover: `1px solid var(--rei-color-error-border-hover, rgba(239, 68, 68, 0.4))`,
   },
 };
 
-export function Button({
-  children,
-  size = "md",
-  variant = "secondary",
-  disabled = false,
-  iconStart,
-  iconEnd,
-  type = "button",
-  onClick,
-  className,
-}: ButtonProps) {
-  const sizeConfig = sizeMap[size];
-  const variantConfig = variantStyles[variant];
+export const Button = memo(
+  forwardRef(function Button(
+    {
+      children,
+      size = "md",
+      variant = "secondary",
+      disabled = false,
+      iconStart,
+      iconEnd,
+      type = "button",
+      onClick,
+      className,
+    }: ButtonProps,
+    ref: Ref<HTMLButtonElement>,
+  ) {
+    const [isHovered, setIsHovered] = useState(false);
+    const [isPressed, setIsPressed] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
 
-  const baseStyle: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: sizeConfig.gap,
-    height: sizeConfig.height,
-    padding: `0 ${sizeConfig.paddingX}`,
-    border: variantConfig.border,
-    borderRadius: RADIUS_SM,
-    backgroundColor: variantConfig.bg,
-    color: variantConfig.color,
-    fontSize: sizeConfig.fontSize,
-    fontWeight: 500,
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    outline: "none",
-    whiteSpace: "nowrap",
-  };
+    const sizeConfig = sizeMap[size];
+    const variantConfig = variantStyles[variant];
 
-  const handlePointerEnter = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = variantConfig.bgHover;
-  };
+    const computedStyle = useMemo<CSSProperties>(() => {
+      const getEffectiveBg = (): string => {
+        if (disabled) {
+          return variantConfig.bg;
+        }
+        if (isPressed) {
+          return variantConfig.bgActive;
+        }
+        if (isHovered) {
+          return variantConfig.bgHover;
+        }
+        return variantConfig.bg;
+      };
 
-  const handlePointerLeave = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = variantConfig.bg;
-  };
+      const effectiveBg = getEffectiveBg();
+      const effectiveBorder =
+        !disabled && isHovered ? variantConfig.borderHover : variantConfig.border;
 
-  const handlePointerDown = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = variantConfig.bgActive;
-  };
+      return {
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: sizeConfig.gap,
+        height: sizeConfig.height,
+        padding: `0 ${sizeConfig.paddingX}`,
+        border: effectiveBorder,
+        borderRadius: RADIUS_SM,
+        backgroundColor: effectiveBg,
+        color: variantConfig.color,
+        fontSize: sizeConfig.fontSize,
+        fontWeight: 500,
+        fontFamily: "inherit",
+        letterSpacing: "0.01em",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.4 : 1,
+        transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
+        outline: "none",
+        whiteSpace: "nowrap",
+        userSelect: "none",
+        WebkitFontSmoothing: "antialiased",
+        boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+        transform: isPressed && !disabled ? "scale(0.98)" : "scale(1)",
+      };
+    }, [
+      isHovered,
+      isPressed,
+      isFocused,
+      disabled,
+      sizeConfig,
+      variantConfig,
+    ]);
 
-  const handlePointerUp = (e: PointerEvent<HTMLButtonElement>) => {
-    if (disabled) {
-      return;
-    }
-    e.currentTarget.style.backgroundColor = variantConfig.bgHover;
-  };
+    const iconStyle = useMemo<CSSProperties>(
+      () => ({
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: sizeConfig.iconSize,
+        height: sizeConfig.iconSize,
+        flexShrink: 0,
+      }),
+      [sizeConfig.iconSize],
+    );
 
-  const handleFocus = (e: React.FocusEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.boxShadow = `0 0 0 2px ${COLOR_FOCUS_RING}`;
-  };
+    const handlePointerEnter = useCallback(() => {
+      if (!disabled) {
+        setIsHovered(true);
+      }
+    }, [disabled]);
 
-  const handleBlur = (e: React.FocusEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.boxShadow = "none";
-  };
+    const handlePointerLeave = useCallback(() => {
+      setIsHovered(false);
+      setIsPressed(false);
+    }, []);
 
-  return (
-    <button
-      type={type}
-      disabled={disabled}
-      onClick={onClick}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      className={className}
-      style={baseStyle}
-    >
-      {iconStart ? <span style={{ display: "flex" }}>{iconStart}</span> : null}
-      {children}
-      {iconEnd ? <span style={{ display: "flex" }}>{iconEnd}</span> : null}
-    </button>
-  );
-}
+    const handlePointerDown = useCallback(() => {
+      if (!disabled) {
+        setIsPressed(true);
+      }
+    }, [disabled]);
+
+    const handlePointerUp = useCallback(() => {
+      setIsPressed(false);
+    }, []);
+
+    const handleFocus = useCallback(() => {
+      setIsFocused(true);
+    }, []);
+
+    const handleBlur = useCallback(() => {
+      setIsFocused(false);
+    }, []);
+
+    return (
+      <button
+        ref={ref}
+        type={type}
+        disabled={disabled}
+        onClick={onClick}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        className={className}
+        style={computedStyle}
+      >
+        {iconStart ? <span style={iconStyle}>{iconStart}</span> : null}
+        {children}
+        {iconEnd ? <span style={iconStyle}>{iconEnd}</span> : null}
+      </button>
+    );
+  }),
+);

@@ -2,6 +2,7 @@
  * @file PropertyGrid component - Grid layout for property panels
  */
 
+import { memo, useMemo } from "react";
 import type { ReactNode, CSSProperties, HTMLAttributes } from "react";
 import { SPACE_SM, SPACE_MD, SPACE_LG } from "../../constants/styles";
 
@@ -18,22 +19,25 @@ const gapMap = {
   lg: SPACE_LG,
 };
 
-export function PropertyGrid({
+export const PropertyGrid = memo(function PropertyGrid({
   children,
   columns = 2,
   gap = "sm",
   className,
   ...rest
 }: PropertyGridProps) {
-  const style: CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: `repeat(${columns}, 1fr)`,
-    gap: gapMap[gap],
-  };
+  const style = useMemo<CSSProperties>(
+    () => ({
+      display: "grid",
+      gridTemplateColumns: `repeat(${columns}, 1fr)`,
+      gap: gapMap[gap],
+    }),
+    [columns, gap],
+  );
 
   return (
     <div className={className} style={style} {...rest}>
       {children}
     </div>
   );
-}
+});

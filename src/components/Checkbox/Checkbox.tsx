@@ -2,7 +2,8 @@
  * @file Checkbox component
  */
 
-import type { CSSProperties, PointerEvent } from "react";
+import { memo, useState, useMemo, useCallback } from "react";
+import type { CSSProperties } from "react";
 import {
   COLOR_PRIMARY,
   COLOR_TEXT,
@@ -53,11 +54,11 @@ function getThumbTransform(
   return `translateX(${config.thumbOffset}px)`;
 }
 
-function renderCheckIcon(iconSize: number) {
+const CheckIcon = memo(function CheckIcon({ size }: { size: number }) {
   return (
     <svg
-      width={iconSize}
-      height={iconSize}
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -68,13 +69,17 @@ function renderCheckIcon(iconSize: number) {
       <polyline points="20 6 9 17 4 12" />
     </svg>
   );
-}
+});
 
-function renderIndeterminateIcon(iconSize: number) {
+const IndeterminateIcon = memo(function IndeterminateIcon({
+  size,
+}: {
+  size: number;
+}) {
   return (
     <svg
-      width={iconSize}
-      height={iconSize}
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -84,28 +89,9 @@ function renderIndeterminateIcon(iconSize: number) {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
-}
+});
 
-function renderIcon(
-  checked: boolean,
-  indeterminate: boolean,
-  iconSize: number,
-) {
-  if (indeterminate) {
-    return renderIndeterminateIcon(iconSize);
-  }
-  if (checked) {
-    return renderCheckIcon(iconSize);
-  }
-  return null;
-}
-
-
-
-
-
-
-export function Checkbox({
+export const Checkbox = memo(function Checkbox({
   checked,
   onChange,
   label,
@@ -116,119 +102,140 @@ export function Checkbox({
   "aria-label": ariaLabel,
   className,
 }: CheckboxProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
   const sizeConfig = sizeMap[size];
   const switchConfig = switchSizeMap[size];
   const isActive = checked || indeterminate;
 
-  const containerStyle: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: SPACE_SM,
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "inline-flex",
+      alignItems: "center",
+      gap: SPACE_SM,
+      cursor: disabled ? "not-allowed" : "pointer",
+      opacity: disabled ? 0.5 : 1,
+    }),
+    [disabled],
+  );
 
-  const boxStyle: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: sizeConfig.box,
-    height: sizeConfig.box,
-    borderRadius: RADIUS_SM,
-    border: `1px solid ${isActive ? COLOR_PRIMARY : COLOR_BORDER}`,
-    backgroundColor: isActive ? COLOR_PRIMARY : "transparent",
-    color: "#ffffff",
-    transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
-    flexShrink: 0,
-  };
+  const boxStyle = useMemo<CSSProperties>(() => {
+    const getBorderColor = (): string => {
+      if (!disabled && isHovered) {
+        return COLOR_INPUT_BORDER_FOCUS;
+      }
+      if (isActive) {
+        return COLOR_PRIMARY;
+      }
+      return COLOR_BORDER;
+    };
 
-  const labelStyle: CSSProperties = {
-    color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
-    fontSize: sizeConfig.fontSize,
-    userSelect: "none",
-  };
+    const borderColor = getBorderColor();
 
-  const handleClick = () => {
-    if (disabled) {
-      return;
-    }
-    onChange(!checked);
-  };
+    return {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: sizeConfig.box,
+      height: sizeConfig.box,
+      borderRadius: RADIUS_SM,
+      border: `1px solid ${borderColor}`,
+      backgroundColor: isActive ? COLOR_PRIMARY : "transparent",
+      color: "#ffffff",
+      transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
+      flexShrink: 0,
+      boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+    };
+  }, [isHovered, isFocused, disabled, isActive, sizeConfig.box]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (disabled) {
-      return;
-    }
-    if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
+  const trackStyle = useMemo<CSSProperties>(() => {
+    const borderColor =
+      !disabled && isHovered ? COLOR_INPUT_BORDER_FOCUS : "transparent";
+
+    return {
+      display: "inline-flex",
+      alignItems: "center",
+      width: switchConfig.trackWidth,
+      height: switchConfig.trackHeight,
+      borderRadius: switchConfig.trackHeight / 2,
+      backgroundColor: checked ? COLOR_PRIMARY : COLOR_BORDER,
+      transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
+      flexShrink: 0,
+      position: "relative",
+      boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+      border: `1px solid ${borderColor}`,
+    };
+  }, [isHovered, isFocused, disabled, checked, switchConfig]);
+
+  const thumbStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      width: switchConfig.thumbSize,
+      height: switchConfig.thumbSize,
+      borderRadius: "50%",
+      backgroundColor: "#ffffff",
+      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+      transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
+      transform: getThumbTransform(checked, switchConfig),
+    }),
+    [checked, switchConfig],
+  );
+
+  const labelStyle = useMemo<CSSProperties>(
+    () => ({
+      color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
+      fontSize: sizeConfig.fontSize,
+      userSelect: "none",
+    }),
+    [disabled, sizeConfig.fontSize],
+  );
+
+  const handleClick = useCallback(() => {
+    if (!disabled) {
       onChange(!checked);
     }
-  };
+  }, [disabled, checked, onChange]);
 
-  const handlePointerEnter = (e: PointerEvent<HTMLDivElement>) => {
-    if (disabled) {
-      return;
-    }
-    const box = e.currentTarget.querySelector(
-      "[data-checkbox-box]",
-    ) as HTMLElement | null;
-    if (box) {
-      box.style.borderColor = COLOR_INPUT_BORDER_FOCUS;
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (disabled) {
+        return;
+      }
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        onChange(!checked);
+      }
+    },
+    [disabled, checked, onChange],
+  );
 
-  const handlePointerLeave = (e: PointerEvent<HTMLDivElement>) => {
-    if (disabled) {
-      return;
+  const handlePointerEnter = useCallback(() => {
+    if (!disabled) {
+      setIsHovered(true);
     }
-    const box = e.currentTarget.querySelector(
-      "[data-checkbox-box]",
-    ) as HTMLElement | null;
-    if (box) {
-      box.style.borderColor = isActive ? COLOR_PRIMARY : COLOR_BORDER;
+  }, [disabled]);
+
+  const handlePointerLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
+
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+  }, []);
+
+  const renderIcon = () => {
+    if (indeterminate) {
+      return <IndeterminateIcon size={sizeConfig.icon} />;
     }
-  };
-
-  const handleFocus = (e: React.FocusEvent<HTMLDivElement>) => {
-    const box = e.currentTarget.querySelector(
-      "[data-checkbox-box]",
-    ) as HTMLElement | null;
-    if (box) {
-      box.style.boxShadow = `0 0 0 2px ${COLOR_FOCUS_RING}`;
+    if (checked) {
+      return <CheckIcon size={sizeConfig.icon} />;
     }
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
-    const box = e.currentTarget.querySelector(
-      "[data-checkbox-box]",
-    ) as HTMLElement | null;
-    if (box) {
-      box.style.boxShadow = "none";
-    }
-  };
-
-  // Switch variant styles
-  const trackStyle: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    width: switchConfig.trackWidth,
-    height: switchConfig.trackHeight,
-    borderRadius: switchConfig.trackHeight / 2,
-    backgroundColor: checked ? COLOR_PRIMARY : COLOR_BORDER,
-    transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
-    flexShrink: 0,
-    position: "relative",
-  };
-
-  const thumbStyle: CSSProperties = {
-    position: "absolute",
-    width: switchConfig.thumbSize,
-    height: switchConfig.thumbSize,
-    borderRadius: "50%",
-    backgroundColor: "#ffffff",
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
-    transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
-    transform: getThumbTransform(checked, switchConfig),
+    return null;
   };
 
   if (variant === "switch") {
@@ -248,7 +255,7 @@ export function Checkbox({
         className={className}
         style={containerStyle}
       >
-        <span data-checkbox-box style={trackStyle}>
+        <span style={trackStyle}>
           <span style={thumbStyle} />
         </span>
         {label ? <span style={labelStyle}>{label}</span> : null}
@@ -272,10 +279,8 @@ export function Checkbox({
       className={className}
       style={containerStyle}
     >
-      <span data-checkbox-box style={boxStyle}>
-        {renderIcon(checked, indeterminate, sizeConfig.icon)}
-      </span>
+      <span style={boxStyle}>{renderIcon()}</span>
       {label ? <span style={labelStyle}>{label}</span> : null}
     </div>
   );
-}
+});

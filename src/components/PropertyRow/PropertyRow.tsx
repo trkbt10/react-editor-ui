@@ -2,6 +2,7 @@
  * @file PropertyRow component - Label and value pair for inspector
  */
 
+import { memo, useState, useMemo, useCallback } from "react";
 import type { ReactNode, CSSProperties } from "react";
 import {
   COLOR_HOVER,
@@ -20,48 +21,58 @@ export type PropertyRowProps = {
   className?: string;
 };
 
-export function PropertyRow({
+export const PropertyRow = memo(function PropertyRow({
   label,
   children,
   onClick,
   className,
 }: PropertyRowProps) {
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "flex-start",
-    padding: `${SPACE_SM} ${SPACE_MD}`,
-    cursor: onClick ? "pointer" : "default",
-    transition: "background-color 100ms ease",
-  };
+  const [isHovered, setIsHovered] = useState(false);
 
-  const labelStyle: CSSProperties = {
-    width: SIZE_PROPERTY_LABEL,
-    flexShrink: 0,
-    color: COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_SM,
-    lineHeight: 1.4,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "flex-start",
+      padding: `${SPACE_SM} ${SPACE_MD}`,
+      cursor: onClick ? "pointer" : "default",
+      transition: "background-color 100ms ease",
+      backgroundColor: onClick && isHovered ? COLOR_HOVER : "transparent",
+    }),
+    [onClick, isHovered],
+  );
 
-  const valueStyle: CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-    color: COLOR_TEXT,
-    fontSize: SIZE_FONT_SM,
-    lineHeight: 1.4,
-    wordBreak: "break-word",
-  };
+  const labelStyle = useMemo<CSSProperties>(
+    () => ({
+      width: SIZE_PROPERTY_LABEL,
+      flexShrink: 0,
+      color: COLOR_TEXT_MUTED,
+      fontSize: SIZE_FONT_SM,
+      lineHeight: 1.4,
+    }),
+    [],
+  );
 
-  const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
+  const valueStyle = useMemo<CSSProperties>(
+    () => ({
+      flex: 1,
+      minWidth: 0,
+      color: COLOR_TEXT,
+      fontSize: SIZE_FONT_SM,
+      lineHeight: 1.4,
+      wordBreak: "break-word",
+    }),
+    [],
+  );
+
+  const handlePointerEnter = useCallback(() => {
     if (onClick) {
-      e.currentTarget.style.backgroundColor = COLOR_HOVER;
+      setIsHovered(true);
     }
-  };
+  }, [onClick]);
 
-  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (onClick) {
-      e.currentTarget.style.backgroundColor = "transparent";
-    }
-  };
+  const handlePointerLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   return (
     <div
@@ -76,4 +87,4 @@ export function PropertyRow({
       <span style={valueStyle}>{children}</span>
     </div>
   );
-}
+});

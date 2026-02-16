@@ -2,7 +2,8 @@
  * @file SectionHeader component - Collapsible section header
  */
 
-import { useState, type ReactNode, type CSSProperties } from "react";
+import { memo, useState, useMemo, useCallback } from "react";
+import type { ReactNode, CSSProperties } from "react";
 import {
   COLOR_HOVER,
   COLOR_TEXT,
@@ -14,12 +15,26 @@ import {
   EASING_DEFAULT,
 } from "../../constants/styles";
 
-function renderChevron(collapsible: boolean, chevronStyle: CSSProperties) {
-  if (!collapsible) {
-    return null;
-  }
+const ChevronIcon = memo(function ChevronIcon({
+  isExpanded,
+}: {
+  isExpanded: boolean;
+}) {
+  const style = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: SPACE_SM,
+      color: COLOR_ICON,
+      transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+      transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
+    }),
+    [isExpanded],
+  );
+
   return (
-    <span style={chevronStyle}>
+    <span style={style}>
       <svg
         width="12"
         height="12"
@@ -32,22 +47,7 @@ function renderChevron(collapsible: boolean, chevronStyle: CSSProperties) {
       </svg>
     </span>
   );
-}
-
-function renderAction(
-  action: ReactNode,
-  actionStyle: CSSProperties,
-  handleActionClick: (e: React.MouseEvent) => void,
-) {
-  if (!action) {
-    return null;
-  }
-  return (
-    <span style={actionStyle} onClick={handleActionClick}>
-      {action}
-    </span>
-  );
-}
+});
 
 export type SectionHeaderProps = {
   title: string;
@@ -59,7 +59,7 @@ export type SectionHeaderProps = {
   className?: string;
 };
 
-export function SectionHeader({
+export const SectionHeader = memo(function SectionHeader({
   title,
   collapsible = false,
   expanded: controlledExpanded,
@@ -69,44 +69,46 @@ export function SectionHeader({
   className,
 }: SectionHeaderProps) {
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+  const [isHovered, setIsHovered] = useState(false);
+
   const isControlled = controlledExpanded !== undefined;
   const isExpanded = isControlled ? controlledExpanded : internalExpanded;
 
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    padding: `${SPACE_SM} ${SPACE_MD}`,
-    cursor: collapsible ? "pointer" : "default",
-    userSelect: "none",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-  };
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      padding: `${SPACE_SM} ${SPACE_MD}`,
+      cursor: collapsible ? "pointer" : "default",
+      userSelect: "none",
+      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      backgroundColor: collapsible && isHovered ? COLOR_HOVER : "transparent",
+    }),
+    [collapsible, isHovered],
+  );
 
-  const titleStyle: CSSProperties = {
-    flex: 1,
-    color: COLOR_TEXT,
-    fontSize: SIZE_FONT_SM,
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  };
+  const titleStyle = useMemo<CSSProperties>(
+    () => ({
+      flex: 1,
+      color: COLOR_TEXT,
+      fontSize: SIZE_FONT_SM,
+      fontWeight: 600,
+      textTransform: "uppercase",
+      letterSpacing: "0.05em",
+    }),
+    [],
+  );
 
-  const chevronStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: SPACE_SM,
-    color: COLOR_ICON,
-    transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-    transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
-  };
+  const actionStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      marginLeft: SPACE_SM,
+    }),
+    [],
+  );
 
-  const actionStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    marginLeft: SPACE_SM,
-  };
-
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (!collapsible) {
       return;
     }
@@ -116,23 +118,21 @@ export function SectionHeader({
       setInternalExpanded(newExpanded);
     }
     onToggle?.(newExpanded);
-  };
+  }, [collapsible, isExpanded, isControlled, onToggle]);
 
-  const handlePointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerEnter = useCallback(() => {
     if (collapsible) {
-      e.currentTarget.style.backgroundColor = COLOR_HOVER;
+      setIsHovered(true);
     }
-  };
+  }, [collapsible]);
 
-  const handlePointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (collapsible) {
-      e.currentTarget.style.backgroundColor = "transparent";
-    }
-  };
+  const handlePointerLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
-  const handleActionClick = (e: React.MouseEvent) => {
+  const handleActionClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-  };
+  }, []);
 
   return (
     <div
@@ -144,9 +144,9 @@ export function SectionHeader({
       className={className}
       style={containerStyle}
     >
-      {renderChevron(collapsible, chevronStyle)}
+      {collapsible ? <ChevronIcon isExpanded={isExpanded} /> : null}
       <span style={titleStyle}>{title}</span>
-      {renderAction(action, actionStyle, handleActionClick)}
+      {action ? <span style={actionStyle} onClick={handleActionClick}>{action}</span> : null}
     </div>
   );
-}
+});
