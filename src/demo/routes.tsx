@@ -4,48 +4,44 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import {
-  IconButton,
-  Button,
-  Input,
-  UnitInput,
-  Badge,
-  Checkbox,
-  SegmentedControl,
-  ColorPicker,
-  ColorInput,
-  Toolbar,
-  ToolbarGroup,
-  ToolbarDivider,
-  PropertyGrid,
-  PropertyGridItem,
-  PropertyRow,
-  PropertySection,
-  SectionHeader,
-  TreeItem,
-  LayerItem,
-  ContextMenu,
-  Select,
-  StatusBar,
-  StatusBarItem,
-  LogEntry,
-  Panel,
-  StrokeSettingsPanel,
-  StrokePanelExpanded,
-  StrokePanelCompact,
-  createDefaultExpandedSettings,
-  createDefaultCompactSettings,
-  GradientEditor,
-  FillEditor,
-  createDefaultGradient,
-  Tooltip,
-  TransformButtons,
-  TypographyPanel,
-  FontsPanel,
-  PositionPanel,
-  createDefaultPositionSettings,
-  SplitButton,
-} from "../components";
+import { IconButton } from "../components/IconButton/IconButton";
+import { Button } from "../components/Button/Button";
+import { Input } from "../components/Input/Input";
+import { UnitInput } from "../components/UnitInput/UnitInput";
+import { Badge } from "../components/Badge/Badge";
+import { Checkbox } from "../components/Checkbox/Checkbox";
+import { SegmentedControl } from "../components/SegmentedControl/SegmentedControl";
+import { ColorPicker } from "../components/ColorPicker/ColorPicker";
+import { ColorInput } from "../components/ColorInput/ColorInput";
+import { Toolbar } from "../components/Toolbar/Toolbar";
+import { ToolbarGroup } from "../components/Toolbar/ToolbarGroup";
+import { ToolbarDivider } from "../components/Toolbar/ToolbarDivider";
+import { PropertyGrid } from "../components/PropertyGrid/PropertyGrid";
+import { PropertyGridItem } from "../components/PropertyGrid/PropertyGridItem";
+import { PropertyRow } from "../components/PropertyRow/PropertyRow";
+import { PropertySection } from "../components/PropertySection/PropertySection";
+import { SectionHeader } from "../components/SectionHeader/SectionHeader";
+import { TreeItem } from "../components/TreeItem/TreeItem";
+import { LayerItem } from "../components/LayerItem/LayerItem";
+import { ContextMenu } from "../components/ContextMenu/ContextMenu";
+import { Select } from "../components/Select/Select";
+import { StatusBar } from "../components/StatusBar/StatusBar";
+import { StatusBarItem } from "../components/StatusBar/StatusBarItem";
+import { LogEntry } from "../components/LogEntry/LogEntry";
+import { Panel } from "../components/Panel/Panel";
+import { StrokeSettingsPanel } from "../components/StrokeSettingsPanel/StrokeSettingsPanel";
+import { StrokePanelExpanded, createDefaultExpandedSettings } from "../components/StrokeSettingsPanel/StrokePanelExpanded";
+import { StrokePanelCompact, createDefaultCompactSettings } from "../components/StrokeSettingsPanel/StrokePanelCompact";
+import { GradientEditor } from "../components/GradientEditor/GradientEditor";
+import { createDefaultGradient } from "../components/GradientEditor/gradientUtils";
+import { FillEditor } from "../components/FillEditor/FillEditor";
+import { Tooltip } from "../components/Tooltip/Tooltip";
+import { TransformButtons } from "../components/TransformButtons/TransformButtons";
+import { TypographyPanel } from "../components/TypographyPanel/TypographyPanel";
+import { FontsPanel } from "../components/FontsPanel/FontsPanel";
+import { PositionPanel, createDefaultPositionSettings } from "../components/PositionPanel/PositionPanel";
+import { SplitButton } from "../components/SplitButton/SplitButton";
+import { LogViewer, type LogItem } from "../components/LogViewer/LogViewer";
 import {
   LuRotateCw,
   LuRotateCcw,
@@ -66,34 +62,26 @@ import {
   LuCode,
   LuPenTool,
 } from "react-icons/lu";
-import type {
-  ColorValue,
-  StrokeSettings,
-  StrokePanelExpandedSettings,
-  StrokePanelCompactSettings,
-  SelectOption,
-  GradientValue,
-  FillValue,
-  TypographySettings,
-  FontItem,
-  PositionSettings,
-  Token,
-  Tokenizer,
-} from "../components";
-import { LogViewer, type LogItem } from "../components/LogViewer/LogViewer";
-import {
-  CodeEditor,
-  TextEditor,
-  Canvas,
-  CanvasContent,
-  CanvasGridLayer,
-  CanvasHorizontalRuler,
-  CanvasVerticalRuler,
-  CanvasRulerCorner,
-  CanvasGuides,
-  CanvasCheckerboard,
-} from "../components";
-import type { ViewportState } from "../components";
+import type { ColorValue } from "../components/ColorPicker/ColorPicker";
+import type { StrokeSettings } from "../components/StrokeSettingsPanel/StrokeSettingsPanel";
+import type { StrokePanelExpandedSettings } from "../components/StrokeSettingsPanel/StrokePanelExpanded";
+import type { StrokePanelCompactSettings } from "../components/StrokeSettingsPanel/StrokePanelCompact";
+import type { SelectOption } from "../components/Select/Select";
+import type { GradientValue } from "../components/GradientEditor/GradientEditor";
+import type { FillValue } from "../components/FillEditor/FillEditor";
+import type { TypographySettings } from "../components/TypographyPanel/TypographyPanel";
+import type { FontItem } from "../components/FontsPanel/FontsPanel";
+import type { PositionSettings } from "../components/PositionPanel/PositionPanel";
+import { CodeEditor } from "../components/Editor/code/CodeEditor";
+import { TextEditor } from "../components/Editor/text/TextEditor";
+import type { Token, Tokenizer } from "../components/Editor/code/types";
+import { Canvas } from "../components/Canvas/Canvas";
+import { CanvasContent } from "../components/Canvas/CanvasContent";
+import { CanvasGridLayer } from "../components/Canvas/CanvasGridLayer";
+import { CanvasHorizontalRuler, CanvasVerticalRuler, CanvasRulerCorner } from "../components/Canvas/CanvasRuler";
+import { CanvasGuides } from "../components/Canvas/CanvasGuide";
+import { CanvasCheckerboard } from "../components/Canvas/CanvasCheckerboard";
+import type { ViewportState } from "../components/Canvas/core/types";
 import {
   createDocument,
   wrapWithTag,
