@@ -25,6 +25,7 @@
       "label": "Layout",
       "description": "Components for organizing and structuring UI",
       "components": [
+        "FloatingToolbar",
         "Panel",
         "PropertyGrid",
         "PropertySection",

@@ -31,6 +31,7 @@ import { SplitButtonDemo } from "./pages/primitives/SplitButtonDemo";
 
 // Layout demos
 import { ToolbarDemo } from "./pages/layout/ToolbarDemo";
+import { FloatingToolbarDemo } from "./pages/layout/FloatingToolbarDemo";
 import { PropertyGridDemo } from "./pages/layout/PropertyGridDemo";
 import { PropertySectionDemo } from "./pages/layout/PropertySectionDemo";
 import { PanelDemo } from "./pages/layout/PanelDemo";
@@ -181,6 +182,12 @@ export const demoCategories: DemoCategory[] = [
         label: "Toolbar",
         path: "toolbar",
         element: <ToolbarDemo />,
+      },
+      {
+        id: "floating-toolbar",
+        label: "FloatingToolbar",
+        path: "floating-toolbar",
+        element: <FloatingToolbarDemo />,
       },
       {
         id: "property-grid",
