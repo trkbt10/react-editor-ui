@@ -23,6 +23,15 @@ export function IconButtonDemo() {
           <IconButton icon={<PlayIcon />} aria-label="Play" variant="ghost" />
           <IconButton icon={<PlayIcon />} aria-label="Play" variant="filled" />
           <IconButton icon={<PlayIcon />} aria-label="Play" variant="minimal" />
+          <IconButton icon={<PlayIcon />} aria-label="Play" variant="selected" />
+        </DemoRow>
+      </DemoSection>
+
+      <DemoSection label="Round">
+        <DemoRow>
+          <IconButton icon={<PlayIcon />} aria-label="Play" round />
+          <IconButton icon={<PlayIcon />} aria-label="Play" variant="filled" round />
+          <IconButton icon={<PlayIcon />} aria-label="Play" variant="selected" round />
         </DemoRow>
       </DemoSection>
 

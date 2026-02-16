@@ -26,6 +26,8 @@ import {
   LuMonitor,
   LuSmartphone,
   LuClock,
+  LuMinus,
+  LuPlus,
 } from "react-icons/lu";
 
 import { TabBar } from "../../../components/TabBar/TabBar";
@@ -675,36 +677,22 @@ function EditorArea({ document, onDocumentChange }: EditorAreaProps) {
                 Counter: 0
               </div>
               <div style={{ display: "flex", gap: 16 }}>
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    backgroundColor: "#3478f6",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontSize: 18,
-                  }}
-                >
-                  -
-                </div>
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    backgroundColor: "#3478f6",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontSize: 18,
-                  }}
-                >
-                  +
-                </div>
+                <IconButton
+                  icon={<LuMinus size={16} />}
+                  aria-label="Decrement"
+                  size="md"
+                  variant="selected"
+                  round
+                  onClick={() => {}}
+                />
+                <IconButton
+                  icon={<LuPlus size={16} />}
+                  aria-label="Increment"
+                  size="md"
+                  variant="selected"
+                  round
+                  onClick={() => {}}
+                />
               </div>
             </div>
           </div>

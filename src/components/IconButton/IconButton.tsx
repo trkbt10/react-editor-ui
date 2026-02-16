@@ -56,6 +56,8 @@ export type IconButtonProps = {
   "aria-label": string;
   size?: "sm" | "md" | "lg" | "xl";
   variant?: "default" | "ghost" | "filled" | "minimal" | "selected";
+  /** Render as a circular button */
+  round?: boolean;
   disabled?: boolean;
   active?: boolean;
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
@@ -76,6 +78,7 @@ export const IconButton = memo(
       "aria-label": ariaLabel,
       size = "md",
       variant = "default",
+      round = false,
       disabled = false,
       active = false,
       onClick,
@@ -113,7 +116,7 @@ export const IconButton = memo(
           height,
           padding: 0,
           border: "none",
-          borderRadius: RADIUS_MD,
+          borderRadius: round ? "50%" : RADIUS_MD,
           backgroundColor: getBg(),
           color: COLOR_TEXT_ON_EMPHASIS,
           cursor: disabled ? "not-allowed" : "pointer",
@@ -164,7 +167,7 @@ export const IconButton = memo(
         height,
         padding: 0,
         border: "none",
-        borderRadius: RADIUS_SM,
+        borderRadius: round ? "50%" : RADIUS_SM,
         backgroundColor: effectiveBg,
         color: effectiveColor,
         cursor: disabled ? "not-allowed" : "pointer",
@@ -173,7 +176,7 @@ export const IconButton = memo(
         outline: "none",
         boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
       };
-    }, [isHovered, isPressed, isFocused, disabled, active, variant, height]);
+    }, [isHovered, isPressed, isFocused, disabled, active, variant, height, round]);
 
     const iconStyle = useMemo<CSSProperties>(
       () => ({
