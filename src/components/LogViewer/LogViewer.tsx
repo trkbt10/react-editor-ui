@@ -124,7 +124,6 @@ export function LogViewer({
     scrollOffset,
     onScroll,
     measureItem,
-    scrollToIndex: virtualScrollToIndex,
     getScrollPosition,
   } = useVirtualScroll({
     itemCount: paginatedItems.length,
@@ -171,11 +170,32 @@ export function LogViewer({
     [onItemClick, items, pagination, page, pageSize],
   );
 
+  // Helper to calculate scroll target for alignment
+  const calculateScrollTarget = useCallback(
+    (index: number, align: "start" | "center" | "end" = "start"): number => {
+      const pos = getScrollPosition(index);
+      const itemHeight = estimatedItemHeight;
+      switch (align) {
+        case "center":
+          return Math.max(0, pos - containerHeight / 2 + itemHeight / 2);
+        case "end":
+          return Math.max(0, pos - containerHeight + itemHeight);
+        case "start":
+        default:
+          return pos;
+      }
+    },
+    [getScrollPosition, containerHeight, estimatedItemHeight],
+  );
+
   // Imperative handle
   useImperativeHandle(
     ref,
     () => ({
       scrollToIndex: (index: number, align?: "start" | "center" | "end") => {
+        if (!containerRef.current) {
+          return;
+        }
         if (pagination) {
           // Navigate to correct page first
           const targetPage = Math.floor(index / pageSize);
@@ -183,9 +203,11 @@ export function LogViewer({
             onPageChange?.(targetPage);
           }
           const indexInPage = index % pageSize;
-          virtualScrollToIndex(indexInPage, align);
+          const target = calculateScrollTarget(indexInPage, align);
+          containerRef.current.scrollTop = target;
         } else {
-          virtualScrollToIndex(index, align);
+          const target = calculateScrollTarget(index, align);
+          containerRef.current.scrollTop = target;
         }
       },
       scrollToTop: () => {
@@ -207,19 +229,25 @@ export function LogViewer({
         };
       },
     }),
-    [virtualScrollToIndex, totalHeight, virtualItems, pagination, page, pageSize, onPageChange],
+    [calculateScrollTarget, totalHeight, virtualItems, pagination, page, pageSize, onPageChange],
   );
 
   // Auto-scroll to selected item
+  // Use DOM scrollTo instead of virtualScrollToIndex to keep DOM and internal state in sync
   useEffect(() => {
-    if (selectedIndex !== undefined) {
-      const indexInPage = pagination ? selectedIndex % pageSize : selectedIndex;
-      const pos = getScrollPosition(indexInPage);
-      const isVisible =
-        pos >= scrollOffset && pos + estimatedItemHeight <= scrollOffset + containerHeight;
-      if (!isVisible) {
-        virtualScrollToIndex(indexInPage, "center");
-      }
+    if (selectedIndex === undefined || !containerRef.current) {
+      return;
+    }
+    const indexInPage = pagination ? selectedIndex % pageSize : selectedIndex;
+    const pos = getScrollPosition(indexInPage);
+    const isVisible =
+      pos >= scrollOffset && pos + estimatedItemHeight <= scrollOffset + containerHeight;
+    if (!isVisible) {
+      // Calculate center position and scroll DOM directly
+      // This triggers onScroll which updates internal state
+      const itemHeight = estimatedItemHeight;
+      const targetScrollTop = Math.max(0, pos - containerHeight / 2 + itemHeight / 2);
+      containerRef.current.scrollTop = targetScrollTop;
     }
   }, [
     selectedIndex,
@@ -229,7 +257,6 @@ export function LogViewer({
     scrollOffset,
     containerHeight,
     estimatedItemHeight,
-    virtualScrollToIndex,
   ]);
 
   const containerStyle: CSSProperties = {
