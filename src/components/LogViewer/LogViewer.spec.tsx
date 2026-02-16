@@ -6,17 +6,20 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { LogViewer, type LogItem } from "./LogViewer";
 
 // Mock ResizeObserver with no-op implementations
-class MockResizeObserver implements ResizeObserver {
-  observe(): void {
-    // no-op for testing
-  }
-  unobserve(): void {
-    // no-op for testing
-  }
-  disconnect(): void {
-    // no-op for testing
-  }
-}
+const MockResizeObserver: typeof ResizeObserver = function MockResizeObserver(
+  this: ResizeObserver
+) {
+  // no-op constructor
+} as typeof ResizeObserver;
+MockResizeObserver.prototype.observe = function observe() {
+  // no-op for testing
+};
+MockResizeObserver.prototype.unobserve = function unobserve() {
+  // no-op for testing
+};
+MockResizeObserver.prototype.disconnect = function disconnect() {
+  // no-op for testing
+};
 global.ResizeObserver = MockResizeObserver;
 
 // Helper to create test log items
