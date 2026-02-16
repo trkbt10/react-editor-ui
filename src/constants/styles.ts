@@ -271,3 +271,15 @@ export const COLOR_CANVAS_GUIDE = "var(--rei-canvas-guide, rgba(59, 130, 246, 0.
 export const COLOR_CANVAS_CHECKER_LIGHT = "var(--rei-canvas-checker-light, #3a3a3a)";
 export const COLOR_CANVAS_CHECKER_DARK = "var(--rei-canvas-checker-dark, #2d2d2d)";
 export const SIZE_CANVAS_RULER = "var(--rei-canvas-ruler-size, 20px)";
+
+// ========================================
+// BOUNDING BOX
+// ========================================
+
+export const COLOR_BOUNDING_BOX_STROKE = "var(--rei-bounding-box-stroke, #18a0fb)";
+export const COLOR_BOUNDING_BOX_HANDLE_FILL = "var(--rei-bounding-box-handle-fill, #ffffff)";
+export const COLOR_BOUNDING_BOX_HANDLE_STROKE = "var(--rei-bounding-box-handle-stroke, #18a0fb)";
+export const COLOR_BOUNDING_BOX_LABEL_BG = "var(--rei-bounding-box-label-bg, #18a0fb)";
+export const COLOR_BOUNDING_BOX_LABEL_TEXT = "var(--rei-bounding-box-label-text, #ffffff)";
+export const SIZE_BOUNDING_BOX_HANDLE = "var(--rei-bounding-box-handle-size, 8px)";
+export const SIZE_BOUNDING_BOX_STROKE_WIDTH = "var(--rei-bounding-box-stroke-width, 1px)";

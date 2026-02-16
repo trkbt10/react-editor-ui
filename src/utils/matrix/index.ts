@@ -1,12 +1,9 @@
 /**
- * @file Utils module exports
+ * @file Matrix module exports
  */
 
-export { createLRUCache } from "./lruCache";
-export type { LRUCache } from "./lruCache";
+export type { Matrix2D, Point2D, Transform2D } from "./types";
 
-// Matrix utilities
-export type { Matrix2D, Point2D, Transform2D } from "./matrix";
 export {
   IDENTITY_MATRIX,
   createRotationMatrix,
