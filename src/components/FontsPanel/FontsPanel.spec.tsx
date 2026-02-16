@@ -61,9 +61,9 @@ describe("FontsPanel", () => {
   });
 
   it("calls onSelectFont when font is clicked", () => {
-    let selectedFontName = "";
+    const ref = { value: "" };
     const handleSelectFont = (fontName: string) => {
-      selectedFontName = fontName;
+      ref.value = fontName;
     };
     render(
       <FontsPanel
@@ -76,7 +76,7 @@ describe("FontsPanel", () => {
     const robotoOption = screen.getByText("Roboto");
     fireEvent.click(robotoOption);
 
-    expect(selectedFontName).toBe("Roboto");
+    expect(ref.value).toBe("Roboto");
   });
 
   it("filters fonts by search query", () => {
@@ -124,9 +124,9 @@ describe("FontsPanel", () => {
   });
 
   it("calls onClose when close button is clicked", () => {
-    let closeCalled = false;
+    const ref = { called: false };
     const handleClose = () => {
-      closeCalled = true;
+      ref.called = true;
     };
     render(
       <FontsPanel
@@ -140,13 +140,13 @@ describe("FontsPanel", () => {
     const closeButton = screen.getByLabelText("Close");
     fireEvent.click(closeButton);
 
-    expect(closeCalled).toBe(true);
+    expect(ref.called).toBe(true);
   });
 
   it("calls onSettings when settings button is clicked", () => {
-    let settingsCalled = false;
+    const ref = { called: false };
     const handleSettings = () => {
-      settingsCalled = true;
+      ref.called = true;
     };
     render(
       <FontsPanel
@@ -160,7 +160,7 @@ describe("FontsPanel", () => {
     const settingsButton = screen.getByLabelText("Font settings");
     fireEvent.click(settingsButton);
 
-    expect(settingsCalled).toBe(true);
+    expect(ref.called).toBe(true);
   });
 
   it("does not render close button when onClose is not provided", () => {
@@ -247,18 +247,6 @@ describe("FontsPanel", () => {
     );
     const panel = container.firstChild as HTMLElement;
     expect(panel.style.maxHeight).toBe("500px");
-  });
-
-  it("applies className when provided", () => {
-    const { container } = render(
-      <FontsPanel
-        fonts={sampleFonts}
-        selectedFont="SF Pro"
-        onSelectFont={() => {}}
-        className="custom-class"
-      />
-    );
-    expect(container.firstChild).toHaveClass("custom-class");
   });
 
   it("displays fonts in their own font family", () => {

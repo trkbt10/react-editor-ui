@@ -53,9 +53,9 @@ describe("Select", () => {
   });
 
   it("calls onChange when option is selected", () => {
-    let selectedValue = "";
+    const ref = { value: "" };
     const handleChange = (value: string) => {
-      selectedValue = value;
+      ref.value = value;
     };
     render(
       <Select options={options} value="apple" onChange={handleChange} />,
@@ -63,7 +63,7 @@ describe("Select", () => {
 
     fireEvent.click(screen.getByRole("combobox"));
     fireEvent.click(screen.getByText("Banana"));
-    expect(selectedValue).toBe("banana");
+    expect(ref.value).toBe("banana");
   });
 
   it("closes dropdown after selection", () => {
@@ -86,9 +86,9 @@ describe("Select", () => {
   });
 
   it("does not select disabled options", () => {
-    let changeCount = 0;
+    const ref = { count: 0 };
     const handleChange = () => {
-      changeCount += 1;
+      ref.count += 1;
     };
     const optionsWithDisabled = [
       { value: "apple", label: "Apple" },
@@ -105,7 +105,7 @@ describe("Select", () => {
 
     fireEvent.click(screen.getByRole("combobox"));
     fireEvent.click(screen.getByText("Banana"));
-    expect(changeCount).toBe(0);
+    expect(ref.count).toBe(0);
   });
 
   it("closes dropdown on Escape key", () => {
@@ -130,9 +130,9 @@ describe("Select", () => {
   });
 
   it("navigates options with arrow keys", () => {
-    let selectedValue = "";
+    const ref = { value: "" };
     const handleChange = (value: string) => {
-      selectedValue = value;
+      ref.value = value;
     };
     render(
       <Select options={options} value="apple" onChange={handleChange} />,
@@ -146,7 +146,7 @@ describe("Select", () => {
     fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
     // Enter selects banana
     fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });
-    expect(selectedValue).toBe("banana");
+    expect(ref.value).toBe("banana");
   });
 
   it("shows aria-expanded state", () => {

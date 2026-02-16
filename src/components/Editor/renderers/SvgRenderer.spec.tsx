@@ -19,7 +19,7 @@ import type { TokenCache, Token } from "./types";
  */
 function createMockMeasureText(): (text: string) => number {
   return (text: string) => {
-    let width = 0;
+    const width = { value: 0 };
     for (const char of text) {
       const code = char.charCodeAt(0);
       // CJK ranges: Hiragana, Katakana, CJK Unified Ideographs
@@ -29,12 +29,12 @@ function createMockMeasureText(): (text: string) => number {
         (code >= 0x3400 && code <= 0x4dbf) || // CJK Extension A
         (code >= 0xff00 && code <= 0xffef)    // Fullwidth forms
       ) {
-        width += 16; // Full-width character
+        width.value += 16; // Full-width character
       } else {
-        width += 8; // Half-width character
+        width.value += 8; // Half-width character
       }
     }
-    return width;
+    return width.value;
   };
 }
 

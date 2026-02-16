@@ -56,9 +56,9 @@ describe("PropertySection", () => {
   });
 
   it("calls onToggle when toggled", () => {
-    let toggledValue: boolean | null = null;
+    const ref = { toggledValue: null as boolean | null };
     const handleToggle = (expanded: boolean) => {
-      toggledValue = expanded;
+      ref.toggledValue = expanded;
     };
     render(
       <PropertySection
@@ -71,7 +71,7 @@ describe("PropertySection", () => {
       </PropertySection>,
     );
     fireEvent.click(screen.getByText("Test Section"));
-    expect(toggledValue).toBe(false);
+    expect(ref.toggledValue).toBe(false);
   });
 
   it("respects controlled expanded prop", () => {

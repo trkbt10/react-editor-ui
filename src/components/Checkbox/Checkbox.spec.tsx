@@ -37,33 +37,33 @@ describe("Checkbox", () => {
   });
 
   it("calls onChange when clicked", () => {
-    let calledWith: boolean | null = null;
+    const ref = { value: null as boolean | null };
     const handleChange = (checked: boolean) => {
-      calledWith = checked;
+      ref.value = checked;
     };
     render(
       <Checkbox checked={false} onChange={handleChange} aria-label="Test" />,
     );
     fireEvent.click(screen.getByRole("checkbox"));
-    expect(calledWith).toBe(true);
+    expect(ref.value).toBe(true);
   });
 
   it("calls onChange with false when checked is true", () => {
-    let calledWith: boolean | null = null;
+    const ref = { value: null as boolean | null };
     const handleChange = (checked: boolean) => {
-      calledWith = checked;
+      ref.value = checked;
     };
     render(
       <Checkbox checked={true} onChange={handleChange} aria-label="Test" />,
     );
     fireEvent.click(screen.getByRole("checkbox"));
-    expect(calledWith).toBe(false);
+    expect(ref.value).toBe(false);
   });
 
   it("does not call onChange when disabled", () => {
-    let callCount = 0;
+    const ref = { value: 0 };
     const handleChange = () => {
-      callCount += 1;
+      ref.value += 1;
     };
     render(
       <Checkbox
@@ -74,7 +74,7 @@ describe("Checkbox", () => {
       />,
     );
     fireEvent.click(screen.getByRole("checkbox"));
-    expect(callCount).toBe(0);
+    expect(ref.value).toBe(0);
   });
 
   it("renders disabled state", () => {
@@ -92,27 +92,27 @@ describe("Checkbox", () => {
   });
 
   it("responds to keyboard Enter", () => {
-    let calledWith: boolean | null = null;
+    const ref = { value: null as boolean | null };
     const handleChange = (checked: boolean) => {
-      calledWith = checked;
+      ref.value = checked;
     };
     render(
       <Checkbox checked={false} onChange={handleChange} aria-label="Test" />,
     );
     fireEvent.keyDown(screen.getByRole("checkbox"), { key: "Enter" });
-    expect(calledWith).toBe(true);
+    expect(ref.value).toBe(true);
   });
 
   it("responds to keyboard Space", () => {
-    let calledWith: boolean | null = null;
+    const ref = { value: null as boolean | null };
     const handleChange = (checked: boolean) => {
-      calledWith = checked;
+      ref.value = checked;
     };
     render(
       <Checkbox checked={false} onChange={handleChange} aria-label="Test" />,
     );
     fireEvent.keyDown(screen.getByRole("checkbox"), { key: " " });
-    expect(calledWith).toBe(true);
+    expect(ref.value).toBe(true);
   });
 
   it("applies custom className", () => {

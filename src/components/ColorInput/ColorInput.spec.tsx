@@ -54,31 +54,31 @@ describe("ColorInput", () => {
   });
 
   it("calls onChange when hex input changes", () => {
-    let changedHex = "";
+    const ref = { value: "" };
     const handleChange = (v: ColorValue) => {
-      changedHex = v.hex;
+      ref.value = v.hex;
     };
     render(<ColorInput value={defaultValue} onChange={handleChange} />);
     const hexInput = screen.getByLabelText("Hex color");
     fireEvent.change(hexInput, { target: { value: "00ff00" } });
-    expect(changedHex).toBe("#00ff00");
+    expect(ref.value).toBe("#00ff00");
   });
 
   it("calls onChange when opacity input changes", () => {
-    let changedOpacity = -1;
+    const ref = { value: -1 };
     const handleChange = (v: ColorValue) => {
-      changedOpacity = v.opacity;
+      ref.value = v.opacity;
     };
     render(<ColorInput value={defaultValue} onChange={handleChange} />);
     const opacityInput = screen.getByLabelText("Opacity");
     fireEvent.change(opacityInput, { target: { value: "50" } });
-    expect(changedOpacity).toBe(50);
+    expect(ref.value).toBe(50);
   });
 
   it("calls onChange when visibility toggle is clicked", () => {
-    let changedVisible = true;
+    const ref = { value: true };
     const handleChange = (v: ColorValue) => {
-      changedVisible = v.visible;
+      ref.value = v.visible;
     };
     render(
       <ColorInput
@@ -88,13 +88,13 @@ describe("ColorInput", () => {
       />,
     );
     fireEvent.click(screen.getByLabelText("Hide color"));
-    expect(changedVisible).toBe(false);
+    expect(ref.value).toBe(false);
   });
 
   it("calls onRemove when remove button is clicked", () => {
-    let removeCount = 0;
+    const ref = { count: 0 };
     const handleRemove = () => {
-      removeCount += 1;
+      ref.count += 1;
     };
     render(
       <ColorInput
@@ -105,7 +105,7 @@ describe("ColorInput", () => {
       />,
     );
     fireEvent.click(screen.getByLabelText("Remove color"));
-    expect(removeCount).toBe(1);
+    expect(ref.count).toBe(1);
   });
 
   it("shows color picker when swatch is clicked", () => {

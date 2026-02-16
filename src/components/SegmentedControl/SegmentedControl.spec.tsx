@@ -40,9 +40,9 @@ describe("SegmentedControl", () => {
   });
 
   it("calls onChange when option clicked", () => {
-    let changedValue: string | string[] | null = null;
+    const ref = { value: null as string | string[] | null };
     const handleChange = (v: string | string[]) => {
-      changedValue = v;
+      ref.value = v;
     };
     render(
       <SegmentedControl
@@ -53,13 +53,13 @@ describe("SegmentedControl", () => {
       />,
     );
     fireEvent.click(screen.getByText("Option B"));
-    expect(changedValue).toBe("b");
+    expect(ref.value).toBe("b");
   });
 
   it("does not call onChange when disabled option clicked", () => {
-    let callCount = 0;
+    const ref = { value: 0 };
     const handleChange = () => {
-      callCount += 1;
+      ref.value += 1;
     };
     const optionsWithDisabled = [
       { value: "a", label: "Option A" },
@@ -74,13 +74,13 @@ describe("SegmentedControl", () => {
       />,
     );
     fireEvent.click(screen.getByText("Option B"));
-    expect(callCount).toBe(0);
+    expect(ref.value).toBe(0);
   });
 
   it("does not call onChange when control is disabled", () => {
-    let callCount = 0;
+    const ref = { value: 0 };
     const handleChange = () => {
-      callCount += 1;
+      ref.value += 1;
     };
     render(
       <SegmentedControl
@@ -92,13 +92,13 @@ describe("SegmentedControl", () => {
       />,
     );
     fireEvent.click(screen.getByText("Option B"));
-    expect(callCount).toBe(0);
+    expect(ref.value).toBe(0);
   });
 
   it("supports multiple selection", () => {
-    let changedValue: string | string[] | null = null;
+    const ref = { value: null as string | string[] | null };
     const handleChange = (v: string | string[]) => {
-      changedValue = v;
+      ref.value = v;
     };
     render(
       <SegmentedControl
@@ -111,13 +111,13 @@ describe("SegmentedControl", () => {
     );
 
     fireEvent.click(screen.getByText("Option B"));
-    expect(changedValue).toEqual(["a", "b"]);
+    expect(ref.value).toEqual(["a", "b"]);
   });
 
   it("supports deselecting in multiple mode", () => {
-    let changedValue: string | string[] | null = null;
+    const ref = { value: null as string | string[] | null };
     const handleChange = (v: string | string[]) => {
-      changedValue = v;
+      ref.value = v;
     };
     render(
       <SegmentedControl
@@ -130,7 +130,7 @@ describe("SegmentedControl", () => {
     );
 
     fireEvent.click(screen.getByText("Option A"));
-    expect(changedValue).toEqual(["b"]);
+    expect(ref.value).toEqual(["b"]);
   });
 
   it("renders with icons", () => {

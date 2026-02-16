@@ -47,42 +47,40 @@ describe("GradientEditor", () => {
 
   it("updates gradient type", () => {
     const gradient = createTestGradient();
-    let updatedGradient = gradient;
-    const handleChange = (g: GradientValue) => {
-      updatedGradient = g;
-    };
+    const ref = { value: gradient as GradientValue };
 
     render(
       <GradientEditor
         value={gradient}
-        onChange={handleChange}
+        onChange={(g: GradientValue) => {
+          ref.value = g;
+        }}
       />,
     );
 
     const radialButton = screen.getByRole("radio", { name: "Radial gradient" });
     fireEvent.click(radialButton);
 
-    expect(updatedGradient.type).toBe("radial");
+    expect(ref.value.type).toBe("radial");
   });
 
   it("updates angle for linear gradient", () => {
     const gradient = createTestGradient();
-    let updatedGradient = gradient;
-    const handleChange = (g: GradientValue) => {
-      updatedGradient = g;
-    };
+    const ref = { value: gradient as GradientValue };
 
     render(
       <GradientEditor
         value={gradient}
-        onChange={handleChange}
+        onChange={(g: GradientValue) => {
+          ref.value = g;
+        }}
       />,
     );
 
     const angleInput = screen.getByRole("textbox", { name: "Gradient angle" });
     fireEvent.change(angleInput, { target: { value: "45" } });
 
-    expect(updatedGradient.angle).toBe(45);
+    expect(ref.value.angle).toBe(45);
   });
 
   it("hides angle input for radial gradient", () => {
@@ -103,42 +101,40 @@ describe("GradientEditor", () => {
 
   it("adds a new stop", () => {
     const gradient = createTestGradient();
-    let updatedGradient = gradient;
-    const handleChange = (g: GradientValue) => {
-      updatedGradient = g;
-    };
+    const ref = { value: gradient as GradientValue };
 
     render(
       <GradientEditor
         value={gradient}
-        onChange={handleChange}
+        onChange={(g: GradientValue) => {
+          ref.value = g;
+        }}
       />,
     );
 
     const addButton = screen.getByRole("button", { name: "Add stop" });
     fireEvent.click(addButton);
 
-    expect(updatedGradient.stops.length).toBe(3);
+    expect(ref.value.stops.length).toBe(3);
   });
 
   it("updates a stop", () => {
     const gradient = createTestGradient();
-    let updatedGradient = gradient;
-    const handleChange = (g: GradientValue) => {
-      updatedGradient = g;
-    };
+    const ref = { value: gradient as GradientValue };
 
     render(
       <GradientEditor
         value={gradient}
-        onChange={handleChange}
+        onChange={(g: GradientValue) => {
+          ref.value = g;
+        }}
       />,
     );
 
     const positionInputs = screen.getAllByRole("textbox", { name: "Position" });
     fireEvent.change(positionInputs[0], { target: { value: "25" } });
 
-    expect(updatedGradient.stops[0].position).toBe(25);
+    expect(ref.value.stops[0].position).toBe(25);
   });
 
   it("removes a stop when there are more than 2", () => {
@@ -150,42 +146,40 @@ describe("GradientEditor", () => {
         { id: "stop-3", position: 100, color: { hex: "#ffffff", opacity: 100, visible: true } },
       ],
     };
-    let updatedGradient = gradient;
-    const handleChange = (g: GradientValue) => {
-      updatedGradient = g;
-    };
+    const ref = { value: gradient as GradientValue };
 
     render(
       <GradientEditor
         value={gradient}
-        onChange={handleChange}
+        onChange={(g: GradientValue) => {
+          ref.value = g;
+        }}
       />,
     );
 
     const removeButtons = screen.getAllByRole("button", { name: "Remove color" });
     fireEvent.click(removeButtons[0]);
 
-    expect(updatedGradient.stops.length).toBe(2);
+    expect(ref.value.stops.length).toBe(2);
   });
 
   it("does not remove stop when only 2 remain", () => {
     const gradient = createTestGradient();
-    let callCount = 0;
-    const handleChange = () => {
-      callCount++;
-    };
+    const ref = { count: 0 };
 
     render(
       <GradientEditor
         value={gradient}
-        onChange={handleChange}
+        onChange={() => {
+          ref.count++;
+        }}
       />,
     );
 
     const removeButtons = screen.getAllByRole("button", { name: "Remove color" });
     fireEvent.click(removeButtons[0]);
 
-    expect(callCount).toBe(0);
+    expect(ref.count).toBe(0);
   });
 
   it("handles disabled state", () => {

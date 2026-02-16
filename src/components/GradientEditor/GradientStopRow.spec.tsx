@@ -37,15 +37,14 @@ describe("GradientStopRow", () => {
 
   it("calls onChange when position is updated", () => {
     const stop = createTestStop();
-    let updatedStop = stop;
-    const handleChange = (s: GradientStop) => {
-      updatedStop = s;
-    };
+    const ref = { value: stop as GradientStop };
 
     render(
       <GradientStopRow
         stop={stop}
-        onChange={handleChange}
+        onChange={(s: GradientStop) => {
+          ref.value = s;
+        }}
         onRemove={() => {}}
         isSelected={false}
         onSelect={() => {}}
@@ -55,20 +54,19 @@ describe("GradientStopRow", () => {
     const positionInput = screen.getByRole("textbox", { name: "Position" });
     fireEvent.change(positionInput, { target: { value: "75" } });
 
-    expect(updatedStop.position).toBe(75);
+    expect(ref.value.position).toBe(75);
   });
 
   it("calls onChange when hex is updated", () => {
     const stop = createTestStop();
-    let updatedStop = stop;
-    const handleChange = (s: GradientStop) => {
-      updatedStop = s;
-    };
+    const ref = { value: stop as GradientStop };
 
     render(
       <GradientStopRow
         stop={stop}
-        onChange={handleChange}
+        onChange={(s: GradientStop) => {
+          ref.value = s;
+        }}
         onRemove={() => {}}
         isSelected={false}
         onSelect={() => {}}
@@ -78,20 +76,19 @@ describe("GradientStopRow", () => {
     const hexInput = screen.getByRole("textbox", { name: "Hex color" });
     fireEvent.change(hexInput, { target: { value: "00ff00" } });
 
-    expect(updatedStop.color.hex).toBe("#00ff00");
+    expect(ref.value.color.hex).toBe("#00ff00");
   });
 
   it("calls onChange when opacity is updated", () => {
     const stop = createTestStop();
-    let updatedStop = stop;
-    const handleChange = (s: GradientStop) => {
-      updatedStop = s;
-    };
+    const ref = { value: stop as GradientStop };
 
     render(
       <GradientStopRow
         stop={stop}
-        onChange={handleChange}
+        onChange={(s: GradientStop) => {
+          ref.value = s;
+        }}
         onRemove={() => {}}
         isSelected={false}
         onSelect={() => {}}
@@ -101,21 +98,20 @@ describe("GradientStopRow", () => {
     const opacityInput = screen.getByRole("textbox", { name: "Opacity" });
     fireEvent.change(opacityInput, { target: { value: "50" } });
 
-    expect(updatedStop.color.opacity).toBe(50);
+    expect(ref.value.color.opacity).toBe(50);
   });
 
   it("calls onRemove when delete button is clicked", () => {
     const stop = createTestStop();
-    let removed = false;
-    const handleRemove = () => {
-      removed = true;
-    };
+    const ref = { removed: false };
 
     render(
       <GradientStopRow
         stop={stop}
         onChange={() => {}}
-        onRemove={handleRemove}
+        onRemove={() => {
+          ref.removed = true;
+        }}
         isSelected={false}
         onSelect={() => {}}
       />,
@@ -124,15 +120,12 @@ describe("GradientStopRow", () => {
     const deleteButton = screen.getByRole("button", { name: "Remove color" });
     fireEvent.click(deleteButton);
 
-    expect(removed).toBe(true);
+    expect(ref.removed).toBe(true);
   });
 
   it("calls onSelect when row is clicked", () => {
     const stop = createTestStop();
-    let selected = false;
-    const handleSelect = () => {
-      selected = true;
-    };
+    const ref = { selected: false };
 
     render(
       <GradientStopRow
@@ -140,28 +133,29 @@ describe("GradientStopRow", () => {
         onChange={() => {}}
         onRemove={() => {}}
         isSelected={false}
-        onSelect={handleSelect}
+        onSelect={() => {
+          ref.selected = true;
+        }}
       />,
     );
 
     const row = screen.getByRole("row");
     fireEvent.click(row);
 
-    expect(selected).toBe(true);
+    expect(ref.selected).toBe(true);
   });
 
   it("disables remove button when removeDisabled is true", () => {
     const stop = createTestStop();
-    let removed = false;
-    const handleRemove = () => {
-      removed = true;
-    };
+    const ref = { removed: false };
 
     render(
       <GradientStopRow
         stop={stop}
         onChange={() => {}}
-        onRemove={handleRemove}
+        onRemove={() => {
+          ref.removed = true;
+        }}
         isSelected={false}
         onSelect={() => {}}
         removeDisabled
@@ -171,7 +165,7 @@ describe("GradientStopRow", () => {
     const deleteButton = screen.getByRole("button", { name: "Remove color" });
     fireEvent.click(deleteButton);
 
-    expect(removed).toBe(false);
+    expect(ref.removed).toBe(false);
   });
 
   it("reverts invalid position on blur", () => {

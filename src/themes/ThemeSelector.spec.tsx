@@ -29,9 +29,9 @@ describe("ThemeSelector", () => {
   });
 
   it("calls onChange when theme selected", () => {
-    let selectedTheme = "light";
+    const selectedTheme = { value: "light" };
     const handleChange = (theme: string) => {
-      selectedTheme = theme;
+      selectedTheme.value = theme;
     };
 
     render(
@@ -43,7 +43,7 @@ describe("ThemeSelector", () => {
 
     fireEvent.click(screen.getByRole("combobox"));
     fireEvent.click(screen.getByText("Dark"));
-    expect(selectedTheme).toBe("dark");
+    expect(selectedTheme.value).toBe("dark");
   });
 
   it("injects theme CSS on mount", () => {

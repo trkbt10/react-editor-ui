@@ -40,9 +40,9 @@ describe("Slider", () => {
   });
 
   it("does not call onChange when disabled", () => {
-    let callCount = 0;
+    const ref = { callCount: 0 };
     const handleChange = () => {
-      callCount++;
+      ref.callCount++;
     };
     const { container } = render(
       <Slider value={0.5} onChange={handleChange} disabled aria-label="Test slider" />,
@@ -50,7 +50,7 @@ describe("Slider", () => {
     const track = container.firstChild as HTMLElement;
 
     fireEvent.pointerDown(track, { clientX: 75, clientY: 5 });
-    expect(callCount).toBe(0);
+    expect(ref.callCount).toBe(0);
   });
 
   it("applies custom height", () => {

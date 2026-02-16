@@ -24,7 +24,7 @@ function setupMeasurementMocks() {
     this: HTMLElement
   ) {
     const text = this.textContent ?? "";
-    let width = 0;
+    const width = { value: 0 };
     for (const char of text) {
       const code = char.charCodeAt(0);
       // CJK ranges
@@ -32,12 +32,12 @@ function setupMeasurementMocks() {
         (code >= 0x3040 && code <= 0x30ff) || // Hiragana + Katakana
         (code >= 0x4e00 && code <= 0x9fff) // CJK Unified Ideographs
       ) {
-        width += 16; // Full-width
+        width.value += 16; // Full-width
       } else {
-        width += 8; // Half-width
+        width.value += 8; // Half-width
       }
     }
-    return { width, height: 21, top: 0, left: 0, bottom: 21, right: width };
+    return { width: width.value, height: 21, top: 0, left: 0, bottom: 21, right: width.value };
   });
 
   HTMLElement.prototype.getBoundingClientRect = mockGetBoundingClientRect;
@@ -583,13 +583,13 @@ describe("styledCoordinatesToPosition", () => {
   });
 
   it("uses correct line offset for column calculation", () => {
-    let capturedLineOffset = -1;
+    const capturedLineOffset = { value: -1 };
     const trackingFindColumn = (
       _line: string,
       x: number,
       lineOffset: number
     ): number => {
-      capturedLineOffset = lineOffset;
+      capturedLineOffset.value = lineOffset;
       return Math.floor(x / 8) + 1;
     };
 
@@ -606,7 +606,7 @@ describe("styledCoordinatesToPosition", () => {
     });
 
     // Line 2 has offset 6
-    expect(capturedLineOffset).toBe(6);
+    expect(capturedLineOffset.value).toBe(6);
   });
 });
 

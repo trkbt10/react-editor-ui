@@ -29,31 +29,25 @@ describe("PositionPanel", () => {
   });
 
   it("updates X position when input changes", () => {
-    let capturedSettings: PositionSettings | undefined;
-    const handleChange = (settings: PositionSettings) => {
-      capturedSettings = settings;
-    };
-    render(<PositionPanel settings={defaultSettings} onChange={handleChange} />);
+    const ref = { settings: undefined as PositionSettings | undefined };
+    render(<PositionPanel settings={defaultSettings} onChange={(s) => { ref.settings = s; }} />);
 
     const xInput = screen.getByLabelText("X position");
     fireEvent.change(xInput, { target: { value: "100" } });
 
-    expect(capturedSettings).toBeDefined();
-    expect(capturedSettings!.x).toBe("100");
+    expect(ref.settings).toBeDefined();
+    expect(ref.settings!.x).toBe("100");
   });
 
   it("updates Y position when input changes", () => {
-    let capturedSettings: PositionSettings | undefined;
-    const handleChange = (settings: PositionSettings) => {
-      capturedSettings = settings;
-    };
-    render(<PositionPanel settings={defaultSettings} onChange={handleChange} />);
+    const ref = { settings: undefined as PositionSettings | undefined };
+    render(<PositionPanel settings={defaultSettings} onChange={(s) => { ref.settings = s; }} />);
 
     const yInput = screen.getByLabelText("Y position");
     fireEvent.change(yInput, { target: { value: "200" } });
 
-    expect(capturedSettings).toBeDefined();
-    expect(capturedSettings!.y).toBe("200");
+    expect(ref.settings).toBeDefined();
+    expect(ref.settings!.y).toBe("200");
   });
 
   it("renders rotation input with degree suffix", () => {
@@ -64,17 +58,14 @@ describe("PositionPanel", () => {
   });
 
   it("updates rotation when input changes", () => {
-    let capturedSettings: PositionSettings | undefined;
-    const handleChange = (settings: PositionSettings) => {
-      capturedSettings = settings;
-    };
-    render(<PositionPanel settings={defaultSettings} onChange={handleChange} />);
+    const ref = { settings: undefined as PositionSettings | undefined };
+    render(<PositionPanel settings={defaultSettings} onChange={(s) => { ref.settings = s; }} />);
 
     const rotationInput = screen.getByLabelText("Rotation");
     fireEvent.change(rotationInput, { target: { value: "45" } });
 
-    expect(capturedSettings).toBeDefined();
-    expect(capturedSettings!.rotation).toBe("45");
+    expect(ref.settings).toBeDefined();
+    expect(ref.settings!.rotation).toBe("45");
   });
 
   it("renders horizontal constraint select", () => {
@@ -108,84 +99,69 @@ describe("PositionPanel", () => {
   });
 
   it("updates horizontal alignment when clicked", () => {
-    let capturedSettings: PositionSettings | undefined;
-    const handleChange = (settings: PositionSettings) => {
-      capturedSettings = settings;
-    };
-    render(<PositionPanel settings={defaultSettings} onChange={handleChange} />);
+    const ref = { settings: undefined as PositionSettings | undefined };
+    render(<PositionPanel settings={defaultSettings} onChange={(s) => { ref.settings = s; }} />);
 
     const centerButton = screen.getByLabelText("Align center");
     fireEvent.click(centerButton);
 
-    expect(capturedSettings).toBeDefined();
-    expect(capturedSettings!.horizontalAlign).toBe("center");
+    expect(ref.settings).toBeDefined();
+    expect(ref.settings!.horizontalAlign).toBe("center");
   });
 
   it("updates vertical alignment when clicked", () => {
-    let capturedSettings: PositionSettings | undefined;
-    const handleChange = (settings: PositionSettings) => {
-      capturedSettings = settings;
-    };
-    render(<PositionPanel settings={defaultSettings} onChange={handleChange} />);
+    const ref = { settings: undefined as PositionSettings | undefined };
+    render(<PositionPanel settings={defaultSettings} onChange={(s) => { ref.settings = s; }} />);
 
     const middleButton = screen.getByLabelText("Align middle");
     fireEvent.click(middleButton);
 
-    expect(capturedSettings).toBeDefined();
-    expect(capturedSettings!.verticalAlign).toBe("middle");
+    expect(ref.settings).toBeDefined();
+    expect(ref.settings!.verticalAlign).toBe("middle");
   });
 
   it("calls onClose when close button is clicked", () => {
-    let closeCount = 0;
-    const handleClose = () => {
-      closeCount += 1;
-    };
+    const ref = { count: 0 };
     render(
-      <PositionPanel settings={defaultSettings} onChange={() => {}} onClose={handleClose} />,
+      <PositionPanel settings={defaultSettings} onChange={() => {}} onClose={() => { ref.count += 1; }} />,
     );
 
     const closeButton = screen.getByLabelText("Close");
     fireEvent.click(closeButton);
 
-    expect(closeCount).toBe(1);
+    expect(ref.count).toBe(1);
   });
 
   it("calls onToggleConstraints when constraint toggle is clicked", () => {
-    let toggleCount = 0;
-    const handleToggle = () => {
-      toggleCount += 1;
-    };
+    const ref = { count: 0 };
     render(
       <PositionPanel
         settings={defaultSettings}
         onChange={() => {}}
-        onToggleConstraints={handleToggle}
+        onToggleConstraints={() => { ref.count += 1; }}
       />,
     );
 
     const toggleButton = screen.getByLabelText("Toggle constraints");
     fireEvent.click(toggleButton);
 
-    expect(toggleCount).toBe(1);
+    expect(ref.count).toBe(1);
   });
 
   it("calls onTransformAction when transform button is clicked", () => {
-    let capturedAction: string | null = null;
-    const handleTransformAction = (action: string) => {
-      capturedAction = action;
-    };
+    const ref = { action: null as string | null };
     render(
       <PositionPanel
         settings={defaultSettings}
         onChange={() => {}}
-        onTransformAction={handleTransformAction}
+        onTransformAction={(action) => { ref.action = action; }}
       />,
     );
 
     const flipHButton = screen.getByLabelText("Flip horizontal");
     fireEvent.click(flipHButton);
 
-    expect(capturedAction).toBe("flip-horizontal");
+    expect(ref.action).toBe("flip-horizontal");
   });
 
   it("applies custom width", () => {
@@ -244,6 +220,75 @@ describe("PositionPanel", () => {
 
       const panel = screen.getByText("Constraints").closest("div");
       expect(panel).toBeInTheDocument();
+    });
+  });
+
+  describe("layout overflow prevention", () => {
+    it("segmented controls have minWidth: 0 wrapper to allow shrinking", () => {
+      render(
+        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+      );
+
+      const horizontalAlignment = screen.getByLabelText("Horizontal alignment");
+      const verticalAlignment = screen.getByLabelText("Vertical alignment");
+
+      const hWrapper = horizontalAlignment.parentElement;
+      const vWrapper = verticalAlignment.parentElement;
+
+      expect(hWrapper?.style.minWidth).toBe("0");
+      expect(vWrapper?.style.minWidth).toBe("0");
+    });
+
+    it("constraint visualization has flexShrink: 0", () => {
+      render(
+        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+      );
+
+      const constraintsSection = screen.getByText("Constraints").closest("div")?.parentElement;
+      const visualization = constraintsSection?.querySelector('[style*="width: 100px"]') as HTMLElement;
+
+      expect(visualization).not.toBeNull();
+      expect(visualization.style.flexShrink).toBe("0");
+    });
+
+    it("position grid wrapper has minWidth: 0", () => {
+      render(
+        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+      );
+
+      const xInput = screen.getByLabelText("X position");
+      // grid wrapper is the parent of the input's container
+      const gridWrapper = xInput.closest('[style*="display: grid"]');
+
+      expect(gridWrapper).not.toBeNull();
+      expect((gridWrapper as HTMLElement).style.minWidth).toBe("0");
+    });
+
+    it("rotation input wrapper has minWidth: 0", () => {
+      render(
+        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+      );
+
+      const rotationInput = screen.getByLabelText("Rotation");
+      // The wrapper div around the input
+      const inputContainer = rotationInput.closest('[style*="display: flex"]');
+      const wrapper = inputContainer?.parentElement;
+
+      expect(wrapper).not.toBeNull();
+      expect((wrapper as HTMLElement).style.minWidth).toBe("0");
+    });
+
+    it("constraints selects column has minWidth: 0", () => {
+      render(
+        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+      );
+
+      const hConstraint = screen.getByLabelText("Horizontal constraint");
+      // Navigate up to the column container
+      const selectsColumn = hConstraint.closest('[style*="flex-direction: column"]');
+
+      expect(selectsColumn).not.toBeNull();
+      expect((selectsColumn as HTMLElement).style.minWidth).toBe("0");
     });
   });
 });

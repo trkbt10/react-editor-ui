@@ -43,14 +43,14 @@ describe("StatusBarItem", () => {
   });
 
   it("handles click events", () => {
-    let clicked = false;
+    const ref = { clicked: false };
     const handleClick = () => {
-      clicked = true;
+      ref.clicked = true;
     };
     render(<StatusBarItem onClick={handleClick}>Click me</StatusBarItem>);
 
     fireEvent.click(screen.getByRole("button"));
-    expect(clicked).toBe(true);
+    expect(ref.clicked).toBe(true);
   });
 
   it("applies custom className to span", () => {
@@ -70,9 +70,9 @@ describe("StatusBarItem", () => {
 
 describe("StatusBar composition", () => {
   it("composes StatusBar with StatusBarItems", () => {
-    let clicked = false;
+    const ref = { clicked: false };
     const handleClick = () => {
-      clicked = true;
+      ref.clicked = true;
     };
 
     render(
@@ -89,6 +89,6 @@ describe("StatusBar composition", () => {
     expect(screen.getByText("LF")).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("LF"));
-    expect(clicked).toBe(true);
+    expect(ref.clicked).toBe(true);
   });
 });

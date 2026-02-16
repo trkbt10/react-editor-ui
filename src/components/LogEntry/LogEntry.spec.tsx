@@ -63,14 +63,14 @@ describe("LogEntry", () => {
   });
 
   it("handles click events", () => {
-    let clicked = false;
+    const ref = { clicked: false };
     const handleClick = () => {
-      clicked = true;
+      ref.clicked = true;
     };
     render(<LogEntry message="Clickable" onClick={handleClick} />);
 
     fireEvent.click(screen.getByRole("button"));
-    expect(clicked).toBe(true);
+    expect(ref.clicked).toBe(true);
   });
 
   it("renders as log role when not clickable", () => {

@@ -18,9 +18,9 @@ describe("Input", () => {
   });
 
   it("calls onChange when value changes", () => {
-    let capturedValue = "";
+    const ref = { capturedValue: "" };
     const handleChange = (value: string) => {
-      capturedValue = value;
+      ref.capturedValue = value;
     };
     render(
       <Input value="" onChange={handleChange} aria-label="Test input" />,
@@ -28,7 +28,7 @@ describe("Input", () => {
 
     const input = screen.getByRole("textbox");
     fireEvent.change(input, { target: { value: "new value" } });
-    expect(capturedValue).toBe("new value");
+    expect(ref.capturedValue).toBe("new value");
   });
 
   it("renders with placeholder", () => {
@@ -100,9 +100,9 @@ describe("Input", () => {
   });
 
   it("clears value when clear button is clicked", () => {
-    let capturedValue = "test";
+    const ref = { capturedValue: "test" };
     const handleChange = (value: string) => {
-      capturedValue = value;
+      ref.capturedValue = value;
     };
     render(
       <Input
@@ -114,7 +114,7 @@ describe("Input", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
-    expect(capturedValue).toBe("");
+    expect(ref.capturedValue).toBe("");
   });
 
   it("applies disabled state", () => {

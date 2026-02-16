@@ -25,23 +25,23 @@ function createTestLineIndex(text: string) {
   // Simulate useLineIndex behavior for pure function testing
   const lines = text.split("\n");
   const lineOffsets: number[] = [];
-  let offset = 0;
+  const offset = { value: 0 };
   for (const line of lines) {
-    lineOffsets.push(offset);
-    offset += line.length + 1;
+    lineOffsets.push(offset.value);
+    offset.value += line.length + 1;
   }
 
   return {
     lines,
     lineOffsets,
     getLineAtOffset: (off: number) => {
-      let remaining = off;
-      for (let i = 0; i < lines.length; i++) {
-        const lineLength = lines[i].length;
-        if (remaining <= lineLength) {
-          return { line: i + 1, column: remaining + 1 };
+      const remaining = { value: off };
+      for (const [i, line] of lines.entries()) {
+        const lineLength = line.length;
+        if (remaining.value <= lineLength) {
+          return { line: i + 1, column: remaining.value + 1 };
         }
-        remaining -= lineLength + 1;
+        remaining.value -= lineLength + 1;
       }
       const lastLine = lines.length;
       return { line: lastLine, column: (lines[lastLine - 1]?.length ?? 0) + 1 };

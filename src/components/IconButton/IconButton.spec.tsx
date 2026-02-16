@@ -17,9 +17,9 @@ describe("IconButton", () => {
   });
 
   it("handles click events", () => {
-    let clickCount = 0;
+    const ref = { clickCount: 0 };
     const handleClick = () => {
-      clickCount += 1;
+      ref.clickCount += 1;
     };
     render(
       <IconButton
@@ -31,13 +31,13 @@ describe("IconButton", () => {
 
     const button = screen.getByRole("button");
     fireEvent.click(button);
-    expect(clickCount).toBe(1);
+    expect(ref.clickCount).toBe(1);
   });
 
   it("does not fire click when disabled", () => {
-    let clicked = false;
+    const ref = { clicked: false };
     const handleClick = () => {
-      clicked = true;
+      ref.clicked = true;
     };
     render(
       <IconButton
@@ -50,7 +50,7 @@ describe("IconButton", () => {
 
     const button = screen.getByRole("button");
     fireEvent.click(button);
-    expect(clicked).toBe(false);
+    expect(ref.clicked).toBe(false);
   });
 
   it("applies size variants", () => {

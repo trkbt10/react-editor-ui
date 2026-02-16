@@ -26,7 +26,7 @@ beforeEach(() => {
   mockGetBoundingClientRect.mockImplementation(function(this: HTMLElement) {
     const text = this.textContent ?? "";
     // Simulate CJK characters being twice as wide
-    let width = 0;
+    const ref = { width: 0 };
     for (const char of text) {
       const code = char.charCodeAt(0);
       // CJK ranges
@@ -34,12 +34,12 @@ beforeEach(() => {
         (code >= 0x3040 && code <= 0x30ff) || // Hiragana + Katakana
         (code >= 0x4e00 && code <= 0x9fff)    // CJK Unified Ideographs
       ) {
-        width += 16; // Full-width
+        ref.width += 16; // Full-width
       } else {
-        width += 8; // Half-width
+        ref.width += 8; // Half-width
       }
     }
-    return { width, height: 21, top: 0, left: 0, bottom: 21, right: width };
+    return { width: ref.width, height: 21, top: 0, left: 0, bottom: 21, right: ref.width };
   });
 
   // Patch HTMLElement prototype
@@ -351,17 +351,17 @@ describe("TextEditor", () => {
 
   describe("styled content", () => {
     it("preserves styles on edit", () => {
-      let doc = createDocument("Hello World");
+      const ref = { doc: createDocument("Hello World") };
       // Define a bold style for the "strong" tag
-      doc = setStyleDefinition(doc, "strong", { fontWeight: "bold" });
+      ref.doc = setStyleDefinition(ref.doc, "strong", { fontWeight: "bold" });
       // Wrap "Hello" (0-5) with the "strong" tag
-      doc = wrapWithTag(doc, 0, 5, "strong");
+      ref.doc = wrapWithTag(ref.doc, 0, 5, "strong");
 
       const onDocumentChange = vi.fn();
 
       render(
         <TextEditor
-          document={doc}
+          document={ref.doc}
           onDocumentChange={onDocumentChange}
         />
       );
@@ -466,15 +466,15 @@ describe("TextEditor", () => {
     });
 
     it("adjusts styles during composition with styled content", () => {
-      let doc = createDocument("Hello World");
-      doc = setStyleDefinition(doc, "strong", { fontWeight: "bold" });
-      doc = wrapWithTag(doc, 0, 5, "strong"); // "Hello" is bold
+      const ref = { doc: createDocument("Hello World") };
+      ref.doc = setStyleDefinition(ref.doc, "strong", { fontWeight: "bold" });
+      ref.doc = wrapWithTag(ref.doc, 0, 5, "strong"); // "Hello" is bold
 
       const onDocumentChange = vi.fn();
 
       render(
         <TextEditor
-          document={doc}
+          document={ref.doc}
           onDocumentChange={onDocumentChange}
         />
       );
@@ -496,15 +496,15 @@ describe("TextEditor", () => {
     });
 
     it("handles composition with multiple style segments", () => {
-      let doc = createDocument("Hello World Test");
-      doc = setStyleDefinition(doc, "strong", { fontWeight: "bold" });
-      doc = setStyleDefinition(doc, "em", { fontStyle: "italic" });
-      doc = wrapWithTag(doc, 0, 5, "strong");  // "Hello" bold
-      doc = wrapWithTag(doc, 6, 11, "em");     // "World" italic
+      const ref = { doc: createDocument("Hello World Test") };
+      ref.doc = setStyleDefinition(ref.doc, "strong", { fontWeight: "bold" });
+      ref.doc = setStyleDefinition(ref.doc, "em", { fontStyle: "italic" });
+      ref.doc = wrapWithTag(ref.doc, 0, 5, "strong");  // "Hello" bold
+      ref.doc = wrapWithTag(ref.doc, 6, 11, "em");     // "World" italic
 
       render(
         <TextEditor
-          document={doc}
+          document={ref.doc}
           onDocumentChange={vi.fn()}
         />
       );

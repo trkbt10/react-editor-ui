@@ -90,9 +90,9 @@ describe("SectionHeader", () => {
   });
 
   it("action click does not toggle section", () => {
-    let toggleCalled = false;
+    const ref = { toggleCalled: false };
     const handleToggle = () => {
-      toggleCalled = true;
+      ref.toggleCalled = true;
     };
     render(
       <SectionHeader
@@ -104,7 +104,7 @@ describe("SectionHeader", () => {
     );
 
     fireEvent.click(screen.getByTestId("action-btn"));
-    expect(toggleCalled).toBe(false);
+    expect(ref.toggleCalled).toBe(false);
   });
 
   it("applies custom className", () => {

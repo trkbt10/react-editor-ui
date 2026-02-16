@@ -20,14 +20,14 @@ describe("TreeItem", () => {
   });
 
   it("handles click events", () => {
-    let clicked = false;
+    const ref = { clicked: false };
     const handleClick = () => {
-      clicked = true;
+      ref.clicked = true;
     };
     render(<TreeItem label="Clickable" onClick={handleClick} />);
 
     fireEvent.click(screen.getByRole("treeitem"));
-    expect(clicked).toBe(true);
+    expect(ref.clicked).toBe(true);
   });
 
   it("shows selected state", () => {
@@ -95,13 +95,12 @@ describe("TreeItem", () => {
   });
 
   it("calls onToggle when expander is clicked", () => {
-    let toggleCalled = false;
-    let clickCalled = false;
+    const ref = { toggleCalled: false, clickCalled: false };
     const handleToggle = () => {
-      toggleCalled = true;
+      ref.toggleCalled = true;
     };
     const handleClick = () => {
-      clickCalled = true;
+      ref.clickCalled = true;
     };
     render(
       <TreeItem
@@ -113,8 +112,8 @@ describe("TreeItem", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Expand" }));
-    expect(toggleCalled).toBe(true);
-    expect(clickCalled).toBe(false);
+    expect(ref.toggleCalled).toBe(true);
+    expect(ref.clickCalled).toBe(false);
   });
 
   it("applies depth indentation", () => {

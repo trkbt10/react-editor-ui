@@ -32,9 +32,9 @@ describe("SplitButton", () => {
   });
 
   it("calls onAction when main button is clicked", () => {
-    let actionCount = 0;
+    const ref = { value: 0 };
     const handleAction = () => {
-      actionCount += 1;
+      ref.value += 1;
     };
     render(
       <SplitButton
@@ -47,7 +47,7 @@ describe("SplitButton", () => {
 
     const mainButton = screen.getByLabelText("Present");
     fireEvent.click(mainButton);
-    expect(actionCount).toBe(1);
+    expect(ref.value).toBe(1);
   });
 
   it("opens dropdown when chevron button is clicked", () => {
@@ -84,9 +84,9 @@ describe("SplitButton", () => {
   });
 
   it("calls onChange when option is selected", () => {
-    let selectedValue = "";
+    const ref = { value: "" };
     const handleChange = (value: string) => {
-      selectedValue = value;
+      ref.value = value;
     };
     render(
       <SplitButton
@@ -102,7 +102,7 @@ describe("SplitButton", () => {
     const previewOption = screen.getByRole("option", { name: /Preview/i });
     fireEvent.click(previewOption);
 
-    expect(selectedValue).toBe("preview");
+    expect(ref.value).toBe("preview");
   });
 
   it("closes dropdown after selection", () => {
@@ -125,9 +125,9 @@ describe("SplitButton", () => {
   });
 
   it("does not call onChange for disabled option", () => {
-    let changeCount = 0;
+    const ref = { value: 0 };
     const handleChange = () => {
-      changeCount += 1;
+      ref.value += 1;
     };
     const optionsWithDisabled: SplitButtonOption[] = [
       { value: "present", label: "Present", icon: <PlayIcon /> },
@@ -148,13 +148,13 @@ describe("SplitButton", () => {
     const previewOption = screen.getByRole("option", { name: /Preview/i });
     fireEvent.click(previewOption);
 
-    expect(changeCount).toBe(0);
+    expect(ref.value).toBe(0);
   });
 
   it("is disabled when disabled prop is true", () => {
-    let actionCount = 0;
+    const ref = { value: 0 };
     const handleAction = () => {
-      actionCount += 1;
+      ref.value += 1;
     };
 
     render(
@@ -176,7 +176,7 @@ describe("SplitButton", () => {
     fireEvent.click(mainButton);
     fireEvent.click(dropdownButton);
 
-    expect(actionCount).toBe(0);
+    expect(ref.value).toBe(0);
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
@@ -198,9 +198,9 @@ describe("SplitButton", () => {
   });
 
   it("supports keyboard navigation", () => {
-    let selectedValue = "";
+    const ref = { value: "" };
     const handleChange = (value: string) => {
-      selectedValue = value;
+      ref.value = value;
     };
     render(
       <SplitButton
@@ -221,7 +221,7 @@ describe("SplitButton", () => {
 
     // Select with Enter
     fireEvent.keyDown(dropdownButton, { key: "Enter" });
-    expect(selectedValue).toBe("preview");
+    expect(ref.value).toBe("preview");
   });
 
   it("renders different sizes", () => {

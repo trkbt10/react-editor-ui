@@ -63,9 +63,9 @@ describe("TypographyPanel", () => {
   });
 
   it("calls onChange when font size is changed", () => {
-    let capturedSettings: TypographySettings | null = null;
+    const ref = { value: null as TypographySettings | null };
     const handleChange = (settings: TypographySettings) => {
-      capturedSettings = settings;
+      ref.value = settings;
     };
     render(<TypographyPanel settings={defaultSettings} onChange={handleChange} />);
 
@@ -74,39 +74,39 @@ describe("TypographyPanel", () => {
     fireEvent.change(fontSizeInput, { target: { value: "32px" } });
     fireEvent.blur(fontSizeInput);
 
-    expect(capturedSettings).toEqual({
+    expect(ref.value).toEqual({
       ...defaultSettings,
       fontSize: "32px",
     });
   });
 
   it("calls onChange when text alignment is changed", () => {
-    let capturedSettings: TypographySettings | null = null;
+    const ref = { value: null as TypographySettings | null };
     const handleChange = (settings: TypographySettings) => {
-      capturedSettings = settings;
+      ref.value = settings;
     };
     render(<TypographyPanel settings={defaultSettings} onChange={handleChange} />);
 
     const centerButton = screen.getByLabelText("Align center");
     fireEvent.click(centerButton);
 
-    expect(capturedSettings).toEqual({
+    expect(ref.value).toEqual({
       ...defaultSettings,
       textAlign: "center",
     });
   });
 
   it("calls onChange when vertical alignment is changed", () => {
-    let capturedSettings: TypographySettings | null = null;
+    const ref = { value: null as TypographySettings | null };
     const handleChange = (settings: TypographySettings) => {
-      capturedSettings = settings;
+      ref.value = settings;
     };
     render(<TypographyPanel settings={defaultSettings} onChange={handleChange} />);
 
     const middleButton = screen.getByLabelText("Align middle");
     fireEvent.click(middleButton);
 
-    expect(capturedSettings).toEqual({
+    expect(ref.value).toEqual({
       ...defaultSettings,
       verticalAlign: "middle",
     });
@@ -134,9 +134,9 @@ describe("TypographyPanel", () => {
   });
 
   it("calls onOpenFontsPanel when font icon is clicked", () => {
-    let fontsPanelOpened = false;
+    const ref = { value: false };
     const handleOpenFontsPanel = () => {
-      fontsPanelOpened = true;
+      ref.value = true;
     };
     render(
       <TypographyPanel
@@ -150,7 +150,7 @@ describe("TypographyPanel", () => {
     const fontIcon = screen.getByTestId("font-icon");
     fireEvent.click(fontIcon);
 
-    expect(fontsPanelOpened).toBe(true);
+    expect(ref.value).toBe(true);
   });
 
   it("shows A? icon when font is not in options list", () => {
@@ -178,9 +178,9 @@ describe("TypographyPanel", () => {
   });
 
   it("calls onOpenSettings when settings button is clicked", () => {
-    let settingsOpened = false;
+    const ref = { value: false };
     const handleOpenSettings = () => {
-      settingsOpened = true;
+      ref.value = true;
     };
     render(
       <TypographyPanel
@@ -193,7 +193,7 @@ describe("TypographyPanel", () => {
     const settingsButton = screen.getByLabelText("Advanced settings");
     fireEvent.click(settingsButton);
 
-    expect(settingsOpened).toBe(true);
+    expect(ref.value).toBe(true);
   });
 
   it("uses custom font options when provided", () => {

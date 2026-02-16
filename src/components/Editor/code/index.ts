@@ -18,5 +18,4 @@ export type {
 export { CodeEditor } from "./CodeEditor";
 
 // Hooks
-export { useKeyHandlers } from "./useKeyHandlers";
 export { useTokenCache } from "./useTokenCache";

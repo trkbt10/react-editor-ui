@@ -24,9 +24,9 @@ describe("PropertyRow", () => {
   });
 
   it("handles click events when onClick is provided", () => {
-    let clicked = false;
+    const ref = { clicked: false };
     const handleClick = () => {
-      clicked = true;
+      ref.clicked = true;
     };
     render(
       <PropertyRow label="Editable" onClick={handleClick}>
@@ -35,7 +35,7 @@ describe("PropertyRow", () => {
     );
 
     fireEvent.click(screen.getByRole("button"));
-    expect(clicked).toBe(true);
+    expect(ref.clicked).toBe(true);
   });
 
   it("does not have button role when onClick is not provided", () => {

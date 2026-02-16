@@ -376,23 +376,25 @@ describe("Overlay Operations", () => {
 
     it("sorts overlays by priority", () => {
       const doc = createDocument("Hello");
-      let result = setOverlayLayer(doc, {
-        id: "high",
-        root: text(""),
-        priority: 10,
-      });
-      result = setOverlayLayer(result, {
+      const ref = {
+        result: setOverlayLayer(doc, {
+          id: "high",
+          root: text(""),
+          priority: 10,
+        }),
+      };
+      ref.result = setOverlayLayer(ref.result, {
         id: "low",
         root: text(""),
         priority: 1,
       });
-      result = setOverlayLayer(result, {
+      ref.result = setOverlayLayer(ref.result, {
         id: "mid",
         root: text(""),
         priority: 5,
       });
 
-      expect(result.overlays.map((l) => l.id)).toEqual(["low", "mid", "high"]);
+      expect(ref.result.overlays.map((l) => l.id)).toEqual(["low", "mid", "high"]);
     });
   });
 
@@ -537,21 +539,23 @@ describe("toFlatSegments", () => {
 describe("Integration", () => {
   it("maintains styles when editing text", () => {
     // Create: <bold>Hello</bold> <italic>World</italic>
-    let doc = createDocument("Hello World", {
-      bold: { fontWeight: "bold" },
-      italic: { fontStyle: "italic" },
-    });
-    doc = wrapWithTag(doc, 0, 5, "bold");
-    doc = wrapWithTag(doc, 6, 11, "italic");
+    const ref = {
+      doc: createDocument("Hello World", {
+        bold: { fontWeight: "bold" },
+        italic: { fontStyle: "italic" },
+      }),
+    };
+    ref.doc = wrapWithTag(ref.doc, 0, 5, "bold");
+    ref.doc = wrapWithTag(ref.doc, 6, 11, "italic");
 
     // Insert " there" after "Hello" (at the space before World)
     // Insertion at position 5 goes into the unstyled space, not extending bold
-    doc = insertText(doc, 5, " there");
+    ref.doc = insertText(ref.doc, 5, " there");
 
-    expect(getDocumentText(doc)).toBe("Hello there World");
-    expect(doc.length).toBe(17);
+    expect(getDocumentText(ref.doc)).toBe("Hello there World");
+    expect(ref.doc.length).toBe(17);
 
-    const segments = toFlatSegments(doc);
+    const segments = toFlatSegments(ref.doc);
 
     // "Hello" should still be bold (not extended)
     const boldSegment = segments.find((s) => s.style.fontWeight === "bold");
@@ -568,19 +572,21 @@ describe("Integration", () => {
 
   it("extends style when inserting inside styled text", () => {
     // Create: <bold>Hello</bold>
-    let doc = createDocument("Hello", {
-      bold: { fontWeight: "bold" },
-    });
-    doc = wrapWithTag(doc, 0, 5, "bold");
+    const ref = {
+      doc: createDocument("Hello", {
+        bold: { fontWeight: "bold" },
+      }),
+    };
+    ref.doc = wrapWithTag(ref.doc, 0, 5, "bold");
 
     // Insert " there" inside the bold text (at position 3)
     // "Hel" + " there" + "lo" = "Hel therelo"
-    doc = insertText(doc, 3, " there");
+    ref.doc = insertText(ref.doc, 3, " there");
 
-    expect(getDocumentText(doc)).toBe("Hel therelo");
-    expect(doc.length).toBe(11);
+    expect(getDocumentText(ref.doc)).toBe("Hel therelo");
+    expect(ref.doc.length).toBe(11);
 
-    const segments = toFlatSegments(doc);
+    const segments = toFlatSegments(ref.doc);
 
     // Entire text should be bold
     const boldSegment = segments.find((s) => s.style.fontWeight === "bold");
@@ -606,16 +612,18 @@ describe("Integration", () => {
   });
 
   it("handles mixed ASCII and CJK with styles", () => {
-    let doc = createDocument("Hello日本語World", {
-      cjk: { color: "blue" },
-    });
+    const ref = {
+      doc: createDocument("Hello日本語World", {
+        cjk: { color: "blue" },
+      }),
+    };
 
     // Wrap the CJK characters
-    doc = wrapWithTag(doc, 5, 8, "cjk");
+    ref.doc = wrapWithTag(ref.doc, 5, 8, "cjk");
 
-    expect(getDocumentText(doc)).toBe("Hello日本語World");
+    expect(getDocumentText(ref.doc)).toBe("Hello日本語World");
 
-    const segments = toFlatSegments(doc);
+    const segments = toFlatSegments(ref.doc);
     expect(segments).toHaveLength(1);
     expect(segments[0]).toEqual({
       start: 5,

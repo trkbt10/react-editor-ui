@@ -120,14 +120,14 @@ describe("ColorPicker", () => {
   });
 
   it("calls onChange when hex input changes", () => {
-    let changedValue: string | null = null;
+    const ref = { changedValue: null as string | null };
     const handleChange = (hex: string) => {
-      changedValue = hex;
+      ref.changedValue = hex;
     };
     render(<ColorPicker value="#ff0000" onChange={handleChange} />);
     const input = screen.getByLabelText("Hex color value");
     fireEvent.change(input, { target: { value: "00ff00" } });
-    expect(changedValue).toBe("#00ff00");
+    expect(ref.changedValue).toBe("#00ff00");
   });
 
   it("renders preset colors", () => {
@@ -140,9 +140,9 @@ describe("ColorPicker", () => {
   });
 
   it("calls onChange when preset clicked", () => {
-    let changedValue: string | null = null;
+    const ref = { changedValue: null as string | null };
     const handleChange = (hex: string) => {
-      changedValue = hex;
+      ref.changedValue = hex;
     };
     const presets = ["#00ff00"];
     render(
@@ -153,7 +153,7 @@ describe("ColorPicker", () => {
       />,
     );
     fireEvent.click(screen.getByLabelText("Select color #00ff00"));
-    expect(changedValue).toBe("#00ff00");
+    expect(ref.changedValue).toBe("#00ff00");
   });
 
   it("renders saturation/brightness slider", () => {

@@ -63,39 +63,37 @@ describe("GradientBar", () => {
 
   it("calls onSelectStop when handle is clicked", () => {
     const gradient = createTestGradient();
-    let selectedId: string | null = null;
-    const handleSelectStop = (id: string) => {
-      selectedId = id;
-    };
+    const ref = { selectedId: null as string | null };
 
     render(
       <GradientBar
         value={gradient}
         onChange={() => {}}
         selectedStopId={null}
-        onSelectStop={handleSelectStop}
+        onSelectStop={(id: string) => {
+          ref.selectedId = id;
+        }}
       />,
     );
 
     const sliders = screen.getAllByRole("slider");
     fireEvent.pointerDown(sliders[0]);
 
-    expect(selectedId).toBe("stop-1");
+    expect(ref.selectedId).toBe("stop-1");
   });
 
   it("handles disabled state", () => {
     const gradient = createTestGradient();
-    let selectedId: string | null = null;
-    const handleSelectStop = (id: string) => {
-      selectedId = id;
-    };
+    const ref = { selectedId: null as string | null };
 
     render(
       <GradientBar
         value={gradient}
         onChange={() => {}}
         selectedStopId={null}
-        onSelectStop={handleSelectStop}
+        onSelectStop={(id: string) => {
+          ref.selectedId = id;
+        }}
         disabled
       />,
     );
@@ -103,7 +101,7 @@ describe("GradientBar", () => {
     const sliders = screen.getAllByRole("slider");
     fireEvent.pointerDown(sliders[0]);
 
-    expect(selectedId).toBeNull();
+    expect(ref.selectedId).toBeNull();
   });
 
   it("applies custom height", () => {
