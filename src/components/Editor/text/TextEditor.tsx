@@ -336,9 +336,6 @@ export const TextEditor = forwardRef(function TextEditor(
     [handleExecuteCommand, core.textareaRef]
   );
 
-  // Render (BlockRenderer always uses SVG internally)
-  // Note: The 'renderer' prop is kept for API compatibility but both render as SVG
-  void renderer; // Acknowledge the prop to satisfy TypeScript
   const isReady = fontMetrics.isReady;
 
   return (
@@ -372,6 +369,7 @@ export const TextEditor = forwardRef(function TextEditor(
             fontFamily={editorConfig.fontFamily}
             fontSize={editorConfig.fontSize}
             startLineNumber={core.visibleBlockInfo.startLineNumber}
+            renderer={renderer}
           />
         )}
       </div>
