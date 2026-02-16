@@ -2,30 +2,16 @@
  * @file Code Editor Types
  *
  * Type definitions for the code editor layer.
+ * Note: Import core types directly from "../core/types".
  */
 
 import type { CSSProperties } from "react";
 import type {
-  CompositionState,
   CursorPosition,
-  CursorState,
   EditorConfig,
   HighlightRange,
   SelectionRange,
 } from "../core/types";
-
-// =============================================================================
-// Re-exports from core
-// =============================================================================
-
-export type {
-  CompositionState,
-  CursorPosition,
-  CursorState,
-  EditorConfig,
-  HighlightRange,
-  SelectionRange,
-};
 
 // =============================================================================
 // Token Types

@@ -5,7 +5,6 @@
  * lineColumnToCoordinates, coordinatesToPosition, calculateSelectionRects.
  */
 
-import { describe, it, expect } from "vitest";
 import {
   offsetToLineColumn,
   lineColumnToOffset,

@@ -4,7 +4,11 @@
 
 import type { StrokeAlign } from "./types";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import { AlignInsideIcon, AlignCenterIcon, AlignOutsideIcon } from "./icons";
+import {
+  StrokeAlignInsideIcon as AlignInsideIcon,
+  StrokeAlignCenterIcon as AlignCenterIcon,
+  StrokeAlignOutsideIcon as AlignOutsideIcon,
+} from "../../icons";
 
 export type StrokeAlignSelectProps = {
   value: StrokeAlign;

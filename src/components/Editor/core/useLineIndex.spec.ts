@@ -5,7 +5,6 @@
  * offsetToLineColumnFromIndex, lineColumnToOffsetFromIndex.
  */
 
-import { describe, it, expect } from "vitest";
 import {
   buildLineOffsets,
   findLineIndex,

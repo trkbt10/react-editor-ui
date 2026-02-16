@@ -171,6 +171,7 @@ export const UnitInput = memo(function UnitInput({
   const currentUnitIndex = findUnitIndex(units, currentUnit);
 
   // Sync edit value when value changes externally (not during manual typing)
+  /* eslint-disable custom/no-use-state-in-use-effect -- Intentional: sync local state with prop */
   useEffect(() => {
     if (!isEditing) {
       if (parsed.isAuto) {
@@ -182,6 +183,7 @@ export const UnitInput = memo(function UnitInput({
       }
     }
   }, [value, isEditing, parsed.isAuto, parsed.num]);
+  /* eslint-enable custom/no-use-state-in-use-effect */
 
   const commitValue = useCallback(
     (inputValue: string) => {
@@ -518,9 +520,8 @@ export const UnitInput = memo(function UnitInput({
             data-testid="unit-input-dropdown"
           >
             {allOptions.map((option) => {
-              const isSelected = option.value === "auto"
-                ? parsed.isAuto
-                : option.value.toLowerCase() === currentUnit.toLowerCase();
+              const isAutoOption = option.value === "auto";
+              const isSelected = isAutoOption ? parsed.isAuto : option.value.toLowerCase() === currentUnit.toLowerCase();
               return (
                 <div
                   key={option.value}

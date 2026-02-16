@@ -212,20 +212,6 @@ export function getTagsAtOffset(
 // =============================================================================
 
 /**
- * Split a text node at an offset.
- * Returns [before, after] text nodes.
- */
-function splitTextNode(
-  node: TextNode,
-  offset: number
-): [TextNode, TextNode] {
-  return [
-    { type: "text", content: node.content.slice(0, offset) },
-    { type: "text", content: node.content.slice(offset) },
-  ];
-}
-
-/**
  * Insert text into a node at a given offset.
  */
 function insertTextIntoNode(
@@ -414,55 +400,6 @@ export function replaceRange(
 // =============================================================================
 // Style Operations
 // =============================================================================
-
-/**
- * Extract a range from a node, returning the extracted portion.
- */
-function extractRange(
-  node: StyledNode,
-  start: number,
-  end: number
-): StyledNode | null {
-  if (node.type === "text") {
-    const content = node.content.slice(start, end);
-    if (content.length === 0) {
-      return null;
-    }
-    return { type: "text", content };
-  }
-
-  // For elements, extract from children
-  const extractedChildren: StyledNode[] = [];
-  let currentOffset = 0;
-
-  for (const child of node.children) {
-    const childLength = getNodeLength(child);
-    const childStart = currentOffset;
-    const childEnd = currentOffset + childLength;
-
-    if (end <= childStart || start >= childEnd) {
-      // Child is completely outside range
-      currentOffset = childEnd;
-      continue;
-    }
-
-    // Child overlaps with range
-    const extractStart = Math.max(0, start - childStart);
-    const extractEnd = Math.min(childLength, end - childStart);
-    const extracted = extractRange(child, extractStart, extractEnd);
-    if (extracted) {
-      extractedChildren.push(extracted);
-    }
-
-    currentOffset = childEnd;
-  }
-
-  if (extractedChildren.length === 0) {
-    return null;
-  }
-
-  return { ...node, children: extractedChildren };
-}
 
 /**
  * Wrap a range with a tag.
@@ -690,19 +627,20 @@ export function setStyleDefinition(
 /**
  * Add or update an overlay layer.
  */
+/** Update or add an overlay layer in the list */
+function updateOverlayList(overlays: OverlayLayer[], layer: OverlayLayer, existingIndex: number): OverlayLayer[] {
+  if (existingIndex >= 0) {
+    return [...overlays.slice(0, existingIndex), layer, ...overlays.slice(existingIndex + 1)];
+  }
+  return [...overlays, layer];
+}
+
 export function setOverlayLayer(
   doc: StyledDocument,
   layer: OverlayLayer
 ): StyledDocument {
   const existingIndex = doc.overlays.findIndex((l) => l.id === layer.id);
-  const newOverlays =
-    existingIndex >= 0
-      ? [
-          ...doc.overlays.slice(0, existingIndex),
-          layer,
-          ...doc.overlays.slice(existingIndex + 1),
-        ]
-      : [...doc.overlays, layer];
+  const newOverlays = updateOverlayList(doc.overlays, layer, existingIndex);
 
   // Sort by priority
   newOverlays.sort((a, b) => a.priority - b.priority);
@@ -726,6 +664,14 @@ export function removeOverlayLayer(
 // =============================================================================
 // Conversion to Flat Segments
 // =============================================================================
+
+/** Compute new tags list, skipping root/fragment elements */
+function computeNewTags(tag: string, currentTags: readonly string[]): readonly string[] {
+  if (tag === "__root__" || tag === "__fragment__") {
+    return currentTags;
+  }
+  return [...currentTags, tag];
+}
 
 /**
  * Flatten a node tree to style segments.
@@ -760,9 +706,7 @@ function flattenNode(
   }
 
   // Element node: add tag to stack
-  const newTags = node.tag === "__root__" || node.tag === "__fragment__"
-    ? tags
-    : [...tags, node.tag];
+  const newTags = computeNewTags(node.tag, tags);
 
   let currentOffset = offset;
   for (const child of node.children) {
@@ -805,9 +749,7 @@ function flattenOverlay(
     return offset + node.content.length;
   }
 
-  const newTags = node.tag === "__root__" || node.tag === "__fragment__"
-    ? tags
-    : [...tags, node.tag];
+  const newTags = computeNewTags(node.tag, tags);
 
   let currentOffset = offset;
   for (const child of node.children) {

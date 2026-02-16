@@ -6,7 +6,7 @@ import type { CSSProperties } from "react";
 import type { WidthProfile } from "./types";
 import { Select, type SelectOption } from "../Select/Select";
 import { IconButton } from "../IconButton/IconButton";
-import { FlipIcon } from "./icons";
+import { FlipVerticalIcon as FlipIcon } from "../../icons";
 import { SPACE_SM } from "../../constants/styles";
 
 export type StrokeProfileSelectProps = {
@@ -109,7 +109,7 @@ export function StrokeProfileSelect({
           aria-label="Width profile"
         />
       </div>
-      {showFlip ? (
+      {showFlip && (
         <IconButton
           icon={<FlipIcon />}
           onClick={handleFlip}
@@ -117,7 +117,7 @@ export function StrokeProfileSelect({
           size="sm"
           disabled={disabled || value === "uniform" || value === "taper-both"}
         />
-      ) : null}
+      )}
     </div>
   );
 }

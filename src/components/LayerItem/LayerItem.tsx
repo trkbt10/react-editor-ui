@@ -50,8 +50,8 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
 // TYPES
 // ========================================
 
-/** Re-export ContextMenuItem for convenience */
-export type { ContextMenuItem as LayerContextMenuItem };
+/** Alias for ContextMenuItem for use with LayerItem context menus */
+export type LayerContextMenuItem = ContextMenuItem;
 
 /** Drop position indicator for drag and drop */
 export type DropPosition = "before" | "inside" | "after" | null;

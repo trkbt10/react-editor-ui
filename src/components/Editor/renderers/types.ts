@@ -2,6 +2,7 @@
  * @file Renderer Types
  *
  * Shared types and interfaces for code rendering in SVG and Canvas.
+ * Note: Import core types directly from "../core/types".
  */
 
 import type { ReactNode, CSSProperties } from "react";
@@ -11,12 +12,6 @@ import type {
   HighlightType,
   MeasureTextFn,
 } from "../core/types";
-
-// =============================================================================
-// Re-exports from core
-// =============================================================================
-
-export type { CursorState, HighlightRange, HighlightType };
 
 // =============================================================================
 // Token Types

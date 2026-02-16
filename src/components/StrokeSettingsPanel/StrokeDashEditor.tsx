@@ -33,6 +33,21 @@ const labelStyle: CSSProperties = {
   textAlign: "center",
 };
 
+const LABELS_6 = ["dash", "gap", "dash", "gap", "dash", "gap"] as const;
+const LABELS_2 = ["dash", "gap"] as const;
+
+function getLabels(columns: 2 | 6): readonly string[] {
+  return columns === 6 ? LABELS_6 : LABELS_2;
+}
+
+function getValues(pattern: DashPattern, columns: 2 | 6): string[] {
+  const values = columns === 6 ? pattern.values.slice(0, 6) : pattern.values.slice(0, 2);
+  while (values.length < columns) {
+    values.push("");
+  }
+  return values;
+}
+
 export function StrokeDashEditor({
   enabled,
   onEnabledChange,
@@ -47,18 +62,8 @@ export function StrokeDashEditor({
     onPatternChange({ values: newValues });
   };
 
-  const labels = columns === 6
-    ? ["dash", "gap", "dash", "gap", "dash", "gap"]
-    : ["dash", "gap"];
-
-  const values = columns === 6
-    ? pattern.values.slice(0, 6)
-    : pattern.values.slice(0, 2);
-
-  // Ensure we have enough values
-  while (values.length < columns) {
-    values.push("");
-  }
+  const labels = getLabels(columns);
+  const values = getValues(pattern, columns);
 
   const gridStyle: CSSProperties = {
     display: "grid",
@@ -75,7 +80,7 @@ export function StrokeDashEditor({
         disabled={disabled}
       />
 
-      {enabled ? (
+      {enabled && (
         <>
           <div style={gridStyle}>
             {labels.map((label, i) => (
@@ -95,7 +100,7 @@ export function StrokeDashEditor({
             ))}
           </div>
         </>
-      ) : null}
+      )}
     </div>
   );
 }

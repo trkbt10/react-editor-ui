@@ -4,7 +4,6 @@
  * Tests for SVG renderer, specifically CJK character measurement.
  */
 
-import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
 import { SvgRenderer } from "./SvgRenderer";
 import type { TokenCache, Token } from "./types";

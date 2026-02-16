@@ -2,6 +2,7 @@
  * @file PositionPanel component - Position, alignment, constraints, and rotation settings
  */
 
+import { memo, useCallback, useMemo } from "react";
 import type { ReactNode, CSSProperties } from "react";
 import { Panel } from "../Panel/Panel";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
@@ -28,7 +29,7 @@ import {
   ResetIcon,
   FlipHorizontalIcon,
   FlipVerticalIcon,
-} from "./positionIcons";
+} from "../../icons";
 import type {
   PositionSettings,
   PositionPanelProps,
@@ -67,7 +68,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
 // MAIN COMPONENT
 // ========================================
 
-export function PositionPanel({
+export const PositionPanel = memo(function PositionPanel({
   settings,
   onChange,
   onClose,
@@ -76,12 +77,12 @@ export function PositionPanel({
   width = 320,
   className,
 }: PositionPanelProps) {
-  const updateSettings = <K extends keyof PositionSettings>(
-    key: K,
-    value: PositionSettings[K],
-  ) => {
-    onChange({ ...settings, [key]: value });
-  };
+  const updateSettings = useCallback(
+    <K extends keyof PositionSettings>(key: K, value: PositionSettings[K]) => {
+      onChange({ ...settings, [key]: value });
+    },
+    [onChange, settings],
+  );
 
   const horizontalAlignOptions = [
     { value: "left" as const, icon: <AlignLeftIcon />, "aria-label": "Align left" },
@@ -127,46 +128,68 @@ export function PositionPanel({
     },
   ];
 
-  const handleTransformAction = (actionId: string) => {
-    onTransformAction?.(actionId);
-  };
+  const handleTransformAction = useCallback(
+    (actionId: string) => {
+      onTransformAction?.(actionId);
+    },
+    [onTransformAction],
+  );
 
-  const rowStyle: CSSProperties = {
-    display: "flex",
-    gap: SPACE_MD,
-    alignItems: "center",
-  };
+  const rowStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      gap: SPACE_MD,
+      alignItems: "center",
+    }),
+    [],
+  );
 
-  const sectionStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_SM,
-  };
+  const sectionStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_SM,
+    }),
+    [],
+  );
 
-  const gridStyle: CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: SPACE_MD,
-  };
+  const gridStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: SPACE_MD,
+    }),
+    [],
+  );
 
-  const constraintsRowStyle: CSSProperties = {
-    display: "flex",
-    gap: SPACE_MD,
-    alignItems: "flex-start",
-  };
+  const constraintsRowStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      gap: SPACE_MD,
+      alignItems: "flex-start",
+    }),
+    [],
+  );
 
-  const selectsColumnStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: SPACE_MD,
-    flex: 1,
-  };
+  const selectsColumnStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_MD,
+      flex: 1,
+      minWidth: 0,
+    }),
+    [],
+  );
 
-  const rotationRowStyle: CSSProperties = {
-    display: "flex",
-    gap: SPACE_MD,
-    alignItems: "center",
-  };
+  const rotationRowStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      gap: SPACE_MD,
+      alignItems: "center",
+    }),
+    [],
+  );
 
   return (
     <Panel title="Position" onClose={onClose} width={width} className={className}>
@@ -174,22 +197,28 @@ export function PositionPanel({
       <div style={sectionStyle}>
         <SectionLabel>Alignment</SectionLabel>
         <div style={rowStyle}>
-          <SegmentedControl
-            options={horizontalAlignOptions}
-            value={settings.horizontalAlign}
-            onChange={(v) => {
-              updateSettings("horizontalAlign", v as HorizontalAlign);
-            }}
-            aria-label="Horizontal alignment"
-          />
-          <SegmentedControl
-            options={verticalAlignOptions}
-            value={settings.verticalAlign}
-            onChange={(v) => {
-              updateSettings("verticalAlign", v as VerticalAlign);
-            }}
-            aria-label="Vertical alignment"
-          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <SegmentedControl
+              options={horizontalAlignOptions}
+              value={settings.horizontalAlign}
+              onChange={(v) => {
+                updateSettings("horizontalAlign", v as HorizontalAlign);
+              }}
+              fullWidth
+              aria-label="Horizontal alignment"
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <SegmentedControl
+              options={verticalAlignOptions}
+              value={settings.verticalAlign}
+              onChange={(v) => {
+                updateSettings("verticalAlign", v as VerticalAlign);
+              }}
+              fullWidth
+              aria-label="Vertical alignment"
+            />
+          </div>
         </div>
       </div>
 
@@ -257,7 +286,7 @@ export function PositionPanel({
       <div style={sectionStyle}>
         <SectionLabel>Rotation</SectionLabel>
         <div style={rotationRowStyle}>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <Input
               value={settings.rotation}
               onChange={(v) => {
@@ -277,4 +306,4 @@ export function PositionPanel({
       </div>
     </Panel>
   );
-}
+});

@@ -4,7 +4,6 @@
  * Tests for CompositionState, display text utilities, and style adjustment.
  */
 
-import { describe, it, expect } from "vitest";
 import {
   INITIAL_COMPOSITION_STATE,
   computeDisplayText,

@@ -4,7 +4,7 @@
 
 import type { StrokeCap } from "./types";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import { CapButtIcon, CapRoundIcon, CapSquareIcon } from "./icons";
+import { CapButtIcon, CapRoundIcon, CapSquareIcon } from "../../icons";
 
 export type StrokeCapSelectProps = {
   value: StrokeCap;

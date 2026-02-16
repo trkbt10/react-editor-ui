@@ -18,6 +18,17 @@ export type ToolbarOrientation = "horizontal" | "vertical";
 
 const ToolbarContext = createContext<ToolbarOrientation>("horizontal");
 
+function getOrientationStyles(isVertical: boolean, fitContent: boolean): CSSProperties {
+  if (isVertical) {
+    return { width: SIZE_TOOLBAR_HEIGHT, padding: `${SPACE_SM} 0`, ...(fitContent && { height: "fit-content" }) };
+  }
+  return { height: SIZE_TOOLBAR_HEIGHT, padding: `0 ${SPACE_SM}`, ...(fitContent && { width: "fit-content" }) };
+}
+
+function getBorderStyle(isVertical: boolean): CSSProperties {
+  return isVertical ? { borderRight: `1px solid ${COLOR_BORDER}` } : { borderBottom: `1px solid ${COLOR_BORDER}` };
+}
+
 export function useToolbarOrientation(): ToolbarOrientation {
   return useContext(ToolbarContext);
 }
@@ -48,17 +59,7 @@ export const Toolbar = memo(function Toolbar({
       alignItems: "center",
       backgroundColor: COLOR_SURFACE,
       gap: SPACE_SM,
-      ...(isVertical
-        ? {
-            width: SIZE_TOOLBAR_HEIGHT,
-            padding: `${SPACE_SM} 0`,
-            ...(fitContent && { height: "fit-content" }),
-          }
-        : {
-            height: SIZE_TOOLBAR_HEIGHT,
-            padding: `0 ${SPACE_SM}`,
-            ...(fitContent && { width: "fit-content" }),
-          }),
+      ...getOrientationStyles(isVertical, fitContent),
     };
 
     if (variant === "floating") {
@@ -72,12 +73,7 @@ export const Toolbar = memo(function Toolbar({
       };
     }
 
-    return {
-      ...baseStyles,
-      ...(isVertical
-        ? { borderRight: `1px solid ${COLOR_BORDER}` }
-        : { borderBottom: `1px solid ${COLOR_BORDER}` }),
-    };
+    return { ...baseStyles, ...getBorderStyle(isVertical) };
   }, [variant, orientation, fitContent, isVertical]);
 
   return (

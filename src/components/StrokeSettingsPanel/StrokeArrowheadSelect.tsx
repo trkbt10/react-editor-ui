@@ -17,7 +17,7 @@ import {
   ArrowDiamondIcon,
   ArrowBarIcon,
   SwapIcon,
-} from "./icons";
+} from "../../icons";
 import {
   COLOR_TEXT_MUTED,
   SIZE_FONT_SM,
@@ -151,7 +151,7 @@ export function StrokeArrowheadSelect({
         />
       </div>
 
-      {showScale ? (
+      {showScale && (
         <div style={rowStyle}>
           <span style={labelStyle}>Scale:</span>
           <div style={{ flex: 1 }}>
@@ -176,9 +176,9 @@ export function StrokeArrowheadSelect({
           </div>
           <div style={{ width: "28px" }} />
         </div>
-      ) : null}
+      )}
 
-      {showAlign ? (
+      {showAlign && (
         <div style={rowStyle}>
           <span style={labelStyle}>Align:</span>
           <SegmentedControl
@@ -190,7 +190,7 @@ export function StrokeArrowheadSelect({
             aria-label="Arrow alignment"
           />
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

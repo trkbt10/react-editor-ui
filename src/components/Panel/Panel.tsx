@@ -84,14 +84,9 @@ export function Panel({
     <div className={className} style={containerStyle}>
       <div style={headerStyle}>
         <h3 style={titleStyle}>{title}</h3>
-        {onClose ? (
-          <IconButton
-            icon={<CloseIcon />}
-            aria-label="Close"
-            size="sm"
-            onClick={onClose}
-          />
-        ) : null}
+        {onClose && (
+          <IconButton icon={<CloseIcon />} aria-label="Close" size="sm" onClick={onClose} />
+        )}
       </div>
       <div style={contentStyle}>{children}</div>
     </div>

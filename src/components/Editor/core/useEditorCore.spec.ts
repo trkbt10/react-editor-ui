@@ -4,7 +4,6 @@
  * Tests for pure functions and editor core utilities.
  */
 
-import { describe, it, expect } from "vitest";
 import {
   createCursorState,
   createSelectionHighlight,
@@ -17,7 +16,6 @@ import {
   adjustStyleForComposition,
   type CompositionState,
 } from "./types";
-import { useLineIndex } from "./useLineIndex";
 
 // =============================================================================
 // Helper to create LineIndex for testing

@@ -2,37 +2,18 @@
  * @file Text Editor Types
  *
  * Type definitions for the text editor layer (rich text editing).
+ * Note: Import core types directly from "../core/types" and "../core/styledDocument".
  */
 
 import type { CSSProperties } from "react";
 import type {
-  CompositionState,
   CursorPosition,
-  CursorState,
   EditorConfig,
-  HighlightRange,
   SelectionRange,
   TextStyle,
   TextStyleSegment,
 } from "../core/types";
 import type { StyledDocument } from "../core/styledDocument";
-
-// =============================================================================
-// Re-exports from core
-// =============================================================================
-
-export type {
-  CompositionState,
-  CursorPosition,
-  CursorState,
-  EditorConfig,
-  HighlightRange,
-  SelectionRange,
-  TextStyle,
-  TextStyleSegment,
-};
-
-export type { StyledDocument } from "../core/styledDocument";
 
 // =============================================================================
 // Text Editor Props

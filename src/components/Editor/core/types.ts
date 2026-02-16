@@ -80,6 +80,7 @@ export const INITIAL_COMPOSITION_STATE: CompositionState = {
  * @param _composition - Current composition state (unused, kept for API compatibility)
  * @returns The text to display
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Kept for API compatibility
 export function computeDisplayText(value: string, _composition: CompositionState): string {
   // Browser handles IME text insertion into value via onChange
   // Simply return value as-is

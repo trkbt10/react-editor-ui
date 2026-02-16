@@ -46,6 +46,22 @@ function isDocumentProps(
   return "document" in props && props.document !== undefined;
 }
 
+/** Extract text value from props based on API type */
+function extractValue(props: TextEditorProps, useDocumentApi: boolean): string {
+  if (useDocumentApi) {
+    return getDocumentText((props as TextEditorProps & { document: StyledDocument }).document);
+  }
+  return props.value as string;
+}
+
+/** Extract styles from props based on API type */
+function extractStyles(props: TextEditorProps, useDocumentApi: boolean): readonly TextStyleSegment[] {
+  if (useDocumentApi) {
+    return toFlatSegments((props as TextEditorProps & { document: StyledDocument }).document);
+  }
+  return props.styles ?? [];
+}
+
 /**
  * Compute text diff and return the change range.
  */
@@ -120,41 +136,54 @@ export const TextEditor = memo(function TextEditor(props: TextEditorProps): Reac
   const useDocumentApi = isDocumentProps(props);
 
   // Extract value and styles from props (either from document or legacy props)
-  // Type assertions are safe because we've already determined which API is in use
-  const value: string = useDocumentApi
-    ? getDocumentText(props.document)
-    : (props.value as string);
-
-  const styles: readonly TextStyleSegment[] = useDocumentApi
-    ? toFlatSegments(props.document)
-    : (props.styles ?? []);
+  const value = extractValue(props, useDocumentApi);
+  const styles = extractStyles(props, useDocumentApi);
 
   // Store the document reference for document API
   const documentRef = useMemo(
     () => (useDocumentApi ? { current: props.document } : { current: null as StyledDocument | null }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally only capturing the reference
+    // Intentionally empty deps - captures reference only once
     []
   );
   if (useDocumentApi) {
     documentRef.current = props.document;
   }
 
+  // Extract stable callback references to avoid re-creating handleChange on every render
+  const onDocumentChangeRef = useMemo(
+    () => ({ current: useDocumentApi ? (props as { onDocumentChange: (doc: StyledDocument) => void }).onDocumentChange : null }),
+    // Intentionally empty deps - capture initial callback only
+    []
+  );
+  const onChangeRef = useMemo(
+    () => ({ current: !useDocumentApi ? (props as { onChange: (value: string) => void }).onChange : null }),
+    // Intentionally empty deps - capture initial callback only
+    []
+  );
+
+  // Update refs when callbacks change (but this won't trigger re-render)
+  if (useDocumentApi) {
+    onDocumentChangeRef.current = (props as { onDocumentChange: (doc: StyledDocument) => void }).onDocumentChange;
+  } else {
+    onChangeRef.current = (props as { onChange: (value: string) => void }).onChange;
+  }
+
   // Create onChange handler that works with both APIs
   const handleChange = useCallback(
     (newValue: string) => {
-      if (useDocumentApi && documentRef.current) {
+      if (useDocumentApi && documentRef.current && onDocumentChangeRef.current) {
         // Document API: compute diff and update document
         const oldText = getDocumentText(documentRef.current);
         const diff = computeTextDiff(oldText, newValue);
         const newText = newValue.slice(diff.start, diff.newEnd);
         const newDoc = replaceRange(documentRef.current, diff.start, diff.oldEnd, newText);
-        (props as { onDocumentChange: (doc: StyledDocument) => void }).onDocumentChange(newDoc);
-      } else if (!useDocumentApi) {
+        onDocumentChangeRef.current(newDoc);
+      } else if (!useDocumentApi && onChangeRef.current) {
         // Legacy API: just call onChange
-        (props as { onChange: (value: string) => void }).onChange(newValue);
+        onChangeRef.current(newValue);
       }
     },
-    [useDocumentApi, props, documentRef]
+    [useDocumentApi, documentRef, onDocumentChangeRef, onChangeRef]
   );
 
   // Merge config with defaults

@@ -16,8 +16,7 @@ export type {
   StrokePanelVariant,
 } from "./types";
 
-// Icons (for custom usage)
-export * from "./icons";
+// Note: Import icons directly from "../../icons" (e.g., CapButtIcon, JoinMiterIcon)
 
 // Sub-components
 export { StrokeCapSelect } from "./StrokeCapSelect";

@@ -4,7 +4,6 @@
  * Comprehensive tests for tree-based styled document operations.
  */
 
-import { describe, it, expect } from "vitest";
 import {
   createDocument,
   createEmptyDocument,
@@ -24,7 +23,6 @@ import {
   removeOverlayLayer,
   toFlatSegments,
   type StyledDocument,
-  type StyledNode,
 } from "./styledDocument";
 
 // =============================================================================

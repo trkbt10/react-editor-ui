@@ -109,14 +109,8 @@ export const Select = memo(function Select<T extends string = string>({
       // Open upward if there's not enough space below but enough space above
       const openUpward = spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow;
 
-      setDropdownPosition({
-        top: openUpward
-          ? rect.top + window.scrollY - gap
-          : rect.bottom + window.scrollY + gap,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-        openUpward,
-      });
+      const top = openUpward ? rect.top + window.scrollY - gap : rect.bottom + window.scrollY + gap;
+      setDropdownPosition({ top, left: rect.left + window.scrollX, width: rect.width, openUpward });
     }
   });
 
@@ -275,9 +269,8 @@ export const Select = memo(function Select<T extends string = string>({
         onKeyDown={handleKeyDown}
         style={triggerStyle}
       >
-        {selectedOption?.preview ? (
-          <div style={previewContainerStyle}>{selectedOption.preview}</div>
-        ) : (
+        {selectedOption?.preview && <div style={previewContainerStyle}>{selectedOption.preview}</div>}
+        {!selectedOption?.preview && (
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {selectedOption?.label ?? placeholder}
           </span>
