@@ -3,6 +3,7 @@
  */
 
 import { memo, useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode, CSSProperties } from "react";
 import {
   COLOR_HOVER,
@@ -10,11 +11,12 @@ import {
   COLOR_TEXT_DISABLED,
   COLOR_BORDER,
   COLOR_ERROR,
-  SIZE_FONT_SM,
-  SPACE_XS,
+  SIZE_FONT_MD,
   SPACE_SM,
   SPACE_MD,
+  SPACE_LG,
   RADIUS_SM,
+  RADIUS_LG,
   SHADOW_MD,
   COLOR_INPUT_BG,
   Z_POPOVER,
@@ -79,9 +81,9 @@ const MenuItem = memo(function MenuItem({
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      gap: SPACE_SM,
-      padding: `${SPACE_SM} ${SPACE_MD}`,
-      fontSize: SIZE_FONT_SM,
+      gap: SPACE_MD,
+      padding: `${SPACE_MD} ${SPACE_LG}`,
+      fontSize: SIZE_FONT_MD,
       color: getItemColor(),
       cursor: item.disabled ? "default" : "pointer",
       borderRadius: RADIUS_SM,
@@ -111,7 +113,7 @@ const MenuItem = memo(function MenuItem({
 
   const shortcutStyle = useMemo<CSSProperties>(
     () => ({
-      fontSize: SIZE_FONT_SM,
+      fontSize: SIZE_FONT_MD,
       color: COLOR_TEXT_DISABLED,
       marginLeft: "auto",
       flexShrink: 0,
@@ -141,7 +143,7 @@ const MenuItem = memo(function MenuItem({
       style={itemStyle}
       data-testid={`context-menu-item-${item.id}`}
     >
-      <span style={{ display: "flex", alignItems: "center", gap: SPACE_SM, overflow: "hidden" }}>
+      <span style={{ display: "flex", alignItems: "center", gap: SPACE_MD, overflow: "hidden" }}>
         {item.icon ? <span style={{ display: "flex", flexShrink: 0 }}>{item.icon}</span> : null}
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {item.label}
@@ -267,10 +269,10 @@ export const ContextMenu = memo(function ContextMenu({
       top: position.y,
       backgroundColor: COLOR_INPUT_BG,
       border: `1px solid ${COLOR_BORDER}`,
-      borderRadius: RADIUS_SM,
-      padding: SPACE_XS,
-      minWidth: "160px",
-      maxWidth: "280px",
+      borderRadius: RADIUS_LG,
+      padding: SPACE_SM,
+      minWidth: "180px",
+      maxWidth: "320px",
       maxHeight: `${maxHeight}px`,
       overflowY: "auto",
       overflowX: "hidden",
@@ -284,7 +286,7 @@ export const ContextMenu = memo(function ContextMenu({
     () => ({
       height: "1px",
       backgroundColor: COLOR_BORDER,
-      margin: `${SPACE_XS} 0`,
+      margin: `${SPACE_SM} 0`,
     }),
     [],
   );
@@ -309,7 +311,7 @@ export const ContextMenu = memo(function ContextMenu({
     );
   };
 
-  return (
+  const menuElement = (
     <div
       ref={menuRef}
       role="menu"
@@ -336,4 +338,11 @@ export const ContextMenu = memo(function ContextMenu({
       {renderSubmenu()}
     </div>
   );
+
+  // Use portal to escape stacking context issues
+  if (nestLevel === 0) {
+    return createPortal(menuElement, document.body);
+  }
+
+  return menuElement;
 });

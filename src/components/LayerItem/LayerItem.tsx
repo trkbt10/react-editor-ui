@@ -8,6 +8,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import {
   COLOR_HOVER,
   COLOR_SELECTED,
+  COLOR_DROP_TARGET,
   COLOR_TEXT,
   COLOR_TEXT_MUTED,
   COLOR_TEXT_DISABLED,
@@ -239,7 +240,7 @@ export function LayerItem({
     alignItems: "center",
     padding: `${SPACE_XS} ${SPACE_MD}`,
     paddingLeft: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
-    backgroundColor: dropPosition === "inside" ? "rgba(37, 99, 235, 0.15)" : selected ? COLOR_SELECTED : "transparent",
+    backgroundColor: dropPosition === "inside" ? COLOR_DROP_TARGET : selected ? COLOR_SELECTED : "transparent",
     cursor: locked ? "default" : "pointer",
     transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
     userSelect: "none",

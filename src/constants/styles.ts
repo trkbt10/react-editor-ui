@@ -169,6 +169,8 @@ export const EASING_OUT = "var(--rei-easing-out, cubic-bezier(0, 0, 0.2, 1))";
 export const COLOR_HOVER = "var(--rei-color-hover, rgba(0, 0, 0, 0.04))";
 export const COLOR_ACTIVE = "var(--rei-color-active, rgba(0, 0, 0, 0.08))";
 export const COLOR_SELECTED = "var(--rei-color-selected, rgba(37, 99, 235, 0.1))";
+export const COLOR_SELECTED_SUBTLE = "var(--rei-color-selected-subtle, rgba(37, 99, 235, 0.05))";
+export const COLOR_DROP_TARGET = "var(--rei-color-drop-target, rgba(37, 99, 235, 0.15))";
 export const COLOR_FOCUS_RING = "var(--rei-color-focus-ring, rgba(37, 99, 235, 0.4))";
 
 // ========================================
