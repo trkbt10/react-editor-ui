@@ -2,8 +2,14 @@
  * @file Input component - Text input with optional icons
  */
 
-import type { ReactNode, ChangeEvent, CSSProperties } from "react";
-import { useState } from "react";
+import {
+  memo,
+  useState,
+  useMemo,
+  useCallback,
+  forwardRef,
+} from "react";
+import type { ReactNode, ChangeEvent, CSSProperties, Ref } from "react";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
@@ -22,63 +28,13 @@ import {
   SIZE_HEIGHT_SM,
   SIZE_HEIGHT_MD,
   SIZE_HEIGHT_LG,
+  SIZE_ICON_SM,
+  SIZE_ICON_MD,
+  SIZE_ICON_LG,
   SPACE_SM,
   SPACE_MD,
   SPACE_LG,
 } from "../../constants/styles";
-
-function renderClearButton(showClearButton: boolean, handleClear: () => void) {
-  if (!showClearButton) {
-    return null;
-  }
-  return (
-    <button
-      type="button"
-      onClick={handleClear}
-      aria-label="Clear"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 0,
-        border: "none",
-        backgroundColor: "transparent",
-        color: COLOR_ICON,
-        cursor: "pointer",
-        flexShrink: 0,
-      }}
-      onPointerEnter={(e) => {
-        e.currentTarget.style.color = COLOR_ICON_HOVER;
-      }}
-      onPointerLeave={(e) => {
-        e.currentTarget.style.color = COLOR_ICON;
-      }}
-    >
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-      </svg>
-    </button>
-  );
-}
-
-function renderIconEnd(
-  iconEnd: ReactNode,
-  showClearButton: boolean,
-  iconStyle: CSSProperties,
-) {
-  if (!iconEnd || showClearButton) {
-    return null;
-  }
-  return <span style={iconStyle}>{iconEnd}</span>;
-}
 
 export type InputProps = {
   value: string;
@@ -97,123 +53,188 @@ export type InputProps = {
 };
 
 const sizeMap = {
-  sm: { height: SIZE_HEIGHT_SM, fontSize: SIZE_FONT_SM, paddingX: SPACE_SM },
-  md: { height: SIZE_HEIGHT_MD, fontSize: SIZE_FONT_MD, paddingX: SPACE_MD },
-  lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_MD, paddingX: SPACE_LG },
+  sm: { height: SIZE_HEIGHT_SM, fontSize: SIZE_FONT_SM, paddingX: SPACE_SM, iconSize: SIZE_ICON_SM },
+  md: { height: SIZE_HEIGHT_MD, fontSize: SIZE_FONT_MD, paddingX: SPACE_MD, iconSize: SIZE_ICON_MD },
+  lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_MD, paddingX: SPACE_LG, iconSize: SIZE_ICON_LG },
 };
 
-function renderPrefix(
-  prefix: ReactNode | string | undefined,
-  affixStyle: CSSProperties,
-) {
-  if (!prefix) {
-    return null;
-  }
-  return <span style={affixStyle}>{prefix}</span>;
-}
+type ClearButtonProps = {
+  onClear: () => void;
+};
 
-function renderSuffix(
-  suffix: ReactNode | string | undefined,
-  affixStyle: CSSProperties,
-) {
-  if (!suffix) {
-    return null;
-  }
-  return <span style={affixStyle}>{suffix}</span>;
-}
+const ClearButton = memo(function ClearButton({ onClear }: ClearButtonProps) {
+  const [isHovered, setIsHovered] = useState(false);
 
-export function Input({
-  value,
-  onChange,
-  type = "text",
-  placeholder,
-  size = "md",
-  disabled = false,
-  iconStart,
-  iconEnd,
-  prefix,
-  suffix,
-  clearable = false,
-  "aria-label": ariaLabel,
-  className,
-}: InputProps) {
-  const [isFocused, setIsFocused] = useState(false);
-  const sizeConfig = sizeMap[size];
+  const buttonStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 0,
+      border: "none",
+      backgroundColor: "transparent",
+      color: isHovered ? COLOR_ICON_HOVER : COLOR_ICON,
+      cursor: "pointer",
+      flexShrink: 0,
+    }),
+    [isHovered],
+  );
 
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    width: "100%",
-    gap: SPACE_SM,
-    height: sizeConfig.height,
-    padding: `0 ${sizeConfig.paddingX}`,
-    backgroundColor: COLOR_INPUT_BG,
-    border: `1px solid ${isFocused ? COLOR_INPUT_BORDER_FOCUS : COLOR_INPUT_BORDER}`,
-    borderRadius: RADIUS_SM,
-    transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
-    opacity: disabled ? 0.5 : 1,
-    boxSizing: "border-box",
-  };
+  const handlePointerEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
 
-  const inputStyle: CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-    height: "100%",
-    padding: 0,
-    border: "none",
-    backgroundColor: "transparent",
-    color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
-    fontSize: sizeConfig.fontSize,
-    outline: "none",
-  };
-
-  const iconStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    color: COLOR_ICON,
-    flexShrink: 0,
-  };
-
-  const affixStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    color: COLOR_TEXT_MUTED,
-    fontSize: sizeConfig.fontSize,
-    flexShrink: 0,
-    userSelect: "none",
-  };
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value, e);
-  };
-
-  const handleClear = () => {
-    onChange("", {
-      target: { value: "" },
-    } as ChangeEvent<HTMLInputElement>);
-  };
-
-  const showClearButton = clearable && value.length > 0 && !disabled;
+  const handlePointerLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   return (
-    <div className={className} style={containerStyle}>
-      {iconStart ? <span style={iconStyle}>{iconStart}</span> : null}
-      {renderPrefix(prefix, affixStyle)}
-      <input
-        type={type}
-        value={value}
-        onChange={handleChange}
-        placeholder={placeholder}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        style={inputStyle}
-      />
-      {renderSuffix(suffix, affixStyle)}
-      {renderClearButton(showClearButton, handleClear)}
-      {renderIconEnd(iconEnd, showClearButton, iconStyle)}
-    </div>
+    <button
+      type="button"
+      onClick={onClear}
+      aria-label="Clear"
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      style={buttonStyle}
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
   );
-}
+});
+
+export const Input = memo(
+  forwardRef(function Input(
+    {
+      value,
+      onChange,
+      type = "text",
+      placeholder,
+      size = "md",
+      disabled = false,
+      iconStart,
+      iconEnd,
+      prefix,
+      suffix,
+      clearable = false,
+      "aria-label": ariaLabel,
+      className,
+    }: InputProps,
+    ref: Ref<HTMLInputElement>,
+  ) {
+    const [isFocused, setIsFocused] = useState(false);
+    const sizeConfig = sizeMap[size];
+
+    const containerStyle = useMemo<CSSProperties>(
+      () => ({
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
+        gap: SPACE_SM,
+        height: sizeConfig.height,
+        padding: `0 ${sizeConfig.paddingX}`,
+        backgroundColor: COLOR_INPUT_BG,
+        border: `1px solid ${isFocused ? COLOR_INPUT_BORDER_FOCUS : COLOR_INPUT_BORDER}`,
+        borderRadius: RADIUS_SM,
+        transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+        boxShadow: isFocused ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+        opacity: disabled ? 0.5 : 1,
+        boxSizing: "border-box",
+      }),
+      [isFocused, disabled, sizeConfig],
+    );
+
+    const inputStyle = useMemo<CSSProperties>(
+      () => ({
+        flex: 1,
+        minWidth: 0,
+        height: "100%",
+        padding: 0,
+        border: "none",
+        backgroundColor: "transparent",
+        color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
+        fontSize: sizeConfig.fontSize,
+        outline: "none",
+      }),
+      [disabled, sizeConfig.fontSize],
+    );
+
+    const iconStyle = useMemo<CSSProperties>(
+      () => ({
+        display: "flex",
+        alignItems: "center",
+        color: COLOR_ICON,
+        flexShrink: 0,
+        width: sizeConfig.iconSize,
+        height: sizeConfig.iconSize,
+      }),
+      [sizeConfig.iconSize],
+    );
+
+    const affixStyle = useMemo<CSSProperties>(
+      () => ({
+        display: "flex",
+        alignItems: "center",
+        color: COLOR_TEXT_MUTED,
+        fontSize: sizeConfig.fontSize,
+        flexShrink: 0,
+        userSelect: "none",
+      }),
+      [sizeConfig.fontSize],
+    );
+
+    const handleChange = useCallback(
+      (e: ChangeEvent<HTMLInputElement>) => {
+        onChange(e.target.value, e);
+      },
+      [onChange],
+    );
+
+    const handleClear = useCallback(() => {
+      onChange("", {
+        target: { value: "" },
+      } as ChangeEvent<HTMLInputElement>);
+    }, [onChange]);
+
+    const handleFocus = useCallback(() => {
+      setIsFocused(true);
+    }, []);
+
+    const handleBlur = useCallback(() => {
+      setIsFocused(false);
+    }, []);
+
+    const showClearButton = clearable && value.length > 0 && !disabled;
+
+    return (
+      <div className={className} style={containerStyle}>
+        {iconStart ? <span style={iconStyle}>{iconStart}</span> : null}
+        {prefix ? <span style={affixStyle}>{prefix}</span> : null}
+        <input
+          ref={ref}
+          type={type}
+          value={value}
+          onChange={handleChange}
+          placeholder={placeholder}
+          disabled={disabled}
+          aria-label={ariaLabel}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          style={inputStyle}
+        />
+        {suffix ? <span style={affixStyle}>{suffix}</span> : null}
+        {showClearButton ? <ClearButton onClear={handleClear} /> : null}
+        {iconEnd && !showClearButton ? <span style={iconStyle}>{iconEnd}</span> : null}
+      </div>
+    );
+  }),
+);
