@@ -454,7 +454,7 @@ export const SvgRenderer = memo(function SvgRenderer({
   tokenCache,
   lineHeight,
   padding,
-  width = 800,
+  width,
   measureText: measureTextProp,
   showLineNumbers = false,
   lineNumberWidth = DEFAULT_LINE_NUMBER_WIDTH,
@@ -499,7 +499,7 @@ export const SvgRenderer = memo(function SvgRenderer({
       {topSpacerHeight > 0 && <div style={{ height: topSpacerHeight }} />}
 
       <svg
-        width={width}
+        width={width ?? "100%"}
         height={svgHeight}
         style={{ display: "block", overflow: "visible" }}
       >

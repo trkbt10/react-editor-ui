@@ -11,7 +11,7 @@
  * Renders using Canvas 2D API for high-performance scenarios.
  */
 
-import { useRef, useEffect, useMemo, memo, type ReactNode, type CSSProperties } from "react";
+import { useRef, useEffect, useEffectEvent, useMemo, useState, memo, type ReactNode, type CSSProperties } from "react";
 import type {
   RendererProps,
   Token,
@@ -324,7 +324,7 @@ export const CanvasRenderer = memo(function CanvasRenderer({
   tokenCache,
   lineHeight,
   padding,
-  width = 800,
+  width: widthProp,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canvas uses ctx.measureText directly
   measureText: _measureText,
   showLineNumbers = false,
@@ -335,7 +335,39 @@ export const CanvasRenderer = memo(function CanvasRenderer({
   fontFamily = DEFAULT_FONT_FAMILY,
   fontSize = DEFAULT_FONT_SIZE,
 }: RendererProps): ReactNode {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [measuredWidth, setMeasuredWidth] = useState<number>(0);
+
+  // Effect event to handle width updates from ResizeObserver
+  const handleWidthChange = useEffectEvent((width: number) => {
+    setMeasuredWidth(width);
+  });
+
+  // Observe container width for responsive canvas sizing
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        handleWidthChange(entry.contentRect.width);
+      }
+    });
+
+    observer.observe(wrapper);
+    // Initial measurement
+    handleWidthChange(wrapper.clientWidth);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Use provided width or measured width
+  const width = widthProp ?? measuredWidth;
 
   // Pre-compute line highlights for visible range
   const lineHighlightsMap = useMemo(() => {
@@ -493,17 +525,19 @@ export const CanvasRenderer = memo(function CanvasRenderer({
   ]);
 
   return (
-    <div style={codeDisplayStyle}>
+    <div ref={wrapperRef} style={codeDisplayStyle}>
       {topSpacerHeight > 0 && <div style={{ height: topSpacerHeight }} />}
 
-      <canvas
-        ref={canvasRef}
-        style={{
-          width,
-          height: canvasHeight,
-          display: "block",
-        }}
-      />
+      {width > 0 && (
+        <canvas
+          ref={canvasRef}
+          style={{
+            width,
+            height: canvasHeight,
+            display: "block",
+          }}
+        />
+      )}
 
       {bottomSpacerHeight > 0 && <div style={{ height: bottomSpacerHeight }} />}
     </div>
