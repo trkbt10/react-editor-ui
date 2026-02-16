@@ -525,8 +525,8 @@ describe("UnitInput", () => {
       fireEvent.click(unitButton);
       expect(screen.getByTestId("unit-input-dropdown")).toBeInTheDocument();
 
-      // Click outside element
-      fireEvent.mouseDown(screen.getByTestId("outside-element"));
+      // Pointer down outside element (supports both mouse and touch)
+      fireEvent.pointerDown(screen.getByTestId("outside-element"));
       expect(screen.queryByTestId("unit-input-dropdown")).not.toBeInTheDocument();
     });
 

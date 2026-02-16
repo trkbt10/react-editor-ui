@@ -10,7 +10,7 @@
  * - Supports "Auto" value
  */
 
-import { memo, useState, useRef, useCallback, useEffect, type CSSProperties, type WheelEvent, type KeyboardEvent } from "react";
+import { memo, useState, useRef, useCallback, type CSSProperties, type KeyboardEvent } from "react";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
@@ -20,8 +20,6 @@ import {
   COLOR_TEXT_DISABLED,
   COLOR_ICON,
   COLOR_FOCUS_RING,
-  COLOR_SURFACE_RAISED,
-  COLOR_SELECTED,
   RADIUS_SM,
   DURATION_FAST,
   EASING_DEFAULT,
@@ -33,18 +31,23 @@ import {
   SPACE_SM,
   SPACE_MD,
   SPACE_LG,
-  SHADOW_MD,
-  Z_DROPDOWN,
 } from "../../constants/styles";
-import { Portal } from "../Portal/Portal";
+import {
+  type UnitOption,
+  parseValue,
+  formatNumber,
+  formatFullValue,
+  getDisplayValue,
+  clampValue,
+  findUnitIndex,
+} from "./unitInputUtils";
+import { UnitDropdown } from "./UnitDropdown";
+import { useNumericStepper } from "./useNumericStepper";
+
+export type { UnitOption };
 
 /** Threshold for showing dropdown instead of cycling */
 const DROPDOWN_THRESHOLD = 5;
-
-export type UnitOption = {
-  value: string;
-  label: string;
-};
 
 export type UnitInputProps = {
   value: string;
@@ -74,61 +77,6 @@ const defaultUnits: UnitOption[] = [
   { value: "px", label: "px" },
 ];
 
-type ParsedValue = {
-  num: number | null;
-  unit: string;
-  isAuto: boolean;
-};
-
-function parseValue(value: string, defaultUnit: string): ParsedValue {
-  const trimmed = value.trim().toLowerCase();
-
-  if (trimmed === "auto") {
-    return { num: null, unit: "", isAuto: true };
-  }
-
-  const match = trimmed.match(/^(-?[\d.]+)\s*([a-z%]*)$/i);
-  if (match) {
-    const num = parseFloat(match[1]);
-    const unit = match[2] || defaultUnit;
-    return { num: isNaN(num) ? null : num, unit, isAuto: false };
-  }
-
-  return { num: null, unit: defaultUnit, isAuto: false };
-}
-
-function formatNumber(num: number): string {
-  if (Number.isInteger(num)) {
-    return num.toString();
-  }
-  return num.toFixed(2).replace(/\.?0+$/, "");
-}
-
-function formatFullValue(num: number | null, unit: string, isAuto: boolean): string {
-  if (isAuto) {
-    return "Auto";
-  }
-  if (num === null) {
-    return "";
-  }
-  return `${formatNumber(num)}${unit}`;
-}
-
-function clampValue(value: number, min?: number, max?: number): number {
-  if (min !== undefined && value < min) {
-    return min;
-  }
-  if (max !== undefined && value > max) {
-    return max;
-  }
-  return value;
-}
-
-function findUnitIndex(units: UnitOption[], currentUnit: string): number {
-  const index = units.findIndex((u) => u.value.toLowerCase() === currentUnit.toLowerCase());
-  return index >= 0 ? index : 0;
-}
-
 
 
 
@@ -154,10 +102,8 @@ export const UnitInput = memo(function UnitInput({
   const [editValue, setEditValue] = useState("");
   const [isUnitHovered, setIsUnitHovered] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
   const unitButtonRef = useRef<HTMLSpanElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const skipBlurCommitRef = useRef(false);
   const sizeConfig = sizeMap[size];
 
@@ -170,20 +116,32 @@ export const UnitInput = memo(function UnitInput({
   const currentUnit = parsed.unit || defaultUnit;
   const currentUnitIndex = findUnitIndex(units, currentUnit);
 
-  // Sync edit value when value changes externally (not during manual typing)
-  /* eslint-disable custom/no-use-state-in-use-effect -- Intentional: sync local state with prop */
-  useEffect(() => {
-    if (!isEditing) {
-      if (parsed.isAuto) {
-        setEditValue("Auto");
-      } else if (parsed.num !== null) {
-        setEditValue(formatNumber(parsed.num));
-      } else {
-        setEditValue("");
-      }
-    }
-  }, [value, isEditing, parsed.isAuto, parsed.num]);
-  /* eslint-enable custom/no-use-state-in-use-effect -- end of prop sync block */
+  // Derive display value from props when not editing
+  const derivedDisplayValue = getDisplayValue(parsed);
+
+  // Current numeric value for stepping (0 if auto or null)
+  const currentNumericValue = parsed.isAuto ? 0 : (parsed.num ?? 0);
+
+  // Handle numeric value changes from stepper
+  const handleStepperValueChange = useCallback(
+    (newValue: number) => {
+      setEditValue(formatNumber(newValue));
+      onChange(formatFullValue(newValue, currentUnit, false));
+    },
+    [onChange, currentUnit],
+  );
+
+  // Numeric stepper for arrow keys and wheel
+  const { handleKeyStep, handleWheel } = useNumericStepper({
+    value: currentNumericValue,
+    step,
+    shiftStep,
+    min,
+    max,
+    disabled,
+    isFocused,
+    onValueChange: handleStepperValueChange,
+  });
 
   const commitValue = useCallback(
     (inputValue: string) => {
@@ -208,11 +166,13 @@ export const UnitInput = memo(function UnitInput({
   const handleFocus = useCallback(() => {
     setIsFocused(true);
     setIsEditing(true);
+    // Initialize edit value from current display value
+    setEditValue(derivedDisplayValue);
     // Select all text on focus
     setTimeout(() => {
       inputRef.current?.select();
     }, 0);
-  }, []);
+  }, [derivedDisplayValue]);
 
   const handleBlur = useCallback(() => {
     setIsFocused(false);
@@ -251,38 +211,10 @@ export const UnitInput = memo(function UnitInput({
         return;
       }
 
-      const actualStep = e.shiftKey ? shiftStep : step;
-
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        const currentNum = parsed.isAuto ? 0 : (parsed.num ?? 0);
-        const newValue = clampValue(currentNum + actualStep, min, max);
-        setEditValue(formatNumber(newValue));
-        onChange(formatFullValue(newValue, currentUnit, false));
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        const currentNum = parsed.isAuto ? 0 : (parsed.num ?? 0);
-        const newValue = clampValue(currentNum - actualStep, min, max);
-        setEditValue(formatNumber(newValue));
-        onChange(formatFullValue(newValue, currentUnit, false));
-      }
+      // Delegate arrow key handling to stepper
+      handleKeyStep(e);
     },
-    [disabled, editValue, commitValue, parsed, step, shiftStep, min, max, currentUnit, onChange],
-  );
-
-  const handleWheel = useCallback(
-    (e: WheelEvent<HTMLDivElement>) => {
-      if (disabled || !isFocused) {return;}
-
-      e.preventDefault();
-      const actualStep = e.shiftKey ? shiftStep : step;
-      const delta = e.deltaY < 0 ? actualStep : -actualStep;
-      const currentNum = parsed.isAuto ? 0 : (parsed.num ?? 0);
-      const newValue = clampValue(currentNum + delta, min, max);
-      setEditValue(formatNumber(newValue));
-      onChange(formatFullValue(newValue, currentUnit, false));
-    },
-    [disabled, isFocused, step, shiftStep, parsed, min, max, currentUnit, onChange],
+    [disabled, editValue, commitValue, handleKeyStep],
   );
 
   const cycleUnit = useCallback(() => {
@@ -307,14 +239,7 @@ export const UnitInput = memo(function UnitInput({
   }, [disabled, units, parsed, currentUnitIndex, onChange, allOptions]);
 
   const openDropdown = useCallback(() => {
-    if (disabled || !unitButtonRef.current) {return;}
-
-    const rect = unitButtonRef.current.getBoundingClientRect();
-    setDropdownPosition({
-      top: rect.bottom + window.scrollY + 4,
-      left: rect.left + window.scrollX,
-      width: Math.max(rect.width, 60),
-    });
+    if (disabled) {return;}
     setIsDropdownOpen(true);
   }, [disabled]);
 
@@ -345,37 +270,6 @@ export const UnitInput = memo(function UnitInput({
       cycleUnit();
     }
   }, [disabled, useDropdown, isDropdownOpen, closeDropdown, openDropdown, cycleUnit]);
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    if (!isDropdownOpen) {return;}
-
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        unitButtonRef.current &&
-        !unitButtonRef.current.contains(target) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target)
-      ) {
-        closeDropdown();
-      }
-    };
-
-    const handleEscape = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        closeDropdown();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isDropdownOpen, closeDropdown]);
 
   const containerStyle: CSSProperties = {
     display: "flex",
@@ -433,28 +327,8 @@ export const UnitInput = memo(function UnitInput({
   const displayUnit = getDisplayUnit();
   const showUnitButton = !parsed.isAuto && units.length > 0;
 
-  const dropdownStyle: CSSProperties = {
-    position: "fixed",
-    top: dropdownPosition.top,
-    left: dropdownPosition.left,
-    minWidth: dropdownPosition.width,
-    backgroundColor: COLOR_SURFACE_RAISED,
-    border: `1px solid ${COLOR_INPUT_BORDER}`,
-    borderRadius: RADIUS_SM,
-    boxShadow: SHADOW_MD,
-    zIndex: Z_DROPDOWN,
-    padding: "4px 0",
-    maxHeight: 200,
-    overflowY: "auto",
-  };
-
-  const dropdownItemStyle: CSSProperties = {
-    padding: `4px ${SPACE_SM}`,
-    fontSize: sizeConfig.fontSize,
-    color: COLOR_TEXT,
-    cursor: "pointer",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-  };
+  // Determine selected value for dropdown (auto or current unit)
+  const dropdownSelectedValue = parsed.isAuto ? "auto" : currentUnit;
 
   return (
     <div
@@ -471,7 +345,7 @@ export const UnitInput = memo(function UnitInput({
       <input
         ref={inputRef}
         type="text"
-        value={isEditing ? editValue : (parsed.isAuto ? "Auto" : (parsed.num !== null ? formatNumber(parsed.num) : ""))}
+        value={isEditing ? editValue : derivedDisplayValue}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
@@ -511,35 +385,14 @@ export const UnitInput = memo(function UnitInput({
         </span>
       )}
       {isDropdownOpen && (
-        <Portal>
-          <div
-            ref={dropdownRef}
-            style={dropdownStyle}
-            role="listbox"
-            aria-label="Select unit"
-            data-testid="unit-input-dropdown"
-          >
-            {allOptions.map((option) => {
-              const isAutoOption = option.value === "auto";
-              const isSelected = isAutoOption ? parsed.isAuto : option.value.toLowerCase() === currentUnit.toLowerCase();
-              return (
-                <div
-                  key={option.value}
-                  onClick={() => selectUnit(option.value)}
-                  style={{
-                    ...dropdownItemStyle,
-                    backgroundColor: isSelected ? COLOR_SELECTED : "transparent",
-                  }}
-                  role="option"
-                  aria-selected={isSelected}
-                  data-testid={`unit-option-${option.value}`}
-                >
-                  {option.label}
-                </div>
-              );
-            })}
-          </div>
-        </Portal>
+        <UnitDropdown
+          options={allOptions}
+          selectedValue={dropdownSelectedValue}
+          onSelect={selectUnit}
+          onClose={closeDropdown}
+          anchorRef={unitButtonRef}
+          fontSize={sizeConfig.fontSize}
+        />
       )}
     </div>
   );
