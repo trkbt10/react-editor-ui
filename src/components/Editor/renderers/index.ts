@@ -34,3 +34,5 @@ export {
 // Renderers
 export { SvgRenderer } from "./SvgRenderer";
 export { CanvasRenderer } from "./CanvasRenderer";
+export { BlockRenderer } from "./BlockRenderer";
+export type { BlockRendererProps, BlockRenderInfo } from "./BlockRenderer";

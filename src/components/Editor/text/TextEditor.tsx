@@ -2,27 +2,33 @@
  * @file Text Editor Component
  *
  * Rich text editor supporting different styles for different parts of the text.
- * Uses the shared useEditorCore hook for IME, cursor, selection, and history.
+ * Uses block-based architecture for stable IME handling and efficient editing.
+ *
+ * External and internal API both use BlockDocument.
  */
 
-import { useMemo, useCallback, forwardRef, useImperativeHandle, useEffect, type ReactNode, type Ref } from "react";
+import {
+  useMemo,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+  useEffect,
+  type ReactNode,
+  type Ref,
+} from "react";
 import type { TextEditorProps, TextEditorHandle, TextSelectionEvent } from "./types";
 import type { TextStyleSegment } from "../core/types";
-import {
-  DEFAULT_EDITOR_CONFIG,
-  adjustStyleForComposition,
-  computeDisplayText,
-} from "../core/types";
+import { DEFAULT_EDITOR_CONFIG } from "../core/types";
 import { useLineIndex } from "../core/useLineIndex";
 import {
-  getDocumentText,
-  toFlatSegments,
-  replaceRange,
-  getTagsAtOffset,
-} from "../core/styledDocument";
-import { executeCommand } from "./commands";
+  getBlockDocumentText,
+  toGlobalSegments,
+  getTagsAtBlockOffset,
+} from "../core/blockDocument";
+import { blockPositionToGlobalOffset } from "../core/blockPosition";
+import { executeBlockCommand } from "./commands";
 import { calculateSelectionRects } from "../core/coordinates";
-import { useEditorCore, type GetOffsetFromPositionFn } from "../core/useEditorCore";
+import { useBlockEditorCore, type GetOffsetFromPositionFn } from "../core/useBlockEditorCore";
 import { useFontMetrics } from "../core/useFontMetrics";
 import { invariant } from "../core/invariant";
 import { useEditorStyles } from "../styles/useEditorStyles";
@@ -32,7 +38,6 @@ import { useStyledMeasurement, styledCoordinatesToPosition } from "./useStyledMe
 import { SvgRenderer } from "../renderers/SvgRenderer";
 import { CanvasRenderer } from "../renderers/CanvasRenderer";
 import { DEFAULT_PADDING_PX } from "../styles/tokens";
-import { computeTextDiff } from "./textDiff";
 
 // =============================================================================
 // Component
@@ -44,7 +49,7 @@ import { computeTextDiff } from "./textDiff";
  * Features:
  * - Per-character/segment styling
  * - Undo/redo with debounced history
- * - IME composition support
+ * - IME composition support (block-based for stability)
  * - Virtual scrolling for large files
  * - Selection and cursor rendering
  * - Exposes TextEditorHandle via ref for programmatic control
@@ -52,7 +57,7 @@ import { computeTextDiff } from "./textDiff";
  * @example
  * ```tsx
  * const editorRef = useRef<TextEditorHandle>(null);
- * const [doc, setDoc] = useState(() => createDocument("Hello"));
+ * const [doc, setDoc] = useState(() => createBlockDocument("Hello"));
  *
  * <TextEditor
  *   ref={editorRef}
@@ -70,7 +75,7 @@ export const TextEditor = forwardRef(function TextEditor(
   ref: Ref<TextEditorHandle>
 ): ReactNode {
   const {
-    document,
+    document: blockDocument,
     onDocumentChange,
     renderer = "svg",
     config,
@@ -82,57 +87,47 @@ export const TextEditor = forwardRef(function TextEditor(
     tabSize = 4,
   } = props;
 
-  // Extract value and styles from document
-  const value = getDocumentText(document);
-  const styles = toFlatSegments(document);
+  // Extract styles from BlockDocument (converted to global offsets for rendering)
+  const globalStyles = useMemo(
+    () => toGlobalSegments(blockDocument),
+    [blockDocument]
+  );
 
-  // Store the document reference
-  const documentRef = useMemo(
-    () => ({ current: document }),
-    // Intentionally empty deps - captures reference only once
+  // Store the BlockDocument reference for commands
+  const blockDocumentRef = useMemo(
+    () => ({ current: blockDocument }),
     []
   );
-  documentRef.current = document;
+  blockDocumentRef.current = blockDocument;
 
-  // Extract stable callback reference to avoid re-creating handleChange on every render
+  // Extract stable callback reference
   const onDocumentChangeRef = useMemo(
     () => ({ current: onDocumentChange }),
-    // Intentionally empty deps - capture initial callback only
     []
   );
   onDocumentChangeRef.current = onDocumentChange;
 
-  // Create onChange handler
-  const handleChange = useCallback(
-    (newValue: string) => {
-      if (documentRef.current && onDocumentChangeRef.current) {
-        const oldText = getDocumentText(documentRef.current);
-        const diff = computeTextDiff(oldText, newValue);
-        const newText = newValue.slice(diff.start, diff.newEnd);
-        const newDoc = replaceRange(documentRef.current, diff.start, diff.oldEnd, newText);
-        onDocumentChangeRef.current(newDoc);
-      }
-    },
-    [documentRef, onDocumentChangeRef]
-  );
-
   // Merge config with defaults
   const editorConfig = { ...DEFAULT_EDITOR_CONFIG, ...config };
 
-  // Style-aware font measurement (needs containerRef, so we create it first)
-  // This will be initialized after useEditorCore provides containerRef
-  const styledMeasurementRef = useMemo(() => ({ current: null as ReturnType<typeof useStyledMeasurement> | null }), []);
+  // Style-aware font measurement ref
+  const styledMeasurementRef = useMemo(
+    () => ({ current: null as ReturnType<typeof useStyledMeasurement> | null }),
+    []
+  );
 
-  // Position calculation function for this editor type
+  // Line index from block document text
+  const textValue = useMemo(() => getBlockDocumentText(blockDocument), [blockDocument]);
+  const lineIndex = useLineIndex(textValue);
+
+  // Position calculation function
   const getOffsetFromPosition: GetOffsetFromPositionFn = useMemo(() => {
-    return (x, y, scrollTop, lineIndex) => {
+    return (x, y, scrollTop, lineCount, lineHeight) => {
       const measurement = styledMeasurementRef.current;
 
-      // Require measurement - no fallback
       invariant(
         measurement !== null,
-        "Styled measurement not available in TextEditor.getOffsetFromPosition. " +
-        "Ensure component is mounted before handling pointer events."
+        "Styled measurement not available in TextEditor.getOffsetFromPosition."
       );
 
       const position = styledCoordinatesToPosition({
@@ -141,7 +136,7 @@ export const TextEditor = forwardRef(function TextEditor(
         lines: lineIndex.lines,
         lineOffsets: lineIndex.lineOffsets,
         scrollTop,
-        lineHeight: editorConfig.lineHeight,
+        lineHeight,
         paddingLeft: DEFAULT_PADDING_PX,
         paddingTop: DEFAULT_PADDING_PX,
         findColumnAtStyledX: measurement.findColumnAtStyledX,
@@ -149,12 +144,12 @@ export const TextEditor = forwardRef(function TextEditor(
 
       return lineIndex.getOffsetAtLineColumn(position.line, position.column);
     };
-  }, [editorConfig.lineHeight, styledMeasurementRef]);
+  }, [lineIndex, styledMeasurementRef]);
 
-  // Core editor logic (IME, cursor, selection, history)
-  const core = useEditorCore(
-    value,
-    handleChange,
+  // Core editor logic using block-based architecture
+  const core = useBlockEditorCore(
+    blockDocument,
+    onDocumentChange,
     {
       lineHeight: editorConfig.lineHeight,
       overscan: editorConfig.overscan,
@@ -168,7 +163,7 @@ export const TextEditor = forwardRef(function TextEditor(
 
   // Initialize styled measurement with containerRef
   const styledMeasurement = useStyledMeasurement(core.containerRef, {
-    styles,
+    styles: globalStyles,
     fontSize: editorConfig.fontSize,
     fontFamily: editorConfig.fontFamily,
   });
@@ -177,32 +172,59 @@ export const TextEditor = forwardRef(function TextEditor(
   // Font metrics for CJK character measurement
   const fontMetrics = useFontMetrics(core.containerRef);
 
-  // Adjust styles for IME composition
-  const adjustedStyles = useMemo(() => {
-    if (!core.composition.isComposing) {
-      return styles;
+  // Adjust styles for IME composition using block-based state
+  // During composition, we need to shift global styles based on composition offset
+  const adjustedStyles = useMemo((): readonly TextStyleSegment[] => {
+    if (!core.composition.isComposing || !core.composition.blockId) {
+      return globalStyles;
     }
 
-    const result: TextStyleSegment[] = [];
-    for (const s of styles) {
-      const adjusted = adjustStyleForComposition(s, core.composition);
-      if (adjusted) {
-        result.push(adjusted);
-      }
+    // Convert block-local offset to global offset
+    const globalOffset = blockPositionToGlobalOffset(blockDocument, {
+      blockId: core.composition.blockId,
+      offset: core.composition.localOffset,
+    });
+
+    if (globalOffset === undefined) {
+      return globalStyles;
     }
-    return result;
-  }, [styles, core.composition]);
+
+    const { text, replacedLength } = core.composition;
+    const compositionEnd = globalOffset + replacedLength;
+    const shift = text.length - replacedLength;
+
+    return globalStyles.map((s) => {
+      // Style is entirely before composition - no change
+      if (s.end <= globalOffset) {
+        return s;
+      }
+
+      // Style is entirely inside composition range - skip it
+      if (s.start >= globalOffset && s.end <= compositionEnd) {
+        return null;
+      }
+
+      // Style is entirely after composition - shift it
+      if (s.start >= compositionEnd) {
+        return { ...s, start: s.start + shift, end: s.end + shift };
+      }
+
+      // Style overlaps with composition - truncate or split
+      if (s.start < globalOffset && s.end > compositionEnd) {
+        // Style spans entire composition - shrink it
+        return { ...s, end: s.end + shift };
+      } else if (s.start < globalOffset) {
+        // Style ends within composition - truncate
+        return { ...s, end: globalOffset };
+      } else {
+        // Style starts within composition - shift start
+        return { ...s, start: globalOffset + shift, end: s.end + shift };
+      }
+    }).filter((s): s is NonNullable<typeof s> => s !== null);
+  }, [globalStyles, core.composition, blockDocument]);
 
   // Text styles management
   const { tokenizer, tokenStyles } = useTextStyles(adjustedStyles);
-
-  // Compute display text and line index for rendering during IME composition
-  // During IME, styles are adjusted to display text coordinates, so lineIndex must also use display text
-  const displayText = useMemo(
-    () => computeDisplayText(value, core.composition),
-    [value, core.composition]
-  );
-  const displayLineIndex = useLineIndex(displayText);
 
   // Style version for cache invalidation
   const styleVersion = useMemo(() => {
@@ -212,12 +234,17 @@ export const TextEditor = forwardRef(function TextEditor(
     }
     const first = baseStyles[0];
     const last = baseStyles[baseStyles.length - 1];
-    const compositionHash = core.composition.isComposing ? core.composition.text.length * 10000 : 0;
-    return baseStyles.length * 1000 + first.start + last.end + compositionHash;
+    const computeCompositionHash = (): number => {
+      if (!core.composition.isComposing) {
+        return 0;
+      }
+      return core.composition.text.length * 10000;
+    };
+    return baseStyles.length * 1000 + first.start + last.end + computeCompositionHash();
   }, [adjustedStyles, core.composition.isComposing, core.composition.text.length]);
 
-  // Token cache - use displayLineIndex for consistent style positioning during IME
-  const tokenCache = useTextTokenCache(tokenizer, displayLineIndex, styleVersion);
+  // Token cache
+  const tokenCache = useTextTokenCache(tokenizer, lineIndex, styleVersion);
 
   // Editor styles
   const editorStyles = useEditorStyles({
@@ -231,13 +258,12 @@ export const TextEditor = forwardRef(function TextEditor(
   // Enhanced Selection Handling
   // =============================================================================
 
-  // Emit enhanced selection event when selection highlight changes
   useEffect(() => {
     if (!onTextSelectionChange) {
       return;
     }
 
-    const selectionHighlight = core.selectionHighlight;
+    const selectionHighlight = core.allHighlights.find((h) => h.type === "selection");
 
     if (!selectionHighlight) {
       onTextSelectionChange(null);
@@ -254,14 +280,12 @@ export const TextEditor = forwardRef(function TextEditor(
     const startOffset = textarea.selectionStart;
     const endOffset = textarea.selectionEnd;
 
-    // Don't emit selection event if no actual selection
     if (startOffset === endOffset) {
       onTextSelectionChange(null);
       return;
     }
 
-    // Calculate selection rectangles for positioning
-    const lines = displayLineIndex.lines;
+    const lines = lineIndex.lines;
     const selectionRects = calculateSelectionRects({
       startLine: selectionHighlight.startLine,
       startColumn: selectionHighlight.startColumn,
@@ -279,16 +303,12 @@ export const TextEditor = forwardRef(function TextEditor(
       return;
     }
 
-    // Get container's bounding rect to convert to viewport coordinates
     const containerRect = container.getBoundingClientRect();
-
-    // Use the first selection rect for anchor positioning
     const firstRect = selectionRects[0];
     const lastRect = selectionRects[selectionRects.length - 1];
 
-    // Calculate bounding box of entire selection
-    const minX = Math.min(...selectionRects.map(r => r.x));
-    const maxX = Math.max(...selectionRects.map(r => r.x + r.width));
+    const minX = Math.min(...selectionRects.map((r) => r.x));
+    const maxX = Math.max(...selectionRects.map((r) => r.x + r.width));
     const minY = firstRect.y;
     const maxY = lastRect.y + lastRect.height;
 
@@ -299,9 +319,8 @@ export const TextEditor = forwardRef(function TextEditor(
       height: maxY - minY,
     };
 
-    // Get selected text and active tags
-    const selectedText = value.slice(startOffset, endOffset);
-    const activeTags = getTagsAtOffset(documentRef.current, startOffset);
+    const selectedText = textValue.slice(startOffset, endOffset);
+    const activeTags = getTagsAtBlockOffset(blockDocumentRef.current, startOffset);
 
     const selection = {
       start: { line: selectionHighlight.startLine, column: selectionHighlight.startColumn },
@@ -320,44 +339,49 @@ export const TextEditor = forwardRef(function TextEditor(
     onTextSelectionChange(event);
   }, [
     onTextSelectionChange,
-    core.selectionHighlight,
+    core.allHighlights,
     core.textareaRef,
     core.containerRef,
     core.virtualScroll.state.scrollTop,
     fontMetrics.isReady,
     fontMetrics.measureText,
-    displayLineIndex.lines,
+    lineIndex.lines,
     editorConfig.lineHeight,
-    value,
-    documentRef,
+    textValue,
+    blockDocumentRef,
   ]);
 
   // =============================================================================
   // Imperative Handle
   // =============================================================================
 
+  // Handle command execution with BlockDocument
+  const handleExecuteCommand = useCallback(
+    (commandId: string) => {
+      const textarea = core.textareaRef.current;
+      if (!textarea || readOnly) {
+        return;
+      }
+
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      if (start === end) {
+        return;
+      }
+
+      const newDoc = executeBlockCommand(blockDocumentRef.current, commandId, start, end);
+      if (newDoc !== blockDocumentRef.current) {
+        onDocumentChangeRef.current(newDoc);
+      }
+    },
+    [core.textareaRef, readOnly, blockDocumentRef, onDocumentChangeRef]
+  );
+
   useImperativeHandle(
     ref,
     () => ({
-      executeCommand: (commandId: string) => {
-        const textarea = core.textareaRef.current;
-        if (!textarea || readOnly) {
-          return;
-        }
-
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-
-        // Don't execute if no selection
-        if (start === end) {
-          return;
-        }
-
-        const newDoc = executeCommand(documentRef.current, commandId, start, end);
-        if (newDoc !== documentRef.current) {
-          onDocumentChangeRef.current(newDoc);
-        }
-      },
+      executeCommand: handleExecuteCommand,
       focus: () => {
         core.textareaRef.current?.focus();
       },
@@ -374,13 +398,11 @@ export const TextEditor = forwardRef(function TextEditor(
         return { start, end };
       },
     }),
-    [core.textareaRef, readOnly, documentRef, onDocumentChangeRef]
+    [handleExecuteCommand, core.textareaRef]
   );
 
   // Render
   const Renderer = renderer === "canvas" ? CanvasRenderer : SvgRenderer;
-
-  // Only render content when font metrics are ready (no fallbacks)
   const isReady = fontMetrics.isReady;
 
   return (
@@ -399,7 +421,7 @@ export const TextEditor = forwardRef(function TextEditor(
       >
         {isReady && (
           <Renderer
-            lines={displayLineIndex.lines}
+            lines={lineIndex.lines}
             visibleRange={core.virtualScroll.state.visibleRange}
             topSpacerHeight={core.virtualScroll.state.topSpacerHeight}
             bottomSpacerHeight={core.virtualScroll.state.bottomSpacerHeight}
@@ -413,14 +435,14 @@ export const TextEditor = forwardRef(function TextEditor(
             tokenStyles={tokenStyles}
             fontFamily={editorConfig.fontFamily}
             fontSize={editorConfig.fontSize}
-            lineOffsets={displayLineIndex.lineOffsets}
+            lineOffsets={lineIndex.lineOffsets}
           />
         )}
       </div>
 
       <textarea
         ref={core.textareaRef}
-        value={value}
+        value={textValue}
         onChange={core.handleChange}
         onKeyDown={core.handleKeyDown}
         onFocus={core.updateCursorPosition}

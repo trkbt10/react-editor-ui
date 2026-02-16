@@ -2,7 +2,7 @@
  * @file Text Editor Types
  *
  * Type definitions for the text editor layer (rich text editing).
- * Note: Import core types directly from "../core/types" and "../core/styledDocument".
+ * Uses BlockDocument for block-based architecture.
  */
 
 import type { CSSProperties } from "react";
@@ -12,7 +12,7 @@ import type {
   SelectionRange,
   TextStyle,
 } from "../core/types";
-import type { StyledDocument } from "../core/styledDocument";
+import type { BlockDocument } from "../core/blockDocument";
 
 // =============================================================================
 // Text Editor Props
@@ -23,15 +23,15 @@ import type { StyledDocument } from "../core/styledDocument";
  *
  * @example
  * ```tsx
- * const [doc, setDoc] = useState(() => createDocument("Hello World"));
+ * const [doc, setDoc] = useState(() => createBlockDocument("Hello World"));
  * <TextEditor document={doc} onDocumentChange={setDoc} />
  * ```
  */
 export type TextEditorProps = {
-  /** Styled document (tree-based structure) */
-  readonly document: StyledDocument;
+  /** Block document */
+  readonly document: BlockDocument;
   /** Called when document changes */
-  readonly onDocumentChange: (doc: StyledDocument) => void;
+  readonly onDocumentChange: (doc: BlockDocument) => void;
   /** Renderer type */
   readonly renderer?: "svg" | "canvas";
   /** Editor configuration */

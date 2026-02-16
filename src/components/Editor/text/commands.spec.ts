@@ -2,7 +2,6 @@
  * @file TextEditor commands tests
  */
 
-import { describe, it, expect } from "vitest";
 import {
   defaultCommands,
   defaultCommandsMap,
@@ -92,8 +91,11 @@ describe("commands", () => {
 
     it("should toggle bold tag off when already applied", () => {
       // Create document with bold "World"
-      let doc = createDocument("Hello World", { bold: { fontWeight: "bold" } });
-      doc = wrapWithTag(doc, 6, 11, "bold");
+      const createBoldDoc = () => {
+        const base = createDocument("Hello World", { bold: { fontWeight: "bold" } });
+        return wrapWithTag(base, 6, 11, "bold");
+      };
+      const doc = createBoldDoc();
 
       // Verify bold is applied
       expect(getTagsAtOffset(doc, 6)).toContain("bold");
@@ -125,15 +127,16 @@ describe("commands", () => {
     });
 
     it("should handle multiple commands on same range", () => {
-      let doc = createDocument("Hello World", {
-        bold: { fontWeight: "bold" },
-        italic: { fontStyle: "italic" },
-      });
-
-      // Apply bold
-      doc = executeCommand(doc, "bold", 0, 5);
-      // Apply italic
-      doc = executeCommand(doc, "italic", 0, 5);
+      const createStyledDoc = () => {
+        const base = createDocument("Hello World", {
+          bold: { fontWeight: "bold" },
+          italic: { fontStyle: "italic" },
+        });
+        // Apply bold then italic
+        const withBold = executeCommand(base, "bold", 0, 5);
+        return executeCommand(withBold, "italic", 0, 5);
+      };
+      const doc = createStyledDoc();
 
       const tags = getTagsAtOffset(doc, 0);
       expect(tags).toContain("bold");
@@ -143,8 +146,12 @@ describe("commands", () => {
 
   describe("getActiveTagsAtRange", () => {
     it("should return tags at start of range", () => {
-      let doc = createDocument("Hello World", { bold: { fontWeight: "bold" } });
-      doc = wrapWithTag(doc, 0, 5, "bold");
+      const doc = wrapWithTag(
+        createDocument("Hello World", { bold: { fontWeight: "bold" } }),
+        0,
+        5,
+        "bold"
+      );
 
       const tags = getActiveTagsAtRange(doc, 0);
       expect(tags).toContain("bold");
@@ -158,12 +165,15 @@ describe("commands", () => {
     });
 
     it("should return multiple tags when overlapping", () => {
-      let doc = createDocument("Hello World", {
-        bold: { fontWeight: "bold" },
-        italic: { fontStyle: "italic" },
-      });
-      doc = wrapWithTag(doc, 0, 5, "bold");
-      doc = wrapWithTag(doc, 0, 5, "italic");
+      const createOverlappingDoc = () => {
+        const base = createDocument("Hello World", {
+          bold: { fontWeight: "bold" },
+          italic: { fontStyle: "italic" },
+        });
+        const withBold = wrapWithTag(base, 0, 5, "bold");
+        return wrapWithTag(withBold, 0, 5, "italic");
+      };
+      const doc = createOverlappingDoc();
 
       const tags = getActiveTagsAtRange(doc, 0);
       expect(tags).toContain("bold");

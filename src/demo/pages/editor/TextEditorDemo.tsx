@@ -10,12 +10,8 @@ import {
 } from "../../components";
 import { TextEditor } from "../../../components/Editor/text/TextEditor";
 import { Button } from "../../../components/Button/Button";
-import {
-  createDocument,
-  wrapWithTag,
-  setStyleDefinition,
-  type StyledDocument,
-} from "../../../components/Editor/core/styledDocument";
+import type { BlockDocument, LocalStyleSegment } from "../../../components/Editor/core/blockDocument";
+import { createBlockDocument, createBlockId, type BlockId } from "../../../components/Editor/core/blockDocument";
 
 const sampleText = `The quick brown fox jumps over the lazy dog.
 
@@ -24,39 +20,88 @@ This is a demonstration of the TextEditor component with rich text support.
 You can apply different styles to different parts of the text.`;
 
 /**
- * Create a styled document with rich text formatting for the demo.
+ * Create a styled BlockDocument with rich text formatting for the demo.
  */
-function createSampleTextDocument(): StyledDocument {
-  let doc = createDocument(sampleText);
+function createSampleBlockDocument(): BlockDocument {
+  // Split text into lines for blocks
+  const lines = sampleText.split("\n");
 
-  // Define styles for tags
-  doc = setStyleDefinition(doc, "bold", { fontWeight: "bold" });
-  doc = setStyleDefinition(doc, "brown-bold", { color: "#a52a2a", fontWeight: "bold" });
-  doc = setStyleDefinition(doc, "brown-large", { color: "#8b4513", fontSize: "18px" });
-  doc = setStyleDefinition(doc, "italic", { fontStyle: "italic" });
-  doc = setStyleDefinition(doc, "small-muted", { fontSize: "10px", color: "#666666" });
-  doc = setStyleDefinition(doc, "bold-large", { fontWeight: "bold", fontSize: "16px" });
-  doc = setStyleDefinition(doc, "bold-blue", { fontWeight: "bold", color: "#0066cc" });
-  doc = setStyleDefinition(doc, "underline", { textDecoration: "underline" });
-  doc = setStyleDefinition(doc, "serif-italic", { fontFamily: "Georgia, serif", fontStyle: "italic" });
+  // Define styles
+  const styleDefinitions = {
+    bold: { fontWeight: "bold" as const },
+    "brown-bold": { color: "#a52a2a", fontWeight: "bold" as const },
+    "brown-large": { color: "#8b4513", fontSize: "18px" },
+    italic: { fontStyle: "italic" as const },
+    "small-muted": { fontSize: "10px", color: "#666666" },
+    "bold-large": { fontWeight: "bold" as const, fontSize: "16px" },
+    "bold-blue": { fontWeight: "bold" as const, color: "#0066cc" },
+    underline: { textDecoration: "underline" as const },
+    "serif-italic": { fontFamily: "Georgia, serif", fontStyle: "italic" as const },
+  };
 
-  // Apply styles to ranges
-  doc = wrapWithTag(doc, 0, 3, "bold");           // "The"
-  doc = wrapWithTag(doc, 4, 9, "brown-bold");     // "quick"
-  doc = wrapWithTag(doc, 10, 15, "brown-large");  // "brown"
-  doc = wrapWithTag(doc, 16, 19, "italic");       // "fox"
-  doc = wrapWithTag(doc, 20, 25, "small-muted");  // "jumps"
-  doc = wrapWithTag(doc, 47, 51, "bold-large");   // "This"
-  doc = wrapWithTag(doc, 74, 84, "bold-blue");    // "TextEditor"
-  doc = wrapWithTag(doc, 125, 142, "underline");  // "different styles"
-  doc = wrapWithTag(doc, 143, 148, "serif-italic"); // "to di"
+  // First line: "The quick brown fox jumps over the lazy dog."
+  // Apply styles: "The"(0-3 bold), "quick"(4-9 brown-bold), "brown"(10-15 brown-large),
+  // "fox"(16-19 italic), "jumps"(20-25 small-muted)
+  const firstLineStyles: LocalStyleSegment[] = [
+    { start: 0, end: 3, style: styleDefinitions.bold },
+    { start: 4, end: 9, style: styleDefinitions["brown-bold"] },
+    { start: 10, end: 15, style: styleDefinitions["brown-large"] },
+    { start: 16, end: 19, style: styleDefinitions.italic },
+    { start: 20, end: 25, style: styleDefinitions["small-muted"] },
+  ];
 
-  return doc;
+  // Third line (index 2 after splitting): "This is a demonstration of the TextEditor component with rich text support."
+  // "This" at start (0-4 bold-large), "TextEditor" (27-37 bold-blue)
+  const thirdLineStyles: LocalStyleSegment[] = [
+    { start: 0, end: 4, style: styleDefinitions["bold-large"] },
+    { start: 27, end: 37, style: styleDefinitions["bold-blue"] },
+  ];
+
+  // Fifth line (index 4): "You can apply different styles to different parts of the text."
+  // "different styles" (14-30 underline), "to di" (31-36 serif-italic)
+  const fifthLineStyles: LocalStyleSegment[] = [
+    { start: 14, end: 30, style: styleDefinitions.underline },
+    { start: 31, end: 36, style: styleDefinitions["serif-italic"] },
+  ];
+
+  const blocks = lines.map((content, index) => {
+    const styles = getStylesForLine(index, firstLineStyles, thirdLineStyles, fifthLineStyles);
+    return {
+      id: createBlockId(),
+      type: "paragraph" as const,
+      content,
+      styles,
+    };
+  });
+
+  return {
+    blocks,
+    styleDefinitions,
+    version: 1,
+  };
+}
+
+function getStylesForLine(
+  index: number,
+  firstLineStyles: LocalStyleSegment[],
+  thirdLineStyles: LocalStyleSegment[],
+  fifthLineStyles: LocalStyleSegment[]
+): readonly LocalStyleSegment[] {
+  switch (index) {
+    case 0:
+      return firstLineStyles;
+    case 2:
+      return thirdLineStyles;
+    case 4:
+      return fifthLineStyles;
+    default:
+      return [];
+  }
 }
 
 export function TextEditorDemo() {
-  const [doc, setDoc] = useState(() => createSampleTextDocument());
-  const [plainDoc, setPlainDoc] = useState(() => createDocument(sampleText));
+  const [doc, setDoc] = useState(() => createSampleBlockDocument());
+  const [plainDoc, setPlainDoc] = useState(() => createBlockDocument(sampleText));
   const [renderer, setRenderer] = useState<"svg" | "canvas">("svg");
 
   return (

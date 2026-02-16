@@ -2,17 +2,86 @@
  * @file TextEditor Tests
  *
  * Tests for TextEditor component, focusing on CJK character handling.
+ * Uses BlockDocument API.
  */
 
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { TextEditor } from "./TextEditor";
 import {
-  createDocument,
-  getDocumentText,
-  wrapWithTag,
-  setStyleDefinition,
-  toFlatSegments,
-} from "../core/styledDocument";
+  createBlockDocument,
+  getBlockDocumentText,
+  toGlobalSegments,
+  type BlockDocument,
+  type LocalStyleSegment,
+  createBlockId,
+} from "../core/blockDocument";
+import type { TextStyle } from "../core/types";
+
+// =============================================================================
+// Test Helpers
+// =============================================================================
+
+/**
+ * Create a BlockDocument with styles applied.
+ */
+function createStyledBlockDocument(
+  text: string,
+  styleDefinitions: Record<string, TextStyle> = {},
+  styleRanges: Array<{ start: number; end: number; tag: string }> = []
+): BlockDocument {
+  const lines = text.split("\n");
+
+  // Calculate global to local offsets
+  const lineOffsets: number[] = [];
+  // eslint-disable-next-line no-restricted-syntax -- accumulator in loop
+  let offset = 0;
+  for (const line of lines) {
+    lineOffsets.push(offset);
+    offset += line.length + 1; // +1 for newline
+  }
+
+  // Convert global style ranges to block-local styles
+  const blocks = lines.map((content, lineIndex) => {
+    const lineStart = lineOffsets[lineIndex];
+    const lineEnd = lineStart + content.length;
+
+    // Find styles that overlap with this line
+    const localStyles: LocalStyleSegment[] = [];
+
+    for (const range of styleRanges) {
+      // Skip ranges that don't overlap
+      if (range.end <= lineStart || range.start >= lineEnd) {
+        continue;
+      }
+
+      const style = styleDefinitions[range.tag];
+      if (!style) {
+        continue;
+      }
+
+      // Convert to local offsets
+      const localStart = Math.max(0, range.start - lineStart);
+      const localEnd = Math.min(content.length, range.end - lineStart);
+
+      if (localStart < localEnd) {
+        localStyles.push({ start: localStart, end: localEnd, style });
+      }
+    }
+
+    return {
+      id: createBlockId(),
+      type: "paragraph" as const,
+      content,
+      styles: localStyles,
+    };
+  });
+
+  return {
+    blocks,
+    styleDefinitions,
+    version: 1,
+  };
+}
 
 // =============================================================================
 // Test Setup
@@ -62,7 +131,7 @@ afterEach(() => {
 describe("TextEditor", () => {
   describe("CJK character support", () => {
     it("renders with CJK text", () => {
-      const doc = createDocument("日本語テスト");
+      const doc = createBlockDocument("日本語テスト");
 
       render(
         <TextEditor
@@ -77,7 +146,7 @@ describe("TextEditor", () => {
     });
 
     it("renders with mixed ASCII and CJK text", () => {
-      const doc = createDocument("Hello日本語World");
+      const doc = createBlockDocument("Hello日本語World");
 
       render(
         <TextEditor
@@ -91,7 +160,7 @@ describe("TextEditor", () => {
     });
 
     it("passes measureText to renderer", () => {
-      const doc = createDocument("テスト");
+      const doc = createBlockDocument("テスト");
 
       // This test verifies that the TextEditor properly initializes
       // font metrics and passes measureText to the renderer
@@ -112,7 +181,7 @@ describe("TextEditor", () => {
     });
 
     it("handles empty value", () => {
-      const doc = createDocument("");
+      const doc = createBlockDocument("");
 
       render(
         <TextEditor
@@ -128,7 +197,7 @@ describe("TextEditor", () => {
 
   describe("Document API", () => {
     it("works with document prop", () => {
-      const doc = createDocument("ドキュメントAPI");
+      const doc = createBlockDocument("ドキュメントAPI");
       const onDocumentChange = vi.fn();
 
       render(
@@ -145,7 +214,7 @@ describe("TextEditor", () => {
 
   describe("text diff and changes", () => {
     it("handles insertion at start", () => {
-      const doc = createDocument("world");
+      const doc = createBlockDocument("world");
       const onDocumentChange = vi.fn();
 
       render(
@@ -161,12 +230,12 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "Hello world" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("Hello world");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("Hello world");
     });
 
     it("handles insertion at end", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
       const onDocumentChange = vi.fn();
 
       render(
@@ -181,12 +250,12 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "Hello World" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("Hello World");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("Hello World");
     });
 
     it("handles insertion in middle", () => {
-      const doc = createDocument("HelloWorld");
+      const doc = createBlockDocument("HelloWorld");
       const onDocumentChange = vi.fn();
 
       render(
@@ -201,12 +270,12 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "Hello World" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("Hello World");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("Hello World");
     });
 
     it("handles deletion at start", () => {
-      const doc = createDocument("Hello World");
+      const doc = createBlockDocument("Hello World");
       const onDocumentChange = vi.fn();
 
       render(
@@ -221,12 +290,12 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "World" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("World");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("World");
     });
 
     it("handles deletion at end", () => {
-      const doc = createDocument("Hello World");
+      const doc = createBlockDocument("Hello World");
       const onDocumentChange = vi.fn();
 
       render(
@@ -241,12 +310,12 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "Hello" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("Hello");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("Hello");
     });
 
     it("handles replacement", () => {
-      const doc = createDocument("Hello World");
+      const doc = createBlockDocument("Hello World");
       const onDocumentChange = vi.fn();
 
       render(
@@ -261,12 +330,12 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "Hello Universe" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("Hello Universe");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("Hello Universe");
     });
 
     it("handles identical strings (no change)", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
       const onDocumentChange = vi.fn();
 
       render(
@@ -288,7 +357,7 @@ describe("TextEditor", () => {
     });
 
     it("handles empty to non-empty", () => {
-      const doc = createDocument("");
+      const doc = createBlockDocument("");
       const onDocumentChange = vi.fn();
 
       render(
@@ -303,12 +372,12 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "Hello" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("Hello");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("Hello");
     });
 
     it("handles non-empty to empty", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
       const onDocumentChange = vi.fn();
 
       render(
@@ -323,12 +392,12 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("");
     });
 
     it("handles repeated characters correctly", () => {
-      const doc = createDocument("aaa");
+      const doc = createBlockDocument("aaa");
       const onDocumentChange = vi.fn();
 
       render(
@@ -344,24 +413,24 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "aaaa" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("aaaa");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("aaaa");
     });
   });
 
   describe("styled content", () => {
     it("preserves styles on edit", () => {
-      const ref = { doc: createDocument("Hello World") };
-      // Define a bold style for the "strong" tag
-      ref.doc = setStyleDefinition(ref.doc, "strong", { fontWeight: "bold" });
-      // Wrap "Hello" (0-5) with the "strong" tag
-      ref.doc = wrapWithTag(ref.doc, 0, 5, "strong");
+      const doc = createStyledBlockDocument(
+        "Hello World",
+        { strong: { fontWeight: "bold" } },
+        [{ start: 0, end: 5, tag: "strong" }] // "Hello" is bold
+      );
 
       const onDocumentChange = vi.fn();
 
       render(
         <TextEditor
-          document={ref.doc}
+          document={doc}
           onDocumentChange={onDocumentChange}
         />
       );
@@ -372,8 +441,8 @@ describe("TextEditor", () => {
       fireEvent.change(textarea, { target: { value: "Hello World!" } });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      const segments = toFlatSegments(newDoc);
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      const segments = toGlobalSegments(newDoc);
 
       // Bold style should still exist on "Hello"
       expect(segments.some(s => s.start === 0 && s.end === 5 && s.style.fontWeight === "bold")).toBe(true);
@@ -382,7 +451,7 @@ describe("TextEditor", () => {
 
   describe("IME composition", () => {
     it("handles composition start", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
 
       render(
         <TextEditor
@@ -401,7 +470,7 @@ describe("TextEditor", () => {
     });
 
     it("handles composition update", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
 
       render(
         <TextEditor
@@ -419,7 +488,7 @@ describe("TextEditor", () => {
     });
 
     it("handles composition end", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
       const onDocumentChange = vi.fn();
 
       render(
@@ -439,12 +508,12 @@ describe("TextEditor", () => {
       fireEvent.compositionEnd(textarea, { data: "日本語" });
 
       expect(onDocumentChange).toHaveBeenCalled();
-      const newDoc = onDocumentChange.mock.calls[0][0];
-      expect(getDocumentText(newDoc)).toBe("Hello日本語");
+      const newDoc = onDocumentChange.mock.calls[0][0] as BlockDocument;
+      expect(getBlockDocumentText(newDoc)).toBe("Hello日本語");
     });
 
     it("handles cancelled composition", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
       const onDocumentChange = vi.fn();
 
       render(
@@ -466,15 +535,17 @@ describe("TextEditor", () => {
     });
 
     it("adjusts styles during composition with styled content", () => {
-      const ref = { doc: createDocument("Hello World") };
-      ref.doc = setStyleDefinition(ref.doc, "strong", { fontWeight: "bold" });
-      ref.doc = wrapWithTag(ref.doc, 0, 5, "strong"); // "Hello" is bold
+      const doc = createStyledBlockDocument(
+        "Hello World",
+        { strong: { fontWeight: "bold" } },
+        [{ start: 0, end: 5, tag: "strong" }] // "Hello" is bold
+      );
 
       const onDocumentChange = vi.fn();
 
       render(
         <TextEditor
-          document={ref.doc}
+          document={doc}
           onDocumentChange={onDocumentChange}
         />
       );
@@ -496,15 +567,21 @@ describe("TextEditor", () => {
     });
 
     it("handles composition with multiple style segments", () => {
-      const ref = { doc: createDocument("Hello World Test") };
-      ref.doc = setStyleDefinition(ref.doc, "strong", { fontWeight: "bold" });
-      ref.doc = setStyleDefinition(ref.doc, "em", { fontStyle: "italic" });
-      ref.doc = wrapWithTag(ref.doc, 0, 5, "strong");  // "Hello" bold
-      ref.doc = wrapWithTag(ref.doc, 6, 11, "em");     // "World" italic
+      const doc = createStyledBlockDocument(
+        "Hello World Test",
+        {
+          strong: { fontWeight: "bold" },
+          em: { fontStyle: "italic" },
+        },
+        [
+          { start: 0, end: 5, tag: "strong" },  // "Hello" bold
+          { start: 6, end: 11, tag: "em" },     // "World" italic
+        ]
+      );
 
       render(
         <TextEditor
-          document={ref.doc}
+          document={doc}
           onDocumentChange={vi.fn()}
         />
       );
@@ -522,7 +599,7 @@ describe("TextEditor", () => {
 
   describe("pointer interactions", () => {
     it("handles pointer down on code area after initialization", async () => {
-      const doc = createDocument("Hello World");
+      const doc = createBlockDocument("Hello World");
 
       const { container } = render(
         <TextEditor
@@ -585,7 +662,7 @@ describe("TextEditor", () => {
     });
 
     it("handles pointer move for selection after initialization", async () => {
-      const doc = createDocument("Hello World");
+      const doc = createBlockDocument("Hello World");
 
       const { container } = render(
         <TextEditor
@@ -637,7 +714,7 @@ describe("TextEditor", () => {
     });
 
     it("handles click at specific position", async () => {
-      const doc = createDocument("Hello World\nSecond Line");
+      const doc = createBlockDocument("Hello World\nSecond Line");
 
       const { container } = render(
         <TextEditor
@@ -682,7 +759,7 @@ describe("TextEditor", () => {
     });
 
     it("calculates cursor position from pointer coordinates", async () => {
-      const doc = createDocument("Hello World");
+      const doc = createBlockDocument("Hello World");
       const onCursorChange = vi.fn();
 
       const { container } = render(
@@ -734,7 +811,7 @@ describe("TextEditor", () => {
 
   describe("cursor and selection callbacks", () => {
     it("calls onCursorChange when cursor moves", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
       const onCursorChange = vi.fn();
 
       render(
@@ -755,7 +832,7 @@ describe("TextEditor", () => {
     });
 
     it("calls onSelectionChange when selection changes", () => {
-      const doc = createDocument("Hello World");
+      const doc = createBlockDocument("Hello World");
       const onSelectionChange = vi.fn();
 
       render(
@@ -775,7 +852,7 @@ describe("TextEditor", () => {
 
   describe("configuration", () => {
     it("respects custom config", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
 
       const { container } = render(
         <TextEditor
@@ -789,7 +866,7 @@ describe("TextEditor", () => {
     });
 
     it("respects tabSize prop", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
 
       render(
         <TextEditor
@@ -804,7 +881,7 @@ describe("TextEditor", () => {
     });
 
     it("respects readOnly prop", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
 
       render(
         <TextEditor
@@ -819,7 +896,7 @@ describe("TextEditor", () => {
     });
 
     it("applies custom style prop", () => {
-      const doc = createDocument("Hello");
+      const doc = createBlockDocument("Hello");
 
       const { container } = render(
         <TextEditor

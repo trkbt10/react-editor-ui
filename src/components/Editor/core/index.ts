@@ -110,3 +110,89 @@ export { useTextareaInput } from "./useTextareaInput";
 export type { UseTextareaInputConfig, UseTextareaInputResult } from "./useTextareaInput";
 export { useVirtualScroll } from "./useVirtualScroll";
 export type { UseVirtualScrollResult, VirtualScrollConfig } from "./useVirtualScroll";
+
+// Block-Based Document Model
+export type {
+  BlockId,
+  BlockType,
+  Block,
+  BlockDocument,
+  LocalStyleSegment,
+} from "./blockDocument";
+
+export {
+  createBlockId,
+  createBlock,
+  createEmptyBlock,
+  createEmptyBlockDocument,
+  createBlockDocument,
+  getBlockDocumentText,
+  getBlockDocumentLength,
+  getBlockById,
+  getBlockIndexById,
+  getBlockAtGlobalOffset,
+  updateBlock,
+  insertTextInBlock,
+  deleteRangeInBlock,
+  replaceRangeInBlock,
+  insertTextInDocument,
+  deleteRangeInDocument,
+  replaceRangeInDocument,
+  fromStyledDocument,
+  toStyledDocument,
+  applyStyleToBlock,
+  removeStylesFromBlock,
+  splitBlock,
+  mergeBlocks,
+} from "./blockDocument";
+
+// Block Position
+export type {
+  BlockPosition,
+  BlockSelection,
+  BlockCursor,
+} from "./blockPosition";
+
+export {
+  createBlockPosition,
+  createBlockCursor,
+  createBlockSelection,
+  isSelectionCollapsed,
+  getSelectionBounds,
+  isPositionInSelection,
+  globalOffsetToBlockPosition,
+  blockPositionToGlobalOffset,
+  blockSelectionToGlobalOffsets,
+  getLineColumnInBlock,
+  getOffsetInBlockFromLineColumn,
+  getGlobalLineColumn,
+  globalLineColumnToBlockPosition,
+  movePositionForward,
+  movePositionBackward,
+  getBlockStart,
+  getBlockEnd,
+  getDocumentStart,
+  getDocumentEnd,
+  comparePositions,
+  positionsEqual,
+} from "./blockPosition";
+
+// Block Composition
+export type { BlockCompositionState } from "./useBlockComposition";
+
+export {
+  INITIAL_BLOCK_COMPOSITION_STATE,
+  useBlockComposition,
+  getCompositionEndPosition,
+  isPositionInComposition,
+  getCompositionRange,
+  computeBlockDisplayContent,
+  adjustBlockStyleForComposition,
+} from "./useBlockComposition";
+
+// Block Editor Core
+export { useBlockEditorCore } from "./useBlockEditorCore";
+export type {
+  UseBlockEditorCoreConfig,
+  UseBlockEditorCoreResult,
+} from "./useBlockEditorCore";

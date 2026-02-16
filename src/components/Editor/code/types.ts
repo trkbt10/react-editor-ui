@@ -36,8 +36,12 @@ export type Token = {
  * Users implement this interface to provide custom syntax highlighting.
  */
 export type Tokenizer = {
-  /** Tokenize a single line of text */
-  readonly tokenize: (line: string) => readonly Token[];
+  /**
+   * Tokenize a single line of text.
+   * @param line - The line content
+   * @param lineOffset - Optional offset for style resolution in rich text
+   */
+  readonly tokenize: (line: string, lineOffset?: number) => readonly Token[];
 };
 
 /**
@@ -52,8 +56,12 @@ export type TokenStyleMap = {
  * Token cache interface for efficient tokenization.
  */
 export type TokenCache = {
-  /** Get tokens for a line, using cache if available */
-  readonly getTokens: (line: string) => readonly Token[];
+  /**
+   * Get tokens for a line, using cache if available.
+   * @param line - The line content
+   * @param lineIndex - Optional line index (0-based) for offset-based styling
+   */
+  readonly getTokens: (line: string, lineIndex?: number) => readonly Token[];
   /** Clear the cache */
   readonly clear: () => void;
 };
