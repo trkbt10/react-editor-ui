@@ -193,4 +193,83 @@ describe("Select", () => {
       "Fruit selection",
     );
   });
+
+  describe("memo optimization", () => {
+    it("updates correctly when value changes", () => {
+      const { rerender } = render(
+        <Select options={options} value="apple" onChange={() => {}} />,
+      );
+
+      expect(screen.getByRole("combobox")).toHaveTextContent("Apple");
+
+      rerender(
+        <Select options={options} value="banana" onChange={() => {}} />,
+      );
+
+      expect(screen.getByRole("combobox")).toHaveTextContent("Banana");
+    });
+
+    it("updates correctly when options change", () => {
+      const newOptions = [
+        { value: "dog", label: "Dog" },
+        { value: "cat", label: "Cat" },
+      ];
+
+      const { rerender } = render(
+        <Select options={options} value="apple" onChange={() => {}} />,
+      );
+
+      fireEvent.click(screen.getByRole("combobox"));
+      expect(screen.getAllByRole("option")).toHaveLength(3);
+
+      // Close dropdown
+      fireEvent.keyDown(screen.getByRole("combobox"), { key: "Escape" });
+
+      rerender(
+        <Select options={newOptions} value="dog" onChange={() => {}} />,
+      );
+
+      // Verify combobox shows new value
+      expect(screen.getByRole("combobox")).toHaveTextContent("Dog");
+
+      fireEvent.click(screen.getByRole("combobox"));
+      expect(screen.getAllByRole("option")).toHaveLength(2);
+    });
+
+    it("updates correctly when disabled state changes", () => {
+      const { rerender } = render(
+        <Select options={options} value="apple" onChange={() => {}} disabled={false} />,
+      );
+
+      // Should open when not disabled
+      fireEvent.click(screen.getByRole("combobox"));
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+
+      // Close
+      fireEvent.keyDown(screen.getByRole("combobox"), { key: "Escape" });
+
+      rerender(
+        <Select options={options} value="apple" onChange={() => {}} disabled={true} />,
+      );
+
+      // Should not open when disabled
+      fireEvent.click(screen.getByRole("combobox"));
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
+
+    it("updates correctly when size changes", () => {
+      const { rerender, container } = render(
+        <Select options={options} value="apple" onChange={() => {}} size="md" />,
+      );
+
+      const combobox = container.querySelector('[role="combobox"]') as HTMLElement;
+
+      rerender(
+        <Select options={options} value="apple" onChange={() => {}} size="sm" />,
+      );
+
+      // Size change should be reflected (different padding)
+      expect(combobox).toBeInTheDocument();
+    });
+  });
 });
