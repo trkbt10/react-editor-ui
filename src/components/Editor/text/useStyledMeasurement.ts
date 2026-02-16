@@ -8,7 +8,7 @@
 
 import { useState, useCallback, useRef, useEffect, useEffectEvent, useMemo, type RefObject } from "react";
 import type { TextStyleSegment } from "../core/types";
-import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "../core/coordinates";
+import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "../font/coordinates";
 import { assertMeasureElement } from "../core/invariant";
 import { parseFontSize, findStyleAtOffset } from "./styledMeasurement";
 

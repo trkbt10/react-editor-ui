@@ -4,7 +4,7 @@
 
 import { render } from "@testing-library/react";
 import { BlockRenderer } from "./BlockRenderer";
-import { createBlock, type Block } from "../core/blockDocument";
+import { createBlock, type Block } from "../block/blockDocument";
 import type { TokenCache } from "./types";
 
 // Mock crypto.randomUUID for deterministic tests

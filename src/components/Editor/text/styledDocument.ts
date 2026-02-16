@@ -19,7 +19,7 @@
  * ```
  */
 
-import type { TextStyle, TextStyleSegment } from "./types";
+import type { TextStyle, TextStyleSegment } from "../core/types";
 
 // =============================================================================
 // Node Types

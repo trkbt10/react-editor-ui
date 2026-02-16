@@ -6,7 +6,7 @@
  */
 
 import { useMemo } from "react";
-import type { CursorPosition, LineIndex } from "./types";
+import type { CursorPosition, LineIndex } from "../core/types";
 import {
   buildLineOffsets,
   offsetToLineColumnFromIndex,
@@ -58,15 +58,3 @@ export function useLineIndex(text: string): LineIndex {
     };
   }, [text]);
 }
-
-// =============================================================================
-// Re-exports for Backwards Compatibility
-// =============================================================================
-
-export {
-  buildLineOffsets,
-  findLineIndex,
-  offsetToLineColumnFromIndex,
-  lineColumnToOffsetFromIndex,
-} from "./lineIndex";
-export type { LineColumnToOffsetOptions } from "./lineIndex";

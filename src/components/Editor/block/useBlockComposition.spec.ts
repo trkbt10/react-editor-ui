@@ -12,8 +12,8 @@ import {
   computeBlockDisplayContent,
   adjustBlockStyleForComposition,
   type BlockCompositionState,
-} from "./useBlockComposition";
-import { createBlockDocument, type BlockId } from "./blockDocument";
+} from "../block/useBlockComposition";
+import { createBlockDocument, type BlockId } from "../block/blockDocument";
 
 // Mock crypto.randomUUID for deterministic tests
 const createUuidCounter = () => {

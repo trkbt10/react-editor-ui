@@ -186,6 +186,22 @@ const [value, setValue] = useState("");
 />
 ```
 
+#### SearchInput
+
+Search input with icon and clear button
+
+Compact search input with search icon prefix and clear button. Extends Input component styling with search-specific features.
+
+```tsx
+import { SearchInput } from "react-editor-ui/SearchInput";
+
+<SearchInput
+  value={query}
+  onChange={setQuery}
+  placeholder="Search files..."
+/>
+```
+
 #### Select
 
 Dropdown selection with portal rendering
@@ -244,6 +260,49 @@ A button with dropdown menu for multiple actions
 import { SplitButton } from "react-editor-ui/SplitButton";
 ```
 
+#### TabBar
+
+Versatile tab bar with multiple variants
+
+A compact tab bar for switching between views or sections. Supports multiple variants: pills (default), files (with close button), and icons (icon-only).
+
+```tsx
+import { TabBar } from "react-editor-ui/TabBar";
+
+// Pills variant (default)
+<TabBar
+  tabs={[
+    { id: "design", label: "Design" },
+    { id: "prototype", label: "Prototype" },
+  ]}
+  activeTab="design"
+  onChange={(tabId) => setActiveTab(tabId)}
+/>
+
+// Files variant with close buttons
+<TabBar
+  variant="files"
+  tabs={[
+    { id: "file1", label: "index.tsx", closable: true },
+    { id: "file2", label: "styles.css", closable: true, isDirty: true },
+  ]}
+  activeTab="file1"
+  onChange={(tabId) => setActiveTab(tabId)}
+  onClose={(tabId) => closeTab(tabId)}
+/>
+
+// Icons variant
+<TabBar
+  variant="icons"
+  tabs={[
+    { id: "folder", label: "Files", icon: <LuFolder /> },
+    { id: "search", label: "Search", icon: <LuSearch /> },
+  ]}
+  activeTab="folder"
+  onChange={(tabId) => setActiveTab(tabId)}
+/>
+```
+
 #### Tooltip
 
 Displays contextual information on hover
@@ -269,6 +328,25 @@ import { UnitInput } from "react-editor-ui/UnitInput";
 ### Layout
 
 > Components for organizing and structuring UI
+
+#### FloatingToolbar
+
+Generic selection-based toolbar
+
+A floating toolbar that appears near selected content. Editor-agnostic: can be used with TextEditor, Canvas, or any selection-based UI.
+
+```tsx
+import { FloatingToolbar } from "react-editor-ui/FloatingToolbar";
+
+<FloatingToolbar
+  anchor={{ x: 100, y: 50, width: 200, height: 20 }}
+  operations={[
+    { id: "bold", label: "Bold", icon: <BoldIcon /> },
+    { id: "italic", label: "Italic", icon: <ItalicIcon /> },
+  ]}
+  onOperationSelect={(id) => console.log("Selected:", id)}
+/>
+```
 
 #### Panel
 
@@ -447,22 +525,24 @@ import { StatusBar } from "react-editor-ui/StatusBar";
 
 Editor module exports
 
-Unified exports for all Editor components including CodeEditor and TextEditor. Provides syntax highlighting, virtual scrolling, and rich text editing.
+Unified exports for all Editor components including CodeEditor and TextEditor. Both editors use BlockDocument for consistent architecture. Provides syntax highlighting, virtual scrolling, and rich text editing.
 
 ```tsx
-import { CodeEditor, TextEditor } from "react-editor-ui/Editor";
+import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/Editor";
+
+const [doc, setDoc] = useState(() => createBlockDocument(code));
 
 // Code editor with syntax highlighting
 <CodeEditor
-  value={code}
-  onChange={setCode}
-  language="typescript"
+  document={doc}
+  onDocumentChange={setDoc}
+  tokenizer={myTokenizer}
 />
 
 // Rich text editor
 <TextEditor
-  value={text}
-  onChange={setText}
+  document={doc}
+  onDocumentChange={setDoc}
 />
 ```
 

@@ -14,7 +14,7 @@ import {
   type BlockDocument,
   type LocalStyleSegment,
   createBlockId,
-} from "../core/blockDocument";
+} from "../block/blockDocument";
 import type { TextStyle } from "../core/types";
 
 // =============================================================================

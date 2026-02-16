@@ -12,7 +12,7 @@ import type {
   SelectionRange,
   TextStyle,
 } from "../core/types";
-import type { BlockDocument } from "../core/blockDocument";
+import type { BlockDocument } from "../block/blockDocument";
 
 // =============================================================================
 // Text Editor Props

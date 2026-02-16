@@ -12,10 +12,12 @@
         "ColorPicker",
         "IconButton",
         "Input",
+        "SearchInput",
         "Select",
         "SegmentedControl",
         "Slider",
         "SplitButton",
+        "TabBar",
         "Tooltip",
         "UnitInput"
       ]

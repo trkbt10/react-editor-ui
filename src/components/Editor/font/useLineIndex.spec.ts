@@ -10,8 +10,8 @@ import {
   findLineIndex,
   offsetToLineColumnFromIndex,
   lineColumnToOffsetFromIndex,
-  useLineIndex,
-} from "./useLineIndex";
+} from "./lineIndex";
+import { useLineIndex } from "./useLineIndex";
 import { renderHook } from "@testing-library/react";
 
 // =============================================================================

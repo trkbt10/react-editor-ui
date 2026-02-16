@@ -1,5 +1,14 @@
 /**
  * @file Core module exports
+ *
+ * This module only exports types and utilities that remain in core/.
+ * For other modules, import directly from their respective directories:
+ * - block/ - Block-based document model (blockDocument, blockPosition, useBlockComposition)
+ * - history/ - Undo/Redo management (useHistory, useCursorRestoration)
+ * - font/ - Font metrics and coordinates (useFontMetrics, coordinates, lineIndex, useLineIndex)
+ * - text/ - Text styling (styledDocument)
+ * - renderers/ - Rendering utilities (useVirtualScroll, editorState)
+ * - user-actions/ - User input handling (useTextareaInput, useSelectionChange)
  */
 
 // Types
@@ -31,161 +40,13 @@ export {
   adjustStyleForComposition,
 } from "./types";
 
-// Styled Document (tree-based decoration structure)
-export type {
-  StyledDocument,
-  StyledNode,
-  StyledElement,
-  TextNode,
-  StyleDefinitions,
-  OverlayLayer,
-} from "./styledDocument";
-
+// Invariant assertions
 export {
-  createDocument,
-  createEmptyDocument,
-  text,
-  element,
-  getPlainText,
-  getDocumentText,
-  getNodeLength,
-  getNodePathAtOffset,
-  getTagsAtOffset,
-  insertText,
-  deleteRange,
-  replaceRange,
-  wrapWithTag,
-  unwrapTag,
-  setStyleDefinition,
-  setOverlayLayer,
-  removeOverlayLayer,
-  toFlatSegments,
-  getDisplayDocumentForComposition,
-} from "./styledDocument";
-
-// Pure Functions - Line Index
-export {
-  buildLineOffsets,
-  findLineIndex,
-  offsetToLineColumnFromIndex,
-  lineColumnToOffsetFromIndex,
-} from "./lineIndex";
-export type { LineColumnToOffsetOptions } from "./lineIndex";
-
-// Pure Functions - Editor State
-export {
-  createCursorState,
-  createSelectionHighlight,
-  createCompositionHighlight,
-  combineHighlights,
-} from "./editorState";
-
-// Hooks
-export {
-  calculateSelectionRects,
-  coordinatesToPosition,
-  lineColumnToCoordinates,
-  lineColumnToOffset,
-  offsetToLineColumn,
-  CODE_AREA_PADDING_LEFT,
-  CODE_AREA_PADDING_TOP,
-  DEFAULT_CHAR_WIDTH,
-  DEFAULT_LINE_HEIGHT,
-} from "./coordinates";
-export type {
-  CoordinateOptions,
-  CoordinatesToPositionOptions,
-  LineColumnToCoordinatesOptions,
-  SelectionRectsOptions,
-} from "./coordinates";
-export { useFontMetrics } from "./useFontMetrics";
-export { useHistory } from "./useHistory";
-export type { UseHistoryConfig, UseHistoryResult } from "./useHistory";
-export { useLineIndex } from "./useLineIndex";
-export { useSelectionChange } from "./useSelectionChange";
-export { useTextareaInput } from "./useTextareaInput";
-export type { UseTextareaInputConfig, UseTextareaInputResult } from "./useTextareaInput";
-export { useVirtualScroll } from "./useVirtualScroll";
-export type { UseVirtualScrollResult, VirtualScrollConfig } from "./useVirtualScroll";
-
-// Block-Based Document Model
-export type {
-  BlockId,
-  BlockType,
-  Block,
-  BlockDocument,
-  LocalStyleSegment,
-} from "./blockDocument";
-
-export {
-  createBlockId,
-  createBlock,
-  createEmptyBlock,
-  createEmptyBlockDocument,
-  createBlockDocument,
-  getBlockDocumentText,
-  getBlockDocumentLength,
-  getBlockById,
-  getBlockIndexById,
-  getBlockAtGlobalOffset,
-  updateBlock,
-  insertTextInBlock,
-  deleteRangeInBlock,
-  replaceRangeInBlock,
-  insertTextInDocument,
-  deleteRangeInDocument,
-  replaceRangeInDocument,
-  fromStyledDocument,
-  toStyledDocument,
-  applyStyleToBlock,
-  removeStylesFromBlock,
-  splitBlock,
-  mergeBlocks,
-} from "./blockDocument";
-
-// Block Position
-export type {
-  BlockPosition,
-  BlockSelection,
-  BlockCursor,
-} from "./blockPosition";
-
-export {
-  createBlockPosition,
-  createBlockCursor,
-  createBlockSelection,
-  isSelectionCollapsed,
-  getSelectionBounds,
-  isPositionInSelection,
-  globalOffsetToBlockPosition,
-  blockPositionToGlobalOffset,
-  blockSelectionToGlobalOffsets,
-  getLineColumnInBlock,
-  getOffsetInBlockFromLineColumn,
-  getGlobalLineColumn,
-  globalLineColumnToBlockPosition,
-  movePositionForward,
-  movePositionBackward,
-  getBlockStart,
-  getBlockEnd,
-  getDocumentStart,
-  getDocumentEnd,
-  comparePositions,
-  positionsEqual,
-} from "./blockPosition";
-
-// Block Composition
-export type { BlockCompositionState } from "./useBlockComposition";
-
-export {
-  INITIAL_BLOCK_COMPOSITION_STATE,
-  useBlockComposition,
-  getCompositionEndPosition,
-  isPositionInComposition,
-  getCompositionRange,
-  computeBlockDisplayContent,
-  adjustBlockStyleForComposition,
-} from "./useBlockComposition";
+  invariant,
+  assertDefined,
+  assertMeasureElement,
+  assertMeasureText,
+} from "./invariant";
 
 // Block Editor Core
 export { useBlockEditorCore } from "./useBlockEditorCore";

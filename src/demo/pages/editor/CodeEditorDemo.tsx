@@ -9,7 +9,7 @@ import {
   DemoRow,
 } from "../../components";
 import { CodeEditor } from "../../../components/Editor/code/CodeEditor";
-import { createBlockDocument } from "../../../components/Editor/core/blockDocument";
+import { createBlockDocument } from "../../../components/Editor/block/blockDocument";
 import { Button } from "../../../components/Button/Button";
 import type { Token, Tokenizer, BlockDocument } from "../../../components/Editor";
 

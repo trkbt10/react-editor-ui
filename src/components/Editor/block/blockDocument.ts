@@ -23,12 +23,9 @@
  * ```
  */
 
-import type { TextStyle, TextStyleSegment } from "./types";
-import type { StyledDocument, StyleDefinitions } from "./styledDocument";
-import { getDocumentText, toFlatSegments, createDocument } from "./styledDocument";
-
-// Re-export for backward compatibility (no longer needed after full migration)
-export type { StyleDefinitions } from "./styledDocument";
+import type { TextStyle, TextStyleSegment } from "../core/types";
+import type { StyledDocument, StyleDefinitions } from "../text/styledDocument";
+import { getDocumentText, toFlatSegments, createDocument } from "../text/styledDocument";
 
 // =============================================================================
 // Branded Types

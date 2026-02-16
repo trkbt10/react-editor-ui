@@ -30,9 +30,9 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import type { BlockId, BlockDocument } from "./blockDocument";
-import type { BlockPosition } from "./blockPosition";
-import { globalOffsetToBlockPosition } from "./blockPosition";
+import type { BlockId, BlockDocument } from "../block/blockDocument";
+import type { BlockPosition } from "../block/blockPosition";
+import { globalOffsetToBlockPosition } from "../block/blockPosition";
 
 // =============================================================================
 // Types

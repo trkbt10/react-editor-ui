@@ -28,7 +28,7 @@
  */
 
 // =============================================================================
-// Core
+// Core Types
 // =============================================================================
 
 export type {
@@ -49,30 +49,50 @@ export type {
   TextStyle,
   TextStyleSegment,
   VirtualScrollState,
-  // Block-based types
-  BlockDocument,
-  Block,
-  BlockId,
 } from "./core";
 
+export { DEFAULT_EDITOR_CONFIG, INITIAL_COMPOSITION_STATE } from "./core";
+
+// =============================================================================
+// Block Document Model
+// =============================================================================
+
+export type { BlockDocument, Block, BlockId } from "./block/blockDocument";
+
+export { createBlockDocument, getBlockDocumentText } from "./block/blockDocument";
+
+// =============================================================================
+// Font & Coordinates
+// =============================================================================
+
+export { useFontMetrics } from "./font/useFontMetrics";
+export { useLineIndex } from "./font/useLineIndex";
 export {
-  DEFAULT_EDITOR_CONFIG,
-  INITIAL_COMPOSITION_STATE,
-  useFontMetrics,
-  useHistory,
-  useLineIndex,
-  useSelectionChange,
-  useTextareaInput,
-  useVirtualScroll,
   calculateSelectionRects,
   coordinatesToPosition,
   lineColumnToCoordinates,
   lineColumnToOffset,
   offsetToLineColumn,
-  // Block-based functions
-  createBlockDocument,
-  getBlockDocumentText,
-} from "./core";
+} from "./font/coordinates";
+
+// =============================================================================
+// History
+// =============================================================================
+
+export { useHistory } from "./history/useHistory";
+
+// =============================================================================
+// User Actions
+// =============================================================================
+
+export { useSelectionChange } from "./user-actions/useSelectionChange";
+export { useTextareaInput } from "./user-actions/useTextareaInput";
+
+// =============================================================================
+// Virtual Scroll
+// =============================================================================
+
+export { useVirtualScroll } from "./renderers/useVirtualScroll";
 
 // =============================================================================
 // Renderers

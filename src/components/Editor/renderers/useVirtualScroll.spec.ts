@@ -5,7 +5,7 @@
  */
 
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useVirtualScroll } from "./useVirtualScroll";
+import { useVirtualScroll } from "../renderers/useVirtualScroll";
 
 // =============================================================================
 // Test Setup

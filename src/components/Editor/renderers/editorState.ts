@@ -10,7 +10,7 @@ import type {
   CursorState,
   HighlightRange,
   LineIndex,
-} from "./types";
+} from "../core/types";
 
 // =============================================================================
 // Cursor State

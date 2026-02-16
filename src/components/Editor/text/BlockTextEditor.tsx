@@ -20,11 +20,11 @@
 import { useMemo, useCallback, memo, type ReactNode, type CSSProperties } from "react";
 import type { CursorPosition } from "../core/types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
-import type { BlockDocument } from "../core/blockDocument";
-import { getBlockDocumentText } from "../core/blockDocument";
+import type { BlockDocument } from "../block/blockDocument";
+import { getBlockDocumentText } from "../block/blockDocument";
 import { useBlockEditorCore } from "../core/useBlockEditorCore";
-import { useFontMetrics } from "../core/useFontMetrics";
-import { useLineIndex } from "../core/useLineIndex";
+import { useFontMetrics } from "../font/useFontMetrics";
+import { useLineIndex } from "../font/useLineIndex";
 import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTextTokenCache } from "./useTextTokenCache";
 import { BlockRenderer } from "../renderers/BlockRenderer";

@@ -21,8 +21,8 @@
  */
 
 import { useMemo, memo, type ReactNode, type CSSProperties } from "react";
-import type { Block, LocalStyleSegment } from "../core/blockDocument";
-import type { BlockCompositionState } from "../core/useBlockComposition";
+import type { Block, LocalStyleSegment } from "../block/blockDocument";
+import type { BlockCompositionState } from "../block/useBlockComposition";
 import type {
   CursorState,
   HighlightRange,

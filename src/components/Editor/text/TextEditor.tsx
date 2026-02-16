@@ -18,16 +18,16 @@ import {
 } from "react";
 import type { TextEditorProps, TextEditorHandle, TextSelectionEvent } from "./types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
-import { useLineIndex } from "../core/useLineIndex";
+import { useLineIndex } from "../font/useLineIndex";
 import {
   getBlockDocumentText,
   toGlobalSegments,
   getTagsAtBlockOffset,
-} from "../core/blockDocument";
+} from "../block/blockDocument";
 import { executeBlockCommand } from "./commands";
-import { calculateSelectionRects } from "../core/coordinates";
+import { calculateSelectionRects } from "../font/coordinates";
 import { useBlockEditorCore, type GetOffsetFromPositionFn } from "../core/useBlockEditorCore";
-import { useFontMetrics } from "../core/useFontMetrics";
+import { useFontMetrics } from "../font/useFontMetrics";
 import { invariant } from "../core/invariant";
 import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTextStyles } from "./useTextStyles";

@@ -5,7 +5,7 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
-import { useHistory, type HistoryEntry } from "./useHistory";
+import { useHistory, type HistoryEntry } from "../history/useHistory";
 
 // =============================================================================
 // Test Setup

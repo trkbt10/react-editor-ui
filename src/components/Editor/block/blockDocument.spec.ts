@@ -28,8 +28,8 @@ import {
   mergeBlocks,
   type BlockId,
   type BlockDocument,
-} from "./blockDocument";
-import { createDocument, setStyleDefinition, wrapWithTag } from "./styledDocument";
+} from "../block/blockDocument";
+import { createDocument, setStyleDefinition, wrapWithTag } from "../text/styledDocument";
 
 // Mock crypto.randomUUID for deterministic tests
 const createUuidCounter = () => {

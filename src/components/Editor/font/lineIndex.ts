@@ -5,7 +5,7 @@
  * Provides O(log n) offset-to-line-column conversion via binary search.
  */
 
-import type { CursorPosition } from "./types";
+import type { CursorPosition } from "../core/types";
 
 // =============================================================================
 // Types

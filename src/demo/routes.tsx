@@ -11,12 +11,14 @@ import {
   LuMessageSquare,
   LuCode,
   LuPenTool,
+  LuAppWindow,
 } from "react-icons/lu";
 
 // Primitives demos
 import { IconButtonDemo } from "./pages/primitives/IconButtonDemo";
 import { ButtonDemo } from "./pages/primitives/ButtonDemo";
 import { InputDemo } from "./pages/primitives/InputDemo";
+import { SearchInputDemo } from "./pages/primitives/SearchInputDemo";
 import { UnitInputDemo } from "./pages/primitives/UnitInputDemo";
 import { BadgeDemo } from "./pages/primitives/BadgeDemo";
 import { CheckboxDemo } from "./pages/primitives/CheckboxDemo";
@@ -28,6 +30,7 @@ import { FillEditorDemo } from "./pages/primitives/FillEditorDemo";
 import { SelectWithPreviewDemo } from "./pages/primitives/SelectWithPreviewDemo";
 import { TooltipDemo } from "./pages/primitives/TooltipDemo";
 import { SplitButtonDemo } from "./pages/primitives/SplitButtonDemo";
+import { TabBarDemo } from "./pages/primitives/TabBarDemo";
 
 // Layout demos
 import { ToolbarDemo } from "./pages/layout/ToolbarDemo";
@@ -67,6 +70,10 @@ import { CanvasGridLayerDemo } from "./pages/canvas/CanvasGridLayerDemo";
 import { CanvasRulerDemo } from "./pages/canvas/CanvasRulerDemo";
 import { CanvasGuideDemo } from "./pages/canvas/CanvasGuideDemo";
 import { CanvasCheckerboardDemo } from "./pages/canvas/CanvasCheckerboardDemo";
+
+// App demos
+import { DesignDemo } from "./pages/app-demo/DesignDemo";
+import { IDEDemo } from "./pages/app-demo/IDEDemo";
 
 // Dev/Test demos
 import { IconGallery } from "./pages/IconGallery";
@@ -110,6 +117,12 @@ export const demoCategories: DemoCategory[] = [
         label: "Input",
         path: "input",
         element: <InputDemo />,
+      },
+      {
+        id: "search-input",
+        label: "SearchInput",
+        path: "search-input",
+        element: <SearchInputDemo />,
       },
       {
         id: "unit-input",
@@ -176,6 +189,12 @@ export const demoCategories: DemoCategory[] = [
         label: "SplitButton",
         path: "split-button",
         element: <SplitButtonDemo />,
+      },
+      {
+        id: "tab-bar",
+        label: "TabBar",
+        path: "tab-bar",
+        element: <TabBarDemo />,
       },
     ],
   },

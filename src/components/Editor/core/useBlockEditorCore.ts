@@ -45,14 +45,14 @@ import type {
   BlockDocument,
   Block,
   BlockId,
-} from "./blockDocument";
+} from "../block/blockDocument";
 import {
   getBlockDocumentText,
   createBlockDocument,
   replaceRangeInDocument,
-} from "./blockDocument";
+} from "../block/blockDocument";
 import { computeTextDiff } from "../text/textDiff";
-import type { BlockPosition, BlockSelection } from "./blockPosition";
+import type { BlockPosition, BlockSelection } from "../block/blockPosition";
 import {
   globalOffsetToBlockPosition,
   blockPositionToGlobalOffset,
@@ -61,19 +61,19 @@ import {
   createBlockSelection,
   isSelectionCollapsed,
   getSelectionBounds,
-} from "./blockPosition";
+} from "../block/blockPosition";
 import {
   type BlockCompositionState,
   INITIAL_BLOCK_COMPOSITION_STATE,
   useBlockComposition,
   getCompositionRange,
-} from "./useBlockComposition";
-import { useVirtualScroll, type UseVirtualScrollResult } from "./useVirtualScroll";
-import { useHistory } from "./useHistory";
-import { useCursorRestoration } from "./useCursorRestoration";
+} from "../block/useBlockComposition";
+import { useVirtualScroll, type UseVirtualScrollResult } from "../renderers/useVirtualScroll";
+import { useHistory } from "../history/useHistory";
+import { useCursorRestoration } from "../history/useCursorRestoration";
 import { useKeyHandlers } from "../user-actions/useKeyHandlers";
 import { injectCursorAnimation } from "../styles/useEditorStyles";
-import { useSelectionChange } from "./useSelectionChange";
+import { useSelectionChange } from "../user-actions/useSelectionChange";
 
 // =============================================================================
 // Types

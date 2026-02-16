@@ -14,7 +14,7 @@ import {
   getDocumentText,
   wrapWithTag,
   getTagsAtOffset,
-} from "../core/styledDocument";
+} from "./styledDocument";
 
 // =============================================================================
 // Tests

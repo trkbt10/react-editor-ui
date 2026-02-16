@@ -4,7 +4,7 @@
 
 import { render, screen } from "@testing-library/react";
 import { BlockTextEditor } from "./BlockTextEditor";
-import { createBlockDocument } from "../core/blockDocument";
+import { createBlockDocument } from "../block/blockDocument";
 
 // Mock crypto.randomUUID for deterministic tests
 const createUuidCounter = () => {

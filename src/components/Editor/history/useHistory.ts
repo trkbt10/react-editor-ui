@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { HistoryState } from "./types";
+import type { HistoryState } from "../core/types";
 
 // =============================================================================
 // Types

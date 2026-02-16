@@ -8,11 +8,11 @@
 import { useMemo, memo, type ReactNode } from "react";
 import type { CodeEditorProps } from "./types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
-import { getBlockDocumentText } from "../core/blockDocument";
+import { getBlockDocumentText } from "../block/blockDocument";
 import { useBlockEditorCore, type GetOffsetFromPositionFn } from "../core/useBlockEditorCore";
-import { useFontMetrics } from "../core/useFontMetrics";
-import { useLineIndex } from "../core/useLineIndex";
-import { coordinatesToPosition } from "../core/coordinates";
+import { useFontMetrics } from "../font/useFontMetrics";
+import { useLineIndex } from "../font/useLineIndex";
+import { coordinatesToPosition } from "../font/coordinates";
 import { assertMeasureText } from "../core/invariant";
 import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTokenCache } from "./useTokenCache";

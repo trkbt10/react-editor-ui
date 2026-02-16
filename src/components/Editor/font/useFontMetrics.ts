@@ -6,9 +6,9 @@
  */
 
 import { useState, useEffect, useEffectEvent, useCallback, useRef, type RefObject } from "react";
-import type { FontMetrics } from "./types";
+import type { FontMetrics } from "../core/types";
 import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "./coordinates";
-import { assertMeasureElement } from "./invariant";
+import { assertMeasureElement } from "../core/invariant";
 
 
 // =============================================================================

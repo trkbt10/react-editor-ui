@@ -7,10 +7,10 @@
  * Supports both StyledDocument (legacy) and BlockDocument (current).
  */
 
-import type { StyledDocument } from "../core/styledDocument";
-import { wrapWithTag, unwrapTag, getTagsAtOffset } from "../core/styledDocument";
-import type { BlockDocument, LocalStyleSegment } from "../core/blockDocument";
-import { getTagsAtBlockOffset } from "../core/blockDocument";
+import type { StyledDocument } from "./styledDocument";
+import { wrapWithTag, unwrapTag, getTagsAtOffset } from "./styledDocument";
+import type { BlockDocument, LocalStyleSegment } from "../block/blockDocument";
+import { getTagsAtBlockOffset } from "../block/blockDocument";
 
 // =============================================================================
 // Types

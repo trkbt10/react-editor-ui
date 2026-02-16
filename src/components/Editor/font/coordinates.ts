@@ -10,7 +10,7 @@ import type {
   CursorPosition,
   MeasureTextFn,
   SelectionRect,
-} from "./types";
+} from "../core/types";
 
 // =============================================================================
 // Constants

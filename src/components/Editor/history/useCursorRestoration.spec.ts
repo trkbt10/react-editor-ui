@@ -5,7 +5,7 @@
  */
 
 import { renderHook, act } from "@testing-library/react";
-import { useCursorRestoration } from "./useCursorRestoration";
+import { useCursorRestoration } from "../history/useCursorRestoration";
 
 // =============================================================================
 // Mock Setup

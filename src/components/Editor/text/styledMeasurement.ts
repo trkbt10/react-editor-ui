@@ -5,7 +5,7 @@
  */
 
 import type { TextStyleSegment, TextStyle, CursorPosition } from "../core/types";
-import { DEFAULT_LINE_HEIGHT } from "../core/coordinates";
+import { DEFAULT_LINE_HEIGHT } from "../font/coordinates";
 
 // =============================================================================
 // Types

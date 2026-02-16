@@ -5,8 +5,8 @@
  */
 
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
-import type { VirtualScrollState } from "./types";
-import { DEFAULT_EDITOR_CONFIG } from "./types";
+import type { VirtualScrollState } from "../core/types";
+import { DEFAULT_EDITOR_CONFIG } from "../core/types";
 
 // =============================================================================
 // Types

@@ -12,7 +12,7 @@ import type {
   HighlightRange,
   SelectionRange,
 } from "../core/types";
-import type { BlockDocument } from "../core/blockDocument";
+import type { BlockDocument } from "../block/blockDocument";
 
 // =============================================================================
 // Token Types
