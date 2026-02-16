@@ -28,6 +28,7 @@ import { useComposition } from "./useComposition";
 import { useSelectionChange } from "./useSelectionChange";
 import { useVirtualScroll, type UseVirtualScrollResult } from "./useVirtualScroll";
 import { useHistory } from "./useHistory";
+import { useCursorRestoration } from "./useCursorRestoration";
 import { useKeyHandlers } from "../user-actions/useKeyHandlers";
 import { injectCursorAnimation } from "../styles/useEditorStyles";
 import {
@@ -323,7 +324,6 @@ export function useEditorCore(
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const codeAreaRef = useRef<HTMLDivElement>(null);
-  const pendingCursorRef = useRef<number | null>(null);
 
   // Stable ref for onChange to avoid re-creating callbacks on every onChange change
   const onChangeRef = useRef(onChange);
@@ -334,19 +334,15 @@ export function useEditorCore(
     injectCursorAnimation();
   }, []);
 
-  // Restore cursor position after undo/redo
-  useEffect(() => {
-    if (pendingCursorRef.current !== null) {
-      const textarea = textareaRef.current;
-      if (textarea) {
-        textarea.setSelectionRange(pendingCursorRef.current, pendingCursorRef.current);
-      }
-      pendingCursorRef.current = null;
-    }
-  }, [value]);
-
   // Composition state (IME)
   const [composition, setComposition] = useState<CompositionState>(INITIAL_COMPOSITION_STATE);
+
+  // Cursor restoration (centralized handling for undo/redo and insertions)
+  const { queueCursorRestoration, setCursorNow } = useCursorRestoration(
+    textareaRef,
+    value,
+    composition.isComposing
+  );
 
   // Line index
   const lineIndex = useLineIndex(value);
@@ -415,11 +411,11 @@ export function useEditorCore(
     }
     const restored = history.undo();
     if (restored) {
-      pendingCursorRef.current = restored.cursorOffset;
+      queueCursorRestoration(restored.cursorOffset);
       onChangeRef.current(restored.state);
       requestAnimationFrame(updateCursorPosition);
     }
-  }, [readOnly, history, updateCursorPosition]);
+  }, [readOnly, history, queueCursorRestoration, updateCursorPosition]);
 
   // Redo handler
   const handleRedo = useCallback(() => {
@@ -428,11 +424,11 @@ export function useEditorCore(
     }
     const restored = history.redo();
     if (restored) {
-      pendingCursorRef.current = restored.cursorOffset;
+      queueCursorRestoration(restored.cursorOffset);
       onChangeRef.current(restored.state);
       requestAnimationFrame(updateCursorPosition);
     }
-  }, [readOnly, history, updateCursorPosition]);
+  }, [readOnly, history, queueCursorRestoration, updateCursorPosition]);
 
   // Insert handler (tab, etc.)
   const handleInsert = useCallback(
@@ -445,11 +441,11 @@ export function useEditorCore(
       const textarea = textareaRef.current;
       if (textarea) {
         textarea.value = newValue;
-        textarea.setSelectionRange(cursorOffset, cursorOffset);
+        setCursorNow(cursorOffset);
       }
       requestAnimationFrame(updateCursorPosition);
     },
-    [readOnly, history, updateCursorPosition]
+    [readOnly, history, setCursorNow, updateCursorPosition]
   );
 
   // Key handlers

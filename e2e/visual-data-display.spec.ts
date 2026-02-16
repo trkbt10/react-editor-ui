@@ -32,6 +32,15 @@ test.describe("Visual: Data Display", () => {
     });
   });
 
+  test("LayerItem", async ({ page }) => {
+    await page.goto("/#/components/data-display/layer-item");
+    await page.waitForSelector("h2");
+    await page.screenshot({
+      path: "e2e/screenshots/layer-item.png",
+      fullPage: true,
+    });
+  });
+
   test("PropertyRow", async ({ page }) => {
     await page.goto("/#/components/data-display/property-row");
     await page.waitForSelector("h2");

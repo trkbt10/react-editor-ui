@@ -5,6 +5,15 @@
 import { test } from "@playwright/test";
 
 test.describe("Visual: Layout", () => {
+  test("Toolbar", async ({ page }) => {
+    await page.goto("/#/components/layout/toolbar");
+    await page.waitForSelector("h2");
+    await page.screenshot({
+      path: "e2e/screenshots/toolbar.png",
+      fullPage: true,
+    });
+  });
+
   test("PropertyGrid", async ({ page }) => {
     await page.goto("/#/components/layout/property-grid");
     await page.waitForSelector("h2");

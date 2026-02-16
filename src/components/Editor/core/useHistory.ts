@@ -97,6 +97,11 @@ export function useHistory<T>(
     future: [],
   });
 
+  // Track the latest historyState synchronously to avoid stale closure issues.
+  // This is necessary because undo/redo may be called immediately after push,
+  // before React has re-rendered with the new state.
+  const historyStateRef = useRef<HistoryState<T>>(historyState);
+
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const batchStartedRef = useRef(false);
 
@@ -118,6 +123,7 @@ export function useHistory<T>(
       }
 
       setHistoryState((prev) => {
+        let newState: HistoryState<T>;
         if (!batchStartedRef.current) {
           // First change in batch - create undo point
           batchStartedRef.current = true;
@@ -126,19 +132,22 @@ export function useHistory<T>(
           if (newPast.length > maxHistory) {
             newPast.shift();
           }
-          return {
+          newState = {
             past: newPast,
             present: { state, cursorOffset },
             future: [], // Clear redo stack on new changes
           };
         } else {
           // Subsequent changes - just update present
-          return {
+          newState = {
             ...prev,
             present: { state, cursorOffset },
             future: [], // Clear redo stack on new changes
           };
         }
+        // Synchronously update ref so undo/redo can read latest state
+        historyStateRef.current = newState;
+        return newState;
       });
 
       // Schedule batch reset after debounce
@@ -153,58 +162,68 @@ export function useHistory<T>(
   const undo = useCallback((): HistoryEntry<T> | undefined => {
     flush(); // Ensure any pending changes are committed
 
-    if (historyState.past.length === 0) {
+    // Read from ref to get the latest state (avoids stale closure issue)
+    const currentState = historyStateRef.current;
+    if (currentState.past.length === 0) {
       return undefined;
     }
 
-    const restoredEntry = historyState.past[historyState.past.length - 1];
+    const restoredEntry = currentState.past[currentState.past.length - 1];
 
     setHistoryState((prev) => {
       if (prev.past.length === 0) {
         return prev;
       }
 
-      return {
+      const newState: HistoryState<T> = {
         past: prev.past.slice(0, -1),
         present: prev.past[prev.past.length - 1],
         future: [prev.present, ...prev.future],
       };
+      historyStateRef.current = newState;
+      return newState;
     });
 
     return restoredEntry;
-  }, [flush, historyState]);
+  }, [flush]);
 
   const redo = useCallback((): HistoryEntry<T> | undefined => {
     flush(); // Ensure any pending changes are committed
 
-    if (historyState.future.length === 0) {
+    // Read from ref to get the latest state (avoids stale closure issue)
+    const currentState = historyStateRef.current;
+    if (currentState.future.length === 0) {
       return undefined;
     }
 
-    const restoredEntry = historyState.future[0];
+    const restoredEntry = currentState.future[0];
 
     setHistoryState((prev) => {
       if (prev.future.length === 0) {
         return prev;
       }
 
-      return {
+      const newState: HistoryState<T> = {
         past: [...prev.past, prev.present],
         present: prev.future[0],
         future: prev.future.slice(1),
       };
+      historyStateRef.current = newState;
+      return newState;
     });
 
     return restoredEntry;
-  }, [flush, historyState]);
+  }, [flush]);
 
   const reset = useCallback((state: T, cursorOffset: number) => {
     flush();
-    setHistoryState({
+    const newState: HistoryState<T> = {
       past: [],
       present: { state, cursorOffset },
       future: [],
-    });
+    };
+    historyStateRef.current = newState;
+    setHistoryState(newState);
   }, [flush]);
 
   // Cleanup on unmount
