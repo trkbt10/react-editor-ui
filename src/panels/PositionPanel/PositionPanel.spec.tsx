@@ -251,17 +251,20 @@ describe("PositionPanel", () => {
       expect(visualization.style.flexShrink).toBe("0");
     });
 
-    it("position grid wrapper has minWidth: 0", () => {
+    it("position input wrappers have minWidth: 0", () => {
       render(
         <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
       );
 
       const xInput = screen.getByLabelText("X position");
-      // grid wrapper is the parent of the input's container
-      const gridWrapper = xInput.closest('[style*="display: grid"]');
+      const yInput = screen.getByLabelText("Y position");
 
-      expect(gridWrapper).not.toBeNull();
-      expect((gridWrapper as HTMLElement).style.minWidth).toBe("0");
+      // Each input is wrapped in a flex: 1, minWidth: 0 container by ControlRow
+      const xWrapper = xInput.closest('[style*="min-width: 0"]');
+      const yWrapper = yInput.closest('[style*="min-width: 0"]');
+
+      expect(xWrapper).not.toBeNull();
+      expect(yWrapper).not.toBeNull();
     });
 
     it("rotation input wrapper has minWidth: 0", () => {

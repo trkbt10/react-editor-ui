@@ -2,7 +2,7 @@
  * @file StrokePanelExpanded - Stroke settings panel with all options visible
  */
 
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import type {
   StrokeCap,
   StrokeJoin,
@@ -21,6 +21,7 @@ import { StrokeDashEditor } from "./StrokeDashEditor";
 import { StrokeArrowheadSelect } from "./StrokeArrowheadSelect";
 import { StrokeProfileSelect } from "./StrokeProfileSelect";
 import { StrokeWeightInput } from "./StrokeWeightInput";
+import { ControlRow } from "../../components/ControlRow/ControlRow";
 import {
   COLOR_TEXT_MUTED,
   COLOR_DIVIDER,
@@ -51,24 +52,19 @@ export type StrokePanelExpandedProps = {
   className?: string;
 };
 
-const rowStyle: CSSProperties = {
+const LABEL_WIDTH = 80;
+
+const cornerRowStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: SPACE_SM,
 };
 
-const labelStyle: CSSProperties = {
-  width: "80px",
+const cornerLabelStyle: CSSProperties = {
+  width: `${LABEL_WIDTH}px`,
   flexShrink: 0,
   color: COLOR_TEXT_MUTED,
   fontSize: SIZE_FONT_SM,
-};
-
-const controlStyle: CSSProperties = {
-  flex: 1,
-  display: "flex",
-  alignItems: "center",
-  gap: SPACE_SM,
 };
 
 const dividerStyle: CSSProperties = {
@@ -76,15 +72,6 @@ const dividerStyle: CSSProperties = {
   backgroundColor: COLOR_DIVIDER,
   margin: `${SPACE_MD} 0`,
 };
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div style={rowStyle}>
-      <span style={labelStyle}>{label}</span>
-      <div style={controlStyle}>{children}</div>
-    </div>
-  );
-}
 
 /** Creates default settings for expanded stroke panel */
 export function createDefaultExpandedSettings(): StrokePanelExpandedSettings {
@@ -133,28 +120,34 @@ export function StrokePanelExpanded({
   return (
     <Panel title={title} onClose={onClose} width={width} className={className}>
       <div style={contentStyle}>
-        <Row label="Weight:">
+        <ControlRow label="Weight:" labelWidth={LABEL_WIDTH} gap="sm">
           <StrokeWeightInput
             value={settings.weight}
             onChange={(v) => update("weight", v)}
             unit={settings.weightUnit}
             onUnitChange={(u) => update("weightUnit", u)}
           />
-        </Row>
+        </ControlRow>
 
-        <Row label="Cap:">
+        <ControlRow label="Cap:" labelWidth={LABEL_WIDTH} gap="sm">
           <StrokeCapSelect
             value={settings.cap}
             onChange={(v) => update("cap", v)}
           />
-        </Row>
+        </ControlRow>
 
-        <Row label="Corner:">
-          <StrokeJoinSelect
-            value={settings.join}
-            onChange={(v) => update("join", v)}
-          />
-          <span style={{ ...labelStyle, width: "auto", marginLeft: SPACE_MD }}>Limit:</span>
+        {/* Corner row has special layout with inline Limit label */}
+        <div style={cornerRowStyle}>
+          <span style={cornerLabelStyle}>Corner:</span>
+          <div style={{ flex: 1 }}>
+            <StrokeJoinSelect
+              value={settings.join}
+              onChange={(v) => update("join", v)}
+            />
+          </div>
+          <span style={{ color: COLOR_TEXT_MUTED, fontSize: SIZE_FONT_SM, marginLeft: SPACE_MD }}>
+            Limit:
+          </span>
           <div style={{ width: "50px" }}>
             <Input
               value={settings.miterLimit}
@@ -164,14 +157,14 @@ export function StrokePanelExpanded({
               aria-label="Miter limit"
             />
           </div>
-        </Row>
+        </div>
 
-        <Row label="Align:">
+        <ControlRow label="Align:" labelWidth={LABEL_WIDTH} gap="sm">
           <StrokeAlignSelect
             value={settings.align}
             onChange={(v) => update("align", v)}
           />
-        </Row>
+        </ControlRow>
 
         <div style={dividerStyle} />
 
@@ -192,12 +185,12 @@ export function StrokePanelExpanded({
 
         <div style={dividerStyle} />
 
-        <Row label="Profile:">
+        <ControlRow label="Profile:" labelWidth={LABEL_WIDTH} gap="sm">
           <StrokeProfileSelect
             value={settings.profile}
             onChange={(v) => update("profile", v)}
           />
-        </Row>
+        </ControlRow>
       </div>
     </Panel>
   );

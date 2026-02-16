@@ -3,20 +3,16 @@
  */
 
 import { memo, useCallback, useMemo } from "react";
-import type { ReactNode, CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { Panel } from "../../panels/Panel/Panel";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import { Input } from "../../components/Input/Input";
 import { Select } from "../../components/Select/Select";
 import { IconButton } from "../../components/IconButton/IconButton";
 import { TransformButtons } from "../../components/TransformButtons/TransformButtons";
-import {
-  COLOR_TEXT_MUTED,
-  SPACE_SM,
-  SPACE_MD,
-  SIZE_FONT_SM,
-  SIZE_HEIGHT_SM,
-} from "../../constants/styles";
+import { ControlRow } from "../../components/ControlRow/ControlRow";
+import { ControlGroup } from "../../components/ControlRow/ControlGroup";
+import { SPACE_MD } from "../../constants/styles";
 import { ConstraintVisualization } from "./ConstraintVisualization";
 import {
   AlignLeftIcon,
@@ -51,23 +47,6 @@ export type {
 export { createDefaultPositionSettings } from "./positionTypes";
 export { ConstraintVisualization } from "./ConstraintVisualization";
 export type { ConstraintVisualizationProps } from "./ConstraintVisualization";
-
-// ========================================
-// SECTION LABEL
-// ========================================
-
-function SectionLabel({ children }: { children: ReactNode }) {
-  const style: CSSProperties = {
-    color: COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_SM,
-    marginBottom: SPACE_SM,
-  };
-  return <div style={style}>{children}</div>;
-}
-
-// ========================================
-// MAIN COMPONENT
-// ========================================
 
 export const PositionPanel = memo(function PositionPanel({
   settings,
@@ -136,33 +115,6 @@ export const PositionPanel = memo(function PositionPanel({
     [onTransformAction],
   );
 
-  const rowStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      gap: SPACE_MD,
-      alignItems: "center",
-    }),
-    [],
-  );
-
-  const sectionStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      flexDirection: "column",
-      gap: SPACE_SM,
-    }),
-    [],
-  );
-
-  const gridStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: SPACE_MD,
-    }),
-    [],
-  );
-
   const constraintsRowStyle = useMemo<CSSProperties>(
     () => ({
       display: "flex",
@@ -183,82 +135,63 @@ export const PositionPanel = memo(function PositionPanel({
     [],
   );
 
-  const rotationRowStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      gap: SPACE_MD,
-      alignItems: "center",
-    }),
-    [],
-  );
-
   return (
     <Panel title="Position" onClose={onClose} width={width} className={className}>
-      {/* Alignment Section */}
-      <div style={sectionStyle}>
-        <SectionLabel>Alignment</SectionLabel>
-        <div style={rowStyle}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <SegmentedControl
-              options={horizontalAlignOptions}
-              value={settings.horizontalAlign}
-              onChange={(v) => {
-                updateSettings("horizontalAlign", v as HorizontalAlign);
-              }}
-              fullWidth
-              aria-label="Horizontal alignment"
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <SegmentedControl
-              options={verticalAlignOptions}
-              value={settings.verticalAlign}
-              onChange={(v) => {
-                updateSettings("verticalAlign", v as VerticalAlign);
-              }}
-              fullWidth
-              aria-label="Vertical alignment"
-            />
-          </div>
-          {/* Spacer to align with Position row's IconButton */}
-          <div style={{ width: SIZE_HEIGHT_SM, flexShrink: 0 }} />
-        </div>
-      </div>
-
-      {/* Position Section */}
-      <div style={sectionStyle}>
-        <SectionLabel>Position</SectionLabel>
-        <div style={rowStyle}>
-          <div style={{ ...gridStyle, flex: 1, minWidth: 0 }}>
-            <Input
-              value={settings.x}
-              onChange={(v) => {
-                updateSettings("x", v);
-              }}
-              prefix="X"
-              aria-label="X position"
-            />
-            <Input
-              value={settings.y}
-              onChange={(v) => {
-                updateSettings("y", v);
-              }}
-              prefix="Y"
-              aria-label="Y position"
-            />
-          </div>
-          <IconButton
-            icon={<ConstraintToggleIcon />}
-            aria-label="Toggle constraints"
-            onClick={onToggleConstraints}
-            active={false}
+      <ControlGroup label="Alignment">
+        <ControlRow spacer>
+          <SegmentedControl
+            options={horizontalAlignOptions}
+            value={settings.horizontalAlign}
+            onChange={(v) => {
+              updateSettings("horizontalAlign", v as HorizontalAlign);
+            }}
+            fullWidth
+            aria-label="Horizontal alignment"
           />
-        </div>
-      </div>
+          <SegmentedControl
+            options={verticalAlignOptions}
+            value={settings.verticalAlign}
+            onChange={(v) => {
+              updateSettings("verticalAlign", v as VerticalAlign);
+            }}
+            fullWidth
+            aria-label="Vertical alignment"
+          />
+        </ControlRow>
+      </ControlGroup>
 
-      {/* Constraints Section */}
-      <div style={sectionStyle}>
-        <SectionLabel>Constraints</SectionLabel>
+      <ControlGroup label="Position">
+        <ControlRow
+          action={
+            <IconButton
+              icon={<ConstraintToggleIcon />}
+              aria-label="Toggle constraints"
+              onClick={onToggleConstraints}
+              active={false}
+              size="sm"
+            />
+          }
+        >
+          <Input
+            value={settings.x}
+            onChange={(v) => {
+              updateSettings("x", v);
+            }}
+            prefix="X"
+            aria-label="X position"
+          />
+          <Input
+            value={settings.y}
+            onChange={(v) => {
+              updateSettings("y", v);
+            }}
+            prefix="Y"
+            aria-label="Y position"
+          />
+        </ControlRow>
+      </ControlGroup>
+
+      <ControlGroup label="Constraints">
         <div style={constraintsRowStyle}>
           <div style={selectsColumnStyle}>
             <Select
@@ -289,30 +222,29 @@ export const PositionPanel = memo(function PositionPanel({
             }}
           />
         </div>
-      </div>
+      </ControlGroup>
 
-      {/* Rotation Section */}
-      <div style={sectionStyle}>
-        <SectionLabel>Rotation</SectionLabel>
-        <div style={rotationRowStyle}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Input
-              value={settings.rotation}
-              onChange={(v) => {
-                updateSettings("rotation", v);
-              }}
-              prefix={<RotationIcon />}
-              suffix="°"
-              aria-label="Rotation"
+      <ControlGroup label="Rotation">
+        <ControlRow
+          action={
+            <TransformButtons
+              groups={transformGroups}
+              onAction={handleTransformAction}
+              size="sm"
             />
-          </div>
-          <TransformButtons
-            groups={transformGroups}
-            onAction={handleTransformAction}
-            size="sm"
+          }
+        >
+          <Input
+            value={settings.rotation}
+            onChange={(v) => {
+              updateSettings("rotation", v);
+            }}
+            prefix={<RotationIcon />}
+            suffix="°"
+            aria-label="Rotation"
           />
-        </div>
-      </div>
+        </ControlRow>
+      </ControlGroup>
     </Panel>
   );
 });

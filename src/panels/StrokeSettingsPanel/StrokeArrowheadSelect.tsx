@@ -8,6 +8,7 @@ import { Select, type SelectOption } from "../../components/Select/Select";
 import { Input } from "../../components/Input/Input";
 import { IconButton } from "../../components/IconButton/IconButton";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
+import { ControlRow } from "../../components/ControlRow/ControlRow";
 import {
   ArrowNoneIcon,
   ArrowTriangleIcon,
@@ -20,12 +21,7 @@ import {
   AlignStartIcon,
   AlignEndIcon,
 } from "../../icons";
-import {
-  COLOR_TEXT_MUTED,
-  SIZE_FONT_SM,
-  SPACE_SM,
-  SPACE_MD,
-} from "../../constants/styles";
+import { SPACE_MD } from "../../constants/styles";
 
 export type StrokeArrowheadSelectProps = {
   value: ArrowheadSettings;
@@ -56,19 +52,6 @@ const containerStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: SPACE_MD,
-};
-
-const rowStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: SPACE_SM,
-};
-
-const labelStyle: CSSProperties = {
-  width: "60px",
-  flexShrink: 0,
-  color: COLOR_TEXT_MUTED,
-  fontSize: SIZE_FONT_SM,
 };
 
 const alignOptions = [
@@ -106,65 +89,58 @@ export function StrokeArrowheadSelect({
 
   return (
     <div style={containerStyle}>
-      <div style={rowStyle}>
-        <span style={labelStyle}>Arrows:</span>
-        <div style={{ flex: 1 }}>
-          <Select
-            options={startOptions}
-            value={value.start}
-            onChange={(v) => update("start", v)}
+      <ControlRow
+        label="Arrows:"
+        gap="sm"
+        action={
+          <IconButton
+            icon={<SwapIcon />}
+            onClick={handleSwap}
+            aria-label="Swap arrows"
+            size="sm"
             disabled={disabled}
-            aria-label="Start arrow"
           />
-        </div>
-        <div style={{ flex: 1 }}>
-          <Select
-            options={endOptions}
-            value={value.end}
-            onChange={(v) => update("end", v)}
-            disabled={disabled}
-            aria-label="End arrow"
-          />
-        </div>
-        <IconButton
-          icon={<SwapIcon />}
-          onClick={handleSwap}
-          aria-label="Swap arrows"
-          size="sm"
+        }
+      >
+        <Select
+          options={startOptions}
+          value={value.start}
+          onChange={(v) => update("start", v)}
           disabled={disabled}
+          aria-label="Start arrow"
         />
-      </div>
+        <Select
+          options={endOptions}
+          value={value.end}
+          onChange={(v) => update("end", v)}
+          disabled={disabled}
+          aria-label="End arrow"
+        />
+      </ControlRow>
 
       {showScale && (
-        <div style={rowStyle}>
-          <span style={labelStyle}>Scale:</span>
-          <div style={{ flex: 1 }}>
-            <Input
-              value={value.startScale}
-              onChange={(v) => update("startScale", v)}
-              type="number"
-              suffix="%"
-              disabled={disabled || value.start === "none"}
-              aria-label="Start arrow scale"
-            />
-          </div>
-          <div style={{ flex: 1 }}>
-            <Input
-              value={value.endScale}
-              onChange={(v) => update("endScale", v)}
-              type="number"
-              suffix="%"
-              disabled={disabled || value.end === "none"}
-              aria-label="End arrow scale"
-            />
-          </div>
-          <div style={{ width: "28px" }} />
-        </div>
+        <ControlRow label="Scale:" gap="sm" spacer>
+          <Input
+            value={value.startScale}
+            onChange={(v) => update("startScale", v)}
+            type="number"
+            suffix="%"
+            disabled={disabled || value.start === "none"}
+            aria-label="Start arrow scale"
+          />
+          <Input
+            value={value.endScale}
+            onChange={(v) => update("endScale", v)}
+            type="number"
+            suffix="%"
+            disabled={disabled || value.end === "none"}
+            aria-label="End arrow scale"
+          />
+        </ControlRow>
       )}
 
       {showAlign && (
-        <div style={rowStyle}>
-          <span style={labelStyle}>Align:</span>
+        <ControlRow label="Align:" gap="sm">
           <SegmentedControl
             options={alignOptions}
             value={value.align}
@@ -173,7 +149,7 @@ export function StrokeArrowheadSelect({
             disabled={disabled}
             aria-label="Arrow alignment"
           />
-        </div>
+        </ControlRow>
       )}
     </div>
   );
