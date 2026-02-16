@@ -47,6 +47,15 @@
       ]
     },
     {
+      "id": "navigation",
+      "label": "Navigation",
+      "description": "Components for navigation and wayfinding",
+      "components": [
+        "Breadcrumb",
+        "ProjectMenu"
+      ]
+    },
+    {
       "id": "data-display",
       "label": "Data Display",
       "description": "Components for displaying and organizing data",

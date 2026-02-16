@@ -12,6 +12,7 @@ import {
   LuCode,
   LuPenTool,
   LuAppWindow,
+  LuCompass,
 } from "react-icons/lu";
 
 // Primitives demos
@@ -62,6 +63,10 @@ import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
 // Editor demos
 import { CodeEditorDemo } from "./pages/editor/CodeEditorDemo";
 import { TextEditorDemo } from "./pages/editor/TextEditorDemo";
+
+// Navigation demos
+import { BreadcrumbDemo } from "./pages/navigation/BreadcrumbDemo";
+import { ProjectMenuDemo } from "./pages/navigation/ProjectMenuDemo";
 
 // Canvas demos
 import { CanvasDemo } from "./pages/canvas/CanvasDemo";
@@ -319,6 +324,26 @@ export const demoCategories: DemoCategory[] = [
     ],
   },
   {
+    id: "navigation",
+    label: "Navigation",
+    icon: <LuCompass size={18} />,
+    base: "/components/navigation",
+    pages: [
+      {
+        id: "breadcrumb",
+        label: "Breadcrumb",
+        path: "breadcrumb",
+        element: <BreadcrumbDemo />,
+      },
+      {
+        id: "project-menu",
+        label: "ProjectMenu",
+        path: "project-menu",
+        element: <ProjectMenuDemo />,
+      },
+    ],
+  },
+  {
     id: "feedback",
     label: "Feedback",
     icon: <LuMessageSquare size={18} />,
@@ -405,6 +430,26 @@ export const demoCategories: DemoCategory[] = [
         label: "CanvasCheckerboard",
         path: "canvas-checkerboard",
         element: <CanvasCheckerboardDemo />,
+      },
+    ],
+  },
+  {
+    id: "app-demo",
+    label: "App Demos",
+    icon: <LuAppWindow size={18} />,
+    base: "/app-demo",
+    pages: [
+      {
+        id: "design",
+        label: "Design Tool",
+        path: "design",
+        element: <DesignDemo />,
+      },
+      {
+        id: "ide",
+        label: "IDE",
+        path: "ide",
+        element: <IDEDemo />,
       },
     ],
   },
