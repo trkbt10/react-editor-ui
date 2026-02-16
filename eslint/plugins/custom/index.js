@@ -15,6 +15,7 @@ import noIife from "./rules/no-iife.js";
 import noDemoImport from "./rules/no-demo-import.js";
 import noParentTypeReexport from "./rules/no-parent-type-reexport.js";
 import noBarrelImport from "./rules/no-barrel-import.js";
+import noComponentIndex from "./rules/no-component-index.js";
 
 export default {
   rules: {
@@ -32,5 +33,6 @@ export default {
     "no-demo-import": noDemoImport,
     "no-parent-type-reexport": noParentTypeReexport,
     "no-barrel-import": noBarrelImport,
+    "no-component-index": noComponentIndex,
   },
 };

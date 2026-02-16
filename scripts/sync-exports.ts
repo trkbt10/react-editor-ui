@@ -1,0 +1,314 @@
+#!/usr/bin/env bun
+/**
+ * @file Component exports synchronization script
+ *
+ * Scans src/components directories and updates:
+ * - package.json exports field
+ * - vite.config.ts entry points (via generated file)
+ *
+ * Entry point detection rules:
+ * 1. If index.ts exists in component folder -> use index.ts
+ * 2. Otherwise -> use [ComponentName].tsx
+ *
+ * Usage:
+ *   bun scripts/sync-exports.ts          # Check mode (shows diff)
+ *   bun scripts/sync-exports.ts --write  # Write changes
+ *   bun scripts/sync-exports.ts --json   # Output as JSON
+ */
+
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import { basename, join, resolve } from "path";
+
+const ROOT_DIR = resolve(import.meta.dirname, "..");
+const COMPONENTS_DIR = join(ROOT_DIR, "src/components");
+const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
+const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
+
+interface ComponentEntry {
+  name: string;
+  entryType: "index" | "named";
+  entryPath: string;
+  relativePath: string;
+}
+
+interface EntryCatalog {
+  generatedAt: string;
+  components: ComponentEntry[];
+}
+
+interface PackageJson {
+  exports: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface ExportEntry {
+  types: string;
+  import: string;
+  require: string;
+}
+
+/**
+ * Components that are allowed to use index.ts as entry point.
+ * These are complex modules with many submodules (e.g., Editor with code/, core/, text/, etc.)
+ */
+const ALLOWED_INDEX_ENTRIES = new Set(["Editor"]);
+
+/**
+ * Detects the entry point for a component directory
+ *
+ * Priority:
+ * 1. [ComponentName].ts (re-export file)
+ * 2. [ComponentName].tsx (direct component)
+ * 3. index.ts (only allowed for ALLOWED_INDEX_ENTRIES)
+ */
+function detectEntryPoint(componentDir: string, componentName: string): ComponentEntry | null {
+  const namedTsPath = join(componentDir, `${componentName}.ts`);
+  const namedTsxPath = join(componentDir, `${componentName}.tsx`);
+  const indexPath = join(componentDir, "index.ts");
+
+  // Priority 1: [ComponentName].ts (re-export file)
+  if (existsSync(namedTsPath)) {
+    return {
+      name: componentName,
+      entryType: "named",
+      entryPath: namedTsPath,
+      relativePath: `src/components/${componentName}/${componentName}.ts`,
+    };
+  }
+
+  // Priority 2: [ComponentName].tsx (direct component)
+  if (existsSync(namedTsxPath)) {
+    // Warn if index.ts also exists but is not allowed
+    if (existsSync(indexPath) && !ALLOWED_INDEX_ENTRIES.has(componentName)) {
+      console.warn(
+        `⚠ ${componentName}: has both ${componentName}.tsx and index.ts. ` +
+        `Rename index.ts to ${componentName}.ts to follow the naming convention.`
+      );
+    }
+    return {
+      name: componentName,
+      entryType: "named",
+      entryPath: namedTsxPath,
+      relativePath: `src/components/${componentName}/${componentName}.tsx`,
+    };
+  }
+
+  // Priority 3: index.ts (only for allowed components)
+  if (existsSync(indexPath)) {
+    if (ALLOWED_INDEX_ENTRIES.has(componentName)) {
+      return {
+        name: componentName,
+        entryType: "index",
+        entryPath: indexPath,
+        relativePath: `src/components/${componentName}/index.ts`,
+      };
+    }
+    console.error(
+      `✗ ${componentName}: index.ts is not allowed. ` +
+      `Rename to ${componentName}.ts to follow the naming convention.`
+    );
+    return null;
+  }
+
+  return null;
+}
+
+/**
+ * Scans components directory and builds entry catalog
+ */
+function buildEntryCatalog(): EntryCatalog {
+  const entries = readdirSync(COMPONENTS_DIR);
+  const components: ComponentEntry[] = [];
+
+  for (const entry of entries) {
+    const componentDir = join(COMPONENTS_DIR, entry);
+    const stat = statSync(componentDir);
+
+    if (!stat.isDirectory()) {
+      continue;
+    }
+
+    const componentEntry = detectEntryPoint(componentDir, entry);
+    if (componentEntry) {
+      components.push(componentEntry);
+    } else {
+      console.warn(`⚠ No entry point found for component: ${entry}`);
+    }
+  }
+
+  components.sort((a, b) => a.name.localeCompare(b.name));
+
+  return {
+    generatedAt: new Date().toISOString(),
+    components,
+  };
+}
+
+/**
+ * Generates package.json exports field
+ */
+function generateExports(catalog: EntryCatalog): Record<string, ExportEntry | string> {
+  const exports: Record<string, ExportEntry | string> = {
+    ".": {
+      types: "./dist/index.d.ts",
+      import: "./dist/index.js",
+      require: "./dist/index.cjs",
+    },
+    "./themes": {
+      types: "./dist/themes/index.d.ts",
+      import: "./dist/themes/index.js",
+      require: "./dist/themes/index.cjs",
+    },
+  };
+
+  for (const component of catalog.components) {
+    const exportKey = `./${component.name}`;
+
+    // Type definition path matches source structure
+    // For index.ts entries (Editor only): dist/components/Editor/index.d.ts
+    // For named entries: dist/components/Badge/Badge.d.ts
+    const typeFileName = component.entryType === "index" ? "index" : component.name;
+    const typesPath = `./dist/components/${component.name}/${typeFileName}.d.ts`;
+
+    exports[exportKey] = {
+      types: typesPath,
+      import: `./dist/components/${component.name}.js`,
+      require: `./dist/components/${component.name}.cjs`,
+    };
+  }
+
+  exports["./package.json"] = "./package.json";
+
+  return exports;
+}
+
+/**
+ * Generates vite entry points object
+ */
+function generateViteEntries(catalog: EntryCatalog): Record<string, string> {
+  const entries: Record<string, string> = {
+    index: "src/index.tsx",
+    "themes/index": "src/themes/index.ts",
+  };
+
+  for (const component of catalog.components) {
+    entries[`components/${component.name}`] = component.relativePath;
+  }
+
+  return entries;
+}
+
+/**
+ * Reads current package.json
+ */
+function readPackageJson(): PackageJson {
+  const content = readFileSync(PACKAGE_JSON_PATH, "utf-8");
+  return JSON.parse(content) as PackageJson;
+}
+
+/**
+ * Writes package.json with proper formatting
+ */
+function writePackageJson(pkg: PackageJson): void {
+  const content = JSON.stringify(pkg, null, 2) + "\n";
+  writeFileSync(PACKAGE_JSON_PATH, content);
+}
+
+/**
+ * Writes entry catalog JSON
+ */
+function writeEntryCatalog(catalog: EntryCatalog): void {
+  const content = JSON.stringify(catalog, null, 2) + "\n";
+  writeFileSync(ENTRY_CATALOG_PATH, content);
+}
+
+/**
+ * Compares two objects for deep equality
+ */
+function deepEqual(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Main execution
+ */
+function main(): void {
+  const args = process.argv.slice(2);
+  const writeMode = args.includes("--write");
+  const jsonMode = args.includes("--json");
+
+  const catalog = buildEntryCatalog();
+  const newExports = generateExports(catalog);
+  const viteEntries = generateViteEntries(catalog);
+
+  if (jsonMode) {
+    console.log(JSON.stringify({
+      catalog,
+      exports: newExports,
+      viteEntries,
+    }, null, 2));
+    return;
+  }
+
+  console.log(`📦 Found ${catalog.components.length} components\n`);
+
+  // Show component breakdown
+  const indexEntries = catalog.components.filter(c => c.entryType === "index");
+  const namedEntries = catalog.components.filter(c => c.entryType === "named");
+
+  console.log(`  index.ts entries: ${indexEntries.length}`);
+  indexEntries.forEach(c => console.log(`    - ${c.name}`));
+
+  console.log(`\n  [Name].tsx entries: ${namedEntries.length}`);
+  namedEntries.forEach(c => console.log(`    - ${c.name}`));
+
+  // Check for changes
+  const currentPkg = readPackageJson();
+  const exportsChanged = !deepEqual(currentPkg.exports, newExports);
+
+  let catalogChanged = true;
+  if (existsSync(ENTRY_CATALOG_PATH)) {
+    const currentCatalog = JSON.parse(readFileSync(ENTRY_CATALOG_PATH, "utf-8")) as EntryCatalog;
+    catalogChanged = !deepEqual(
+      currentCatalog.components,
+      catalog.components
+    );
+  }
+
+  console.log("\n📋 Status:");
+
+  if (!exportsChanged && !catalogChanged) {
+    console.log("  ✅ All exports are up to date");
+    return;
+  }
+
+  if (exportsChanged) {
+    console.log("  ⚠ package.json exports need update");
+  }
+  if (catalogChanged) {
+    console.log("  ⚠ entry-catalog.json needs update");
+  }
+
+  if (!writeMode) {
+    console.log("\n💡 Run with --write to apply changes");
+    console.log("\nPreview of package.json exports:");
+    console.log(JSON.stringify(newExports, null, 2));
+    process.exit(1);
+  }
+
+  // Write changes
+  console.log("\n✍️ Writing changes...");
+
+  if (exportsChanged) {
+    currentPkg.exports = newExports;
+    writePackageJson(currentPkg);
+    console.log("  ✅ Updated package.json");
+  }
+
+  writeEntryCatalog(catalog);
+  console.log("  ✅ Updated entry-catalog.json");
+
+  console.log("\n✅ Sync complete!");
+}
+
+main();

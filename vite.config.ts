@@ -2,9 +2,48 @@
  * @file Vite build configuration for library
  */
 
+import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+
+interface ComponentEntry {
+  name: string;
+  entryType: "index" | "named";
+  entryPath: string;
+  relativePath: string;
+}
+
+interface EntryCatalog {
+  generatedAt: string;
+  components: ComponentEntry[];
+}
+
+/**
+ * Loads entry points from generated catalog
+ * Falls back to base entries if catalog doesn't exist
+ */
+function loadEntries(): Record<string, string> {
+  const baseEntries: Record<string, string> = {
+    index: resolve(__dirname, "src/index.tsx"),
+    "themes/index": resolve(__dirname, "src/themes/index.ts"),
+  };
+
+  const catalogPath = resolve(__dirname, "scripts/entry-catalog.json");
+
+  if (!existsSync(catalogPath)) {
+    console.warn("⚠ entry-catalog.json not found. Run: bun scripts/sync-exports.ts --write");
+    return baseEntries;
+  }
+
+  const catalog: EntryCatalog = JSON.parse(readFileSync(catalogPath, "utf-8"));
+
+  for (const component of catalog.components) {
+    baseEntries[`components/${component.name}`] = resolve(__dirname, component.relativePath);
+  }
+
+  return baseEntries;
+}
 
 export default defineConfig({
   plugins: [
@@ -30,10 +69,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     lib: {
-      entry: {
-        index: resolve(__dirname, "src/index.tsx"),
-        "themes/index": resolve(__dirname, "src/themes/index.ts"),
-      },
+      entry: loadEntries(),
     },
     rollupOptions: {
       external: ["react", "react-dom", "react/jsx-runtime"],

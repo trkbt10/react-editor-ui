@@ -453,3 +453,65 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
     </Panel>
   );
 });
+
+// =============================================================================
+// Re-exports for module entry point
+// =============================================================================
+
+// Types (WidthProfile is defined locally, not re-exported from types.ts)
+export type {
+  StrokeCap,
+  StrokeJoin,
+  StrokeAlign,
+  DashCornerMode,
+  ArrowheadType,
+  ArrowheadAlign,
+  DashPattern,
+  ArrowheadSettings,
+  StrokePanelVariant,
+} from "./types";
+
+// Sub-components
+export { StrokeCapSelect } from "./StrokeCapSelect";
+export type { StrokeCapSelectProps } from "./StrokeCapSelect";
+
+export { StrokeJoinSelect } from "./StrokeJoinSelect";
+export type { StrokeJoinSelectProps } from "./StrokeJoinSelect";
+
+export { StrokeAlignSelect } from "./StrokeAlignSelect";
+export type { StrokeAlignSelectProps } from "./StrokeAlignSelect";
+
+export { StrokeDashEditor } from "./StrokeDashEditor";
+export type { StrokeDashEditorProps } from "./StrokeDashEditor";
+
+export { StrokeArrowheadSelect } from "./StrokeArrowheadSelect";
+export type { StrokeArrowheadSelectProps } from "./StrokeArrowheadSelect";
+
+export { StrokeProfileSelect } from "./StrokeProfileSelect";
+export type { StrokeProfileSelectProps } from "./StrokeProfileSelect";
+
+export { StrokeWeightInput } from "./StrokeWeightInput";
+export type { StrokeWeightInputProps, WeightUnit } from "./StrokeWeightInput";
+
+// Panel variants
+export {
+  StrokePanelExpanded,
+  createDefaultExpandedSettings,
+} from "./StrokePanelExpanded";
+export type {
+  StrokePanelExpandedProps,
+  StrokePanelExpandedSettings,
+} from "./StrokePanelExpanded";
+
+export {
+  StrokePanelCompact,
+  createDefaultCompactSettings,
+} from "./StrokePanelCompact";
+// BrushDirection is defined locally, not re-exported from StrokePanelCompact
+export type {
+  StrokePanelCompactProps,
+  StrokePanelCompactSettings,
+  StrokePanelCompactTab,
+  StrokeLineStyle,
+  BrushStyle,
+} from "./StrokePanelCompact";

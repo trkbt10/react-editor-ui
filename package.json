@@ -6,7 +6,7 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "packageManager": "bun@1.3.1",
+  "packageManager": "bun@1.3.9",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/trkbt10/react-editor-ui.git"
@@ -21,6 +21,181 @@
       "types": "./dist/themes/index.d.ts",
       "import": "./dist/themes/index.js",
       "require": "./dist/themes/index.cjs"
+    },
+    "./Badge": {
+      "types": "./dist/components/Badge/Badge.d.ts",
+      "import": "./dist/components/Badge.js",
+      "require": "./dist/components/Badge.cjs"
+    },
+    "./Button": {
+      "types": "./dist/components/Button/Button.d.ts",
+      "import": "./dist/components/Button.js",
+      "require": "./dist/components/Button.cjs"
+    },
+    "./Canvas": {
+      "types": "./dist/components/Canvas/Canvas.d.ts",
+      "import": "./dist/components/Canvas.js",
+      "require": "./dist/components/Canvas.cjs"
+    },
+    "./Checkbox": {
+      "types": "./dist/components/Checkbox/Checkbox.d.ts",
+      "import": "./dist/components/Checkbox.js",
+      "require": "./dist/components/Checkbox.cjs"
+    },
+    "./ColorInput": {
+      "types": "./dist/components/ColorInput/ColorInput.d.ts",
+      "import": "./dist/components/ColorInput.js",
+      "require": "./dist/components/ColorInput.cjs"
+    },
+    "./ColorPicker": {
+      "types": "./dist/components/ColorPicker/ColorPicker.d.ts",
+      "import": "./dist/components/ColorPicker.js",
+      "require": "./dist/components/ColorPicker.cjs"
+    },
+    "./ContextMenu": {
+      "types": "./dist/components/ContextMenu/ContextMenu.d.ts",
+      "import": "./dist/components/ContextMenu.js",
+      "require": "./dist/components/ContextMenu.cjs"
+    },
+    "./Editor": {
+      "types": "./dist/components/Editor/index.d.ts",
+      "import": "./dist/components/Editor.js",
+      "require": "./dist/components/Editor.cjs"
+    },
+    "./FillEditor": {
+      "types": "./dist/components/FillEditor/FillEditor.d.ts",
+      "import": "./dist/components/FillEditor.js",
+      "require": "./dist/components/FillEditor.cjs"
+    },
+    "./FontsPanel": {
+      "types": "./dist/components/FontsPanel/FontsPanel.d.ts",
+      "import": "./dist/components/FontsPanel.js",
+      "require": "./dist/components/FontsPanel.cjs"
+    },
+    "./GradientEditor": {
+      "types": "./dist/components/GradientEditor/GradientEditor.d.ts",
+      "import": "./dist/components/GradientEditor.js",
+      "require": "./dist/components/GradientEditor.cjs"
+    },
+    "./IconButton": {
+      "types": "./dist/components/IconButton/IconButton.d.ts",
+      "import": "./dist/components/IconButton.js",
+      "require": "./dist/components/IconButton.cjs"
+    },
+    "./Input": {
+      "types": "./dist/components/Input/Input.d.ts",
+      "import": "./dist/components/Input.js",
+      "require": "./dist/components/Input.cjs"
+    },
+    "./LayerItem": {
+      "types": "./dist/components/LayerItem/LayerItem.d.ts",
+      "import": "./dist/components/LayerItem.js",
+      "require": "./dist/components/LayerItem.cjs"
+    },
+    "./LogEntry": {
+      "types": "./dist/components/LogEntry/LogEntry.d.ts",
+      "import": "./dist/components/LogEntry.js",
+      "require": "./dist/components/LogEntry.cjs"
+    },
+    "./LogViewer": {
+      "types": "./dist/components/LogViewer/LogViewer.d.ts",
+      "import": "./dist/components/LogViewer.js",
+      "require": "./dist/components/LogViewer.cjs"
+    },
+    "./Panel": {
+      "types": "./dist/components/Panel/Panel.d.ts",
+      "import": "./dist/components/Panel.js",
+      "require": "./dist/components/Panel.cjs"
+    },
+    "./Portal": {
+      "types": "./dist/components/Portal/Portal.d.ts",
+      "import": "./dist/components/Portal.js",
+      "require": "./dist/components/Portal.cjs"
+    },
+    "./PositionPanel": {
+      "types": "./dist/components/PositionPanel/PositionPanel.d.ts",
+      "import": "./dist/components/PositionPanel.js",
+      "require": "./dist/components/PositionPanel.cjs"
+    },
+    "./PropertyGrid": {
+      "types": "./dist/components/PropertyGrid/PropertyGrid.d.ts",
+      "import": "./dist/components/PropertyGrid.js",
+      "require": "./dist/components/PropertyGrid.cjs"
+    },
+    "./PropertyRow": {
+      "types": "./dist/components/PropertyRow/PropertyRow.d.ts",
+      "import": "./dist/components/PropertyRow.js",
+      "require": "./dist/components/PropertyRow.cjs"
+    },
+    "./PropertySection": {
+      "types": "./dist/components/PropertySection/PropertySection.d.ts",
+      "import": "./dist/components/PropertySection.js",
+      "require": "./dist/components/PropertySection.cjs"
+    },
+    "./SectionHeader": {
+      "types": "./dist/components/SectionHeader/SectionHeader.d.ts",
+      "import": "./dist/components/SectionHeader.js",
+      "require": "./dist/components/SectionHeader.cjs"
+    },
+    "./SegmentedControl": {
+      "types": "./dist/components/SegmentedControl/SegmentedControl.d.ts",
+      "import": "./dist/components/SegmentedControl.js",
+      "require": "./dist/components/SegmentedControl.cjs"
+    },
+    "./Select": {
+      "types": "./dist/components/Select/Select.d.ts",
+      "import": "./dist/components/Select.js",
+      "require": "./dist/components/Select.cjs"
+    },
+    "./Slider": {
+      "types": "./dist/components/Slider/Slider.d.ts",
+      "import": "./dist/components/Slider.js",
+      "require": "./dist/components/Slider.cjs"
+    },
+    "./SplitButton": {
+      "types": "./dist/components/SplitButton/SplitButton.d.ts",
+      "import": "./dist/components/SplitButton.js",
+      "require": "./dist/components/SplitButton.cjs"
+    },
+    "./StatusBar": {
+      "types": "./dist/components/StatusBar/StatusBar.d.ts",
+      "import": "./dist/components/StatusBar.js",
+      "require": "./dist/components/StatusBar.cjs"
+    },
+    "./StrokeSettingsPanel": {
+      "types": "./dist/components/StrokeSettingsPanel/StrokeSettingsPanel.d.ts",
+      "import": "./dist/components/StrokeSettingsPanel.js",
+      "require": "./dist/components/StrokeSettingsPanel.cjs"
+    },
+    "./Toolbar": {
+      "types": "./dist/components/Toolbar/Toolbar.d.ts",
+      "import": "./dist/components/Toolbar.js",
+      "require": "./dist/components/Toolbar.cjs"
+    },
+    "./Tooltip": {
+      "types": "./dist/components/Tooltip/Tooltip.d.ts",
+      "import": "./dist/components/Tooltip.js",
+      "require": "./dist/components/Tooltip.cjs"
+    },
+    "./TransformButtons": {
+      "types": "./dist/components/TransformButtons/TransformButtons.d.ts",
+      "import": "./dist/components/TransformButtons.js",
+      "require": "./dist/components/TransformButtons.cjs"
+    },
+    "./TreeItem": {
+      "types": "./dist/components/TreeItem/TreeItem.d.ts",
+      "import": "./dist/components/TreeItem.js",
+      "require": "./dist/components/TreeItem.cjs"
+    },
+    "./TypographyPanel": {
+      "types": "./dist/components/TypographyPanel/TypographyPanel.d.ts",
+      "import": "./dist/components/TypographyPanel.js",
+      "require": "./dist/components/TypographyPanel.cjs"
+    },
+    "./UnitInput": {
+      "types": "./dist/components/UnitInput/UnitInput.d.ts",
+      "import": "./dist/components/UnitInput.js",
+      "require": "./dist/components/UnitInput.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -45,37 +220,40 @@
     "test:e2e:ui": "playwright test --ui",
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:tokens:fix": "bun scripts/check-tokens.ts --fix",
-    "check:tokens:strict": "bun scripts/check-tokens.ts --strict"
+    "check:tokens:strict": "bun scripts/check-tokens.ts --strict",
+    "sync:exports": "bun scripts/sync-exports.ts",
+    "sync:exports:write": "bun scripts/sync-exports.ts --write",
+    "prebuild": "bun scripts/sync-exports.ts --write"
   },
   "devDependencies": {
-    "@playwright/test": "^1.52.0",
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
-    "@types/node": "^24.9.1",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
-    "@typescript-eslint/parser": "^8.46.2",
-    "@vitejs/plugin-react": "^5.1.0",
-    "@vitest/coverage-v8": "^4.0.3",
-    "eslint": "^9.38.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^24.10.13",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsdoc": "^61.1.9",
-    "jsdom": "^27.0.1",
-    "prettier": "^3.6.2",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "eslint-plugin-jsdoc": "^61.7.1",
+    "jsdom": "^27.4.0",
+    "prettier": "^3.8.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "react-icons": "^5.5.0",
-    "react-panel-layout": "^0.6.1",
-    "react-router": "^7.9.4",
-    "rimraf": "^6.0.1",
-    "shiki": "^3.20.0",
+    "react-panel-layout": "^0.7.0",
+    "react-router": "^7.13.0",
+    "rimraf": "^6.1.2",
+    "shiki": "^3.22.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.2",
-    "vite": "^7.1.12",
-    "vitest": "^4.0.3"
+    "typescript-eslint": "^8.55.0",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   },
   "dependencies": {}
 }
