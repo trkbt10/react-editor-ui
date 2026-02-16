@@ -304,16 +304,16 @@ const lightColorTokens: ColorTokens = {
   "tooltip-color": "#ffffff",
 
   // Canvas
-  "canvas-ruler-bg": "#2d2d2d",
-  "canvas-ruler-text": "#9ca3af",
-  "canvas-ruler-tick": "#6b7280",
-  "canvas-ruler-indicator": "#ef4444",
-  "canvas-grid-major": "rgba(255, 255, 255, 0.1)",
-  "canvas-grid-minor": "rgba(255, 255, 255, 0.04)",
-  "canvas-grid-origin": "rgba(59, 130, 246, 0.6)",
-  "canvas-guide": "rgba(59, 130, 246, 0.8)",
-  "canvas-checker-light": "#3a3a3a",
-  "canvas-checker-dark": "#2d2d2d",
+  "canvas-ruler-bg": "#f3f4f6",
+  "canvas-ruler-text": "#6b7280",
+  "canvas-ruler-tick": "#9ca3af",
+  "canvas-ruler-indicator": "#dc2626",
+  "canvas-grid-major": "rgba(0, 0, 0, 0.1)",
+  "canvas-grid-minor": "rgba(0, 0, 0, 0.04)",
+  "canvas-grid-origin": "rgba(37, 99, 235, 0.6)",
+  "canvas-guide": "rgba(37, 99, 235, 0.8)",
+  "canvas-checker-light": "#e5e7eb",
+  "canvas-checker-dark": "#d1d5db",
 
   // Shadows
   "shadow-sm": "0 1px 2px rgba(0, 0, 0, 0.05)",
