@@ -42,6 +42,7 @@ interface PackageJson {
 }
 
 interface ExportEntry {
+  source: string;
   types: string;
   import: string;
   require: string;
@@ -150,11 +151,13 @@ function buildEntryCatalog(): EntryCatalog {
 function generateExports(catalog: EntryCatalog): Record<string, ExportEntry | string> {
   const exports: Record<string, ExportEntry | string> = {
     ".": {
+      source: "./src/index.tsx",
       types: "./dist/index.d.ts",
       import: "./dist/index.js",
       require: "./dist/index.cjs",
     },
     "./themes": {
+      source: "./src/themes/index.ts",
       types: "./dist/themes/index.d.ts",
       import: "./dist/themes/index.js",
       require: "./dist/themes/index.cjs",
@@ -171,6 +174,7 @@ function generateExports(catalog: EntryCatalog): Record<string, ExportEntry | st
     const typesPath = `./dist/components/${component.name}/${typeFileName}.d.ts`;
 
     exports[exportKey] = {
+      source: `./${component.relativePath}`,
       types: typesPath,
       import: `./dist/components/${component.name}.js`,
       require: `./dist/components/${component.name}.cjs`,
