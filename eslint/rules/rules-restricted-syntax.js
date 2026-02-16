@@ -38,18 +38,13 @@ export default {
     },
     {
       selector:
-        "CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|fn|spyOn|restoreAllMocks|resetAllMocks)$/]",
-      message: "Mock APIs (vi.mock/fn/spyOn/...) are prohibited. Prefer DI or simple fakes instead.",
-    },
-    {
-      selector:
         "CallExpression[callee.object.name='jest'][callee.property.name=/^(mock|fn|spyOn|restoreAllMocks|resetAllMocks)$/]",
-      message: "Mock APIs (jest.mock/fn/spyOn/...) are prohibited. Prefer DI or simple fakes instead.",
+      message: "Jest mock APIs are prohibited. Use vitest instead.",
     },
     {
       selector:
         "CallExpression[callee.object.name='mock'][callee.property.name=/^(module|object|replace|restore|reset)$/]",
-      message: "Mock APIs (bun:test mock.*) are prohibited. Prefer DI or simple fakes instead.",
+      message: "Bun mock APIs are prohibited. Use vitest instead.",
     },
   ],
 
