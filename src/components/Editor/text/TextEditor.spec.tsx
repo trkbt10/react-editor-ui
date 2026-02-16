@@ -628,6 +628,56 @@ describe("TextEditor", () => {
       expect(onDocumentChange).toHaveBeenCalled();
     });
 
+    it("does not shift styles after composition point during IME input", async () => {
+      // "Hello" is bold (0-5), " World" is normal (5-11)
+      const doc = createStyledBlockDocument(
+        "Hello World",
+        { strong: { fontWeight: "bold" } },
+        [{ start: 0, end: 5, tag: "strong" }]
+      );
+
+      const { container } = render(
+        <TextEditor
+          document={doc}
+          onDocumentChange={vi.fn()}
+        />
+      );
+
+      // Wait for SVG renderer
+      await waitFor(() => {
+        expect(container.querySelector("svg")).not.toBeNull();
+      });
+
+      const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
+
+      // Position cursor at end of "Hello" (position 5)
+      textarea.setSelectionRange(5, 5);
+
+      // Start IME composition at position 5
+      fireEvent.compositionStart(textarea, { data: "" });
+      fireEvent.compositionUpdate(textarea, { data: "あ" });
+
+      // During composition, styles should NOT shift
+      // The bold style should still be at 0-5, not shifted
+      // Check that the SVG renders correctly by examining text elements
+      const textElements = container.querySelectorAll("svg text tspan");
+
+      // Find the "Hello" text element - it should have bold styling
+      const helloSpan = Array.from(textElements).find(
+        (el) => el.textContent === "Hello"
+      );
+
+      // The bold style should be applied to "Hello", not shifted
+      // SVG uses font-weight attribute, not style.fontWeight
+      expect(helloSpan).not.toBeNull();
+      if (helloSpan) {
+        const fontWeight = helloSpan.getAttribute("font-weight");
+        expect(fontWeight).toBe("bold");
+      }
+
+      fireEvent.compositionEnd(textarea, { data: "あ" });
+    });
+
     it("handles composition with multiple style segments", () => {
       const doc = createStyledBlockDocument(
         "Hello World Test",

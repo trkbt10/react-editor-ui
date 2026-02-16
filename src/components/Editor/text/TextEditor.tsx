@@ -17,7 +17,6 @@ import {
   type Ref,
 } from "react";
 import type { TextEditorProps, TextEditorHandle, TextSelectionEvent } from "./types";
-import type { TextStyleSegment } from "../core/types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
 import { useLineIndex } from "../core/useLineIndex";
 import {
@@ -25,7 +24,6 @@ import {
   toGlobalSegments,
   getTagsAtBlockOffset,
 } from "../core/blockDocument";
-import { blockPositionToGlobalOffset } from "../core/blockPosition";
 import { executeBlockCommand } from "./commands";
 import { calculateSelectionRects } from "../core/coordinates";
 import { useBlockEditorCore, type GetOffsetFromPositionFn } from "../core/useBlockEditorCore";
@@ -172,79 +170,17 @@ export const TextEditor = forwardRef(function TextEditor(
   // Font metrics for CJK character measurement
   const fontMetrics = useFontMetrics(core.containerRef);
 
-  // Adjust styles for IME composition using block-based state
-  // During composition, we need to shift global styles based on composition offset
-  const adjustedStyles = useMemo((): readonly TextStyleSegment[] => {
-    if (!core.composition.isComposing || !core.composition.blockId) {
-      return globalStyles;
-    }
-
-    // Convert block-local offset to global offset
-    const globalOffset = blockPositionToGlobalOffset(blockDocument, {
-      blockId: core.composition.blockId,
-      offset: core.composition.localOffset,
-    });
-
-    if (globalOffset === undefined) {
-      return globalStyles;
-    }
-
-    const { text, replacedLength } = core.composition;
-    const compositionEnd = globalOffset + replacedLength;
-    const shift = text.length - replacedLength;
-
-    return globalStyles.map((s) => {
-      // Style is entirely before composition - no change
-      if (s.end <= globalOffset) {
-        return s;
-      }
-
-      // Style is entirely inside composition range - skip it
-      if (s.start >= globalOffset && s.end <= compositionEnd) {
-        return null;
-      }
-
-      // Style is entirely after composition - shift it
-      if (s.start >= compositionEnd) {
-        return { ...s, start: s.start + shift, end: s.end + shift };
-      }
-
-      // Style overlaps with composition - truncate or split
-      if (s.start < globalOffset && s.end > compositionEnd) {
-        // Style spans entire composition - shrink it
-        return { ...s, end: s.end + shift };
-      } else if (s.start < globalOffset) {
-        // Style ends within composition - truncate
-        return { ...s, end: globalOffset };
-      } else {
-        // Style starts within composition - shift start
-        return { ...s, start: globalOffset + shift, end: s.end + shift };
-      }
-    }).filter((s): s is NonNullable<typeof s> => s !== null);
-  }, [globalStyles, core.composition, blockDocument]);
+  // During IME composition, the renderer still shows the base document text
+  // (not the display text with composition). Therefore, styles should NOT be
+  // shifted - they remain aligned with the base document coordinates.
+  // The composition text is rendered separately via the composition highlight.
+  const adjustedStyles = globalStyles;
 
   // Text styles management
   const { tokenizer, tokenStyles } = useTextStyles(adjustedStyles);
 
-  // Style version for cache invalidation
-  const styleVersion = useMemo(() => {
-    const baseStyles = adjustedStyles;
-    if (baseStyles.length === 0) {
-      return core.composition.isComposing ? -1 : 0;
-    }
-    const first = baseStyles[0];
-    const last = baseStyles[baseStyles.length - 1];
-    const computeCompositionHash = (): number => {
-      if (!core.composition.isComposing) {
-        return 0;
-      }
-      return core.composition.text.length * 10000;
-    };
-    return baseStyles.length * 1000 + first.start + last.end + computeCompositionHash();
-  }, [adjustedStyles, core.composition.isComposing, core.composition.text.length]);
-
-  // Token cache
-  const tokenCache = useTextTokenCache(tokenizer, lineIndex, styleVersion);
+  // Token cache - use document version for cache invalidation
+  const tokenCache = useTextTokenCache(tokenizer, lineIndex, blockDocument.version);
 
   // Editor styles
   const editorStyles = useEditorStyles({
