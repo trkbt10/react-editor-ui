@@ -196,10 +196,18 @@ type CanvasDrawContext = {
  * Parse fontSize string to number (e.g., "16px" -> 16, "1.5em" -> baseSize * 1.5)
  */
 function parseFontSize(size: string | undefined, baseSize: number): number {
-  if (!size) return baseSize;
-  if (size.endsWith("px")) return parseFloat(size);
-  if (size.endsWith("em")) return parseFloat(size) * baseSize;
-  if (size.endsWith("%")) return (parseFloat(size) / 100) * baseSize;
+  if (!size) {
+    return baseSize;
+  }
+  if (size.endsWith("px")) {
+    return parseFloat(size);
+  }
+  if (size.endsWith("em")) {
+    return parseFloat(size) * baseSize;
+  }
+  if (size.endsWith("%")) {
+    return (parseFloat(size) / 100) * baseSize;
+  }
   const num = parseFloat(size);
   return Number.isNaN(num) ? baseSize : num;
 }
@@ -350,58 +358,91 @@ function calculateCanvasTokenPositions(
 }
 
 /**
- * Get X position for a column using canvas measurement.
+ * Calculate per-character cumulative positions for a token.
+ * Returns array where positions[i] is the X position at the start of character i.
  */
-function getCanvasColumnX(
+function calculateCharacterPositions(
   ctx: CanvasRenderingContext2D,
+  text: string,
+  startX: number
+): readonly number[] {
+  const positions: number[] = [startX];
+  let currentX = startX;
+
+  for (let i = 0; i < text.length; i++) {
+    const charWidth = ctx.measureText(text[i]).width;
+    currentX += charWidth;
+    positions.push(currentX);
+  }
+
+  return positions;
+}
+
+/**
+ * Token character positions cache type.
+ * charPositions[i] = X position at start of character i within the token.
+ * charPositions[charPositions.length - 1] = X position at end of token.
+ */
+type TokenCharPositions = {
+  readonly tokenStart: number; // token.start (0-based column in line)
+  readonly charPositions: readonly number[]; // Per-character cumulative X positions
+};
+
+/**
+ * Line token cache with per-character positions for fast column lookup.
+ */
+type LineTokenCacheEntry = {
+  tokens: readonly Token[];
+  positions: readonly number[]; // Token start X positions
+  charPositionsPerToken: readonly TokenCharPositions[]; // Per-character positions
+  lineText: string;
+  lineEndX: number; // X position at end of line
+};
+
+/**
+ * Get X position for a column using cached character positions.
+ * This is O(tokens) + O(1) instead of requiring measureText calls.
+ */
+function getColumnXFromCachedPositions(
+  cached: LineTokenCacheEntry,
   column: number,
-  tokens: readonly Token[],
-  tokenPositions: readonly number[],
-  tokenStyles: TokenStyleMap | undefined,
-  fontSize: number,
-  fontFamily: string,
-  codeXOffset: number,
-  lineText: string
+  codeXOffset: number
 ): number {
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    if (column <= token.start + 1) {
-      return tokenPositions[i];
-    }
-    if (column <= token.end + 1) {
-      const charOffset = column - token.start - 1;
-      const textWithinToken = token.text.slice(0, charOffset);
+  const { tokens, charPositionsPerToken, lineEndX, lineText } = cached;
 
-      const style = tokenStyles?.[token.type];
-      const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
-      const fontWeight = (style?.fontWeight as string) ?? "normal";
-      const fontStyle = (style?.fontStyle as string) ?? "normal";
-      const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
-
-      ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
-      const widthWithinToken = ctx.measureText(textWithinToken).width;
-
-      return tokenPositions[i] + widthWithinToken;
-    }
-  }
-
-  // Position at or past end of line
-  if (tokens.length > 0 && tokenPositions.length > 0) {
-    const lastIdx = tokens.length - 1;
-    const lastToken = tokens[lastIdx];
-    const style = tokenStyles?.[lastToken.type];
-    const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
-    const fontWeight = (style?.fontWeight as string) ?? "normal";
-    const fontStyle = (style?.fontStyle as string) ?? "normal";
-    const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
-
-    ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
-    return tokenPositions[lastIdx] + ctx.measureText(lastToken.text).width;
-  }
+  // Column is 1-based, token.start/end are 0-based
+  const targetCol = column - 1;
 
   // Empty line
-  ctx.font = `normal normal ${fontSize}px ${fontFamily}`;
-  return codeXOffset + ctx.measureText(lineText.slice(0, column - 1)).width;
+  if (tokens.length === 0 || charPositionsPerToken.length === 0) {
+    // For empty lines, just return the base offset
+    return codeXOffset;
+  }
+
+  // Find which token contains this column
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const charPos = charPositionsPerToken[i];
+
+    // Before this token
+    if (targetCol < token.start) {
+      return charPos.charPositions[0];
+    }
+
+    // Within this token
+    if (targetCol <= token.end) {
+      const offsetInToken = targetCol - token.start;
+      // charPositions has length = text.length + 1 (includes end position)
+      if (offsetInToken < charPos.charPositions.length) {
+        return charPos.charPositions[offsetInToken];
+      }
+      // Fallback to end of token
+      return charPos.charPositions[charPos.charPositions.length - 1];
+    }
+  }
+
+  // Past end of line - return end position
+  return lineEndX;
 }
 
 // =============================================================================
@@ -489,6 +530,84 @@ type BlockLineProps = {
   readonly localStyles: readonly LocalStyleSegment[];
   readonly localOffset: number;
 };
+
+/**
+ * Custom comparison for BlockLine memo.
+ * Compares highlights by value since they're computed per line.
+ */
+function blockLinePropsAreEqual(
+  prev: BlockLineProps,
+  next: BlockLineProps
+): boolean {
+  // Text content changed
+  if (prev.lineText !== next.lineText) {
+    return false;
+  }
+
+  // Position/style props changed
+  if (
+    prev.lineNumber !== next.lineNumber ||
+    prev.lineIndex !== next.lineIndex ||
+    prev.y !== next.y ||
+    prev.xOffset !== next.xOffset ||
+    prev.lineHeight !== next.lineHeight ||
+    prev.showLineNumbers !== next.showLineNumbers ||
+    prev.lineNumberWidth !== next.lineNumberWidth ||
+    prev.fontFamily !== next.fontFamily ||
+    prev.fontSize !== next.fontSize ||
+    prev.localOffset !== next.localOffset
+  ) {
+    return false;
+  }
+
+  // Reference-based comparison for stable objects
+  if (
+    prev.measureText !== next.measureText ||
+    prev.tokenCache !== next.tokenCache ||
+    prev.tokenStyles !== next.tokenStyles
+  ) {
+    return false;
+  }
+
+  // Compare cursor
+  if (prev.cursor !== next.cursor) {
+    if (!prev.cursor || !next.cursor) {
+      return false; // One is undefined
+    }
+    if (prev.cursor.column !== next.cursor.column ||
+        prev.cursor.blinking !== next.cursor.blinking) {
+      return false;
+    }
+  }
+
+  // Compare highlights by value
+  if (prev.highlights.length !== next.highlights.length) {
+    return false;
+  }
+  for (let i = 0; i < prev.highlights.length; i++) {
+    const ph = prev.highlights[i];
+    const nh = next.highlights[i];
+    if (ph.type !== nh.type ||
+        ph.startColumn !== nh.startColumn ||
+        ph.endColumn !== nh.endColumn) {
+      return false;
+    }
+  }
+
+  // Compare localStyles
+  if (prev.localStyles.length !== next.localStyles.length) {
+    return false;
+  }
+  for (let i = 0; i < prev.localStyles.length; i++) {
+    const ps = prev.localStyles[i];
+    const ns = next.localStyles[i];
+    if (ps.start !== ns.start || ps.end !== ns.end || ps.style !== ns.style) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
   const {
@@ -705,7 +824,7 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
       {renderCursor()}
     </g>
   );
-});
+}, blockLinePropsAreEqual);
 
 // =============================================================================
 // Single Block Component
@@ -725,6 +844,123 @@ type SingleBlockProps = {
   readonly fontFamily: string;
   readonly fontSize: number;
 };
+
+/**
+ * Check if cursor is within a block's line range.
+ */
+function cursorInBlock(cursor: CursorState | undefined, startLine: number, lineCount: number): boolean {
+  if (!cursor?.visible) return false;
+  return cursor.line >= startLine && cursor.line < startLine + lineCount;
+}
+
+/**
+ * Check if any highlights overlap with a block's line range.
+ */
+function highlightsOverlapBlock(
+  highlights: readonly HighlightRange[],
+  startLine: number,
+  lineCount: number
+): boolean {
+  const endLine = startLine + lineCount - 1;
+  return highlights.some((h) => h.startLine <= endLine && h.endLine >= startLine);
+}
+
+/**
+ * Custom comparison for SingleBlock memo.
+ * Only re-render if:
+ * - Block content or position changed
+ * - Cursor moved into/out of this block, or moved within this block
+ * - Highlights that overlap this block changed
+ */
+function singleBlockPropsAreEqual(
+  prev: SingleBlockProps,
+  next: SingleBlockProps
+): boolean {
+  // Block info changed (content, position, etc.)
+  // Compare by value since info objects may be recreated
+  const prevInfo = prev.info;
+  const nextInfo = next.info;
+  if (prevInfo.block.id !== nextInfo.block.id ||
+      prevInfo.block.content !== nextInfo.block.content ||
+      prevInfo.startLine !== nextInfo.startLine ||
+      prevInfo.lineCount !== nextInfo.lineCount ||
+      prevInfo.y !== nextInfo.y ||
+      prevInfo.height !== nextInfo.height) {
+    return false;
+  }
+
+  // Styling props changed
+  if (
+    prev.padding !== next.padding ||
+    prev.lineHeight !== next.lineHeight ||
+    prev.showLineNumbers !== next.showLineNumbers ||
+    prev.lineNumberWidth !== next.lineNumberWidth ||
+    prev.fontFamily !== next.fontFamily ||
+    prev.fontSize !== next.fontSize
+  ) {
+    return false;
+  }
+
+  // Reference-based comparison for stable objects
+  if (prev.measureText !== next.measureText ||
+      prev.tokenCache !== next.tokenCache ||
+      prev.tokenStyles !== next.tokenStyles) {
+    return false;
+  }
+
+  const { startLine, lineCount } = prevInfo;
+
+  // Check if cursor affects this block
+  const prevCursorInBlock = cursorInBlock(prev.cursor, startLine, lineCount);
+  const nextCursorInBlock = cursorInBlock(next.cursor, startLine, lineCount);
+
+  if (prevCursorInBlock !== nextCursorInBlock) {
+    // Cursor moved into or out of this block
+    return false;
+  }
+
+  if (prevCursorInBlock && nextCursorInBlock) {
+    // Cursor is in this block - check if position changed
+    if (prev.cursor?.line !== next.cursor?.line ||
+        prev.cursor?.column !== next.cursor?.column ||
+        prev.cursor?.blinking !== next.cursor?.blinking) {
+      return false;
+    }
+  }
+
+  // Check if highlights affecting this block changed
+  const prevHasHighlights = highlightsOverlapBlock(prev.highlights, startLine, lineCount);
+  const nextHasHighlights = highlightsOverlapBlock(next.highlights, startLine, lineCount);
+
+  if (prevHasHighlights !== nextHasHighlights) {
+    return false;
+  }
+
+  if (prevHasHighlights && nextHasHighlights) {
+    // Both have highlights - compare the actual highlights for this block
+    const prevBlockHighlights = getBlockHighlights(startLine, lineCount, prev.highlights);
+    const nextBlockHighlights = getBlockHighlights(startLine, lineCount, next.highlights);
+
+    if (prevBlockHighlights.length !== nextBlockHighlights.length) {
+      return false;
+    }
+
+    // Compare each highlight
+    for (let i = 0; i < prevBlockHighlights.length; i++) {
+      const ph = prevBlockHighlights[i];
+      const nh = nextBlockHighlights[i];
+      if (ph.type !== nh.type ||
+          ph.startLine !== nh.startLine ||
+          ph.startColumn !== nh.startColumn ||
+          ph.endLine !== nh.endLine ||
+          ph.endColumn !== nh.endColumn) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
 
 const SingleBlock = memo(function SingleBlock({
   info,
@@ -811,7 +1047,7 @@ const SingleBlock = memo(function SingleBlock({
   };
 
   return <g data-block-id={block.id}>{renderLines()}</g>;
-});
+}, singleBlockPropsAreEqual);
 
 // =============================================================================
 // Canvas Block Renderer
@@ -833,6 +1069,55 @@ type CanvasBlockRendererProps = {
   readonly totalHeight: number;
 };
 
+/**
+ * Custom comparison for CanvasBlockRenderer memo.
+ * Optimized for performance - avoids deep comparison of arrays.
+ * The useEffect with requestAnimationFrame handles actual change detection.
+ */
+function canvasBlockRendererPropsAreEqual(
+  prev: CanvasBlockRendererProps,
+  next: CanvasBlockRendererProps
+): boolean {
+  // Compare primitive props
+  if (
+    prev.padding !== next.padding ||
+    prev.lineHeight !== next.lineHeight ||
+    prev.showLineNumbers !== next.showLineNumbers ||
+    prev.lineNumberWidth !== next.lineNumberWidth ||
+    prev.fontFamily !== next.fontFamily ||
+    prev.fontSize !== next.fontSize ||
+    prev.width !== next.width ||
+    prev.totalHeight !== next.totalHeight
+  ) {
+    return false;
+  }
+
+  // Compare cursor by reference (cursor object is recreated on change)
+  if (prev.cursor !== next.cursor) {
+    return false;
+  }
+
+  // Compare highlights by reference (array is recreated on change)
+  if (prev.highlights !== next.highlights) {
+    return false;
+  }
+
+  // Compare blockInfos by reference
+  if (prev.blockInfos !== next.blockInfos) {
+    return false;
+  }
+
+  // tokenCache and tokenStyles are typically stable references
+  if (prev.tokenCache !== next.tokenCache) {
+    return false;
+  }
+  if (prev.tokenStyles !== next.tokenStyles) {
+    return false;
+  }
+
+  return true;
+}
+
 const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
   blockInfos,
   padding,
@@ -849,22 +1134,45 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
   totalHeight,
 }: CanvasBlockRendererProps): ReactNode {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafIdRef = useRef<number | null>(null);
 
-  // Draw function wrapped in useEffectEvent for stable reference
-  const draw = useEffectEvent(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  // Offscreen canvas for text layer (cached)
+  const textCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const textCacheKeyRef = useRef<string>("");
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // Cached token positions per line (lineNumber -> LineTokenCacheEntry)
+  // Includes per-character positions for fast column X lookup without measureText
+  const lineTokenCacheRef = useRef<Map<number, LineTokenCacheEntry>>(new Map());
 
-    // Handle device pixel ratio for sharp rendering
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = totalHeight * dpr;
+  // Generate cache key for text layer (changes when text content changes)
+  const textCacheKey = useMemo(() => {
+    return blockInfos.map((info) => `${info.block.id}:${info.block.content}`).join("|");
+  }, [blockInfos]);
+
+  // Draw text layer to offscreen canvas (only when text changes)
+  const drawTextLayer = useEffectEvent((dpr: number) => {
+    // Check if we need to redraw text layer
+    if (textCacheKeyRef.current === textCacheKey && textCanvasRef.current) {
+      return textCanvasRef.current;
+    }
+
+    // Clear line token cache when text changes
+    lineTokenCacheRef.current.clear();
+
+    // Create or resize offscreen canvas
+    if (!textCanvasRef.current) {
+      textCanvasRef.current = document.createElement("canvas");
+    }
+    const textCanvas = textCanvasRef.current;
+    textCanvas.width = width * dpr;
+    textCanvas.height = totalHeight * dpr;
+
+    const ctx = textCanvas.getContext("2d");
+    if (!ctx) {
+      return null;
+    }
+
     ctx.scale(dpr, dpr);
-
-    // Clear canvas
     ctx.clearRect(0, 0, width, totalHeight);
 
     const drawContext: CanvasDrawContext = {
@@ -880,21 +1188,11 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
 
     const codeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
 
-    // Draw each block
+    // Draw each block (text and line numbers only)
     for (const info of blockInfos) {
       const { block, startLine, y: blockY } = info;
       const lines = block.content.split("\n");
 
-      // Get block highlights
-      const blockHighlights = getBlockHighlights(startLine, lines.length, highlights);
-
-      // Calculate line local offsets
-      const lineLocalOffsets: number[] = [0];
-      for (let i = 0; i < lines.length - 1; i++) {
-        lineLocalOffsets.push(lineLocalOffsets[i] + lines[i].length + 1);
-      }
-
-      // Draw each line
       for (let i = 0; i < lines.length; i++) {
         const lineText = lines[i];
         const lineNumber = startLine + i;
@@ -909,57 +1207,212 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
         // Get tokens for this line
         const tokens = tokenCache.getTokens(lineText, lineIndex);
 
-        // Calculate token positions
-        const tokenPositions = calculateCanvasTokenPositions(
-          ctx,
-          tokens,
-          tokenStyles,
-          codeXOffset,
-          fontSize,
-          fontFamily
-        );
+        // Calculate token positions and per-character positions
+        const tokenPositions: number[] = [];
+        const charPositionsPerToken: TokenCharPositions[] = [];
+        let currentX = codeXOffset;
 
-        // Get column X position helper
-        const getColX = (col: number) => getCanvasColumnX(
-          ctx,
-          col,
-          tokens,
-          tokenPositions,
-          tokenStyles,
-          fontSize,
-          fontFamily,
-          codeXOffset,
-          lineText
-        );
+        for (const token of tokens) {
+          tokenPositions.push(currentX);
 
-        // Get highlights for this line
-        const lineHighlights = getLineHighlights(lineNumber, lineText.length, blockHighlights);
+          // Set font for this token
+          const style = tokenStyles?.[token.type];
+          const fontWeight = (style?.fontWeight as string) ?? "normal";
+          const fontStyle = (style?.fontStyle as string) ?? "normal";
+          const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
+          const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+          ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
 
-        // Draw highlights
-        for (const h of lineHighlights) {
-          const startX = getColX(h.startColumn);
-          const endX = getColX(h.endColumn);
-          drawCanvasHighlight(drawContext, h, lineY, startX, endX);
+          // Calculate per-character positions for this token
+          const charPositions = calculateCharacterPositions(ctx, token.text, currentX);
+          charPositionsPerToken.push({
+            tokenStart: token.start,
+            charPositions,
+          });
+
+          // Update currentX to end of token
+          currentX = charPositions[charPositions.length - 1];
         }
+
+        // Calculate line end X (for cursor at end of line)
+        const lineEndX = tokens.length > 0 ? currentX : codeXOffset;
+
+        // Cache tokens and positions for overlay drawing
+        lineTokenCacheRef.current.set(lineNumber, {
+          tokens,
+          positions: tokenPositions,
+          charPositionsPerToken,
+          lineText,
+          lineEndX,
+        });
 
         // Draw tokens
         for (let j = 0; j < tokens.length; j++) {
           drawCanvasToken(drawContext, tokens[j], tokenPositions[j], lineY);
         }
+      }
+    }
 
-        // Draw cursor
-        if (cursor?.visible && cursor.line === lineNumber) {
-          const cursorX = getColX(cursor.column);
-          drawCanvasCursor(drawContext, cursorX, lineY);
+    // Reset scale for future use
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    textCacheKeyRef.current = textCacheKey;
+
+    return textCanvas;
+  });
+
+  // Helper to get column X position using cached per-character positions
+  // This is now O(tokens) instead of requiring measureText calls
+  const getColumnXFromCache = (
+    lineNumber: number,
+    column: number,
+    codeXOffset: number
+  ): number => {
+    const cached = lineTokenCacheRef.current.get(lineNumber);
+    if (!cached) {
+      // Fallback: rough estimate based on font size
+      return codeXOffset + (column - 1) * fontSize * 0.6;
+    }
+
+    return getColumnXFromCachedPositions(cached, column, codeXOffset);
+  };
+
+  // Draw overlay (highlights and cursor) - runs every frame when needed
+  const drawOverlay = useEffectEvent((
+    ctx: CanvasRenderingContext2D,
+    textCanvas: HTMLCanvasElement,
+    dpr: number
+  ) => {
+    // Clear canvas
+    ctx.clearRect(0, 0, width * dpr, totalHeight * dpr);
+
+    // Scale for drawing
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    const drawContext: CanvasDrawContext = {
+      ctx,
+      lineHeight,
+      padding,
+      showLineNumbers,
+      lineNumberWidth,
+      tokenStyles,
+      fontFamily,
+      fontSize,
+    };
+
+    const codeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
+
+    // First pass: Draw highlights (behind text) - uses cached token positions
+    for (const info of blockInfos) {
+      const { block, startLine, y: blockY } = info;
+      const lines = block.content.split("\n");
+      const blockHighlights = getBlockHighlights(startLine, lines.length, highlights);
+
+      for (let i = 0; i < lines.length; i++) {
+        const lineNumber = startLine + i;
+        const lineY = blockY + i * lineHeight;
+        const lineText = lines[i];
+
+        const lineHighlights = getLineHighlights(lineNumber, lineText.length, blockHighlights);
+        for (const h of lineHighlights) {
+          const startX = getColumnXFromCache(lineNumber, h.startColumn, codeXOffset);
+          const endX = getColumnXFromCache(lineNumber, h.endColumn, codeXOffset);
+          drawCanvasHighlight(drawContext, h, lineY, startX, endX);
         }
       }
     }
+
+    ctx.restore();
+
+    // Draw text layer on top of highlights
+    ctx.drawImage(textCanvas, 0, 0);
+
+    // Second pass: Draw cursor (on top of text) - uses cached token positions
+    if (cursor?.visible) {
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      // Find cursor line Y position
+      for (const info of blockInfos) {
+        const { startLine, y: blockY, lineCount } = info;
+        if (cursor.line >= startLine && cursor.line < startLine + lineCount) {
+          const lineOffset = cursor.line - startLine;
+          const lineY = blockY + lineOffset * lineHeight;
+          const cursorX = getColumnXFromCache(cursor.line, cursor.column, codeXOffset);
+          drawCanvasCursor(drawContext, cursorX, lineY);
+          break;
+        }
+      }
+
+      ctx.restore();
+    }
   });
 
-  // Redraw when dependencies change
+  // Main draw function
+  const draw = useEffectEvent(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+
+    const dpr = window.devicePixelRatio || 1;
+
+    // Resize canvas if needed
+    if (canvas.width !== width * dpr || canvas.height !== totalHeight * dpr) {
+      canvas.width = width * dpr;
+      canvas.height = totalHeight * dpr;
+    }
+
+    // Draw text layer (cached)
+    const textCanvas = drawTextLayer(dpr);
+    if (!textCanvas) {
+      return;
+    }
+
+    // Draw overlay (highlights + cursor)
+    drawOverlay(ctx, textCanvas, dpr);
+  });
+
+  // Redraw when dependencies change, throttled via requestAnimationFrame
   useEffect(() => {
-    draw();
-  }, [blockInfos, highlights, cursor, tokenCache, tokenStyles, width, totalHeight]);
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+    }
+
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      draw();
+    });
+
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, [
+    blockInfos,
+    highlights,
+    cursor,
+    tokenCache,
+    tokenStyles,
+    width,
+    totalHeight,
+    textCacheKey,
+  ]);
+
+  // Cleanup offscreen canvas on unmount
+  useEffect(() => {
+    return () => {
+      textCanvasRef.current = null;
+      textCacheKeyRef.current = "";
+    };
+  }, []);
 
   return (
     <canvas
@@ -971,7 +1424,7 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
       }}
     />
   );
-});
+}, canvasBlockRendererPropsAreEqual);
 
 // =============================================================================
 // Main Component
