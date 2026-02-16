@@ -5,7 +5,7 @@
  * Supports both half-width (ASCII) and full-width (CJK) characters.
  */
 
-import { useState, useEffect, useCallback, useRef, type RefObject } from "react";
+import { useState, useEffect, useEffectEvent, useCallback, useRef, type RefObject } from "react";
 import type { FontMetrics } from "./types";
 import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "./coordinates";
 import { assertMeasureElement } from "./invariant";
@@ -66,6 +66,15 @@ export function useFontMetrics(
   const measureElRef = useRef<HTMLSpanElement | null>(null);
   const charCacheRef = useRef<Map<string, number>>(new Map());
 
+  // Handle metrics update from measurement
+  const onMetricsReady = useEffectEvent((measured: {
+    charWidth: number;
+    fullWidthCharWidth: number;
+    lineHeight: number;
+  }) => {
+    setMetrics({ ...measured, isReady: true });
+  });
+
   // Measure base metrics on mount
   useEffect(() => {
     const container = containerRef.current;
@@ -91,8 +100,7 @@ export function useFontMetrics(
     const computedStyle = window.getComputedStyle(container);
     const lineHeight = parseFloat(computedStyle.lineHeight) || DEFAULT_LINE_HEIGHT;
 
-    // eslint-disable-next-line custom/no-use-state-in-use-effect -- One-time measurement on mount
-    setMetrics({ charWidth, fullWidthCharWidth, lineHeight, isReady: true });
+    onMetricsReady({ charWidth, fullWidthCharWidth, lineHeight });
 
     return () => {
       if (measureEl.parentNode) {

@@ -6,7 +6,7 @@
  * where text can have variable font sizes and families.
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo, type RefObject } from "react";
+import { useState, useCallback, useRef, useEffect, useEffectEvent, useMemo, type RefObject } from "react";
 import type { TextStyleSegment } from "../core/types";
 import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "../core/coordinates";
 import { assertMeasureElement } from "../core/invariant";
@@ -100,6 +100,14 @@ export function useStyledMeasurement(
     isReady: false,
   });
 
+  // Handle metrics update from measurement
+  const onMetricsReady = useEffectEvent((measured: {
+    charWidth: number;
+    lineHeight: number;
+  }) => {
+    setMetrics({ ...measured, isReady: true });
+  });
+
   // Initialize measurement element
   useEffect(() => {
     const container = containerRef.current;
@@ -119,8 +127,7 @@ export function useStyledMeasurement(
     const computedStyle = window.getComputedStyle(container);
     const lineHeight = parseFloat(computedStyle.lineHeight) || DEFAULT_LINE_HEIGHT;
 
-    // eslint-disable-next-line custom/no-use-state-in-use-effect -- One-time measurement on mount
-    setMetrics({ charWidth, lineHeight, isReady: true });
+    onMetricsReady({ charWidth, lineHeight });
 
     return () => {
       if (measureEl.parentNode) {

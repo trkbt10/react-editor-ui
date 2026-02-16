@@ -4,7 +4,7 @@
  * Manages virtual scroll state for rendering only visible lines.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import type { VirtualScrollState } from "./types";
 import { DEFAULT_EDITOR_CONFIG } from "./types";
 
@@ -79,6 +79,11 @@ export function useVirtualScroll(
   const topSpacerHeight = startLine * lineHeight;
   const bottomSpacerHeight = (lineCount - endLine) * lineHeight;
 
+  // Handle viewport height changes from ResizeObserver
+  const onViewportResize = useEffectEvent((height: number) => {
+    setViewportHeight(height);
+  });
+
   // Handle container ref
   const setContainer = useCallback((node: HTMLElement | null) => {
     containerRef.current = node;
@@ -96,8 +101,7 @@ export function useVirtualScroll(
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        // eslint-disable-next-line custom/no-use-state-in-use-effect -- ResizeObserver callback
-        setViewportHeight(entry.contentRect.height);
+        onViewportResize(entry.contentRect.height);
       }
     });
 
