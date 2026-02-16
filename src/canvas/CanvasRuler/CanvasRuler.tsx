@@ -18,6 +18,8 @@ import {
 import type { ViewportState, RulerConfig } from "../core/types";
 import { DEFAULT_RULER_CONFIG } from "../core/types";
 
+type Orientation = "horizontal" | "vertical";
+
 type BaseRulerProps = {
   viewport: ViewportState;
   /** Current mouse position indicator (canvas coordinate) */
@@ -42,6 +44,22 @@ export type CanvasRulerCornerProps = {
 };
 
 /**
+ * Snap to nice numbers (1, 2, 5, 10, 20, 50, 100, etc.)
+ */
+function getNiceFactor(n: number): number {
+  if (n < 1.5) {
+    return 1;
+  }
+  if (n < 3.5) {
+    return 2;
+  }
+  if (n < 7.5) {
+    return 5;
+  }
+  return 10;
+}
+
+/**
  * Calculate adaptive tick intervals based on zoom level
  */
 function getAdaptiveIntervals(
@@ -49,36 +67,234 @@ function getAdaptiveIntervals(
   baseTickInterval: number,
   baseLabelInterval: number,
 ): { tickInterval: number; labelInterval: number } {
-  // Find the best interval for the current scale
-  const targetPixelsBetweenLabels = 50; // Aim for ~50px between labels on screen
-  const baseInterval = baseLabelInterval;
-
-  // Calculate what interval gives us ~50px on screen
+  const targetPixelsBetweenLabels = 50;
   const idealInterval = targetPixelsBetweenLabels / scale;
-
-  // Snap to nice numbers (1, 2, 5, 10, 20, 50, 100, etc.)
   const magnitude = Math.pow(10, Math.floor(Math.log10(idealInterval)));
   const normalized = idealInterval / magnitude;
 
-  const getNiceFactor = (n: number): number => {
-    if (n < 1.5) {
-      return 1;
-    }
-    if (n < 3.5) {
-      return 2;
-    }
-    if (n < 7.5) {
-      return 5;
-    }
-    return 10;
-  };
-
   const labelInterval = getNiceFactor(normalized) * magnitude;
-  const tickInterval = labelInterval / 5; // 5 ticks per label
+  const tickInterval = labelInterval / 5;
 
   return {
     tickInterval: Math.max(tickInterval, baseTickInterval / 10),
-    labelInterval: Math.max(labelInterval, baseInterval / 10),
+    labelInterval: Math.max(labelInterval, baseLabelInterval / 10),
+  };
+}
+
+type TickParams = {
+  orientation: Orientation;
+  start: number;
+  end: number;
+  tickInterval: number;
+  labelInterval: number;
+  viewportOffset: number;
+  scale: number;
+  size: number;
+  screenOffset: number;
+  length: number;
+};
+
+/**
+ * Generate tick and label elements for ruler
+ */
+function generateTicks(params: TickParams): ReactNode[] {
+  const {
+    orientation,
+    start,
+    end,
+    tickInterval,
+    labelInterval,
+    viewportOffset,
+    scale,
+    size,
+    screenOffset,
+    length,
+  } = params;
+
+  const isHorizontal = orientation === "horizontal";
+  const result: ReactNode[] = [];
+
+  for (let pos = start; pos <= end; pos += tickInterval) {
+    const isLabel = Math.abs(pos % labelInterval) < tickInterval / 2;
+    const screenPos = (pos - viewportOffset) * scale + screenOffset;
+
+    if (screenPos < screenOffset || screenPos > length + screenOffset) {
+      continue;
+    }
+
+    const tickSize = isLabel ? size * 0.5 : size * 0.25;
+
+    if (isHorizontal) {
+      result.push(
+        <line
+          key={`tick-${pos}`}
+          x1={screenPos}
+          y1={size - 1}
+          x2={screenPos}
+          y2={size - 1 - tickSize}
+          stroke={COLOR_CANVAS_RULER_TICK}
+          strokeWidth={1}
+        />,
+      );
+    } else {
+      result.push(
+        <line
+          key={`tick-${pos}`}
+          x1={size - 1}
+          y1={screenPos}
+          x2={size - 1 - tickSize}
+          y2={screenPos}
+          stroke={COLOR_CANVAS_RULER_TICK}
+          strokeWidth={1}
+        />,
+      );
+    }
+
+    if (isLabel) {
+      const label = Math.round(pos);
+
+      if (isHorizontal) {
+        result.push(
+          <text
+            key={`label-${pos}`}
+            x={screenPos + 3}
+            y={size - tickSize - 3}
+            fill={COLOR_CANVAS_RULER_TEXT}
+            fontSize={SIZE_FONT_XS}
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            {label}
+          </text>,
+        );
+      } else {
+        result.push(
+          <text
+            key={`label-${pos}`}
+            x={2}
+            y={screenPos + 3}
+            fill={COLOR_CANVAS_RULER_TEXT}
+            fontSize={SIZE_FONT_XS}
+            fontFamily="system-ui, -apple-system, sans-serif"
+            transform={`rotate(-90, 2, ${screenPos + 3})`}
+            dominantBaseline="hanging"
+          >
+            {label}
+          </text>,
+        );
+      }
+    }
+  }
+
+  return result;
+}
+
+type IndicatorParams = {
+  orientation: Orientation;
+  position: number;
+  viewportOffset: number;
+  scale: number;
+  size: number;
+  screenOffset: number;
+  length: number;
+};
+
+/**
+ * Generate indicator element for current mouse position
+ */
+function generateIndicator(params: IndicatorParams): ReactNode {
+  const {
+    orientation,
+    position,
+    viewportOffset,
+    scale,
+    size,
+    screenOffset,
+    length,
+  } = params;
+
+  const screenPos = (position - viewportOffset) * scale + screenOffset;
+  if (screenPos < screenOffset || screenPos > length + screenOffset) {
+    return null;
+  }
+
+  const label = Math.round(position);
+  const isHorizontal = orientation === "horizontal";
+
+  if (isHorizontal) {
+    return (
+      <g key="indicator">
+        <line
+          x1={screenPos}
+          y1={0}
+          x2={screenPos}
+          y2={size}
+          stroke={COLOR_CANVAS_RULER_INDICATOR}
+          strokeWidth={1}
+        />
+        <text
+          x={screenPos + 3}
+          y={size * 0.6}
+          fill={COLOR_CANVAS_RULER_INDICATOR}
+          fontSize={SIZE_FONT_XS}
+          fontFamily="system-ui, -apple-system, sans-serif"
+          fontWeight={500}
+        >
+          {label}
+        </text>
+      </g>
+    );
+  }
+
+  return (
+    <g key="indicator">
+      <line
+        x1={0}
+        y1={screenPos}
+        x2={size}
+        y2={screenPos}
+        stroke={COLOR_CANVAS_RULER_INDICATOR}
+        strokeWidth={1}
+      />
+      <text
+        x={2}
+        y={screenPos + 3}
+        fill={COLOR_CANVAS_RULER_INDICATOR}
+        fontSize={SIZE_FONT_XS}
+        fontFamily="system-ui, -apple-system, sans-serif"
+        fontWeight={500}
+        transform={`rotate(-90, 2, ${screenPos + 3})`}
+        dominantBaseline="hanging"
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
+
+type ContainerStyleParams = {
+  orientation: Orientation;
+  size: number;
+  length: number;
+  screenOffset: number;
+};
+
+/**
+ * Generate container style for ruler
+ */
+function getContainerStyle(params: ContainerStyleParams): CSSProperties {
+  const { orientation, size, length, screenOffset } = params;
+  const isHorizontal = orientation === "horizontal";
+
+  return {
+    position: "relative",
+    width: isHorizontal ? length + screenOffset : size,
+    height: isHorizontal ? size : length,
+    background: COLOR_CANVAS_RULER_BG,
+    borderBottom: isHorizontal ? `1px solid ${COLOR_BORDER}` : undefined,
+    borderRight: isHorizontal ? undefined : `1px solid ${COLOR_BORDER}`,
+    overflow: "hidden",
+    userSelect: "none",
+    flexShrink: 0,
   };
 }
 
@@ -104,98 +320,48 @@ export function CanvasHorizontalRuler({
   const startX = Math.floor(viewport.x / tickInterval) * tickInterval;
   const endX = viewport.x + viewWidth;
 
-  const ticks = useMemo(() => {
-    const result: ReactNode[] = [];
+  const ticks = useMemo(
+    () =>
+      generateTicks({
+        orientation: "horizontal",
+        start: startX,
+        end: endX,
+        tickInterval,
+        labelInterval,
+        viewportOffset: viewport.x,
+        scale: viewport.scale,
+        size,
+        screenOffset: rulerOffset,
+        length: width,
+      }),
+    [startX, endX, tickInterval, labelInterval, viewport.x, viewport.scale, size, rulerOffset, width],
+  );
 
-    for (let x = startX; x <= endX; x += tickInterval) {
-      const isLabel = Math.abs(x % labelInterval) < tickInterval / 2;
-      const screenX = (x - viewport.x) * viewport.scale + rulerOffset;
-
-      if (screenX < rulerOffset || screenX > width + rulerOffset) {
-        continue;
-      }
-
-      const tickHeight = isLabel ? size * 0.5 : size * 0.25;
-
-      result.push(
-        <line
-          key={`tick-${x}`}
-          x1={screenX}
-          y1={size - 1}
-          x2={screenX}
-          y2={size - 1 - tickHeight}
-          stroke={COLOR_CANVAS_RULER_TICK}
-          strokeWidth={1}
-        />,
-      );
-
-      if (isLabel) {
-        // Round to avoid floating point display issues
-        const label = Math.round(x);
-        result.push(
-          <text
-            key={`label-${x}`}
-            x={screenX + 3}
-            y={size - tickHeight - 3}
-            fill={COLOR_CANVAS_RULER_TEXT}
-            fontSize={SIZE_FONT_XS}
-            fontFamily="system-ui, -apple-system, sans-serif"
-          >
-            {label}
-          </text>,
-        );
-      }
-    }
-
-    return result;
-  }, [startX, endX, tickInterval, labelInterval, viewport, size, rulerOffset, width]);
-
-  // Indicator for current mouse position
   const indicator = useMemo(() => {
     if (indicatorPosition === undefined) {
       return null;
     }
+    return generateIndicator({
+      orientation: "horizontal",
+      position: indicatorPosition,
+      viewportOffset: viewport.x,
+      scale: viewport.scale,
+      size,
+      screenOffset: rulerOffset,
+      length: width,
+    });
+  }, [indicatorPosition, viewport.x, viewport.scale, size, rulerOffset, width]);
 
-    const screenX = (indicatorPosition - viewport.x) * viewport.scale + rulerOffset;
-    if (screenX < rulerOffset || screenX > width + rulerOffset) {
-      return null;
-    }
-
-    const label = Math.round(indicatorPosition);
-    return (
-      <g key="indicator">
-        <line
-          x1={screenX}
-          y1={0}
-          x2={screenX}
-          y2={size}
-          stroke={COLOR_CANVAS_RULER_INDICATOR}
-          strokeWidth={1}
-        />
-        <text
-          x={screenX + 3}
-          y={size * 0.6}
-          fill={COLOR_CANVAS_RULER_INDICATOR}
-          fontSize={SIZE_FONT_XS}
-          fontFamily="system-ui, -apple-system, sans-serif"
-          fontWeight={500}
-        >
-          {label}
-        </text>
-      </g>
-    );
-  }, [indicatorPosition, viewport, size, rulerOffset, width]);
-
-  const containerStyle: CSSProperties = {
-    position: "relative",
-    width: width + rulerOffset,
-    height: size,
-    background: COLOR_CANVAS_RULER_BG,
-    borderBottom: `1px solid ${COLOR_BORDER}`,
-    overflow: "hidden",
-    userSelect: "none",
-    flexShrink: 0,
-  };
+  const containerStyle = useMemo(
+    () =>
+      getContainerStyle({
+        orientation: "horizontal",
+        size,
+        length: width,
+        screenOffset: rulerOffset,
+      }),
+    [size, width, rulerOffset],
+  );
 
   return (
     <div style={containerStyle} data-testid="canvas-ruler-horizontal">
@@ -228,102 +394,48 @@ export function CanvasVerticalRuler({
   const startY = Math.floor(viewport.y / tickInterval) * tickInterval;
   const endY = viewport.y + viewHeight;
 
-  const ticks = useMemo(() => {
-    const result: ReactNode[] = [];
+  const ticks = useMemo(
+    () =>
+      generateTicks({
+        orientation: "vertical",
+        start: startY,
+        end: endY,
+        tickInterval,
+        labelInterval,
+        viewportOffset: viewport.y,
+        scale: viewport.scale,
+        size,
+        screenOffset: 0,
+        length: height,
+      }),
+    [startY, endY, tickInterval, labelInterval, viewport.y, viewport.scale, size, height],
+  );
 
-    for (let y = startY; y <= endY; y += tickInterval) {
-      const isLabel = Math.abs(y % labelInterval) < tickInterval / 2;
-      const screenY = (y - viewport.y) * viewport.scale;
-
-      if (screenY < 0 || screenY > height) {
-        continue;
-      }
-
-      const tickWidth = isLabel ? size * 0.5 : size * 0.25;
-
-      result.push(
-        <line
-          key={`tick-${y}`}
-          x1={size - 1}
-          y1={screenY}
-          x2={size - 1 - tickWidth}
-          y2={screenY}
-          stroke={COLOR_CANVAS_RULER_TICK}
-          strokeWidth={1}
-        />,
-      );
-
-      if (isLabel) {
-        const label = Math.round(y);
-        // Rotate text 90 degrees for vertical ruler
-        result.push(
-          <text
-            key={`label-${y}`}
-            x={2}
-            y={screenY + 3}
-            fill={COLOR_CANVAS_RULER_TEXT}
-            fontSize={SIZE_FONT_XS}
-            fontFamily="system-ui, -apple-system, sans-serif"
-            transform={`rotate(-90, 2, ${screenY + 3})`}
-            dominantBaseline="hanging"
-          >
-            {label}
-          </text>,
-        );
-      }
-    }
-
-    return result;
-  }, [startY, endY, tickInterval, labelInterval, viewport, size, height]);
-
-  // Indicator for current mouse position
   const indicator = useMemo(() => {
     if (indicatorPosition === undefined) {
       return null;
     }
+    return generateIndicator({
+      orientation: "vertical",
+      position: indicatorPosition,
+      viewportOffset: viewport.y,
+      scale: viewport.scale,
+      size,
+      screenOffset: 0,
+      length: height,
+    });
+  }, [indicatorPosition, viewport.y, viewport.scale, size, height]);
 
-    const screenY = (indicatorPosition - viewport.y) * viewport.scale;
-    if (screenY < 0 || screenY > height) {
-      return null;
-    }
-
-    const label = Math.round(indicatorPosition);
-    return (
-      <g key="indicator">
-        <line
-          x1={0}
-          y1={screenY}
-          x2={size}
-          y2={screenY}
-          stroke={COLOR_CANVAS_RULER_INDICATOR}
-          strokeWidth={1}
-        />
-        <text
-          x={2}
-          y={screenY + 3}
-          fill={COLOR_CANVAS_RULER_INDICATOR}
-          fontSize={SIZE_FONT_XS}
-          fontFamily="system-ui, -apple-system, sans-serif"
-          fontWeight={500}
-          transform={`rotate(-90, 2, ${screenY + 3})`}
-          dominantBaseline="hanging"
-        >
-          {label}
-        </text>
-      </g>
-    );
-  }, [indicatorPosition, viewport, size, height]);
-
-  const containerStyle: CSSProperties = {
-    position: "relative",
-    width: size,
-    height,
-    background: COLOR_CANVAS_RULER_BG,
-    borderRight: `1px solid ${COLOR_BORDER}`,
-    overflow: "hidden",
-    userSelect: "none",
-    flexShrink: 0,
-  };
+  const containerStyle = useMemo(
+    () =>
+      getContainerStyle({
+        orientation: "vertical",
+        size,
+        length: height,
+        screenOffset: 0,
+      }),
+    [size, height],
+  );
 
   return (
     <div style={containerStyle} data-testid="canvas-ruler-vertical">

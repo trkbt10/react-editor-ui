@@ -9,14 +9,50 @@ import type { ReactNode } from "react";
 import { COLOR_CANVAS_GUIDE } from "../../constants/styles";
 import { useCanvasContext } from "../core/CanvasContext";
 
+type Orientation = "horizontal" | "vertical";
+
 export type CanvasGuideProps = {
   /** Guide orientation */
-  orientation: "horizontal" | "vertical";
+  orientation: Orientation;
   /** Position in canvas coordinates (Y for horizontal, X for vertical) */
   position: number;
   /** Line color */
   color?: string;
 };
+
+type LineAttrs = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+
+/**
+ * Calculate line coordinates based on orientation
+ */
+function getLineAttrs(
+  orientation: Orientation,
+  position: number,
+  viewportX: number,
+  viewportY: number,
+  viewWidth: number,
+  viewHeight: number,
+): LineAttrs {
+  if (orientation === "horizontal") {
+    return {
+      x1: viewportX,
+      y1: position,
+      x2: viewportX + viewWidth,
+      y2: position,
+    };
+  }
+  return {
+    x1: position,
+    y1: viewportY,
+    x2: position,
+    y2: viewportY + viewHeight,
+  };
+}
 
 /**
  * Single guide line component
@@ -31,29 +67,21 @@ export function CanvasGuide({
   const viewWidth = canvasWidth / viewport.scale;
   const viewHeight = canvasHeight / viewport.scale;
 
-  if (orientation === "horizontal") {
-    return (
-      <line
-        x1={viewport.x}
-        y1={position}
-        x2={viewport.x + viewWidth}
-        y2={position}
-        stroke={color}
-        strokeWidth={1 / viewport.scale}
-        data-testid="canvas-guide-horizontal"
-      />
-    );
-  }
+  const attrs = getLineAttrs(
+    orientation,
+    position,
+    viewport.x,
+    viewport.y,
+    viewWidth,
+    viewHeight,
+  );
 
   return (
     <line
-      x1={position}
-      y1={viewport.y}
-      x2={position}
-      y2={viewport.y + viewHeight}
+      {...attrs}
       stroke={color}
       strokeWidth={1 / viewport.scale}
-      data-testid="canvas-guide-vertical"
+      data-testid={`canvas-guide-${orientation}`}
     />
   );
 }
