@@ -1,5 +1,5 @@
 /**
- * @file UnitInput component - Figma-style numeric input with unit support
+ * @file UnitInput component - Numeric input with unit support
  *
  * Features:
  * - Displays only the number, with unit as a separate clickable suffix

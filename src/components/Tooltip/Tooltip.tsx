@@ -1,6 +1,18 @@
 /**
  * @file Tooltip component - Displays contextual information on hover
- * Uses SVG for background and arrow rendering
+ *
+ * @description
+ * Shows contextual help on hover with automatic positioning.
+ * Uses SVG for smooth background and arrow rendering.
+ *
+ * @example
+ * ```tsx
+ * import { Tooltip } from "react-editor-ui/Tooltip";
+ *
+ * <Tooltip content="Save your changes" placement="top">
+ *   <button>Save</button>
+ * </Tooltip>
+ * ```
  */
 
 import {

@@ -1,5 +1,19 @@
 /**
  * @file PropertyRow component - Label and value pair for inspector
+ *
+ * @description
+ * Displays property name and value in a consistent layout.
+ * Used in inspector panels for editing object properties.
+ *
+ * @example
+ * ```tsx
+ * import { PropertyRow } from "react-editor-ui/PropertyRow";
+ * import { Input } from "react-editor-ui/Input";
+ *
+ * <PropertyRow label="Width">
+ *   <Input value="100" onChange={() => {}} suffix="px" />
+ * </PropertyRow>
+ * ```
  */
 
 import { memo, useState, useMemo, useCallback } from "react";

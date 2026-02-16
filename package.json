@@ -260,7 +260,9 @@
     "check:tokens:strict": "bun scripts/check-tokens.ts --strict",
     "sync:exports": "bun scripts/sync-exports.ts",
     "sync:exports:write": "bun scripts/sync-exports.ts --write",
-    "prebuild": "bun scripts/sync-exports.ts --write"
+    "prebuild": "bun scripts/sync-exports.ts --write",
+    "build:readme": "bun scripts/build-readme.ts",
+    "build:readme:check": "bun scripts/build-readme.ts --check"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

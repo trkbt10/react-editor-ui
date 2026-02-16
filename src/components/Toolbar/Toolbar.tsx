@@ -1,5 +1,26 @@
 /**
  * @file Toolbar component - Container for toolbar items
+ *
+ * @description
+ * Flexible container for toolbar buttons and controls.
+ * Supports horizontal and vertical orientations with floating variant.
+ *
+ * @example
+ * ```tsx
+ * import { Toolbar, ToolbarGroup, ToolbarDivider } from "react-editor-ui/Toolbar";
+ * import { IconButton } from "react-editor-ui/IconButton";
+ *
+ * <Toolbar variant="floating">
+ *   <ToolbarGroup>
+ *     <IconButton icon={<SelectIcon />} aria-label="Select" />
+ *     <IconButton icon={<MoveIcon />} aria-label="Move" />
+ *   </ToolbarGroup>
+ *   <ToolbarDivider />
+ *   <ToolbarGroup>
+ *     <IconButton icon={<ZoomInIcon />} aria-label="Zoom in" />
+ *   </ToolbarGroup>
+ * </Toolbar>
+ * ```
  */
 
 import { createContext, memo, useContext, useMemo } from "react";

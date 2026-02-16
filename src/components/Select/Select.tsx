@@ -1,5 +1,26 @@
 /**
  * @file Select component - Dropdown selection with portal rendering
+ *
+ * @description
+ * Dropdown select with keyboard navigation and portal-based rendering.
+ * Supports custom option rendering and disabled states.
+ *
+ * @example
+ * ```tsx
+ * import { Select } from "react-editor-ui/Select";
+ *
+ * const options = [
+ *   { value: "small", label: "Small" },
+ *   { value: "medium", label: "Medium" },
+ *   { value: "large", label: "Large" },
+ * ];
+ *
+ * <Select
+ *   value="medium"
+ *   options={options}
+ *   onChange={(value) => console.log(value)}
+ * />
+ * ```
  */
 
 import { memo, useState, useRef, useEffect, useEffectEvent, useLayoutEffect, type CSSProperties, type ReactNode } from "react";

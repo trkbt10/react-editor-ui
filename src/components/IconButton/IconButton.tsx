@@ -1,5 +1,21 @@
 /**
  * @file IconButton component - A button with only an icon
+ *
+ * @description
+ * Compact button for toolbar actions and icon-only interactions.
+ * Supports multiple sizes and variants including ghost and filled.
+ *
+ * @example
+ * ```tsx
+ * import { IconButton } from "react-editor-ui/IconButton";
+ * import { FiPlus } from "react-icons/fi";
+ *
+ * <IconButton
+ *   icon={<FiPlus />}
+ *   aria-label="Add item"
+ *   onClick={() => console.log("add")}
+ * />
+ * ```
  */
 
 import {

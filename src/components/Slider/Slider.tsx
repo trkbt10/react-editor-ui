@@ -1,5 +1,24 @@
 /**
  * @file Slider component - Reusable drag slider for color/gradient editing
+ *
+ * @description
+ * Draggable slider supporting horizontal and vertical orientations.
+ * Customizable track background for color pickers and gradient editors.
+ *
+ * @example
+ * ```tsx
+ * import { Slider } from "react-editor-ui/Slider";
+ * import { useState } from "react";
+ *
+ * const [value, setValue] = useState(0.5);
+ *
+ * <Slider
+ *   value={value}
+ *   onChange={setValue}
+ *   background="linear-gradient(to right, red, blue)"
+ *   aria-label="Color intensity"
+ * />
+ * ```
  */
 
 import { useRef, useCallback, memo, forwardRef, useMemo } from "react";

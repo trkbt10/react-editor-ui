@@ -1,6 +1,18 @@
 /**
  * @file Button component - Text button with optional icons
- * Figma-style design with clean, minimal aesthetics
+ *
+ * @description
+ * Clean, minimal design with attention to detail.
+ * Supports primary, secondary, ghost, and danger variants.
+ *
+ * @example
+ * ```tsx
+ * import { Button } from "react-editor-ui/Button";
+ *
+ * <Button variant="primary" onClick={() => console.log("clicked")}>
+ *   Save Changes
+ * </Button>
+ * ```
  */
 
 import {

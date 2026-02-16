@@ -1,5 +1,24 @@
 /**
  * @file Input component - Text input with optional icons
+ *
+ * @description
+ * Versatile text input supporting icons, prefix/suffix, and clearable mode.
+ * Available in multiple sizes with consistent styling.
+ *
+ * @example
+ * ```tsx
+ * import { Input } from "react-editor-ui/Input";
+ * import { useState } from "react";
+ *
+ * const [value, setValue] = useState("");
+ *
+ * <Input
+ *   value={value}
+ *   onChange={setValue}
+ *   placeholder="Enter text..."
+ *   clearable
+ * />
+ * ```
  */
 
 import {

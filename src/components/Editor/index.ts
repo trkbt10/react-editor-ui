@@ -1,7 +1,27 @@
 /**
  * @file Editor module exports
  *
- * Unified exports for all Editor components.
+ * @description
+ * Unified exports for all Editor components including CodeEditor and TextEditor.
+ * Provides syntax highlighting, virtual scrolling, and rich text editing.
+ *
+ * @example
+ * ```tsx
+ * import { CodeEditor, TextEditor } from "react-editor-ui/Editor";
+ *
+ * // Code editor with syntax highlighting
+ * <CodeEditor
+ *   value={code}
+ *   onChange={setCode}
+ *   language="typescript"
+ * />
+ *
+ * // Rich text editor
+ * <TextEditor
+ *   value={text}
+ *   onChange={setText}
+ * />
+ * ```
  */
 
 // =============================================================================

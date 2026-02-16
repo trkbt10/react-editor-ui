@@ -1,5 +1,5 @@
 /**
- * @file ColorInput component - Figma-style compact color input with swatch
+ * @file ColorInput component - Compact color input with swatch
  */
 
 import { useState, useRef, useEffect, useEffectEvent } from "react";

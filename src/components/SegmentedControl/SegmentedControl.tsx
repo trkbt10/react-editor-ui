@@ -1,5 +1,5 @@
 /**
- * @file SegmentedControl component - Figma-style button group for selecting options
+ * @file SegmentedControl component - Button group for selecting options
  */
 
 import { memo, useState, useMemo, useCallback } from "react";

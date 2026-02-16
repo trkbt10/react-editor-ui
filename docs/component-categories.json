@@ -1,0 +1,88 @@
+{
+  "categories": [
+    {
+      "id": "primitives",
+      "label": "Primitives",
+      "description": "Basic UI components for building interfaces",
+      "components": [
+        "Badge",
+        "Button",
+        "Checkbox",
+        "ColorInput",
+        "ColorPicker",
+        "IconButton",
+        "Input",
+        "Select",
+        "SegmentedControl",
+        "Slider",
+        "SplitButton",
+        "Tooltip",
+        "UnitInput"
+      ]
+    },
+    {
+      "id": "layout",
+      "label": "Layout",
+      "description": "Components for organizing and structuring UI",
+      "components": [
+        "Panel",
+        "PropertyGrid",
+        "PropertySection",
+        "Toolbar"
+      ]
+    },
+    {
+      "id": "composite",
+      "label": "Composite",
+      "description": "Complex components combining multiple primitives",
+      "components": [
+        "FontsPanel",
+        "PositionPanel",
+        "StrokeSettingsPanel",
+        "TransformButtons",
+        "TypographyPanel"
+      ]
+    },
+    {
+      "id": "data-display",
+      "label": "Data Display",
+      "description": "Components for displaying and organizing data",
+      "components": [
+        "ContextMenu",
+        "LayerItem",
+        "PropertyRow",
+        "SectionHeader",
+        "TreeItem"
+      ]
+    },
+    {
+      "id": "feedback",
+      "label": "Feedback",
+      "description": "Components for status and feedback display",
+      "components": [
+        "LogEntry",
+        "LogViewer",
+        "StatusBar"
+      ]
+    },
+    {
+      "id": "editor",
+      "label": "Editor",
+      "description": "Code and text editing components",
+      "components": [
+        "Editor"
+      ]
+    },
+    {
+      "id": "utilities",
+      "label": "Utilities",
+      "description": "Utility components for specialized tasks",
+      "components": [
+        "Canvas",
+        "FillEditor",
+        "GradientEditor",
+        "Portal"
+      ]
+    }
+  ]
+}

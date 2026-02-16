@@ -1,5 +1,23 @@
 /**
- * @file Checkbox component
+ * @file Checkbox component - Toggle input with checkbox and switch variants
+ *
+ * @description
+ * Supports both checkbox and switch visual styles with labels.
+ * Includes indeterminate state for partial selection.
+ *
+ * @example
+ * ```tsx
+ * import { Checkbox } from "react-editor-ui/Checkbox";
+ * import { useState } from "react";
+ *
+ * const [checked, setChecked] = useState(false);
+ *
+ * <Checkbox
+ *   checked={checked}
+ *   onChange={setChecked}
+ *   label="Enable feature"
+ * />
+ * ```
  */
 
 import { memo, useState, useMemo, useCallback } from "react";

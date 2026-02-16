@@ -1,5 +1,5 @@
 /**
- * @file LayerItem component - Figma-style layer panel item
+ * @file LayerItem component - Layer panel item for hierarchical display
  * Features: visibility toggle, lock toggle, rename, delete, reorder, context menu
  */
 
