@@ -46,6 +46,7 @@ import { TransformButtonsDemo } from "./pages/composite/TransformButtonsDemo";
 import { TypographyPanelDemo } from "./pages/composite/TypographyPanelDemo";
 import { FontsPanelDemo } from "./pages/composite/FontsPanelDemo";
 import { PositionPanelDemo } from "./pages/composite/PositionPanelDemo";
+import { AnimationPanelDemo } from "./pages/composite/AnimationPanelDemo";
 
 // Data display demos
 import { PropertyRowDemo } from "./pages/data-display/PropertyRowDemo";
@@ -276,6 +277,12 @@ export const demoCategories: DemoCategory[] = [
         label: "PositionPanel",
         path: "position-panel",
         element: <PositionPanelDemo />,
+      },
+      {
+        id: "animation-panel",
+        label: "AnimationPanel",
+        path: "animation-panel",
+        element: <AnimationPanelDemo />,
       },
     ],
   },

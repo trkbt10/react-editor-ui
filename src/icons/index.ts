@@ -115,3 +115,6 @@ export {
   TextAlignMiddleIcon,
   TextAlignBottomIcon,
 } from "./typography";
+
+// Animation icons
+export { ClockIcon, HourglassIcon } from "./animation";

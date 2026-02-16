@@ -39,6 +39,7 @@
       "label": "Composite",
       "description": "Complex components combining multiple primitives",
       "components": [
+        "AnimationPanel",
         "FontsPanel",
         "PositionPanel",
         "StrokeSettingsPanel",
@@ -90,6 +91,7 @@
       "label": "Utilities",
       "description": "Utility components for specialized tasks",
       "components": [
+        "BezierCurveEditor",
         "FillEditor",
         "GradientEditor",
         "Portal"

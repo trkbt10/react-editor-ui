@@ -38,5 +38,30 @@ export type { StatusBarProps } from "./components/StatusBar/StatusBar";
 export type { StatusBarItemProps } from "./components/StatusBar/StatusBarItem";
 export type { LogEntryProps } from "./components/LogEntry/LogEntry";
 
+// Animation components - BezierCurveEditor
+export { BezierCurveEditor } from "./components/BezierCurveEditor/BezierCurveEditor";
+export type { BezierCurveEditorProps } from "./components/BezierCurveEditor/BezierCurveEditor";
+export {
+  EASING_PRESETS,
+  PRESET_LABELS,
+  matchPreset,
+  toCubicBezierCss,
+  createDefaultAnimationSettings,
+} from "./components/BezierCurveEditor/bezierPresets";
+export type {
+  BezierControlPoints,
+  EasingPreset,
+  AnimationSettings,
+} from "./components/BezierCurveEditor/bezierTypes";
+
+// Panels
+export { AnimationPanel } from "./panels/AnimationPanel/AnimationPanel";
+export { EasingPresetSelect } from "./panels/AnimationPanel/EasingPresetSelect";
+export type { AnimationPanelProps } from "./panels/AnimationPanel/AnimationPanel";
+export type { EasingPresetSelectProps } from "./panels/AnimationPanel/EasingPresetSelect";
+
+// Animation icons
+export { ClockIcon, HourglassIcon } from "./icons/animation";
+
 // Style constants
 export { CSS_VAR_PREFIX } from "./constants/styles";
