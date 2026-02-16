@@ -39,6 +39,7 @@ import { Tooltip } from "../components/Tooltip/Tooltip";
 import { TransformButtons } from "../components/TransformButtons/TransformButtons";
 import { TypographyPanel } from "../components/TypographyPanel/TypographyPanel";
 import { FontsPanel } from "../components/FontsPanel/FontsPanel";
+import { LocalFontList } from "../components/FontsPanel/LocalFontList";
 import { PositionPanel, createDefaultPositionSettings } from "../components/PositionPanel/PositionPanel";
 import { SplitButton } from "../components/SplitButton/SplitButton";
 import { LogViewer, type LogItem } from "../components/LogViewer/LogViewer";
@@ -3163,30 +3164,56 @@ function PositionPanelDemo() {
 // FontsPanel Demo
 function FontsPanelDemo() {
   const [selectedFont, setSelectedFont] = useState("SF Pro");
+  const [localSelectedFont, setLocalSelectedFont] = useState("");
+
+  // Get font family for preview (from sampleFonts or local font)
+  const previewFontFamily = localSelectedFont
+    ? `"${localSelectedFont}", sans-serif`
+    : sampleFonts.find((f) => f.name === selectedFont)?.family ?? "inherit";
 
   return (
     <div style={demoContainerStyle}>
       <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>FontsPanel</h2>
 
       <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Basic Panel</div>
+        <div style={demoLabelStyle}>Basic Panel (with predefined fonts)</div>
         <FontsPanel
           fonts={sampleFonts}
           selectedFont={selectedFont}
-          onSelectFont={setSelectedFont}
+          onSelectFont={(font) => {
+            setSelectedFont(font);
+            setLocalSelectedFont("");
+          }}
           onClose={() => alert("Close clicked")}
           onSettings={() => alert("Settings clicked")}
         />
       </div>
 
       <div style={demoSectionStyle}>
-        <div style={demoLabelStyle}>Selected: {selectedFont}</div>
+        <div style={demoLabelStyle}>
+          Local Font List (via queryLocalFonts API)
+        </div>
+        <LocalFontList
+          selectedFont={localSelectedFont}
+          onSelectFont={(font) => {
+            setLocalSelectedFont(font);
+            setSelectedFont("");
+          }}
+          onClose={() => alert("Close clicked")}
+          onSettings={() => alert("Settings clicked")}
+        />
+      </div>
+
+      <div style={demoSectionStyle}>
+        <div style={demoLabelStyle}>
+          Selected: {localSelectedFont || selectedFont || "None"}
+        </div>
         <div
           style={{
             backgroundColor: "var(--rei-color-surface, #1e1f24)",
             borderRadius: "4px",
             padding: "24px",
-            fontFamily: sampleFonts.find((f) => f.name === selectedFont)?.family ?? "inherit",
+            fontFamily: previewFontFamily,
             fontSize: "24px",
             color: "var(--rei-color-text)",
           }}
