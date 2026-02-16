@@ -3,8 +3,8 @@
  */
 
 // Theme tokens
-export { themes, lightTheme, darkTheme, highContrastLightTheme } from "./tokens";
-export type { ThemeTokens, ThemeName } from "./tokens";
+export { themes, lightTheme, darkTheme, highContrastLightTheme, baseTokens } from "./tokens";
+export type { ThemeTokens, ThemeName, BaseTokens, ColorTokens } from "./tokens";
 
 // CSS injection utilities
 export { injectTheme, clearTheme, getThemeCss } from "./injectTheme";
