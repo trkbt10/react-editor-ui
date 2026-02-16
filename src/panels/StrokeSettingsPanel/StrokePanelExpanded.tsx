@@ -12,8 +12,8 @@ import type {
   WidthProfile,
 } from "./types";
 import type { WeightUnit } from "./StrokeWeightInput";
-import { Panel } from "../Panel/Panel";
-import { Input } from "../Input/Input";
+import { Panel } from "../../panels/Panel/Panel";
+import { Input } from "../../components/Input/Input";
 import { StrokeCapSelect } from "./StrokeCapSelect";
 import { StrokeJoinSelect } from "./StrokeJoinSelect";
 import { StrokeAlignSelect } from "./StrokeAlignSelect";

@@ -3,7 +3,7 @@
  */
 
 import { useState, useMemo, type CSSProperties } from "react";
-import { Select, type SelectOption } from "../Select/Select";
+import { Select, type SelectOption } from "../../components/Select/Select";
 import {
   COLOR_SURFACE,
   COLOR_SURFACE_RAISED,

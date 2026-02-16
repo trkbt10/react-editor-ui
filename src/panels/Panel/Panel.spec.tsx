@@ -83,4 +83,28 @@ describe("Panel", () => {
     const panel = container.firstChild as HTMLElement;
     expect(panel.className).toBe("custom-class");
   });
+
+  it("has box-sizing: border-box to include border in width", () => {
+    const { container } = render(
+      <Panel title="Test" width={320}>
+        Content
+      </Panel>,
+    );
+
+    const panel = container.firstChild as HTMLElement;
+    expect(panel.style.boxSizing).toBe("border-box");
+  });
+
+  it("content area has overflow: hidden to prevent child overflow", () => {
+    const { container } = render(
+      <Panel title="Test">
+        Content
+      </Panel>,
+    );
+
+    const panel = container.firstChild as HTMLElement;
+    // Content is the second child (after header)
+    const content = panel.children[1] as HTMLElement;
+    expect(content.style.overflow).toBe("hidden");
+  });
 });

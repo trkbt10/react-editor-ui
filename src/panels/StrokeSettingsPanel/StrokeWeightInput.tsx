@@ -3,7 +3,7 @@
  */
 
 import { useCallback, useMemo } from "react";
-import { UnitInput, type UnitOption } from "../UnitInput/UnitInput";
+import { UnitInput, type UnitOption } from "../../components/UnitInput/UnitInput";
 
 export type WeightUnit = "px" | "pt" | "em" | "rem";
 

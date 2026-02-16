@@ -12,6 +12,7 @@ interface ComponentEntry {
   entryType: "index" | "named";
   entryPath: string;
   relativePath: string;
+  category: "component" | "panel";
 }
 
 interface EntryCatalog {
@@ -38,8 +39,9 @@ function loadEntries(): Record<string, string> {
 
   const catalog: EntryCatalog = JSON.parse(readFileSync(catalogPath, "utf-8"));
 
-  for (const component of catalog.components) {
-    baseEntries[`components/${component.name}`] = resolve(__dirname, component.relativePath);
+  for (const entry of catalog.components) {
+    const categoryDir = entry.category === "component" ? "components" : "panels";
+    baseEntries[`${categoryDir}/${entry.name}`] = resolve(__dirname, entry.relativePath);
   }
 
   return baseEntries;

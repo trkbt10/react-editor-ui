@@ -2,6 +2,7 @@
  * @file ConstraintVisualization component - Visual representation of constraint settings
  */
 
+import { memo } from "react";
 import type { CSSProperties } from "react";
 import { COLOR_PRIMARY, COLOR_BORDER } from "../../constants/styles";
 import type { HorizontalConstraint, VerticalConstraint } from "./positionTypes";
@@ -19,7 +20,7 @@ function getLineStyle(isActive: boolean, baseStyle: CSSProperties): CSSPropertie
   };
 }
 
-export function ConstraintVisualization({
+export const ConstraintVisualization = memo(function ConstraintVisualization({
   horizontal,
   vertical,
   className,
@@ -30,6 +31,7 @@ export function ConstraintVisualization({
   const containerStyle: CSSProperties = {
     width: 100,
     height: 80,
+    flexShrink: 0,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -158,4 +160,4 @@ export function ConstraintVisualization({
       </div>
     </div>
   );
-}
+});

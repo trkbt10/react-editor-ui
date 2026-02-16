@@ -3,13 +3,13 @@
  */
 
 import { useState, type CSSProperties } from "react";
-import { Select, type SelectOption } from "../Select/Select";
-import { UnitInput } from "../UnitInput/UnitInput";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import { IconButton } from "../IconButton/IconButton";
-import { SectionHeader } from "../SectionHeader/SectionHeader";
-import { PropertyGrid } from "../PropertyGrid/PropertyGrid";
-import { PropertyGridItem } from "../PropertyGrid/PropertyGridItem";
+import { Select, type SelectOption } from "../../components/Select/Select";
+import { UnitInput } from "../../components/UnitInput/UnitInput";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
+import { IconButton } from "../../components/IconButton/IconButton";
+import { SectionHeader } from "../../components/SectionHeader/SectionHeader";
+import { PropertyGrid } from "../../components/PropertyGrid/PropertyGrid";
+import { PropertyGridItem } from "../../components/PropertyGrid/PropertyGridItem";
 import {
   COLOR_TEXT_MUTED,
   COLOR_WARNING,

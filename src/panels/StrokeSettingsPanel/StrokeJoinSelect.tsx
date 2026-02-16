@@ -3,7 +3,7 @@
  */
 
 import type { StrokeJoin } from "./types";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import { JoinMiterIcon, JoinRoundIcon, JoinBevelIcon } from "../../icons";
 
 export type StrokeJoinSelectProps = {

@@ -16,6 +16,7 @@ import noDemoImport from "./rules/no-demo-import.js";
 import noParentTypeReexport from "./rules/no-parent-type-reexport.js";
 import noBarrelImport from "./rules/no-barrel-import.js";
 import noComponentIndex from "./rules/no-component-index.js";
+import noPanelsInComponents from "./rules/no-panels-in-components.js";
 
 export default {
   rules: {
@@ -34,5 +35,6 @@ export default {
     "no-parent-type-reexport": noParentTypeReexport,
     "no-barrel-import": noBarrelImport,
     "no-component-index": noComponentIndex,
+    "no-panels-in-components": noPanelsInComponents,
   },
 };

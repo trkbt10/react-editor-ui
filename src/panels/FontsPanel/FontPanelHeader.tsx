@@ -3,7 +3,7 @@
  */
 
 import type { CSSProperties } from "react";
-import { IconButton } from "../IconButton/IconButton";
+import { IconButton } from "../../components/IconButton/IconButton";
 import { CloseIcon, SettingsIcon, RefreshIcon } from "../../icons";
 import {
   COLOR_BORDER,

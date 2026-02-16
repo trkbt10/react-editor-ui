@@ -3,7 +3,7 @@
  */
 
 import type { CSSProperties } from "react";
-import { Input } from "../Input/Input";
+import { Input } from "../../components/Input/Input";
 import { SearchIcon } from "../../icons";
 import { COLOR_BORDER, SPACE_MD } from "../../constants/styles";
 

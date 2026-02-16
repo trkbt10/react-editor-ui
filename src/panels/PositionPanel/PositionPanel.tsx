@@ -4,12 +4,12 @@
 
 import { memo, useCallback, useMemo } from "react";
 import type { ReactNode, CSSProperties } from "react";
-import { Panel } from "../Panel/Panel";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import { Input } from "../Input/Input";
-import { Select } from "../Select/Select";
-import { IconButton } from "../IconButton/IconButton";
-import { TransformButtons } from "../TransformButtons/TransformButtons";
+import { Panel } from "../../panels/Panel/Panel";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
+import { Input } from "../../components/Input/Input";
+import { Select } from "../../components/Select/Select";
+import { IconButton } from "../../components/IconButton/IconButton";
+import { TransformButtons } from "../../components/TransformButtons/TransformButtons";
 import {
   COLOR_TEXT_MUTED,
   SPACE_SM,

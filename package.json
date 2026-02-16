@@ -13,186 +13,223 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.tsx",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
     "./themes": {
+      "source": "./src/themes/index.ts",
       "types": "./dist/themes/index.d.ts",
       "import": "./dist/themes/index.js",
       "require": "./dist/themes/index.cjs"
     },
     "./Badge": {
+      "source": "./src/components/Badge/Badge.tsx",
       "types": "./dist/components/Badge/Badge.d.ts",
       "import": "./dist/components/Badge.js",
       "require": "./dist/components/Badge.cjs"
     },
     "./Button": {
+      "source": "./src/components/Button/Button.tsx",
       "types": "./dist/components/Button/Button.d.ts",
       "import": "./dist/components/Button.js",
       "require": "./dist/components/Button.cjs"
     },
     "./Canvas": {
+      "source": "./src/components/Canvas/Canvas.tsx",
       "types": "./dist/components/Canvas/Canvas.d.ts",
       "import": "./dist/components/Canvas.js",
       "require": "./dist/components/Canvas.cjs"
     },
     "./Checkbox": {
+      "source": "./src/components/Checkbox/Checkbox.tsx",
       "types": "./dist/components/Checkbox/Checkbox.d.ts",
       "import": "./dist/components/Checkbox.js",
       "require": "./dist/components/Checkbox.cjs"
     },
     "./ColorInput": {
+      "source": "./src/components/ColorInput/ColorInput.tsx",
       "types": "./dist/components/ColorInput/ColorInput.d.ts",
       "import": "./dist/components/ColorInput.js",
       "require": "./dist/components/ColorInput.cjs"
     },
     "./ColorPicker": {
+      "source": "./src/components/ColorPicker/ColorPicker.tsx",
       "types": "./dist/components/ColorPicker/ColorPicker.d.ts",
       "import": "./dist/components/ColorPicker.js",
       "require": "./dist/components/ColorPicker.cjs"
     },
     "./ContextMenu": {
+      "source": "./src/components/ContextMenu/ContextMenu.tsx",
       "types": "./dist/components/ContextMenu/ContextMenu.d.ts",
       "import": "./dist/components/ContextMenu.js",
       "require": "./dist/components/ContextMenu.cjs"
     },
     "./Editor": {
+      "source": "./src/components/Editor/index.ts",
       "types": "./dist/components/Editor/index.d.ts",
       "import": "./dist/components/Editor.js",
       "require": "./dist/components/Editor.cjs"
     },
     "./FillEditor": {
+      "source": "./src/components/FillEditor/FillEditor.tsx",
       "types": "./dist/components/FillEditor/FillEditor.d.ts",
       "import": "./dist/components/FillEditor.js",
       "require": "./dist/components/FillEditor.cjs"
     },
-    "./FontsPanel": {
-      "types": "./dist/components/FontsPanel/FontsPanel.d.ts",
-      "import": "./dist/components/FontsPanel.js",
-      "require": "./dist/components/FontsPanel.cjs"
+    "./panels/FontsPanel": {
+      "source": "./src/panels/FontsPanel/FontsPanel.tsx",
+      "types": "./dist/panels/FontsPanel/FontsPanel.d.ts",
+      "import": "./dist/panels/FontsPanel.js",
+      "require": "./dist/panels/FontsPanel.cjs"
     },
     "./GradientEditor": {
+      "source": "./src/components/GradientEditor/GradientEditor.tsx",
       "types": "./dist/components/GradientEditor/GradientEditor.d.ts",
       "import": "./dist/components/GradientEditor.js",
       "require": "./dist/components/GradientEditor.cjs"
     },
     "./IconButton": {
+      "source": "./src/components/IconButton/IconButton.tsx",
       "types": "./dist/components/IconButton/IconButton.d.ts",
       "import": "./dist/components/IconButton.js",
       "require": "./dist/components/IconButton.cjs"
     },
     "./Input": {
+      "source": "./src/components/Input/Input.tsx",
       "types": "./dist/components/Input/Input.d.ts",
       "import": "./dist/components/Input.js",
       "require": "./dist/components/Input.cjs"
     },
     "./LayerItem": {
+      "source": "./src/components/LayerItem/LayerItem.tsx",
       "types": "./dist/components/LayerItem/LayerItem.d.ts",
       "import": "./dist/components/LayerItem.js",
       "require": "./dist/components/LayerItem.cjs"
     },
     "./LogEntry": {
+      "source": "./src/components/LogEntry/LogEntry.tsx",
       "types": "./dist/components/LogEntry/LogEntry.d.ts",
       "import": "./dist/components/LogEntry.js",
       "require": "./dist/components/LogEntry.cjs"
     },
     "./LogViewer": {
+      "source": "./src/components/LogViewer/LogViewer.tsx",
       "types": "./dist/components/LogViewer/LogViewer.d.ts",
       "import": "./dist/components/LogViewer.js",
       "require": "./dist/components/LogViewer.cjs"
     },
-    "./Panel": {
-      "types": "./dist/components/Panel/Panel.d.ts",
-      "import": "./dist/components/Panel.js",
-      "require": "./dist/components/Panel.cjs"
+    "./panels/Panel": {
+      "source": "./src/panels/Panel/Panel.tsx",
+      "types": "./dist/panels/Panel/Panel.d.ts",
+      "import": "./dist/panels/Panel.js",
+      "require": "./dist/panels/Panel.cjs"
     },
     "./Portal": {
+      "source": "./src/components/Portal/Portal.tsx",
       "types": "./dist/components/Portal/Portal.d.ts",
       "import": "./dist/components/Portal.js",
       "require": "./dist/components/Portal.cjs"
     },
-    "./PositionPanel": {
-      "types": "./dist/components/PositionPanel/PositionPanel.d.ts",
-      "import": "./dist/components/PositionPanel.js",
-      "require": "./dist/components/PositionPanel.cjs"
+    "./panels/PositionPanel": {
+      "source": "./src/panels/PositionPanel/PositionPanel.tsx",
+      "types": "./dist/panels/PositionPanel/PositionPanel.d.ts",
+      "import": "./dist/panels/PositionPanel.js",
+      "require": "./dist/panels/PositionPanel.cjs"
     },
     "./PropertyGrid": {
+      "source": "./src/components/PropertyGrid/PropertyGrid.tsx",
       "types": "./dist/components/PropertyGrid/PropertyGrid.d.ts",
       "import": "./dist/components/PropertyGrid.js",
       "require": "./dist/components/PropertyGrid.cjs"
     },
     "./PropertyRow": {
+      "source": "./src/components/PropertyRow/PropertyRow.tsx",
       "types": "./dist/components/PropertyRow/PropertyRow.d.ts",
       "import": "./dist/components/PropertyRow.js",
       "require": "./dist/components/PropertyRow.cjs"
     },
     "./PropertySection": {
+      "source": "./src/components/PropertySection/PropertySection.tsx",
       "types": "./dist/components/PropertySection/PropertySection.d.ts",
       "import": "./dist/components/PropertySection.js",
       "require": "./dist/components/PropertySection.cjs"
     },
     "./SectionHeader": {
+      "source": "./src/components/SectionHeader/SectionHeader.tsx",
       "types": "./dist/components/SectionHeader/SectionHeader.d.ts",
       "import": "./dist/components/SectionHeader.js",
       "require": "./dist/components/SectionHeader.cjs"
     },
     "./SegmentedControl": {
+      "source": "./src/components/SegmentedControl/SegmentedControl.tsx",
       "types": "./dist/components/SegmentedControl/SegmentedControl.d.ts",
       "import": "./dist/components/SegmentedControl.js",
       "require": "./dist/components/SegmentedControl.cjs"
     },
     "./Select": {
+      "source": "./src/components/Select/Select.tsx",
       "types": "./dist/components/Select/Select.d.ts",
       "import": "./dist/components/Select.js",
       "require": "./dist/components/Select.cjs"
     },
     "./Slider": {
+      "source": "./src/components/Slider/Slider.tsx",
       "types": "./dist/components/Slider/Slider.d.ts",
       "import": "./dist/components/Slider.js",
       "require": "./dist/components/Slider.cjs"
     },
     "./SplitButton": {
+      "source": "./src/components/SplitButton/SplitButton.tsx",
       "types": "./dist/components/SplitButton/SplitButton.d.ts",
       "import": "./dist/components/SplitButton.js",
       "require": "./dist/components/SplitButton.cjs"
     },
     "./StatusBar": {
+      "source": "./src/components/StatusBar/StatusBar.tsx",
       "types": "./dist/components/StatusBar/StatusBar.d.ts",
       "import": "./dist/components/StatusBar.js",
       "require": "./dist/components/StatusBar.cjs"
     },
-    "./StrokeSettingsPanel": {
-      "types": "./dist/components/StrokeSettingsPanel/StrokeSettingsPanel.d.ts",
-      "import": "./dist/components/StrokeSettingsPanel.js",
-      "require": "./dist/components/StrokeSettingsPanel.cjs"
+    "./panels/StrokeSettingsPanel": {
+      "source": "./src/panels/StrokeSettingsPanel/StrokeSettingsPanel.tsx",
+      "types": "./dist/panels/StrokeSettingsPanel/StrokeSettingsPanel.d.ts",
+      "import": "./dist/panels/StrokeSettingsPanel.js",
+      "require": "./dist/panels/StrokeSettingsPanel.cjs"
     },
     "./Toolbar": {
+      "source": "./src/components/Toolbar/Toolbar.tsx",
       "types": "./dist/components/Toolbar/Toolbar.d.ts",
       "import": "./dist/components/Toolbar.js",
       "require": "./dist/components/Toolbar.cjs"
     },
     "./Tooltip": {
+      "source": "./src/components/Tooltip/Tooltip.tsx",
       "types": "./dist/components/Tooltip/Tooltip.d.ts",
       "import": "./dist/components/Tooltip.js",
       "require": "./dist/components/Tooltip.cjs"
     },
     "./TransformButtons": {
+      "source": "./src/components/TransformButtons/TransformButtons.tsx",
       "types": "./dist/components/TransformButtons/TransformButtons.d.ts",
       "import": "./dist/components/TransformButtons.js",
       "require": "./dist/components/TransformButtons.cjs"
     },
     "./TreeItem": {
+      "source": "./src/components/TreeItem/TreeItem.tsx",
       "types": "./dist/components/TreeItem/TreeItem.d.ts",
       "import": "./dist/components/TreeItem.js",
       "require": "./dist/components/TreeItem.cjs"
     },
-    "./TypographyPanel": {
-      "types": "./dist/components/TypographyPanel/TypographyPanel.d.ts",
-      "import": "./dist/components/TypographyPanel.js",
-      "require": "./dist/components/TypographyPanel.cjs"
+    "./panels/TypographyPanel": {
+      "source": "./src/panels/TypographyPanel/TypographyPanel.tsx",
+      "types": "./dist/panels/TypographyPanel/TypographyPanel.d.ts",
+      "import": "./dist/panels/TypographyPanel.js",
+      "require": "./dist/panels/TypographyPanel.cjs"
     },
     "./UnitInput": {
+      "source": "./src/components/UnitInput/UnitInput.tsx",
       "types": "./dist/components/UnitInput/UnitInput.d.ts",
       "import": "./dist/components/UnitInput.js",
       "require": "./dist/components/UnitInput.cjs"

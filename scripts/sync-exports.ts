@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * @file Component exports synchronization script
+ * @file Component and panel exports synchronization script
  *
- * Scans src/components directories and updates:
+ * Scans src/components and src/panels directories and updates:
  * - package.json exports field
  * - vite.config.ts entry points (via generated file)
  *
@@ -17,18 +17,22 @@
  */
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
-import { basename, join, resolve } from "path";
+import { join, resolve } from "path";
 
 const ROOT_DIR = resolve(import.meta.dirname, "..");
 const COMPONENTS_DIR = join(ROOT_DIR, "src/components");
+const PANELS_DIR = join(ROOT_DIR, "src/panels");
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
 const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
+
+type EntryCategory = "component" | "panel";
 
 interface ComponentEntry {
   name: string;
   entryType: "index" | "named";
   entryPath: string;
   relativePath: string;
+  category: EntryCategory;
 }
 
 interface EntryCatalog {
@@ -55,58 +59,66 @@ interface ExportEntry {
 const ALLOWED_INDEX_ENTRIES = new Set(["Editor"]);
 
 /**
- * Detects the entry point for a component directory
+ * Detects the entry point for a component or panel directory
  *
  * Priority:
  * 1. [ComponentName].ts (re-export file)
  * 2. [ComponentName].tsx (direct component)
  * 3. index.ts (only allowed for ALLOWED_INDEX_ENTRIES)
  */
-function detectEntryPoint(componentDir: string, componentName: string): ComponentEntry | null {
-  const namedTsPath = join(componentDir, `${componentName}.ts`);
-  const namedTsxPath = join(componentDir, `${componentName}.tsx`);
-  const indexPath = join(componentDir, "index.ts");
+function detectEntryPoint(
+  dir: string,
+  name: string,
+  category: EntryCategory,
+): ComponentEntry | null {
+  const namedTsPath = join(dir, `${name}.ts`);
+  const namedTsxPath = join(dir, `${name}.tsx`);
+  const indexPath = join(dir, "index.ts");
+  const categoryDir = category === "component" ? "components" : "panels";
 
-  // Priority 1: [ComponentName].ts (re-export file)
+  // Priority 1: [Name].ts (re-export file)
   if (existsSync(namedTsPath)) {
     return {
-      name: componentName,
+      name,
       entryType: "named",
       entryPath: namedTsPath,
-      relativePath: `src/components/${componentName}/${componentName}.ts`,
+      relativePath: `src/${categoryDir}/${name}/${name}.ts`,
+      category,
     };
   }
 
-  // Priority 2: [ComponentName].tsx (direct component)
+  // Priority 2: [Name].tsx (direct component)
   if (existsSync(namedTsxPath)) {
     // Warn if index.ts also exists but is not allowed
-    if (existsSync(indexPath) && !ALLOWED_INDEX_ENTRIES.has(componentName)) {
+    if (existsSync(indexPath) && !ALLOWED_INDEX_ENTRIES.has(name)) {
       console.warn(
-        `⚠ ${componentName}: has both ${componentName}.tsx and index.ts. ` +
-        `Rename index.ts to ${componentName}.ts to follow the naming convention.`
+        `⚠ ${name}: has both ${name}.tsx and index.ts. ` +
+        `Rename index.ts to ${name}.ts to follow the naming convention.`
       );
     }
     return {
-      name: componentName,
+      name,
       entryType: "named",
       entryPath: namedTsxPath,
-      relativePath: `src/components/${componentName}/${componentName}.tsx`,
+      relativePath: `src/${categoryDir}/${name}/${name}.tsx`,
+      category,
     };
   }
 
   // Priority 3: index.ts (only for allowed components)
   if (existsSync(indexPath)) {
-    if (ALLOWED_INDEX_ENTRIES.has(componentName)) {
+    if (ALLOWED_INDEX_ENTRIES.has(name)) {
       return {
-        name: componentName,
+        name,
         entryType: "index",
         entryPath: indexPath,
-        relativePath: `src/components/${componentName}/index.ts`,
+        relativePath: `src/${categoryDir}/${name}/index.ts`,
+        category,
       };
     }
     console.error(
-      `✗ ${componentName}: index.ts is not allowed. ` +
-      `Rename to ${componentName}.ts to follow the naming convention.`
+      `✗ ${name}: index.ts is not allowed. ` +
+      `Rename to ${name}.ts to follow the naming convention.`
     );
     return null;
   }
@@ -115,33 +127,50 @@ function detectEntryPoint(componentDir: string, componentName: string): Componen
 }
 
 /**
- * Scans components directory and builds entry catalog
+ * Scans a directory and collects entries
  */
-function buildEntryCatalog(): EntryCatalog {
-  const entries = readdirSync(COMPONENTS_DIR);
-  const components: ComponentEntry[] = [];
+function scanDirectory(
+  dir: string,
+  category: EntryCategory,
+): ComponentEntry[] {
+  if (!existsSync(dir)) {
+    return [];
+  }
+  const entries = readdirSync(dir);
+  const result: ComponentEntry[] = [];
 
   for (const entry of entries) {
-    const componentDir = join(COMPONENTS_DIR, entry);
-    const stat = statSync(componentDir);
+    const entryDir = join(dir, entry);
+    const stat = statSync(entryDir);
 
     if (!stat.isDirectory()) {
       continue;
     }
 
-    const componentEntry = detectEntryPoint(componentDir, entry);
+    const componentEntry = detectEntryPoint(entryDir, entry, category);
     if (componentEntry) {
-      components.push(componentEntry);
+      result.push(componentEntry);
     } else {
-      console.warn(`⚠ No entry point found for component: ${entry}`);
+      console.warn(`⚠ No entry point found for ${category}: ${entry}`);
     }
   }
 
-  components.sort((a, b) => a.name.localeCompare(b.name));
+  return result;
+}
+
+/**
+ * Scans components and panels directories and builds entry catalog
+ */
+function buildEntryCatalog(): EntryCatalog {
+  const components = scanDirectory(COMPONENTS_DIR, "component");
+  const panels = scanDirectory(PANELS_DIR, "panel");
+  const allEntries = [...components, ...panels];
+
+  allEntries.sort((a, b) => a.name.localeCompare(b.name));
 
   return {
     generatedAt: new Date().toISOString(),
-    components,
+    components: allEntries,
   };
 }
 
@@ -164,20 +193,24 @@ function generateExports(catalog: EntryCatalog): Record<string, ExportEntry | st
     },
   };
 
-  for (const component of catalog.components) {
-    const exportKey = `./${component.name}`;
+  for (const entry of catalog.components) {
+    const categoryDir = entry.category === "component" ? "components" : "panels";
+    // Components: ./ComponentName, Panels: ./panels/PanelName
+    const exportKey = entry.category === "component"
+      ? `./${entry.name}`
+      : `./panels/${entry.name}`;
 
     // Type definition path matches source structure
     // For index.ts entries (Editor only): dist/components/Editor/index.d.ts
     // For named entries: dist/components/Badge/Badge.d.ts
-    const typeFileName = component.entryType === "index" ? "index" : component.name;
-    const typesPath = `./dist/components/${component.name}/${typeFileName}.d.ts`;
+    const typeFileName = entry.entryType === "index" ? "index" : entry.name;
+    const typesPath = `./dist/${categoryDir}/${entry.name}/${typeFileName}.d.ts`;
 
     exports[exportKey] = {
-      source: `./${component.relativePath}`,
+      source: `./${entry.relativePath}`,
       types: typesPath,
-      import: `./dist/components/${component.name}.js`,
-      require: `./dist/components/${component.name}.cjs`,
+      import: `./dist/${categoryDir}/${entry.name}.js`,
+      require: `./dist/${categoryDir}/${entry.name}.cjs`,
     };
   }
 
@@ -195,8 +228,9 @@ function generateViteEntries(catalog: EntryCatalog): Record<string, string> {
     "themes/index": "src/themes/index.ts",
   };
 
-  for (const component of catalog.components) {
-    entries[`components/${component.name}`] = component.relativePath;
+  for (const entry of catalog.components) {
+    const categoryDir = entry.category === "component" ? "components" : "panels";
+    entries[`${categoryDir}/${entry.name}`] = entry.relativePath;
   }
 
   return entries;
@@ -254,17 +288,20 @@ function main(): void {
     return;
   }
 
-  console.log(`📦 Found ${catalog.components.length} components\n`);
+  const components = catalog.components.filter(c => c.category === "component");
+  const panels = catalog.components.filter(c => c.category === "panel");
+
+  console.log(`📦 Found ${catalog.components.length} entries (${components.length} components, ${panels.length} panels)\n`);
 
   // Show component breakdown
   const indexEntries = catalog.components.filter(c => c.entryType === "index");
   const namedEntries = catalog.components.filter(c => c.entryType === "named");
 
   console.log(`  index.ts entries: ${indexEntries.length}`);
-  indexEntries.forEach(c => console.log(`    - ${c.name}`));
+  indexEntries.forEach(c => console.log(`    - ${c.name} (${c.category})`));
 
   console.log(`\n  [Name].tsx entries: ${namedEntries.length}`);
-  namedEntries.forEach(c => console.log(`    - ${c.name}`));
+  namedEntries.forEach(c => console.log(`    - ${c.name} (${c.category})`));
 
   // Check for changes
   const currentPkg = readPackageJson();

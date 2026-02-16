@@ -9,18 +9,18 @@ import {
   DemoRow,
   DemoStateDisplay,
 } from "../../components";
-import { StrokeSettingsPanel } from "../../../components/StrokeSettingsPanel/StrokeSettingsPanel";
+import { StrokeSettingsPanel } from "../../../panels/StrokeSettingsPanel/StrokeSettingsPanel";
 import {
   StrokePanelExpanded,
   createDefaultExpandedSettings,
-} from "../../../components/StrokeSettingsPanel/StrokePanelExpanded";
+} from "../../../panels/StrokeSettingsPanel/StrokePanelExpanded";
 import {
   StrokePanelCompact,
   createDefaultCompactSettings,
-} from "../../../components/StrokeSettingsPanel/StrokePanelCompact";
-import type { StrokeSettings } from "../../../components/StrokeSettingsPanel/StrokeSettingsPanel";
-import type { StrokePanelExpandedSettings } from "../../../components/StrokeSettingsPanel/StrokePanelExpanded";
-import type { StrokePanelCompactSettings } from "../../../components/StrokeSettingsPanel/StrokePanelCompact";
+} from "../../../panels/StrokeSettingsPanel/StrokePanelCompact";
+import type { StrokeSettings } from "../../../panels/StrokeSettingsPanel/StrokeSettingsPanel";
+import type { StrokePanelExpandedSettings } from "../../../panels/StrokeSettingsPanel/StrokePanelExpanded";
+import type { StrokePanelCompactSettings } from "../../../panels/StrokeSettingsPanel/StrokePanelCompact";
 
 export function StrokeSettingsPanelDemo() {
   // Legacy settings

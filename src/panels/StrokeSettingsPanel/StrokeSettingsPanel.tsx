@@ -4,11 +4,11 @@
 
 import { memo, useCallback } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { Panel } from "../Panel/Panel";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import { Select, type SelectOption } from "../Select/Select";
-import { UnitInput } from "../UnitInput/UnitInput";
-import { IconButton } from "../IconButton/IconButton";
+import { Panel } from "../../panels/Panel/Panel";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
+import { Select, type SelectOption } from "../../components/Select/Select";
+import { UnitInput } from "../../components/UnitInput/UnitInput";
+import { IconButton } from "../../components/IconButton/IconButton";
 import {
   COLOR_TEXT_MUTED,
   SIZE_FONT_SM,

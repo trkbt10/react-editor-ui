@@ -4,8 +4,8 @@
 
 import type { CSSProperties } from "react";
 import type { DashPattern } from "./types";
-import { Checkbox } from "../Checkbox/Checkbox";
-import { Input } from "../Input/Input";
+import { Checkbox } from "../../components/Checkbox/Checkbox";
+import { Input } from "../../components/Input/Input";
 import {
   COLOR_TEXT_MUTED,
   SIZE_FONT_XS,

@@ -7,7 +7,7 @@ import {
   DemoSection,
   DemoMutedText,
 } from "../../components";
-import { Panel } from "../../../components/Panel/Panel";
+import { Panel } from "../../../panels/Panel/Panel";
 import { PropertyRow } from "../../../components/PropertyRow/PropertyRow";
 
 export function PanelDemo() {

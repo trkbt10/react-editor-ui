@@ -3,7 +3,7 @@
  */
 
 import type { StrokeAlign } from "./types";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import {
   StrokeAlignInsideIcon as AlignInsideIcon,
   StrokeAlignCenterIcon as AlignCenterIcon,

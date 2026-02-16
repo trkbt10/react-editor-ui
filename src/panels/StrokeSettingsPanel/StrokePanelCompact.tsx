@@ -10,10 +10,10 @@ import type {
   ArrowheadSettings,
   WidthProfile,
 } from "./types";
-import { Panel } from "../Panel/Panel";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import { Select, type SelectOption } from "../Select/Select";
-import { Input } from "../Input/Input";
+import { Panel } from "../../panels/Panel/Panel";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
+import { Select, type SelectOption } from "../../components/Select/Select";
+import { Input } from "../../components/Input/Input";
 import { StrokeJoinSelect } from "./StrokeJoinSelect";
 import { StrokeProfileSelect } from "./StrokeProfileSelect";
 import { StrokeDashEditor } from "./StrokeDashEditor";

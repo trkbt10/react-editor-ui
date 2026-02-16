@@ -9,9 +9,9 @@ import {
   DemoSurface,
   DemoPreview,
 } from "../../components";
-import { FontsPanel } from "../../../components/FontsPanel/FontsPanel";
-import { LocalFontList } from "../../../components/FontsPanel/LocalFontList";
-import type { FontItem } from "../../../components/FontsPanel/FontsPanel";
+import { FontsPanel } from "../../../panels/FontsPanel/FontsPanel";
+import { LocalFontList } from "../../../panels/FontsPanel/LocalFontList";
+import type { FontItem } from "../../../panels/FontsPanel/FontsPanel";
 
 const sampleFonts: FontItem[] = [
   { name: "SF Pro", family: "'SF Pro', -apple-system, sans-serif", category: "sans-serif" },

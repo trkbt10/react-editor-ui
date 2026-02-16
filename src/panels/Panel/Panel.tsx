@@ -3,7 +3,7 @@
  */
 
 import type { ReactNode, CSSProperties } from "react";
-import { IconButton } from "../IconButton/IconButton";
+import { IconButton } from "../../components/IconButton/IconButton";
 import {
   COLOR_SURFACE,
   COLOR_BORDER,

@@ -11,8 +11,8 @@ import {
 import {
   PositionPanel,
   createDefaultPositionSettings,
-} from "../../../components/PositionPanel/PositionPanel";
-import type { PositionSettings } from "../../../components/PositionPanel/PositionPanel";
+} from "../../../panels/PositionPanel/PositionPanel";
+import type { PositionSettings } from "../../../panels/PositionPanel/PositionPanel";
 
 export function PositionPanelDemo() {
   const [settings, setSettings] = useState<PositionSettings>(createDefaultPositionSettings());

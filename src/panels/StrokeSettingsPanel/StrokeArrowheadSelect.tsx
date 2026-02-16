@@ -4,10 +4,10 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import type { ArrowheadSettings, ArrowheadType, ArrowheadAlign } from "./types";
-import { Select, type SelectOption } from "../Select/Select";
-import { Input } from "../Input/Input";
-import { IconButton } from "../IconButton/IconButton";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
+import { Select, type SelectOption } from "../../components/Select/Select";
+import { Input } from "../../components/Input/Input";
+import { IconButton } from "../../components/IconButton/IconButton";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import {
   ArrowNoneIcon,
   ArrowTriangleIcon,

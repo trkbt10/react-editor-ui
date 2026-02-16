@@ -10,10 +10,10 @@ import {
   DemoStateDisplay,
   DemoPreview,
 } from "../../components";
-import { TypographyPanel } from "../../../components/TypographyPanel/TypographyPanel";
-import { FontsPanel } from "../../../components/FontsPanel/FontsPanel";
-import type { TypographySettings } from "../../../components/TypographyPanel/TypographyPanel";
-import type { FontItem } from "../../../components/FontsPanel/FontsPanel";
+import { TypographyPanel } from "../../../panels/TypographyPanel/TypographyPanel";
+import { FontsPanel } from "../../../panels/FontsPanel/FontsPanel";
+import type { TypographySettings } from "../../../panels/TypographyPanel/TypographyPanel";
+import type { FontItem } from "../../../panels/FontsPanel/FontsPanel";
 
 const sampleFonts: FontItem[] = [
   { name: "SF Pro", family: "'SF Pro', -apple-system, sans-serif", category: "sans-serif" },

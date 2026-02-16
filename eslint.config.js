@@ -58,6 +58,7 @@ export default [
         "custom/no-parent-type-reexport": "error",
         "custom/no-barrel-import": "error",
         "custom/no-component-index": "error",
+        "custom/no-panels-in-components": "error",
         "import/no-cycle": ["error", { maxDepth: 10 }],
         "custom/no-use-state-in-use-effect": "error",
         "custom/prefer-pointer-events": "warn",
