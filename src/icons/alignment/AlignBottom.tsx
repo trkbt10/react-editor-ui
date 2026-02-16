@@ -1,6 +1,11 @@
+/**
+ * @file Bottom alignment icon for object positioning
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Bars aligned to bottom edge baseline */
 export function AlignBottomIcon({
   size,
   color = "currentColor",

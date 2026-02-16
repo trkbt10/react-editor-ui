@@ -128,6 +128,7 @@ function MinusIcon({ size }: IconProps) {
   );
 }
 
+/** Compact color input with swatch preview, hex input, and color picker popup */
 export function ColorInput({
   value,
   onChange,

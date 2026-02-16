@@ -84,6 +84,7 @@ function formatTimestamp(timestamp: string | Date): string {
   });
 }
 
+/** Single log entry row with timestamp, level indicator, and message */
 export function LogEntry({
   message,
   level = "info",

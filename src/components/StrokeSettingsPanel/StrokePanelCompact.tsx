@@ -189,6 +189,7 @@ function BrushPreview({ style }: { style: BrushStyle }) {
   );
 }
 
+/** Creates default settings for compact stroke panel */
 export function createDefaultCompactSettings(): StrokePanelCompactSettings {
   return {
     lineStyle: "solid",
@@ -212,6 +213,7 @@ export function createDefaultCompactSettings(): StrokePanelCompactSettings {
   };
 }
 
+/** Compact stroke panel with line style, arrowheads, and effect options */
 export function StrokePanelCompact({
   settings,
   onChange,

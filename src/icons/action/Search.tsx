@@ -1,6 +1,11 @@
+/**
+ * @file Magnifying glass icon for search functionality
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Magnifying glass for search inputs and find operations */
 export function SearchIcon({
   size,
   color = "currentColor",

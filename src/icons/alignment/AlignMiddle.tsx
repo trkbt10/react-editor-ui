@@ -1,6 +1,11 @@
+/**
+ * @file Vertical center alignment icon
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Bars centered on horizontal axis */
 export function AlignMiddleIcon({
   size,
   color = "currentColor",

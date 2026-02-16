@@ -1,6 +1,11 @@
+/**
+ * @file Miter join icon for sharp corner connections
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** L-corner with sharp pointed outer edge at the join */
 export function JoinMiterIcon({
   size,
   color = "currentColor",

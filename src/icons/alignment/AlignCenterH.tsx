@@ -1,6 +1,11 @@
+/**
+ * @file Horizontal center alignment icon
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Bars centered on vertical axis */
 export function AlignCenterHIcon({
   size,
   color = "currentColor",

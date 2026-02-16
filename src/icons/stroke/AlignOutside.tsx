@@ -1,6 +1,11 @@
+/**
+ * @file Outside stroke alignment icon
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** L-corner with stroke drawn outside the path boundary */
 export function StrokeAlignOutsideIcon({
   size,
   color = "currentColor",

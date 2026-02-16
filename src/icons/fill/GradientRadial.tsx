@@ -1,6 +1,11 @@
+/**
+ * @file Radial gradient type icon for circular color transitions
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Rectangle with center-outward radial gradient showing circular fade */
 export function GradientRadialIcon({
   size,
   style,

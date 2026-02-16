@@ -1,6 +1,11 @@
+/**
+ * @file Round join icon for smooth corner connections
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** L-corner with curved rounded edge at the join */
 export function JoinRoundIcon({
   size,
   color = "currentColor",

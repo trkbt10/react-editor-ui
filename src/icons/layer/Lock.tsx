@@ -1,3 +1,7 @@
+/**
+ * @file Lock icon for layer edit protection
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
@@ -5,6 +9,7 @@ export type LockIconProps = IconProps & {
   locked: boolean;
 };
 
+/** Closed or open padlock indicating layer lock state */
 export function LockIcon({
   locked,
   size,

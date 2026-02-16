@@ -26,6 +26,7 @@ const unitOptions: UnitOption[] = [
   { value: "rem", label: "rem" },
 ];
 
+/** Stroke weight input with unit selector (px, pt, em, rem) */
 export function StrokeWeightInput({
   value,
   onChange,

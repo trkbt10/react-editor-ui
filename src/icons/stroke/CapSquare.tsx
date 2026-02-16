@@ -1,6 +1,11 @@
+/**
+ * @file Square cap icon for extended flat stroke endings
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Horizontal bar with square extensions beyond path endpoints */
 export function CapSquareIcon({
   size,
   color = "currentColor",

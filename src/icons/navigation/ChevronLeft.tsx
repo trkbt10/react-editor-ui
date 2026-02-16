@@ -1,6 +1,11 @@
+/**
+ * @file Left chevron for back navigation and previous actions
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Left-pointing angle bracket for previous/back navigation */
 export function ChevronLeftIcon({
   size,
   color = "currentColor",

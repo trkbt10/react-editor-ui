@@ -1,6 +1,11 @@
+/**
+ * @file Swap icon for exchanging or mirroring values
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Split panel symbol for swapping or reflecting values */
 export function SwapIcon({
   size,
   color = "currentColor",

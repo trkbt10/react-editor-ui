@@ -1,6 +1,11 @@
+/**
+ * @file Diamond gradient type icon for rhombus-shaped color transitions
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Diamond shape with radial gradient showing four-corner fade pattern */
 export function GradientDiamondIcon({
   size,
   style,

@@ -1,6 +1,11 @@
+/**
+ * @file Butt cap icon for flat stroke endings
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Horizontal bar with flat ends cut at the path endpoint */
 export function CapButtIcon({
   size,
   color = "currentColor",

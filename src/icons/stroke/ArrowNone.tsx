@@ -1,5 +1,10 @@
+/**
+ * @file No arrowhead icon for plain line endings
+ */
+
 import type { IconProps } from "../types";
 
+/** Simple horizontal line without any arrowhead decoration */
 export function ArrowNoneIcon({
   color = "currentColor",
   style,

@@ -19,6 +19,7 @@ const options = [
   { value: "square" as const, icon: <CapSquareIcon />, "aria-label": "Square cap" },
 ];
 
+/** Segmented control for line cap style: butt, round, or square */
 export function StrokeCapSelect({
   value,
   onChange,

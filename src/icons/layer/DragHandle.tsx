@@ -1,5 +1,10 @@
+/**
+ * @file Drag handle icon for layer reordering
+ */
+
 import type { IconProps } from "../types";
 
+/** Six-dot grip pattern (2x3) for drag-and-drop reordering */
 export function DragHandleIcon({
   size = 10,
   color = "currentColor",

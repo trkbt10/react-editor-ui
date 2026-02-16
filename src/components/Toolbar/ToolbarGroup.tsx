@@ -11,6 +11,7 @@ export type ToolbarGroupProps = {
   className?: string;
 };
 
+/** Container for grouping related toolbar buttons together */
 export function ToolbarGroup({ children, className }: ToolbarGroupProps) {
   const toolbarOrientation = useToolbarOrientation();
   const isVertical = toolbarOrientation === "vertical";

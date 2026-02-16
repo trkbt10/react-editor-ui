@@ -24,6 +24,7 @@ function getDividerStyle(isVerticalToolbar: boolean): CSSProperties {
   return { width: SIZE_DIVIDER_WIDTH, height: SIZE_ICON_MD, backgroundColor: COLOR_DIVIDER, margin: `0 ${SPACE_SM}`, flexShrink: 0 };
 }
 
+/** Visual separator line between toolbar button groups */
 export function ToolbarDivider({ className }: ToolbarDividerProps) {
   const toolbarOrientation = useToolbarOrientation();
   const isVerticalToolbar = toolbarOrientation === "vertical";

@@ -1,3 +1,7 @@
+/**
+ * @file Alignment icons for object positioning in design tools
+ */
+
 export { AlignLeftIcon } from "./AlignLeft";
 export { AlignCenterHIcon } from "./AlignCenterH";
 export { AlignRightIcon } from "./AlignRight";

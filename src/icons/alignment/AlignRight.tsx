@@ -1,6 +1,11 @@
+/**
+ * @file Right alignment icon for object positioning
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Bars aligned to right edge with vertical reference line */
 export function AlignRightIcon({
   size,
   color = "currentColor",

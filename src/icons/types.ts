@@ -1,3 +1,7 @@
+/**
+ * @file Icon component type definitions and prop interfaces
+ */
+
 import type { CSSProperties } from "react";
 
 /**

@@ -1,6 +1,11 @@
+/**
+ * @file Video fill type icon for motion content fills
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Video camera with viewfinder representing video/motion fill */
 export function FillVideoIcon({
   size,
   color = "currentColor",

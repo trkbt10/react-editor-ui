@@ -1,6 +1,11 @@
+/**
+ * @file Solid fill type icon for flat color fills
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Filled rounded rectangle representing single-color fill */
 export function FillSolidIcon({
   size,
   color = "currentColor",

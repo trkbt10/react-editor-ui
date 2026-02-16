@@ -1,6 +1,11 @@
+/**
+ * @file Horizontal flip icon for left-right mirroring
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Vertical axis with arrows pointing outward for horizontal reflection */
 export function FlipHorizontalIcon({
   size,
   color = "currentColor",

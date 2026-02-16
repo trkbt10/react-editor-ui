@@ -181,11 +181,7 @@ function renderPreview(
   );
 }
 
-
-
-
-
-
+/** Pattern fill editor with tiling, scale, rotation, and offset controls */
 export function PatternEditor({
   value,
   onChange,

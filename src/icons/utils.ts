@@ -1,3 +1,7 @@
+/**
+ * @file Icon utility functions for size resolution
+ */
+
 import {
   SIZE_ICON_SM,
   SIZE_ICON_MD,

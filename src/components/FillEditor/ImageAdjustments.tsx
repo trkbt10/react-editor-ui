@@ -130,11 +130,7 @@ function AdjustmentSlider({
   );
 }
 
-
-
-
-
-
+/** Sliders for adjusting image exposure, contrast, saturation, temperature, and tint */
 export function ImageAdjustments({
   value,
   onChange,

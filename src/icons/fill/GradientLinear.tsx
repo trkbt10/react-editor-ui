@@ -1,6 +1,11 @@
+/**
+ * @file Linear gradient type icon for straight-line color transitions
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Rectangle with left-to-right linear gradient showing directional fade */
 export function GradientLinearIcon({
   size,
   style,

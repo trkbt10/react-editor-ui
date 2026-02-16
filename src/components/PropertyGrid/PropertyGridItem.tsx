@@ -17,11 +17,7 @@ function getGridColumn(span: 1 | 2 | 3 | 4 | "full"): string {
   return `span ${span}`;
 }
 
-
-
-
-
-
+/** Grid cell item that can span 1-4 columns for property row layouts */
 export function PropertyGridItem({
   children,
   span = 1,

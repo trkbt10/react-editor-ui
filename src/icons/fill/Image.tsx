@@ -1,6 +1,11 @@
+/**
+ * @file Image fill type icon for bitmap/photograph fills
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Picture frame with sun and mountain landscape representing image fill */
 export function FillImageIcon({
   size,
   color = "currentColor",

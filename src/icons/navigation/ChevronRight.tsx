@@ -1,6 +1,11 @@
+/**
+ * @file Right chevron for forward navigation and expand actions
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Right-pointing angle bracket for next/forward navigation */
 export function ChevronRightIcon({
   size,
   color = "currentColor",

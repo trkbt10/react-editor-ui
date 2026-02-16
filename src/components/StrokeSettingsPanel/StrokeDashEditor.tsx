@@ -48,6 +48,7 @@ function getValues(pattern: DashPattern, columns: 2 | 6): string[] {
   return values;
 }
 
+/** Dash pattern editor with toggle and repeating dash/gap value inputs */
 export function StrokeDashEditor({
   enabled,
   onEnabledChange,

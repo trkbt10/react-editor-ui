@@ -36,11 +36,7 @@ export type FillEditorProps = {
   "aria-label"?: string;
 };
 
-
-
-
-
-
+/** Editor panel that switches between solid, gradient, image, pattern, and video fill types */
 export function FillEditor({
   value,
   onChange,

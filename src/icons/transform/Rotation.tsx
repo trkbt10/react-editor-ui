@@ -1,6 +1,11 @@
+/**
+ * @file Rotation icon for angular transformation
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Circular arrow indicating clockwise rotation transformation */
 export function RotationIcon({
   size,
   color = "currentColor",

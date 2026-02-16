@@ -1,6 +1,11 @@
+/**
+ * @file Round cap icon for semicircular stroke endings
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Horizontal bar with rounded semicircle ends */
 export function CapRoundIcon({
   size,
   color = "currentColor",

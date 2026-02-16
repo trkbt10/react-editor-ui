@@ -1,6 +1,11 @@
+/**
+ * @file Generic gradient fill icon for color transition fills
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Rectangle with horizontal gradient fade representing gradient fill type */
 export function FillGradientIcon({
   size,
   style,

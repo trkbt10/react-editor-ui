@@ -30,6 +30,7 @@ export type GradientStopRowProps = {
   disabled?: boolean;
 };
 
+/** Single gradient color stop row with position, color, and remove controls */
 export function GradientStopRow({
   stop,
   onChange,

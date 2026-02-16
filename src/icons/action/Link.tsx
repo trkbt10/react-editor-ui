@@ -1,6 +1,11 @@
+/**
+ * @file Chain link icon for URL and constraint linking
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Interlocking chain links representing linked values or URLs */
 export function LinkIcon({
   size,
   color = "currentColor",

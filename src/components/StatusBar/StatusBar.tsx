@@ -15,6 +15,7 @@ export type StatusBarProps = {
   className?: string;
 };
 
+/** Application status bar container at bottom of editor window */
 export function StatusBar({ children, className }: StatusBarProps) {
   const style: CSSProperties = {
     display: "flex",

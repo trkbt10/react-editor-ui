@@ -93,6 +93,7 @@ const alignOptions = [
   { value: "end" as const, icon: <AlignEndIcon />, "aria-label": "Align to path end" },
 ];
 
+/** Arrowhead selector with start/end style pickers, scale inputs, and swap button */
 export function StrokeArrowheadSelect({
   value,
   onChange,

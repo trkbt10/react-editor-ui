@@ -1,6 +1,11 @@
+/**
+ * @file Reset icon with crosshair for returning to default/center
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Crosshair with dashed circle for resetting position to origin */
 export function ResetIcon({
   size,
   color = "currentColor",

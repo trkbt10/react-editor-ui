@@ -1,3 +1,7 @@
+/**
+ * @file Eye icon for layer visibility toggle
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
@@ -5,6 +9,7 @@ export type EyeIconProps = IconProps & {
   visible: boolean;
 };
 
+/** Open or crossed-out eye indicating layer visibility state */
 export function EyeIcon({
   visible,
   size,

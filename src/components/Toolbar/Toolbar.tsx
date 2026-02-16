@@ -29,6 +29,7 @@ function getBorderStyle(isVertical: boolean): CSSProperties {
   return isVertical ? { borderRight: `1px solid ${COLOR_BORDER}` } : { borderBottom: `1px solid ${COLOR_BORDER}` };
 }
 
+/** Hook to access current toolbar orientation from context */
 export function useToolbarOrientation(): ToolbarOrientation {
   return useContext(ToolbarContext);
 }

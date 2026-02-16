@@ -23,6 +23,7 @@ const options = [
   { value: "outside" as const, icon: <AlignOutsideIcon />, "aria-label": "Outside" },
 ];
 
+/** Segmented control for stroke alignment: inside, center, or outside */
 export function StrokeAlignSelect({
   value,
   onChange,

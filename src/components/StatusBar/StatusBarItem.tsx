@@ -21,6 +21,7 @@ export type StatusBarItemProps = {
   className?: string;
 };
 
+/** Individual clickable status bar item with hover effect */
 export function StatusBarItem({
   children,
   onClick,

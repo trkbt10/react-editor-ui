@@ -135,6 +135,7 @@ export type LayerItemProps = {
 // COMPONENT
 // ========================================
 
+/** Layer panel item row with expand/collapse, visibility, lock, and drag handle */
 export function LayerItem({
   id,
   label,

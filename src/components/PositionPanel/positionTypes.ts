@@ -27,6 +27,7 @@ export type PositionPanelProps = {
   className?: string;
 };
 
+/** Creates initial position settings with default alignment and zero offset */
 export function createDefaultPositionSettings(): PositionSettings {
   return {
     horizontalAlign: "left",

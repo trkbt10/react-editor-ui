@@ -1,5 +1,10 @@
+/**
+ * @file Triangle arrow icon for filled arrowheads
+ */
+
 import type { IconProps } from "../types";
 
+/** Line with solid filled triangular arrowhead */
 export function ArrowTriangleIcon({
   color = "currentColor",
   style,

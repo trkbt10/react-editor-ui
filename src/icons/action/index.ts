@@ -1,3 +1,7 @@
+/**
+ * @file Action icons for buttons and interactive elements
+ */
+
 export { CloseIcon } from "./Close";
 export { CheckIcon } from "./Check";
 export { SearchIcon } from "./Search";

@@ -1,6 +1,11 @@
+/**
+ * @file Downward chevron for dropdowns and collapsible sections
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Downward-pointing angle bracket for expand/collapse and decrement */
 export function ChevronDownIcon({
   size,
   color = "currentColor",

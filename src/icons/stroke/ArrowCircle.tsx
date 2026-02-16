@@ -1,5 +1,10 @@
+/**
+ * @file Circle terminator icon for dot endings
+ */
+
 import type { IconProps } from "../types";
 
+/** Line ending with filled circular terminator */
 export function ArrowCircleIcon({
   color = "currentColor",
   style,

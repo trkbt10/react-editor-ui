@@ -1,5 +1,10 @@
+/**
+ * @file Diamond terminator icon for rhombus endings
+ */
+
 import type { IconProps } from "../types";
 
+/** Line ending with filled diamond/rhombus terminator */
 export function ArrowDiamondIcon({
   color = "currentColor",
   style,

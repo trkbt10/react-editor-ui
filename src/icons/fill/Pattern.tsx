@@ -1,6 +1,11 @@
+/**
+ * @file Pattern fill type icon for repeating tile fills
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** 2x2 grid of squares representing repeating pattern fill */
 export function FillPatternIcon({
   size,
   color = "currentColor",

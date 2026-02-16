@@ -200,11 +200,7 @@ function FontListItem({
   );
 }
 
-
-
-
-
-
+/** Scrollable font picker panel with search and family/style grouping */
 export function FontsPanel({
   fonts,
   selectedFont,

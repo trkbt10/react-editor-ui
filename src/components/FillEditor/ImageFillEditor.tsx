@@ -106,11 +106,7 @@ function renderPlaceholder(
   );
 }
 
-
-
-
-
-
+/** Image fill editor with sizing, positioning, and exposure/tint adjustments */
 export function ImageFillEditor({
   value,
   onChange,

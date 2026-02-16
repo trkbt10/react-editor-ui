@@ -32,11 +32,7 @@ function formatWidth(width: number | string): string {
   return width;
 }
 
-
-
-
-
-
+/** Fixed-width side panel container with header, close button, and scrollable content */
 export function Panel({
   title,
   children,

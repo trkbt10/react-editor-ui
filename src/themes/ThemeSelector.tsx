@@ -42,6 +42,7 @@ const themeOptions: Array<{ value: ThemeName; label: string }> = [
   { value: "high-contrast-light", label: "High Contrast" },
 ];
 
+/** Dropdown for switching between light, dark, and high-contrast themes */
 export function ThemeSelector({
   value,
   onChange,

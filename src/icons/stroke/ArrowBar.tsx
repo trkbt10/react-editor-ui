@@ -1,5 +1,10 @@
+/**
+ * @file Bar terminator icon for perpendicular line endings
+ */
+
 import type { IconProps } from "../types";
 
+/** Line ending with vertical bar terminator */
 export function ArrowBarIcon({
   color = "currentColor",
   style,

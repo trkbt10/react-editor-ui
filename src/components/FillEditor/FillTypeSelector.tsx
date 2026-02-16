@@ -28,11 +28,7 @@ const fillTypeOptions: SegmentedControlOption<FillType>[] = [
   { value: "video", icon: <FillVideoIcon />, "aria-label": "Video fill" },
 ];
 
-
-
-
-
-
+/** Segmented control for selecting between solid, gradient, image, pattern, and video fills */
 export function FillTypeSelector({
   value,
   onChange,

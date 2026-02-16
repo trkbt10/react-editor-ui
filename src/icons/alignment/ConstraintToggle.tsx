@@ -1,6 +1,11 @@
+/**
+ * @file Constraint toggle icon for anchor point configuration
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Rectangle with extending lines showing constraint attachment points */
 export function ConstraintToggleIcon({
   size,
   color = "currentColor",

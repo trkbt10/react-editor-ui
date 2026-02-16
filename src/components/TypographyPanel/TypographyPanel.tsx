@@ -307,21 +307,7 @@ function LabeledUnitInput({
   );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/** Typography settings panel with font, size, weight, color, and spacing controls */
 export function TypographyPanel({
   settings,
   onChange,

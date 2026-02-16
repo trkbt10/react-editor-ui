@@ -1,6 +1,11 @@
+/**
+ * @file Top alignment icon for object positioning
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Bars aligned to top edge baseline with horizontal reference line */
 export function AlignTopIcon({
   size,
   color = "currentColor",

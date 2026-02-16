@@ -76,6 +76,7 @@ const containerStyle: CSSProperties = {
   gap: SPACE_SM,
 };
 
+/** Dropdown for stroke width profile (uniform, tapered) with flip button */
 export function StrokeProfileSelect({
   value,
   onChange,

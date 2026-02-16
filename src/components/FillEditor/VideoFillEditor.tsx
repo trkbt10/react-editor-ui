@@ -66,11 +66,7 @@ function renderPreview(
   );
 }
 
-
-
-
-
-
+/** Video fill editor with URL input, sizing, and playback controls */
 export function VideoFillEditor({
   value,
   onChange,

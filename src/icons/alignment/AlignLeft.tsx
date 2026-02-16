@@ -1,6 +1,11 @@
+/**
+ * @file Left alignment icon for object positioning
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Bars aligned to left edge */
 export function AlignLeftIcon({
   size,
   color = "currentColor",

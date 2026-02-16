@@ -1,6 +1,11 @@
+/**
+ * @file Vertical flip icon for up-down mirroring
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Horizontal axis with arrows pointing outward for vertical reflection */
 export function FlipVerticalIcon({
   size,
   color = "currentColor",

@@ -1,5 +1,10 @@
+/**
+ * @file Square terminator icon for box endings
+ */
+
 import type { IconProps } from "../types";
 
+/** Line ending with filled square terminator */
 export function ArrowSquareIcon({
   color = "currentColor",
   style,

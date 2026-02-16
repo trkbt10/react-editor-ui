@@ -1,6 +1,11 @@
+/**
+ * @file Upward chevron for collapsible sections and steppers
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Upward-pointing angle bracket for collapse/expand and increment */
 export function ChevronUpIcon({
   size,
   color = "currentColor",

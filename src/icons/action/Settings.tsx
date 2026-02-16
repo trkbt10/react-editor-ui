@@ -1,6 +1,11 @@
+/**
+ * @file Gear icon for settings and configuration
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Gear/cog wheel for accessing settings and preferences */
 export function SettingsIcon({
   size,
   color = "currentColor",

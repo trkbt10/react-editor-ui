@@ -1,6 +1,11 @@
+/**
+ * @file X-shaped close icon for dismissing dialogs and panels
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** X-shaped icon for closing, dismissing, or canceling actions */
 export function CloseIcon({
   size,
   color = "currentColor",

@@ -1,6 +1,11 @@
+/**
+ * @file Inside stroke alignment icon
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** L-corner with stroke drawn inside the path boundary */
 export function StrokeAlignInsideIcon({
   size,
   color = "currentColor",

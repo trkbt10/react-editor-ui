@@ -1,5 +1,10 @@
+/**
+ * @file Open arrow icon for chevron-style arrowheads
+ */
+
 import type { IconProps } from "../types";
 
+/** Line with open V-shaped chevron arrowhead */
 export function ArrowOpenIcon({
   color = "currentColor",
   style,

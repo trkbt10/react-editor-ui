@@ -1,6 +1,11 @@
+/**
+ * @file Center stroke alignment icon
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** L-corner with stroke centered on path boundary */
 export function StrokeAlignCenterIcon({
   size,
   color = "currentColor",

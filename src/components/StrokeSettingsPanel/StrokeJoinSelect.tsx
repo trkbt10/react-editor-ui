@@ -19,6 +19,7 @@ const options = [
   { value: "bevel" as const, icon: <JoinBevelIcon />, "aria-label": "Bevel join" },
 ];
 
+/** Segmented control for line join style: miter, round, or bevel */
 export function StrokeJoinSelect({
   value,
   onChange,

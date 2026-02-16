@@ -1,6 +1,11 @@
+/**
+ * @file Bevel join icon for cut corner connections
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** L-corner with diagonal flat edge at the join */
 export function JoinBevelIcon({
   size,
   color = "currentColor",

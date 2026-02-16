@@ -1,3 +1,7 @@
+/**
+ * @file Stroke styling icons for caps, joins, alignment, and arrowheads
+ */
+
 // Cap icons
 export { CapButtIcon } from "./CapButt";
 export { CapRoundIcon } from "./CapRound";

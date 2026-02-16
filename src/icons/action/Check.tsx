@@ -1,6 +1,11 @@
+/**
+ * @file Checkmark icon for confirmation and selection states
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Checkmark icon indicating success, completion, or selected state */
 export function CheckIcon({
   size,
   color = "currentColor",

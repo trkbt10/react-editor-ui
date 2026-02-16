@@ -86,6 +86,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+/** Creates default settings for expanded stroke panel */
 export function createDefaultExpandedSettings(): StrokePanelExpandedSettings {
   return {
     weight: "1",
@@ -107,6 +108,7 @@ export function createDefaultExpandedSettings(): StrokePanelExpandedSettings {
   };
 }
 
+/** Expanded stroke panel with weight, caps, joins, dashes, and arrowheads */
 export function StrokePanelExpanded({
   settings,
   onChange,

@@ -1,6 +1,11 @@
+/**
+ * @file Angular gradient type icon for rotational color sweeps
+ */
+
 import type { IconProps } from "../types";
 import { resolveSize } from "../utils";
 
+/** Rectangle with angular gradient showing conical color rotation */
 export function GradientAngularIcon({
   size,
   style,
