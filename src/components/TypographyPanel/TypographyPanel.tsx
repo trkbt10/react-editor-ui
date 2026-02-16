@@ -41,6 +41,8 @@ export type FontWeightOption = {
   label: string;
 };
 
+export type FontIconVisibility = 'always' | 'never' | 'missing-only';
+
 export type TypographyPanelProps = {
   settings: TypographySettings;
   onChange: (settings: TypographySettings) => void;
@@ -48,6 +50,8 @@ export type TypographyPanelProps = {
   weightOptions?: FontWeightOption[];
   onOpenFontsPanel?: () => void;
   onOpenSettings?: () => void;
+  /** Controls font icon visibility: 'always' (default), 'never', or 'missing-only' */
+  showFontIcon?: FontIconVisibility;
   className?: string;
 };
 
@@ -195,13 +199,19 @@ function FontFamilyRow({
   options,
   onChange,
   onOpenFontsPanel,
+  showFontIcon = 'always',
 }: {
   value: string;
   options: SelectOption<string>[];
   onChange: (value: string) => void;
   onOpenFontsPanel?: () => void;
+  showFontIcon?: FontIconVisibility;
 }) {
   const isMissing = !options.some((opt) => opt.value === value);
+
+  const shouldShowIcon =
+    showFontIcon === 'always' ||
+    (showFontIcon === 'missing-only' && isMissing);
 
   const containerStyle: CSSProperties = {
     display: "flex",
@@ -211,12 +221,14 @@ function FontFamilyRow({
 
   return (
     <div style={containerStyle}>
-      <span
-        onClick={onOpenFontsPanel}
-        style={{ cursor: onOpenFontsPanel ? "pointer" : "default" }}
-      >
-        <FontIcon isMissing={isMissing} />
-      </span>
+      {shouldShowIcon && (
+        <span
+          onClick={onOpenFontsPanel}
+          style={{ cursor: onOpenFontsPanel ? "pointer" : "default" }}
+        >
+          <FontIcon isMissing={isMissing} />
+        </span>
+      )}
       <div style={{ flex: 1 }}>
         <Select
           options={options}
@@ -300,6 +312,16 @@ function LabeledUnitInput({
 
 
 
+
+
+
+
+
+
+
+
+
+
 export function TypographyPanel({
   settings,
   onChange,
@@ -307,6 +329,7 @@ export function TypographyPanel({
   weightOptions = defaultWeightOptions,
   onOpenFontsPanel,
   onOpenSettings,
+  showFontIcon = 'always',
   className,
 }: TypographyPanelProps) {
   const [expanded, setExpanded] = useState(true);
@@ -380,6 +403,7 @@ export function TypographyPanel({
           options={fontSelectOptions}
           onChange={(v) => handleChange("fontFamily", v)}
           onOpenFontsPanel={onOpenFontsPanel}
+          showFontIcon={showFontIcon}
         />
         <PropertyGrid columns={2}>
           <PropertyGridItem>
