@@ -1,0 +1,50 @@
+/**
+ * @file Styles module exports
+ */
+
+export {
+  // Background Colors
+  EDITOR_BG,
+  EDITOR_LINE_NUMBER_BG,
+  EDITOR_LINE_NUMBER_COLOR,
+  EDITOR_LINE_NUMBER_BORDER,
+  // Selection & Highlight Colors
+  EDITOR_SELECTION_BG,
+  EDITOR_MATCH_BG,
+  EDITOR_CURRENT_MATCH_BG,
+  HIGHLIGHT_COLORS,
+  // Cursor
+  EDITOR_CURSOR_COLOR,
+  EDITOR_CURSOR_WIDTH,
+  // Typography
+  EDITOR_FONT_FAMILY,
+  EDITOR_FONT_SIZE,
+  EDITOR_LINE_HEIGHT,
+  // Layout
+  EDITOR_LINE_NUMBER_WIDTH,
+  EDITOR_PADDING,
+  // Syntax Highlighting Colors
+  EDITOR_KEYWORD_COLOR,
+  EDITOR_TYPE_COLOR,
+  EDITOR_BUILTIN_COLOR,
+  EDITOR_STRING_COLOR,
+  EDITOR_COMMENT_COLOR,
+  EDITOR_NUMBER_COLOR,
+  EDITOR_OPERATOR_COLOR,
+  EDITOR_IDENTIFIER_COLOR,
+  EDITOR_PUNCTUATION_COLOR,
+  // Numeric Defaults
+  DEFAULT_LINE_HEIGHT_PX,
+  DEFAULT_FONT_SIZE_PX,
+  DEFAULT_CHAR_WIDTH_PX,
+  DEFAULT_LINE_NUMBER_WIDTH_PX,
+  DEFAULT_PADDING_PX,
+} from "./tokens";
+
+export {
+  useEditorStyles,
+  injectCursorAnimation,
+  CURSOR_BLINK_KEYFRAMES,
+} from "./useEditorStyles";
+
+export type { EditorStyles, EditorStylesConfig } from "./useEditorStyles";

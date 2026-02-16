@@ -1,0 +1,142 @@
+/**
+ * @file Editor Style Tokens
+ *
+ * CSS variable definitions specific to Editor components.
+ * All variables use the unified prefix: --rei-editor-*
+ */
+
+import { CSS_VAR_PREFIX } from "../../../constants/styles";
+
+// =============================================================================
+// Editor Prefix
+// =============================================================================
+
+const EDITOR_PREFIX = `${CSS_VAR_PREFIX}-editor`;
+
+// =============================================================================
+// Background Colors
+// =============================================================================
+
+/** Editor background color */
+export const EDITOR_BG = `var(--${EDITOR_PREFIX}-bg, var(--${CSS_VAR_PREFIX}-color-surface, #ffffff))`;
+
+/** Line number background color */
+export const EDITOR_LINE_NUMBER_BG = `var(--${EDITOR_PREFIX}-line-number-bg, #f8f9fa)`;
+
+/** Line number text color */
+export const EDITOR_LINE_NUMBER_COLOR = `var(--${EDITOR_PREFIX}-line-number-color, #9aa0a6)`;
+
+/** Line number border color */
+export const EDITOR_LINE_NUMBER_BORDER = `var(--${EDITOR_PREFIX}-line-number-border, rgba(0, 0, 0, 0.08))`;
+
+// =============================================================================
+// Selection & Highlight Colors
+// =============================================================================
+
+/** Selection background color */
+export const EDITOR_SELECTION_BG = `var(--${EDITOR_PREFIX}-selection-bg, rgba(51, 144, 255, 0.3))`;
+
+/** Search match background color */
+export const EDITOR_MATCH_BG = `var(--${EDITOR_PREFIX}-match-bg, rgba(255, 213, 0, 0.4))`;
+
+/** Current search match background color */
+export const EDITOR_CURRENT_MATCH_BG = `var(--${EDITOR_PREFIX}-current-match-bg, rgba(255, 140, 0, 0.6))`;
+
+/** IME composition background color */
+export const EDITOR_COMPOSITION_BG = `var(--${EDITOR_PREFIX}-composition-bg, rgba(100, 100, 255, 0.2))`;
+
+// =============================================================================
+// Cursor
+// =============================================================================
+
+/** Cursor color */
+export const EDITOR_CURSOR_COLOR = `var(--${EDITOR_PREFIX}-cursor-color, var(--${CSS_VAR_PREFIX}-color-text, #000000))`;
+
+/** Cursor width */
+export const EDITOR_CURSOR_WIDTH = `var(--${EDITOR_PREFIX}-cursor-width, 2px)`;
+
+// =============================================================================
+// Typography
+// =============================================================================
+
+/** Editor font family */
+export const EDITOR_FONT_FAMILY = `var(--${EDITOR_PREFIX}-font-family, 'Consolas', 'Monaco', 'Courier New', monospace)`;
+
+/** Editor font size */
+export const EDITOR_FONT_SIZE = `var(--${EDITOR_PREFIX}-font-size, 13px)`;
+
+/** Editor line height */
+export const EDITOR_LINE_HEIGHT = `var(--${EDITOR_PREFIX}-line-height, 21px)`;
+
+// =============================================================================
+// Layout
+// =============================================================================
+
+/** Line number gutter width */
+export const EDITOR_LINE_NUMBER_WIDTH = `var(--${EDITOR_PREFIX}-line-number-width, 48px)`;
+
+/** Editor padding */
+export const EDITOR_PADDING = `var(--${EDITOR_PREFIX}-padding, 8px)`;
+
+// =============================================================================
+// Syntax Highlighting Colors
+// =============================================================================
+
+/** Keyword color (e.g., if, else, for) */
+export const EDITOR_KEYWORD_COLOR = `var(--${EDITOR_PREFIX}-keyword, #0000ff)`;
+
+/** Type color (e.g., String, Integer) */
+export const EDITOR_TYPE_COLOR = `var(--${EDITOR_PREFIX}-type, #2b91af)`;
+
+/** Builtin function color */
+export const EDITOR_BUILTIN_COLOR = `var(--${EDITOR_PREFIX}-builtin, #795e26)`;
+
+/** String literal color */
+export const EDITOR_STRING_COLOR = `var(--${EDITOR_PREFIX}-string, #a31515)`;
+
+/** Comment color */
+export const EDITOR_COMMENT_COLOR = `var(--${EDITOR_PREFIX}-comment, #008000)`;
+
+/** Number literal color */
+export const EDITOR_NUMBER_COLOR = `var(--${EDITOR_PREFIX}-number, #098658)`;
+
+/** Operator color */
+export const EDITOR_OPERATOR_COLOR = `var(--${EDITOR_PREFIX}-operator, #000000)`;
+
+/** Identifier color */
+export const EDITOR_IDENTIFIER_COLOR = `var(--${EDITOR_PREFIX}-identifier, #000000)`;
+
+/** Punctuation color */
+export const EDITOR_PUNCTUATION_COLOR = `var(--${EDITOR_PREFIX}-punctuation, #000000)`;
+
+// =============================================================================
+// Highlight Type to Color Map
+// =============================================================================
+
+/**
+ * Map of highlight types to their background colors.
+ */
+export const HIGHLIGHT_COLORS = {
+  selection: EDITOR_SELECTION_BG,
+  match: EDITOR_MATCH_BG,
+  currentMatch: EDITOR_CURRENT_MATCH_BG,
+} as const;
+
+// =============================================================================
+// Numeric Defaults (for calculations)
+// =============================================================================
+
+/** Default line height in pixels */
+export const DEFAULT_LINE_HEIGHT_PX = 21;
+
+/** Default font size in pixels */
+export const DEFAULT_FONT_SIZE_PX = 13;
+
+/** Default character width in pixels (monospace) */
+export const DEFAULT_CHAR_WIDTH_PX = 7.8;
+
+/** Default line number width in pixels */
+export const DEFAULT_LINE_NUMBER_WIDTH_PX = 48;
+
+/** Default padding in pixels */
+export const DEFAULT_PADDING_PX = 8;
