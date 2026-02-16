@@ -73,6 +73,7 @@ type DropdownPosition = {
   top: number;
   left: number;
   width: number;
+  openUpward: boolean;
 };
 
 export const Select = memo(function Select<T extends string = string>({
@@ -87,7 +88,7 @@ export const Select = memo(function Select<T extends string = string>({
 }: SelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
-  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0, width: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0, width: 0, openUpward: false });
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const sizeConfig = sizeMap[size];
@@ -97,10 +98,24 @@ export const Select = memo(function Select<T extends string = string>({
   const updateDropdownPosition = useEffectEvent(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const dropdownMaxHeight = 240;
+      const gap = 4;
+      const viewportHeight = window.innerHeight;
+
+      // Calculate available space above and below the trigger
+      const spaceBelow = viewportHeight - rect.bottom - gap;
+      const spaceAbove = rect.top - gap;
+
+      // Open upward if there's not enough space below but enough space above
+      const openUpward = spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow;
+
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
+        top: openUpward
+          ? rect.top + window.scrollY - gap
+          : rect.bottom + window.scrollY + gap,
         left: rect.left + window.scrollX,
         width: rect.width,
+        openUpward,
       });
     }
   });
@@ -218,6 +233,9 @@ export const Select = memo(function Select<T extends string = string>({
     zIndex: Z_DROPDOWN,
     maxHeight: "240px",
     overflowY: "auto",
+    ...(dropdownPosition.openUpward && {
+      transform: "translateY(-100%)",
+    }),
   };
 
   const getOptionStyle = (
