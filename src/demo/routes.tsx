@@ -58,6 +58,14 @@ import {
   LuAlignStartHorizontal,
   LuAlignCenterHorizontal,
   LuAlignEndHorizontal,
+  // Category icons
+  LuBox,
+  LuLayoutGrid,
+  LuLayers,
+  LuList,
+  LuMessageSquare,
+  LuCode,
+  LuPenTool,
 } from "react-icons/lu";
 import type {
   ColorValue,
@@ -98,6 +106,7 @@ export type DemoPage = {
 export type DemoCategory = {
   id: string;
   label: string;
+  icon?: ReactNode;
   base: string;
   pages: DemoPage[];
 };
@@ -3507,6 +3516,7 @@ export const demoCategories: DemoCategory[] = [
   {
     id: "primitives",
     label: "Primitives",
+    icon: <LuBox size={18} />,
     base: "/components/primitives",
     pages: [
       {
@@ -3598,6 +3608,7 @@ export const demoCategories: DemoCategory[] = [
   {
     id: "layout",
     label: "Layout",
+    icon: <LuLayoutGrid size={18} />,
     base: "/components/layout",
     pages: [
       {
@@ -3629,6 +3640,7 @@ export const demoCategories: DemoCategory[] = [
   {
     id: "composite",
     label: "Composite",
+    icon: <LuLayers size={18} />,
     base: "/components/composite",
     pages: [
       {
@@ -3666,6 +3678,7 @@ export const demoCategories: DemoCategory[] = [
   {
     id: "data-display",
     label: "Data Display",
+    icon: <LuList size={18} />,
     base: "/components/data-display",
     pages: [
       {
@@ -3709,6 +3722,7 @@ export const demoCategories: DemoCategory[] = [
   {
     id: "feedback",
     label: "Feedback",
+    icon: <LuMessageSquare size={18} />,
     base: "/components/feedback",
     pages: [
       {
@@ -3728,6 +3742,7 @@ export const demoCategories: DemoCategory[] = [
   {
     id: "editor",
     label: "Editor",
+    icon: <LuCode size={18} />,
     base: "/components/editor",
     pages: [
       {
@@ -3747,6 +3762,7 @@ export const demoCategories: DemoCategory[] = [
   {
     id: "canvas",
     label: "Canvas",
+    icon: <LuPenTool size={18} />,
     base: "/components/canvas",
     pages: [
       {

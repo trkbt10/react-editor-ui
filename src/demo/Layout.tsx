@@ -3,7 +3,7 @@
  * Design matches react-panel-layout demo style
  */
 
-import type { FC, CSSProperties } from "react";
+import type { FC, CSSProperties, ReactNode } from "react";
 import { useMemo, useState, useCallback, useEffect, useEffectEvent } from "react";
 import { Outlet, Link, useLocation } from "react-router";
 import {
@@ -11,6 +11,7 @@ import {
   type PanelLayoutConfig,
   type LayerDefinition,
 } from "react-panel-layout";
+import { LuHouse, LuMenu } from "react-icons/lu";
 import { demoCategories } from "./routes";
 import { ThemeSelector, type ThemeName } from "../themes";
 
@@ -138,6 +139,15 @@ const styles = {
     transition: "transform 0.2s ease",
     fontSize: "12px",
   } satisfies CSSProperties,
+  navIcon: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "18px",
+    height: "18px",
+    color: "inherit",
+    flexShrink: 0,
+  } satisfies CSSProperties,
 };
 
 type SidebarNavProps = {
@@ -147,7 +157,9 @@ type SidebarNavProps = {
 
 const SidebarNav: FC<SidebarNavProps> = ({ theme, onThemeChange }) => {
   const location = useLocation();
-  const topLinks = [{ path: "/", label: "Home" }] as const;
+  const topLinks: { path: string; label: string; icon: ReactNode }[] = [
+    { path: "/", label: "Home", icon: <LuHouse size={18} /> },
+  ];
 
   return (
     <div style={styles.sidebar}>
@@ -167,6 +179,7 @@ const SidebarNav: FC<SidebarNavProps> = ({ theme, onThemeChange }) => {
                 ...(isActive ? styles.navLinkActive : {}),
               }}
             >
+              <span style={styles.navIcon}>{item.icon}</span>
               {item.label}
             </Link>
           );
@@ -181,6 +194,9 @@ const SidebarNav: FC<SidebarNavProps> = ({ theme, onThemeChange }) => {
               open={isOpen}
             >
               <summary style={styles.navCategorySummary}>
+                {category.icon && (
+                  <span style={styles.navIcon}>{category.icon}</span>
+                )}
                 <span style={{ flex: 1 }}>{category.label}</span>
                 <span style={styles.navArrow}>▸</span>
               </summary>
@@ -230,7 +246,8 @@ const MobileHeader: FC<{ onOpenNav: () => void }> = ({ onOpenNav }) => {
         onClick={onOpenNav}
         aria-label="Open navigation"
       >
-        ☰ Menu
+        <LuMenu size={16} />
+        Menu
       </button>
       <h2
         style={{
