@@ -6,7 +6,7 @@
  */
 
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { useRef, useCallback, useLayoutEffect, useState, useMemo, useImperativeHandle, useEffect } from "react";
+import { useRef, useCallback, useLayoutEffect, useState, useMemo, useImperativeHandle } from "react";
 import { useVirtualScroll, type VirtualItem } from "./useVirtualScroll";
 import { LogEntry, type LogEntryProps } from "../LogEntry/LogEntry";
 import {
@@ -121,7 +121,6 @@ export function LogViewer({
   const {
     virtualItems,
     totalHeight,
-    scrollOffset,
     onScroll,
     measureItem,
     getScrollPosition,
@@ -231,33 +230,6 @@ export function LogViewer({
     }),
     [calculateScrollTarget, totalHeight, virtualItems, pagination, page, pageSize, onPageChange],
   );
-
-  // Auto-scroll to selected item
-  // Use DOM scrollTo instead of virtualScrollToIndex to keep DOM and internal state in sync
-  useEffect(() => {
-    if (selectedIndex === undefined || !containerRef.current) {
-      return;
-    }
-    const indexInPage = pagination ? selectedIndex % pageSize : selectedIndex;
-    const pos = getScrollPosition(indexInPage);
-    const isVisible =
-      pos >= scrollOffset && pos + estimatedItemHeight <= scrollOffset + containerHeight;
-    if (!isVisible) {
-      // Calculate center position and scroll DOM directly
-      // This triggers onScroll which updates internal state
-      const itemHeight = estimatedItemHeight;
-      const targetScrollTop = Math.max(0, pos - containerHeight / 2 + itemHeight / 2);
-      containerRef.current.scrollTop = targetScrollTop;
-    }
-  }, [
-    selectedIndex,
-    pagination,
-    pageSize,
-    getScrollPosition,
-    scrollOffset,
-    containerHeight,
-    estimatedItemHeight,
-  ]);
 
   const containerStyle: CSSProperties = {
     height,
