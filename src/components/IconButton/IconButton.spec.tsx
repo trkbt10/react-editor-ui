@@ -70,6 +70,11 @@ describe("IconButton", () => {
     expect(screen.getByRole("button")).toHaveStyle({
       width: "var(--rei-size-height-lg, 32px)",
     });
+
+    rerender(<IconButton icon={<TestIcon />} aria-label="XLarge" size="xl" />);
+    expect(screen.getByRole("button")).toHaveStyle({
+      width: "var(--rei-size-height-xl, 40px)",
+    });
   });
 
   it("applies active state styling", () => {
@@ -90,6 +95,21 @@ describe("IconButton", () => {
     expect(button).toHaveStyle({
       backgroundColor: "var(--rei-color-hover, rgba(0, 0, 0, 0.04))",
     });
+  });
+
+  it("applies minimal variant with no hover effect", () => {
+    render(
+      <IconButton icon={<TestIcon />} aria-label="Minimal" variant="minimal" />,
+    );
+
+    const button = screen.getByRole("button");
+    // Minimal variant has transparent background (no visible styling)
+    const initialBg = button.style.backgroundColor;
+    expect(initialBg).toBe("transparent");
+
+    // Hover should not change background (minimal has no hover effect)
+    fireEvent.pointerEnter(button);
+    expect(button.style.backgroundColor).toBe("transparent");
   });
 
   it("applies custom className", () => {

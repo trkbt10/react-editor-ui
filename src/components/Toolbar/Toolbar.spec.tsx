@@ -25,6 +25,33 @@ describe("Toolbar", () => {
     render(<Toolbar className="custom-toolbar">Content</Toolbar>);
     expect(screen.getByRole("toolbar")).toHaveClass("custom-toolbar");
   });
+
+  it("applies default variant with bottom border", () => {
+    render(
+      <Toolbar>
+        <button>Button</button>
+      </Toolbar>,
+    );
+
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.style.borderBottom).toContain("solid");
+  });
+
+  it("applies floating variant with shadow and rounded corners", () => {
+    render(
+      <Toolbar variant="floating">
+        <button>Button</button>
+      </Toolbar>,
+    );
+
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.style.borderRadius).toBe("var(--rei-radius-lg, 10px)");
+    expect(toolbar.style.boxShadow).toBe(
+      "var(--rei-shadow-md, 0 4px 6px rgba(0, 0, 0, 0.07))",
+    );
+    // Floating variant should not have bottom border
+    expect(toolbar.style.borderBottom).toBe("");
+  });
 });
 
 describe("ToolbarGroup", () => {
