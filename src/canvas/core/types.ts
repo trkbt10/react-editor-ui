@@ -116,18 +116,6 @@ export type CanvasProps = {
   "aria-label"?: string;
 };
 
-/**
- * CanvasContent props for positioning children
- */
-export type CanvasContentProps = {
-  /** X position in canvas coordinates */
-  x: number;
-  /** Y position in canvas coordinates */
-  y: number;
-  /** Content to render */
-  children: ReactNode;
-};
-
 // ========================================
 // DEFAULT VALUES
 // ========================================

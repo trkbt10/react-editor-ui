@@ -7,7 +7,7 @@
 
 import type { ReactNode } from "react";
 import { COLOR_CANVAS_GUIDE } from "../../constants/styles";
-import { useCanvasContext } from "./core/CanvasContext";
+import { useCanvasContext } from "../core/CanvasContext";
 
 export type CanvasGuideProps = {
   /** Guide orientation */

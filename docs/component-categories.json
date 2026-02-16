@@ -78,10 +78,21 @@
       "label": "Utilities",
       "description": "Utility components for specialized tasks",
       "components": [
-        "Canvas",
         "FillEditor",
         "GradientEditor",
         "Portal"
+      ]
+    },
+    {
+      "id": "canvas",
+      "label": "Canvas",
+      "description": "Pan/zoom canvas components for visual editing",
+      "components": [
+        "Canvas",
+        "CanvasCheckerboard",
+        "CanvasGridLayer",
+        "CanvasGuide",
+        "CanvasRuler"
       ]
     }
   ]

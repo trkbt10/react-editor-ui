@@ -22,10 +22,11 @@ import { join, resolve } from "node:path";
 const ROOT_DIR = resolve(import.meta.dirname, "..");
 const COMPONENTS_DIR = join(ROOT_DIR, "src/components");
 const PANELS_DIR = join(ROOT_DIR, "src/panels");
+const CANVAS_DIR = join(ROOT_DIR, "src/canvas");
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
 const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
 
-type EntryCategory = "component" | "panel";
+type EntryCategory = "component" | "panel" | "canvas";
 
 interface ComponentEntry {
   name: string;
@@ -58,6 +59,20 @@ interface ExportEntry {
 const ALLOWED_INDEX_ENTRIES = new Set(["Editor"]);
 
 /**
+ * Maps category to directory name
+ */
+function getCategoryDir(category: EntryCategory): string {
+  switch (category) {
+    case "component":
+      return "components";
+    case "panel":
+      return "panels";
+    case "canvas":
+      return "canvas";
+  }
+}
+
+/**
  * Detects the entry point for a component or panel directory
  *
  * Priority:
@@ -73,7 +88,7 @@ function detectEntryPoint(
   const namedTsPath = join(dir, `${name}.ts`);
   const namedTsxPath = join(dir, `${name}.tsx`);
   const indexPath = join(dir, "index.ts");
-  const categoryDir = category === "component" ? "components" : "panels";
+  const categoryDir = getCategoryDir(category);
 
   // Priority 1: [Name].ts (re-export file)
   if (existsSync(namedTsPath)) {
@@ -123,6 +138,12 @@ function detectEntryPoint(
 }
 
 /**
+ * Directories to skip when scanning for components.
+ * These are internal shared modules, not public components.
+ */
+const SKIP_DIRECTORIES = new Set(["core"]);
+
+/**
  * Scans a directory and collects entries
  */
 function scanDirectory(
@@ -136,6 +157,11 @@ function scanDirectory(
   const result: ComponentEntry[] = [];
 
   for (const entry of entries) {
+    // Skip internal directories
+    if (SKIP_DIRECTORIES.has(entry)) {
+      continue;
+    }
+
     const entryDir = join(dir, entry);
     const stat = statSync(entryDir);
 
@@ -160,7 +186,8 @@ function scanDirectory(
 function buildEntryCatalog(): EntryCatalog {
   const components = scanDirectory(COMPONENTS_DIR, "component");
   const panels = scanDirectory(PANELS_DIR, "panel");
-  const allEntries = [...components, ...panels];
+  const canvas = scanDirectory(CANVAS_DIR, "canvas");
+  const allEntries = [...components, ...panels, ...canvas];
 
   allEntries.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -190,11 +217,11 @@ function generateExports(catalog: EntryCatalog): Record<string, ExportEntry | st
   };
 
   for (const entry of catalog.components) {
-    const categoryDir = entry.category === "component" ? "components" : "panels";
-    // Components: ./ComponentName, Panels: ./panels/PanelName
+    const categoryDir = getCategoryDir(entry.category);
+    // Components: ./ComponentName, Panels: ./panels/PanelName, Canvas: ./canvas/CanvasName
     const exportKey = entry.category === "component"
       ? `./${entry.name}`
-      : `./panels/${entry.name}`;
+      : `./${categoryDir}/${entry.name}`;
 
     // Type definition path matches source structure
     // For index.ts entries (Editor only): dist/components/Editor/index.d.ts
@@ -225,7 +252,7 @@ function generateViteEntries(catalog: EntryCatalog): Record<string, string> {
   };
 
   for (const entry of catalog.components) {
-    const categoryDir = entry.category === "component" ? "components" : "panels";
+    const categoryDir = getCategoryDir(entry.category);
     entries[`${categoryDir}/${entry.name}`] = entry.relativePath;
   }
 
@@ -286,8 +313,9 @@ function main(): void {
 
   const components = catalog.components.filter(c => c.category === "component");
   const panels = catalog.components.filter(c => c.category === "panel");
+  const canvasEntries = catalog.components.filter(c => c.category === "canvas");
 
-  console.log(`📦 Found ${catalog.components.length} entries (${components.length} components, ${panels.length} panels)\n`);
+  console.log(`📦 Found ${catalog.components.length} entries (${components.length} components, ${panels.length} panels, ${canvasEntries.length} canvas)\n`);
 
   // Show component breakdown
   const indexEntries = catalog.components.filter(c => c.entryType === "index");

@@ -10,14 +10,24 @@ import react from "@vitejs/plugin-react";
 interface ComponentEntry {
   name: string;
   entryType: "index" | "named";
-  entryPath: string;
   relativePath: string;
-  category: "component" | "panel";
+  category: "component" | "panel" | "canvas";
 }
 
 interface EntryCatalog {
   generatedAt: string;
   components: ComponentEntry[];
+}
+
+function getCategoryDir(category: ComponentEntry["category"]): string {
+  switch (category) {
+    case "component":
+      return "components";
+    case "panel":
+      return "panels";
+    case "canvas":
+      return "canvas";
+  }
 }
 
 /**
@@ -40,7 +50,7 @@ function loadEntries(): Record<string, string> {
   const catalog: EntryCatalog = JSON.parse(readFileSync(catalogPath, "utf-8"));
 
   for (const entry of catalog.components) {
-    const categoryDir = entry.category === "component" ? "components" : "panels";
+    const categoryDir = getCategoryDir(entry.category);
     baseEntries[`${categoryDir}/${entry.name}`] = resolve(__dirname, entry.relativePath);
   }
 

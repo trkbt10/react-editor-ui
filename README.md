@@ -470,14 +470,6 @@ import { CodeEditor, TextEditor } from "react-editor-ui/Editor";
 
 > Utility components for specialized tasks
 
-#### Canvas
-
-SVG-based canvas with pan/zoom control
-
-```tsx
-import { Canvas } from "react-editor-ui/Canvas";
-```
-
 #### FillEditor
 
 Switch between solid, gradient, image, pattern, and video fill modes
@@ -500,6 +492,50 @@ Renders children into a DOM node outside the parent hierarchy
 
 ```tsx
 import { Portal } from "react-editor-ui/Portal";
+```
+
+### Canvas
+
+> Pan/zoom canvas components for visual editing
+
+#### Canvas
+
+SVG-based canvas with pan/zoom control
+
+```tsx
+import { Canvas } from "react-editor-ui/canvas/Canvas";
+```
+
+#### CanvasCheckerboard
+
+CanvasCheckerboard - Checkerboard background pattern for Canvas
+
+```tsx
+import { CanvasCheckerboard } from "react-editor-ui/canvas/CanvasCheckerboard";
+```
+
+#### CanvasGridLayer
+
+CanvasGridLayer - Grid/guideline layer for Canvas
+
+```tsx
+import { CanvasGridLayer } from "react-editor-ui/canvas/CanvasGridLayer";
+```
+
+#### CanvasGuide
+
+CanvasGuide - Fixed guide lines for Canvas
+
+```tsx
+import { CanvasGuide } from "react-editor-ui/canvas/CanvasGuide";
+```
+
+#### CanvasRuler
+
+CanvasRuler - Horizontal and Vertical rulers for Canvas
+
+```tsx
+import { CanvasRuler } from "react-editor-ui/canvas/CanvasRuler";
 ```
 <!-- /AUTO:COMPONENTS -->
 

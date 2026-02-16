@@ -8,18 +8,17 @@ import {
   DemoSection,
   DemoMutedText,
 } from "../../components";
-import { Canvas } from "../../../components/Canvas/Canvas";
-import { CanvasContent } from "../../../components/Canvas/CanvasContent";
-import { CanvasGridLayer } from "../../../components/Canvas/CanvasGridLayer";
+import { Canvas } from "../../../canvas/Canvas/Canvas";
+import { CanvasGridLayer } from "../../../canvas/CanvasGridLayer/CanvasGridLayer";
 import {
   CanvasHorizontalRuler,
   CanvasVerticalRuler,
   CanvasRulerCorner,
-} from "../../../components/Canvas/CanvasRuler";
-import { CanvasGuides } from "../../../components/Canvas/CanvasGuide";
-import { CanvasCheckerboard } from "../../../components/Canvas/CanvasCheckerboard";
+} from "../../../canvas/CanvasRuler/CanvasRuler";
+import { CanvasGuides } from "../../../canvas/CanvasGuide/CanvasGuide";
+import { CanvasCheckerboard } from "../../../canvas/CanvasCheckerboard/CanvasCheckerboard";
 import { Button } from "../../../components/Button/Button";
-import type { ViewportState } from "../../../components/Canvas/core/types";
+import type { ViewportState } from "../../../canvas/core/types";
 
 export function CanvasDemo() {
   const [viewport, setViewport] = useState<ViewportState>({ x: -50, y: -150, scale: 1 });
@@ -47,40 +46,42 @@ export function CanvasDemo() {
             showGrid
             gridSize={50}
           >
-            <CanvasContent x={100} y={100}>
-              <div
-                style={{
-                  width: 200,
-                  height: 150,
-                  background: "var(--rei-color-primary)",
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontWeight: 600,
-                }}
-              >
-                Drag me (pan)
-              </div>
-            </CanvasContent>
-            <CanvasContent x={350} y={200}>
-              <div
-                style={{
-                  width: 120,
-                  height: 120,
-                  background: "var(--rei-color-success)",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontWeight: 600,
-                }}
-              >
-                Circle
-              </div>
-            </CanvasContent>
+            <div
+              style={{
+                position: "absolute",
+                left: 100,
+                top: 100,
+                width: 200,
+                height: 150,
+                background: "var(--rei-color-primary)",
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontWeight: 600,
+              }}
+            >
+              Drag me (pan)
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: 350,
+                top: 200,
+                width: 120,
+                height: 120,
+                background: "var(--rei-color-success)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontWeight: 600,
+              }}
+            >
+              Circle
+            </div>
           </Canvas>
           <div style={{ flex: "0 0 200px" }}>
             <h4 style={{ margin: "0 0 8px" }}>Viewport State</h4>
@@ -129,35 +130,37 @@ export function CanvasDemo() {
                 </>
               }
             >
-                <CanvasContent x={100} y={100}>
-                  <div
-                    style={{
-                      width: 200,
-                      height: 150,
-                      background: "var(--rei-color-primary)",
-                      borderRadius: 8,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Element at (100, 100)
-                  </div>
-                </CanvasContent>
-                <CanvasContent x={0} y={0}>
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      background: "var(--rei-color-error)",
-                      borderRadius: "50%",
-                      transform: "translate(-5px, -5px)",
-                    }}
-                    title="Origin (0, 0)"
-                  />
-                </CanvasContent>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 100,
+                  top: 100,
+                  width: 200,
+                  height: 150,
+                  background: "var(--rei-color-primary)",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontWeight: 600,
+                }}
+              >
+                Element at (100, 100)
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  width: 10,
+                  height: 10,
+                  background: "var(--rei-color-error)",
+                  borderRadius: "50%",
+                  transform: "translate(-5px, -5px)",
+                }}
+                title="Origin (0, 0)"
+              />
             </Canvas>
           </div>
         </div>

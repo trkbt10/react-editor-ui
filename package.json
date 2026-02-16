@@ -36,11 +36,35 @@
       "import": "./dist/components/Button.js",
       "require": "./dist/components/Button.cjs"
     },
-    "./Canvas": {
-      "source": "./src/components/Canvas/Canvas.tsx",
-      "types": "./dist/components/Canvas/Canvas.d.ts",
-      "import": "./dist/components/Canvas.js",
-      "require": "./dist/components/Canvas.cjs"
+    "./canvas/Canvas": {
+      "source": "./src/canvas/Canvas/Canvas.tsx",
+      "types": "./dist/canvas/Canvas/Canvas.d.ts",
+      "import": "./dist/canvas/Canvas.js",
+      "require": "./dist/canvas/Canvas.cjs"
+    },
+    "./canvas/CanvasCheckerboard": {
+      "source": "./src/canvas/CanvasCheckerboard/CanvasCheckerboard.tsx",
+      "types": "./dist/canvas/CanvasCheckerboard/CanvasCheckerboard.d.ts",
+      "import": "./dist/canvas/CanvasCheckerboard.js",
+      "require": "./dist/canvas/CanvasCheckerboard.cjs"
+    },
+    "./canvas/CanvasGridLayer": {
+      "source": "./src/canvas/CanvasGridLayer/CanvasGridLayer.tsx",
+      "types": "./dist/canvas/CanvasGridLayer/CanvasGridLayer.d.ts",
+      "import": "./dist/canvas/CanvasGridLayer.js",
+      "require": "./dist/canvas/CanvasGridLayer.cjs"
+    },
+    "./canvas/CanvasGuide": {
+      "source": "./src/canvas/CanvasGuide/CanvasGuide.tsx",
+      "types": "./dist/canvas/CanvasGuide/CanvasGuide.d.ts",
+      "import": "./dist/canvas/CanvasGuide.js",
+      "require": "./dist/canvas/CanvasGuide.cjs"
+    },
+    "./canvas/CanvasRuler": {
+      "source": "./src/canvas/CanvasRuler/CanvasRuler.tsx",
+      "types": "./dist/canvas/CanvasRuler/CanvasRuler.d.ts",
+      "import": "./dist/canvas/CanvasRuler.js",
+      "require": "./dist/canvas/CanvasRuler.cjs"
     },
     "./Checkbox": {
       "source": "./src/components/Checkbox/Checkbox.tsx",

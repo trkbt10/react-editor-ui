@@ -15,8 +15,8 @@ import {
   COLOR_BORDER,
   SIZE_FONT_XS,
 } from "../../constants/styles";
-import type { ViewportState, RulerConfig } from "./core/types";
-import { DEFAULT_RULER_CONFIG } from "./core/types";
+import type { ViewportState, RulerConfig } from "../core/types";
+import { DEFAULT_RULER_CONFIG } from "../core/types";
 
 type BaseRulerProps = {
   viewport: ViewportState;

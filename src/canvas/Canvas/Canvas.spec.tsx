@@ -3,9 +3,8 @@
  */
 import { render, screen } from "@testing-library/react";
 import { Canvas } from "./Canvas";
-import { CanvasContent } from "./CanvasContent";
-import { useCanvasContext } from "./core/CanvasContext";
-import type { ViewportState } from "./core/types";
+import { useCanvasContext } from "../core/CanvasContext";
+import type { ViewportState } from "../core/types";
 
 describe("Canvas", () => {
   const defaultViewport: ViewportState = { x: 0, y: 0, scale: 1 };
@@ -206,22 +205,5 @@ describe("Canvas Context", () => {
     } finally {
       console.error = originalError;
     }
-  });
-});
-
-describe("CanvasContent", () => {
-  it("positions children at specified coordinates", () => {
-    render(
-      <CanvasContent x={100} y={200}>
-        <div data-testid="positioned-content">Content</div>
-      </CanvasContent>,
-    );
-
-    const content = screen.getByTestId("positioned-content").parentElement;
-    expect(content).toHaveStyle({
-      position: "absolute",
-      left: "100px",
-      top: "200px",
-    });
   });
 });

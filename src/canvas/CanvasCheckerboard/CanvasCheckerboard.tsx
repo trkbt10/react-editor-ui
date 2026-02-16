@@ -6,12 +6,12 @@
  */
 
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useId } from "react";
 import {
   COLOR_CANVAS_CHECKER_LIGHT,
   COLOR_CANVAS_CHECKER_DARK,
 } from "../../constants/styles";
-import { useCanvasContext } from "./core/CanvasContext";
+import { useCanvasContext } from "../core/CanvasContext";
 
 export type CanvasCheckerboardProps = {
   /** Size of each checker square in canvas units */
@@ -40,7 +40,7 @@ export function CanvasCheckerboard({
   const viewHeight = canvasHeight / viewport.scale;
 
   // Unique pattern ID to avoid conflicts
-  const patternId = useMemo(() => `checker-${Math.random().toString(36).slice(2, 9)}`, []);
+  const patternId = useId();
 
   return (
     <g data-testid="canvas-checkerboard">

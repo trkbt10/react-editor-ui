@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-16T07:14:10.317Z",
+  "generatedAt": "2026-02-16T07:39:58.435Z",
   "components": [
     {
       "name": "Badge",
@@ -16,8 +16,32 @@
     {
       "name": "Canvas",
       "entryType": "named",
-      "relativePath": "src/components/Canvas/Canvas.tsx",
-      "category": "component"
+      "relativePath": "src/canvas/Canvas/Canvas.tsx",
+      "category": "canvas"
+    },
+    {
+      "name": "CanvasCheckerboard",
+      "entryType": "named",
+      "relativePath": "src/canvas/CanvasCheckerboard/CanvasCheckerboard.tsx",
+      "category": "canvas"
+    },
+    {
+      "name": "CanvasGridLayer",
+      "entryType": "named",
+      "relativePath": "src/canvas/CanvasGridLayer/CanvasGridLayer.tsx",
+      "category": "canvas"
+    },
+    {
+      "name": "CanvasGuide",
+      "entryType": "named",
+      "relativePath": "src/canvas/CanvasGuide/CanvasGuide.tsx",
+      "category": "canvas"
+    },
+    {
+      "name": "CanvasRuler",
+      "entryType": "named",
+      "relativePath": "src/canvas/CanvasRuler/CanvasRuler.tsx",
+      "category": "canvas"
     },
     {
       "name": "Checkbox",

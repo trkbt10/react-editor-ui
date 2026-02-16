@@ -8,7 +8,6 @@ export type {
   PanTrigger,
   GestureConfig,
   CanvasProps,
-  CanvasContentProps,
   GridLayerConfig,
   RulerConfig,
 } from "./types";

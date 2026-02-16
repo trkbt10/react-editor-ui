@@ -12,11 +12,11 @@
 
 import { useRef, useMemo, type ReactNode, type CSSProperties } from "react";
 import { COLOR_SURFACE, COLOR_BORDER } from "../../constants/styles";
-import { CanvasContext, type CanvasContextValue, type Point } from "./core/CanvasContext";
-import { useGestures } from "./core/useGestures";
-import type { CanvasProps } from "./core/types";
-import { DEFAULT_CONSTRAINTS, DEFAULT_GESTURE_CONFIG } from "./core/types";
-import { CanvasGridLayer } from "./CanvasGridLayer";
+import { CanvasContext, type CanvasContextValue, type Point } from "../core/CanvasContext";
+import { useGestures } from "../core/useGestures";
+import type { CanvasProps } from "../core/types";
+import { DEFAULT_CONSTRAINTS, DEFAULT_GESTURE_CONFIG } from "../core/types";
+import { CanvasGridLayer } from "../CanvasGridLayer/CanvasGridLayer";
 
 
 /**
@@ -175,46 +175,3 @@ export function Canvas({
   );
 }
 
-// =============================================================================
-// Re-exports for module entry point
-// =============================================================================
-
-export { CanvasContent } from "./CanvasContent";
-export { CanvasGridLayer } from "./CanvasGridLayer";
-export type { CanvasGridLayerProps } from "./CanvasGridLayer";
-export {
-  CanvasHorizontalRuler,
-  CanvasVerticalRuler,
-  CanvasRulerCorner,
-} from "./CanvasRuler";
-export type {
-  CanvasHorizontalRulerProps,
-  CanvasVerticalRulerProps,
-  CanvasRulerCornerProps,
-} from "./CanvasRuler";
-export { CanvasGuide, CanvasGuides } from "./CanvasGuide";
-export type { CanvasGuideProps, CanvasGuidesProps } from "./CanvasGuide";
-export { CanvasCheckerboard } from "./CanvasCheckerboard";
-export type { CanvasCheckerboardProps } from "./CanvasCheckerboard";
-
-export type {
-  ViewportState,
-  ViewportConstraints,
-  PanTrigger,
-  GestureConfig,
-  CanvasProps,
-  CanvasContentProps,
-  CanvasContextValue,
-  Point,
-  GridLayerConfig,
-  RulerConfig,
-} from "./core";
-
-export {
-  DEFAULT_VIEWPORT,
-  DEFAULT_CONSTRAINTS,
-  DEFAULT_GESTURE_CONFIG,
-  DEFAULT_GRID_CONFIG,
-  DEFAULT_RULER_CONFIG,
-  useCanvasContext,
-} from "./core";

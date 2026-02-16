@@ -6,14 +6,14 @@
  */
 
 import type { ReactNode } from "react";
-import { useCanvasContext } from "./core/CanvasContext";
+import { useCanvasContext } from "../core/CanvasContext";
 import {
   COLOR_CANVAS_GRID_MAJOR,
   COLOR_CANVAS_GRID_MINOR,
   COLOR_CANVAS_GRID_ORIGIN,
 } from "../../constants/styles";
-import type { GridLayerConfig } from "./core/types";
-import { DEFAULT_GRID_CONFIG } from "./core/types";
+import type { GridLayerConfig } from "../core/types";
+import { DEFAULT_GRID_CONFIG } from "../core/types";
 
 export type CanvasGridLayerProps = Partial<GridLayerConfig>;
 

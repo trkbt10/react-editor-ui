@@ -53,6 +53,7 @@ describe("sync-exports", () => {
       const testExport = parsed.exports["./TestSyncComponent"];
 
       expect(testExport).toEqual({
+        source: "./src/components/TestSyncComponent/TestSyncComponent.tsx",
         types: "./dist/components/TestSyncComponent/TestSyncComponent.d.ts",
         import: "./dist/components/TestSyncComponent.js",
         require: "./dist/components/TestSyncComponent.cjs",
@@ -114,6 +115,7 @@ describe("sync-exports", () => {
       const parsed = JSON.parse(result);
 
       expect(parsed.exports["."]).toEqual({
+        source: "./src/index.tsx",
         types: "./dist/index.d.ts",
         import: "./dist/index.js",
         require: "./dist/index.cjs",
@@ -129,6 +131,7 @@ describe("sync-exports", () => {
       const parsed = JSON.parse(result);
 
       expect(parsed.exports["./themes"]).toEqual({
+        source: "./src/themes/index.ts",
         types: "./dist/themes/index.d.ts",
         import: "./dist/themes/index.js",
         require: "./dist/themes/index.cjs",
