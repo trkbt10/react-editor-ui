@@ -5,7 +5,7 @@
  * Converts style segments into tokens that the renderer can use.
  */
 
-import { useMemo, useCallback, type CSSProperties } from "react";
+import { useMemo, useCallback, useRef, type CSSProperties } from "react";
 import type { TextStyleSegment, TextStyle } from "../core/types";
 import type { StyleToken } from "./types";
 import type { Token, Tokenizer, TokenStyleMap } from "../code/types";
@@ -16,6 +16,64 @@ import {
   buildStyleEntries,
   findOverlappingEntries,
 } from "./textStyles";
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+/**
+ * Compare two CSSProperties objects for shallow equality.
+ */
+function cssPropertiesAreEqual(
+  a: CSSProperties,
+  b: CSSProperties
+): boolean {
+  const keysA = Object.keys(a) as Array<keyof CSSProperties>;
+  const keysB = Object.keys(b) as Array<keyof CSSProperties>;
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  for (const key of keysA) {
+    if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Compare two TokenStyleMap objects for equality.
+ * Returns true if both maps have the same keys and each style is equal.
+ */
+function tokenStyleMapsAreEqual(
+  a: TokenStyleMap,
+  b: TokenStyleMap
+): boolean {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  for (const key of keysA) {
+    const styleA = a[key];
+    const styleB = b[key];
+
+    if (!styleB) {
+      return false;
+    }
+
+    if (!cssPropertiesAreEqual(styleA, styleB)) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 // =============================================================================
 // Types
@@ -62,7 +120,7 @@ export function useTextStyles(
   const styleEntries = useMemo(() => buildStyleEntries(styles), [styles]);
 
   // Build token style map for the renderer
-  const tokenStyles = useMemo((): TokenStyleMap => {
+  const computedTokenStyles = useMemo((): TokenStyleMap => {
     const map: Record<string, CSSProperties> = {
       [DEFAULT_TOKEN_TYPE]: {},
     };
@@ -73,6 +131,17 @@ export function useTextStyles(
 
     return map;
   }, [styleEntries]);
+
+  // Stabilize tokenStyles reference - return previous reference if content is equal
+  // This prevents unnecessary re-renders when styles haven't actually changed
+  const tokenStylesRef = useRef<TokenStyleMap>(computedTokenStyles);
+  const tokenStyles = useMemo((): TokenStyleMap => {
+    if (tokenStyleMapsAreEqual(tokenStylesRef.current, computedTokenStyles)) {
+      return tokenStylesRef.current;
+    }
+    tokenStylesRef.current = computedTokenStyles;
+    return computedTokenStyles;
+  }, [computedTokenStyles]);
 
   // Get style at a specific offset
   const getStyleAt = useCallback(

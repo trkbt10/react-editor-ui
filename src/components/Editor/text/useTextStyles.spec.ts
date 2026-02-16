@@ -599,4 +599,98 @@ describe("useTextStyles memoization", () => {
     expect(result.current.tokenizer).not.toBe(initialTokenizer);
     expect(result.current.tokenStyles).not.toBe(initialTokenStyles);
   });
+
+  it("returns stable tokenStyles when style content is same but positions change", () => {
+    // Initial styles with bold at position 0-5
+    const { result, rerender } = renderHook(
+      ({ styles }) => useTextStyles(styles),
+      {
+        initialProps: {
+          styles: [{ start: 0, end: 5, style: BOLD_STYLE }] as TextStyleSegment[],
+        },
+      }
+    );
+
+    const initialTokenStyles = result.current.tokenStyles;
+
+    // Change position but keep same style content (simulates typing that shifts existing style)
+    rerender({
+      styles: [{ start: 3, end: 8, style: BOLD_STYLE }],
+    });
+
+    // tokenStyles should remain stable since the actual CSS properties haven't changed
+    expect(result.current.tokenStyles).toBe(initialTokenStyles);
+  });
+
+  it("returns stable tokenStyles when new styles array has same content", () => {
+    const { result, rerender } = renderHook(
+      ({ styles }) => useTextStyles(styles),
+      {
+        initialProps: {
+          styles: [
+            { start: 0, end: 5, style: BOLD_STYLE },
+            { start: 5, end: 10, style: ITALIC_STYLE },
+          ] as TextStyleSegment[],
+        },
+      }
+    );
+
+    const initialTokenStyles = result.current.tokenStyles;
+
+    // New array instance with same style content at different positions
+    rerender({
+      styles: [
+        { start: 10, end: 15, style: BOLD_STYLE },
+        { start: 15, end: 20, style: ITALIC_STYLE },
+      ],
+    });
+
+    // tokenStyles reference should be stable since CSSProperties are identical
+    expect(result.current.tokenStyles).toBe(initialTokenStyles);
+  });
+
+  it("updates tokenStyles when a style property changes", () => {
+    const { result, rerender } = renderHook(
+      ({ styles }) => useTextStyles(styles),
+      {
+        initialProps: {
+          styles: [{ start: 0, end: 5, style: { fontWeight: "bold" } }] as TextStyleSegment[],
+        },
+      }
+    );
+
+    const initialTokenStyles = result.current.tokenStyles;
+
+    // Change font weight value
+    rerender({
+      styles: [{ start: 0, end: 5, style: { fontWeight: "normal" } }],
+    });
+
+    // tokenStyles should change because the CSS property value changed
+    expect(result.current.tokenStyles).not.toBe(initialTokenStyles);
+  });
+
+  it("updates tokenStyles when style count changes", () => {
+    const { result, rerender } = renderHook(
+      ({ styles }) => useTextStyles(styles),
+      {
+        initialProps: {
+          styles: [{ start: 0, end: 5, style: BOLD_STYLE }] as TextStyleSegment[],
+        },
+      }
+    );
+
+    const initialTokenStyles = result.current.tokenStyles;
+
+    // Add another style segment
+    rerender({
+      styles: [
+        { start: 0, end: 5, style: BOLD_STYLE },
+        { start: 5, end: 10, style: ITALIC_STYLE },
+      ],
+    });
+
+    // tokenStyles should change because we have a new token type
+    expect(result.current.tokenStyles).not.toBe(initialTokenStyles);
+  });
 });
