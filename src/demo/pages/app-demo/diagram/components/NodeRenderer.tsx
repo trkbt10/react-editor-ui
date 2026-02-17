@@ -76,22 +76,6 @@ const textDisplayBaseStyle: CSSProperties = {
   userSelect: "none",
 };
 
-const textInputBaseStyle: CSSProperties = {
-  width: "100%",
-  height: "100%",
-  border: "none",
-  background: "rgba(255, 255, 255, 0.95)",
-  fontSize: 14,
-  color: "var(--rei-color-text)",
-  textAlign: "center",
-  outline: "2px solid var(--rei-color-primary, #18a0fb)",
-  outlineOffset: -1,
-  padding: 4,
-  resize: "none",
-  pointerEvents: "auto",
-  borderRadius: 2,
-};
-
 const groupBorderStyle: CSSProperties = {
   position: "absolute",
   inset: 0,
@@ -133,16 +117,12 @@ const ShapeRenderer = memo(function ShapeRenderer({ node, selected }: ShapeRende
 
   const containerStyle = useMemo<CSSProperties>(
     () => ({
-      position: "absolute",
-      left: node.x,
-      top: node.y,
-      width: node.width,
-      height: node.height,
-      transform: node.rotation !== 0 ? `rotate(${node.rotation}deg)` : undefined,
-      transformOrigin: "center center",
+      position: "relative",
+      width: "100%",
+      height: "100%",
       cursor: selected ? "move" : "pointer",
     }),
-    [node.x, node.y, node.width, node.height, node.rotation, selected],
+    [selected],
   );
 
   const svgStyle = useMemo<CSSProperties>(
@@ -208,57 +188,73 @@ const TextRenderer = memo(function TextRenderer({
   onContentChange,
   onEditEnd,
 }: TextRendererProps) {
-  const [editText, setEditText] = useState(node.content);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLSpanElement>(null);
+  const initialContentRef = useRef<string>(node.content);
 
-  useEffect(() => {
-    if (!editing) {
-      setEditText(node.content);
-    }
-  }, [node.content, editing]);
-
+  // Focus and select all when entering edit mode
   useEffect(() => {
     if (editing && inputRef.current) {
+      // Store initial content for escape key
+      initialContentRef.current = node.content;
+      // Focus and select all
       inputRef.current.focus();
-      inputRef.current.select();
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(inputRef.current);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
     }
-  }, [editing]);
+  }, [editing, node.content]);
 
   const handleBlur = useCallback(() => {
-    onContentChange(node.id, editText);
+    const newContent = inputRef.current?.textContent ?? node.content;
+    onContentChange(node.id, newContent);
     onEditEnd();
-  }, [node.id, editText, onContentChange, onEditEnd]);
+  }, [node.id, node.content, onContentChange, onEditEnd]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        onContentChange(node.id, editText);
+        const newContent = inputRef.current?.textContent ?? node.content;
+        onContentChange(node.id, newContent);
         onEditEnd();
       } else if (e.key === "Escape") {
-        setEditText(node.content);
+        // Restore original content
+        if (inputRef.current) {
+          inputRef.current.textContent = initialContentRef.current;
+        }
         onEditEnd();
+      } else if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+        // Handle Cmd/Ctrl+A to select all text (ensure it works in contentEditable)
+        e.preventDefault();
+        e.stopPropagation();
+        if (inputRef.current) {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(inputRef.current);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+      } else {
+        // Stop propagation for all other keys to prevent interference from parent handlers
+        e.stopPropagation();
       }
     },
-    [node.content, editText, onContentChange, onEditEnd],
+    [node.id, node.content, onContentChange, onEditEnd],
   );
-
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditText(e.target.value);
-  }, []);
 
   const containerStyle = useMemo<CSSProperties>(
     () => ({
-      position: "absolute",
-      left: node.x,
-      top: node.y,
-      width: node.width,
-      height: node.height,
-      transform: node.rotation !== 0 ? `rotate(${node.rotation}deg)` : undefined,
-      transformOrigin: "center center",
-      cursor: selected ? "move" : "pointer",
+      position: "relative",
+      width: "100%",
+      height: "100%",
+      cursor: editing ? "text" : selected ? "move" : "pointer",
+      outline: editing ? "2px solid var(--rei-color-primary, #18a0fb)" : undefined,
+      outlineOffset: editing ? 2 : undefined,
+      borderRadius: editing ? 2 : undefined,
     }),
-    [node.x, node.y, node.width, node.height, node.rotation, selected],
+    [selected, editing],
   );
 
   const textStyle = useMemo<CSSProperties>(() => {
@@ -274,27 +270,47 @@ const TextRenderer = memo(function TextRenderer({
     };
   }, [node.textProps]);
 
-  const textInputStyle = useMemo<CSSProperties>(() => ({
-    ...textInputBaseStyle,
-    fontSize: node.textProps.fontSize,
-    fontWeight: node.textProps.fontWeight,
-    textAlign: node.textProps.textAlign,
-  }), [node.textProps]);
+  const editableStyle = useMemo<CSSProperties>(() => {
+    const props = node.textProps;
+    return {
+      ...textDisplayBaseStyle,
+      fontSize: props.fontSize,
+      fontWeight: props.fontWeight,
+      textAlign: props.textAlign,
+      color: props.color.visible
+        ? `${props.color.hex}${Math.round((props.color.opacity / 100) * 255).toString(16).padStart(2, "0")}`
+        : "transparent",
+      outline: "none",
+      cursor: "text",
+      pointerEvents: "auto",
+      userSelect: "text",
+      minWidth: 20,
+    };
+  }, [node.textProps]);
+
+  const innerContainerStyle = useMemo<CSSProperties>(() => ({
+    ...textContainerStyle,
+    pointerEvents: editing ? "auto" : "none",
+  }), [editing]);
 
   return (
-    <div style={containerStyle}>
-      <div style={textContainerStyle}>
+    <div style={containerStyle} data-testid={`text-node-${node.id}`}>
+      <div style={innerContainerStyle}>
         {editing ? (
-          <textarea
+          <span
             ref={inputRef}
-            value={editText}
-            onChange={handleChange}
+            contentEditable
+            suppressContentEditableWarning
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            style={textInputStyle}
+            style={editableStyle}
+            data-testid="text-content-editable"
+            dangerouslySetInnerHTML={{ __html: node.content }}
           />
         ) : (
-          <span style={textStyle}>{node.content}</span>
+          <span style={textStyle} data-testid="text-content-display">
+            {node.content}
+          </span>
         )}
       </div>
     </div>
@@ -313,16 +329,14 @@ type GroupRendererProps = {
 const GroupRenderer = memo(function GroupRenderer({ node, selected }: GroupRendererProps) {
   const containerStyle = useMemo<CSSProperties>(
     () => ({
-      position: "absolute",
-      left: node.x,
-      top: node.y,
-      width: node.width,
-      height: node.height,
+      position: "relative",
+      width: "100%",
+      height: "100%",
       transform: node.rotation !== 0 ? `rotate(${node.rotation}deg)` : undefined,
       transformOrigin: "center center",
       cursor: selected ? "move" : "pointer",
     }),
-    [node.x, node.y, node.width, node.height, node.rotation, selected],
+    [node.rotation, selected],
   );
 
   // Group itself is invisible - just a container

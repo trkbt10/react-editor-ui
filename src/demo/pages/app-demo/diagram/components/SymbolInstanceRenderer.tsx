@@ -2,7 +2,7 @@
  * @file SymbolInstanceRenderer - Renders a symbol instance by resolving its symbol definition with variants
  */
 
-import { memo, useMemo, type CSSProperties } from "react";
+import { memo, useMemo, useCallback, useRef, useEffect, type CSSProperties } from "react";
 import type {
   SymbolInstance,
   SymbolDefinition,
@@ -141,9 +141,68 @@ const ShapePartRenderer = memo(function ShapePartRenderer({
 
 type TextPartRendererProps = {
   part: TextPart;
+  editing: boolean;
+  onContentChange: (partId: string, content: string) => void;
+  onEditEnd: () => void;
 };
 
-const TextPartRenderer = memo(function TextPartRenderer({ part }: TextPartRendererProps) {
+const TextPartRenderer = memo(function TextPartRenderer({
+  part,
+  editing,
+  onContentChange,
+  onEditEnd,
+}: TextPartRendererProps) {
+  const inputRef = useRef<HTMLSpanElement>(null);
+  const initialContentRef = useRef<string>(part.content);
+
+  // Focus and select all when entering edit mode
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      initialContentRef.current = part.content;
+      inputRef.current.focus();
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(inputRef.current);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+  }, [editing, part.content]);
+
+  const handleBlur = useCallback(() => {
+    const newContent = inputRef.current?.textContent ?? part.content;
+    onContentChange(part.id, newContent);
+    onEditEnd();
+  }, [part.id, part.content, onContentChange, onEditEnd]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const newContent = inputRef.current?.textContent ?? part.content;
+        onContentChange(part.id, newContent);
+        onEditEnd();
+      } else if (e.key === "Escape") {
+        if (inputRef.current) {
+          inputRef.current.textContent = initialContentRef.current;
+        }
+        onEditEnd();
+      } else if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (inputRef.current) {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(inputRef.current);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+      } else {
+        e.stopPropagation();
+      }
+    },
+    [part.id, part.content, onContentChange, onEditEnd],
+  );
+
   const textStyle = useMemo<CSSProperties>(() => {
     const props = part.textProps;
     return {
@@ -157,9 +216,47 @@ const TextPartRenderer = memo(function TextPartRenderer({ part }: TextPartRender
     };
   }, [part.textProps]);
 
+  const editableStyle = useMemo<CSSProperties>(() => {
+    const props = part.textProps;
+    return {
+      ...textDisplayBaseStyle,
+      fontSize: props.fontSize,
+      fontWeight: props.fontWeight,
+      textAlign: props.textAlign,
+      color: props.color.visible
+        ? `${props.color.hex}${Math.round((props.color.opacity / 100) * 255).toString(16).padStart(2, "0")}`
+        : "transparent",
+      outline: "none",
+      cursor: "text",
+      pointerEvents: "auto",
+      userSelect: "text",
+      minWidth: 20,
+    };
+  }, [part.textProps]);
+
+  const containerStyle = useMemo<CSSProperties>(() => ({
+    ...textContainerStyle,
+    pointerEvents: editing ? "auto" : "none",
+  }), [editing]);
+
   return (
-    <div style={textContainerStyle}>
-      <span style={textStyle}>{part.content}</span>
+    <div style={containerStyle}>
+      {editing ? (
+        <span
+          ref={inputRef}
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          style={editableStyle}
+          data-testid="symbol-text-content-editable"
+          dangerouslySetInnerHTML={{ __html: part.content }}
+        />
+      ) : (
+        <span style={textStyle} data-testid="symbol-text-content-display">
+          {part.content}
+        </span>
+      )}
     </div>
   );
 });
@@ -235,6 +332,16 @@ function mergePartWithOverrides(
 }
 
 // =============================================================================
+// Find first text part ID
+// =============================================================================
+
+export function findFirstTextPartId(symbolDef: SymbolDefinition | null): string | null {
+  if (!symbolDef) return null;
+  const textPart = symbolDef.parts.find(isTextPart);
+  return textPart?.id ?? null;
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -242,12 +349,21 @@ type SymbolInstanceRendererProps = {
   instance: SymbolInstance;
   symbolDef: SymbolDefinition | null;
   selected: boolean;
+  /** Part ID being edited (null = not editing) */
+  editingPartId?: string | null;
+  /** Callback when part content changes */
+  onPartContentChange?: (instanceId: string, partId: string, content: string) => void;
+  /** Callback when editing ends */
+  onEditEnd?: () => void;
 };
 
 export const SymbolInstanceRenderer = memo(function SymbolInstanceRenderer({
   instance,
   symbolDef,
   selected,
+  editingPartId = null,
+  onPartContentChange,
+  onEditEnd = () => {},
 }: SymbolInstanceRendererProps) {
   // Get variant
   const variant = useMemo(() => {
@@ -266,18 +382,26 @@ export const SymbolInstanceRenderer = memo(function SymbolInstanceRenderer({
     });
   }, [symbolDef, variant, instance.partOverrides]);
 
+  const handleContentChange = useCallback(
+    (partId: string, content: string) => {
+      onPartContentChange?.(instance.id, partId, content);
+    },
+    [instance.id, onPartContentChange],
+  );
+
+  const isEditing = editingPartId !== null;
+
   const containerStyle = useMemo<CSSProperties>(
     () => ({
-      position: "absolute",
-      left: instance.x,
-      top: instance.y,
-      width: instance.width,
-      height: instance.height,
-      transform: instance.rotation !== 0 ? `rotate(${instance.rotation}deg)` : undefined,
-      transformOrigin: "center center",
-      cursor: selected ? "move" : "pointer",
+      position: "relative",
+      width: "100%",
+      height: "100%",
+      cursor: isEditing ? "text" : selected ? "move" : "pointer",
+      outline: isEditing ? "2px solid var(--rei-color-primary, #18a0fb)" : undefined,
+      outlineOffset: isEditing ? 2 : undefined,
+      borderRadius: isEditing ? 2 : undefined,
     }),
-    [instance.x, instance.y, instance.width, instance.height, instance.rotation, selected],
+    [selected, isEditing],
   );
 
   if (!symbolDef) {
@@ -303,7 +427,7 @@ export const SymbolInstanceRenderer = memo(function SymbolInstanceRenderer({
   }
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} data-testid={`symbol-instance-${instance.id}`}>
       {resolvedParts.map((part) => {
         if (isShapePart(part)) {
           return (
@@ -317,7 +441,15 @@ export const SymbolInstanceRenderer = memo(function SymbolInstanceRenderer({
         }
 
         if (isTextPart(part)) {
-          return <TextPartRenderer key={part.id} part={part} />;
+          return (
+            <TextPartRenderer
+              key={part.id}
+              part={part}
+              editing={editingPartId === part.id}
+              onContentChange={handleContentChange}
+              onEditEnd={onEditEnd}
+            />
+          );
         }
 
         return null;

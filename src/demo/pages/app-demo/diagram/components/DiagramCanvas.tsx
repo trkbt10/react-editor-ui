@@ -54,8 +54,14 @@ import { NodeRenderer } from "./NodeRenderer";
 import { ConnectionRenderer, ArrowMarkerDefs } from "./ConnectionRenderer";
 import { DiagramBottomToolbar } from "./DiagramBottomToolbar";
 import { MarqueeSelection, intersectsMarquee, type MarqueeState } from "./MarqueeSelection";
-import { SymbolInstanceRenderer } from "./SymbolInstanceRenderer";
+import { SymbolInstanceRenderer, findFirstTextPartId } from "./SymbolInstanceRenderer";
 import { FrameRenderer } from "./FrameRenderer";
+
+// Symbol editing state type
+type SymbolEditingState = {
+  instanceId: string;
+  partId: string;
+} | null;
 
 // =============================================================================
 // Styles
@@ -81,9 +87,22 @@ type NodeWrapperProps = {
   onContentChange: (nodeId: string, content: string) => void;
   onEditEnd: () => void;
   symbolDef: SymbolDefinition | null;
+  /** For Symbol instances: which part is being edited */
+  editingPartId?: string | null;
+  /** For Symbol instances: callback when part content changes */
+  onPartContentChange?: (instanceId: string, partId: string, content: string) => void;
 };
 
-const NodeWrapper = memo(function NodeWrapper({ node, selected, editing, onContentChange, onEditEnd, symbolDef }: NodeWrapperProps) {
+const NodeWrapper = memo(function NodeWrapper({
+  node,
+  selected,
+  editing,
+  onContentChange,
+  onEditEnd,
+  symbolDef,
+  editingPartId,
+  onPartContentChange,
+}: NodeWrapperProps) {
   // Render symbol instances using SymbolInstanceRenderer
   if (isSymbolInstance(node)) {
     return (
@@ -91,6 +110,9 @@ const NodeWrapper = memo(function NodeWrapper({ node, selected, editing, onConte
         instance={node}
         symbolDef={symbolDef}
         selected={selected}
+        editingPartId={editingPartId}
+        onPartContentChange={onPartContentChange}
+        onEditEnd={onEditEnd}
       />
     );
   }
@@ -219,6 +241,9 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
   // Text editing state
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
+  // Symbol instance editing state (tracks which instance and which part)
+  const [editingSymbolState, setEditingSymbolState] = useState<SymbolEditingState>(null);
+
   // Track if we're in direct drag mode (to keep pointer events active on node)
   const [directDragNodeId, setDirectDragNodeId] = useState<string | null>(null);
 
@@ -307,6 +332,30 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
         nodes.map((n) =>
           n.id === nodeId && n.type === "text" ? { ...n, content } : n,
         ),
+      );
+    },
+    [updatePageNodes],
+  );
+
+  // Handle Symbol instance part content change
+  const handleSymbolPartContentChange = useCallback(
+    (instanceId: string, partId: string, content: string) => {
+      updatePageNodes((nodes) =>
+        nodes.map((n) => {
+          if (n.id === instanceId && isSymbolInstance(n)) {
+            return {
+              ...n,
+              partOverrides: {
+                ...n.partOverrides,
+                [partId]: {
+                  ...n.partOverrides?.[partId],
+                  content,
+                },
+              },
+            };
+          }
+          return n;
+        }),
       );
     },
     [updatePageNodes],
@@ -461,17 +510,32 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
     [updatePageNodes, selectedNodeIds],
   );
 
-  // Handle double-click to edit text
+  // Handle double-click to edit text (for text nodes and symbol instances)
   const handleBoundingBoxDoubleClick = useCallback(() => {
     if (selectedNodeIds.size === 1) {
       const nodeId = Array.from(selectedNodeIds)[0];
-      setEditingNodeId(nodeId);
+      const node = pageNodes.find((n) => n.id === nodeId);
+
+      // Text nodes support inline editing
+      if (node?.type === "text") {
+        setEditingNodeId(nodeId);
+        return;
+      }
+
+      // Symbol instances: find first text part and edit it
+      if (node && isSymbolInstance(node)) {
+        const textPartId = findFirstTextPartId(symbolDef);
+        if (textPartId) {
+          setEditingSymbolState({ instanceId: node.id, partId: textPartId });
+        }
+      }
     }
-  }, [selectedNodeIds]);
+  }, [selectedNodeIds, pageNodes, symbolDef]);
 
   // Handle edit end
   const handleEditEnd = useCallback(() => {
     setEditingNodeId(null);
+    setEditingSymbolState(null);
   }, []);
 
   // Convert screen coordinates to canvas coordinates
@@ -802,8 +866,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
             onSelect={handleConnectionSelect}
           />
         ))}
-        {/* Bounding box for selected nodes */}
-        {selectionBounds && (
+        {/* Bounding box for selected nodes (hidden when editing text) */}
+        {selectionBounds && !editingNodeId && !editingSymbolState && (
           <BoundingBox
             x={selectionBounds.x}
             y={selectionBounds.y}
@@ -834,6 +898,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
       selectionBounds,
       singleSelectedNode,
       selectedNodeIds.size,
+      editingNodeId,
+      editingSymbolState,
       handleConnectionSelect,
       handleMoveStart,
       handleNodeMove,
@@ -893,6 +959,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                   {frameChildren.map((child) => {
                     const isChildSelected = selectedNodeIds.has(child.id);
                     const isChildEditing = editingNodeId === child.id;
+                    const isChildSymbolEditing = editingSymbolState?.instanceId === child.id;
+                    const isChildAnyEditing = isChildEditing || isChildSymbolEditing;
 
                     // Adjust coordinates relative to frame
                     const adjustedChild = {
@@ -905,13 +973,34 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                       <div
                         key={child.id}
                         style={{
-                          pointerEvents: "auto",
-                          position: "relative",
+                          position: "absolute",
+                          left: adjustedChild.x,
+                          top: adjustedChild.y,
+                          width: adjustedChild.width,
+                          height: adjustedChild.height,
+                          pointerEvents: isChildAnyEditing || !isChildSelected ? "auto" : "none",
                           zIndex: isChildSelected ? 1 : 0,
                         }}
                         onPointerDown={(e) => {
+                          // Skip drag handling when editing (allow text selection)
+                          if (isChildAnyEditing) return;
                           e.stopPropagation();
                           handleNodePointerDown(child.id, e);
+                        }}
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          // Text nodes support inline editing
+                          if (child.type === "text") {
+                            setEditingNodeId(child.id);
+                            return;
+                          }
+                          // Symbol instances: find first text part and edit it
+                          if (isSymbolInstance(child)) {
+                            const textPartId = findFirstTextPartId(symbolDef);
+                            if (textPartId) {
+                              setEditingSymbolState({ instanceId: child.id, partId: textPartId });
+                            }
+                          }
                         }}
                       >
                         <NodeWrapper
@@ -921,6 +1010,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                           onContentChange={handleContentChange}
                           onEditEnd={handleEditEnd}
                           symbolDef={symbolDef}
+                          editingPartId={isChildSymbolEditing ? editingSymbolState.partId : null}
+                          onPartContentChange={handleSymbolPartContentChange}
                         />
                       </div>
                     );
@@ -932,16 +1023,40 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
             {topLevelNodes.map((node) => {
               const isSelected = selectedNodeIds.has(node.id);
               const isEditing = editingNodeId === node.id;
+              const isSymbolEditing = editingSymbolState?.instanceId === node.id;
+              const isAnyEditing = isEditing || isSymbolEditing;
               const isDirectDragging = directDragNodeId === node.id;
               return (
                 <div
                   key={node.id}
                   style={{
-                    pointerEvents: isDirectDragging || isEditing || !isSelected ? "auto" : "none",
+                    position: "absolute",
+                    left: node.x,
+                    top: node.y,
+                    width: node.width,
+                    height: node.height,
+                    pointerEvents: isDirectDragging || isAnyEditing || !isSelected ? "auto" : "none",
                   }}
                   onPointerDown={(e) => {
+                    // Skip drag handling when editing (allow text selection)
+                    if (isAnyEditing) return;
                     e.stopPropagation();
                     handleNodePointerDown(node.id, e);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    // Text nodes support inline editing
+                    if (node.type === "text") {
+                      setEditingNodeId(node.id);
+                      return;
+                    }
+                    // Symbol instances: find first text part and edit it
+                    if (isSymbolInstance(node)) {
+                      const textPartId = findFirstTextPartId(symbolDef);
+                      if (textPartId) {
+                        setEditingSymbolState({ instanceId: node.id, partId: textPartId });
+                      }
+                    }
                   }}
                 >
                   <NodeWrapper
@@ -951,6 +1066,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                     onContentChange={handleContentChange}
                     onEditEnd={handleEditEnd}
                     symbolDef={symbolDef}
+                    editingPartId={isSymbolEditing ? editingSymbolState.partId : null}
+                    onPartContentChange={handleSymbolPartContentChange}
                   />
                 </div>
               );
