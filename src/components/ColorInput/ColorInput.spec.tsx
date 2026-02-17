@@ -4,7 +4,7 @@
 
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ColorInput } from "./ColorInput";
-import type { ColorValue } from "./ColorInput";
+import type { ColorValue } from "../../utils/color/types";
 
 describe("ColorInput", () => {
   const defaultValue: ColorValue = {

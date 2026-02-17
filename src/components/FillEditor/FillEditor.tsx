@@ -5,7 +5,7 @@
 import { memo, useCallback, type CSSProperties } from "react";
 import { SPACE_MD } from "../../constants/styles";
 import { ColorInput } from "../ColorInput/ColorInput";
-import type { ColorValue } from "../ColorInput/ColorInput";
+import type { ColorValue } from "../../utils/color/types";
 import { GradientEditor } from "../GradientEditor/GradientEditor";
 import type { GradientValue } from "../GradientEditor/gradientTypes";
 import { createDefaultGradient } from "../GradientEditor/gradientUtils";

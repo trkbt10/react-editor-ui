@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { DemoContainer, DemoSection } from "../../components";
 import { ColorInput } from "../../../components/ColorInput/ColorInput";
-import type { ColorValue } from "../../../components/ColorInput/ColorInput";
+import type { ColorValue } from "../../../utils/color/types";
 
 export function ColorInputDemo() {
   const [colorValue, setColorValue] = useState<ColorValue>({

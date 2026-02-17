@@ -2,7 +2,7 @@
  * @file Type definitions for gradient editing
  */
 
-import type { ColorValue } from "../ColorInput/ColorInput";
+import type { ColorValue } from "../../utils/color/types";
 
 export type GradientType = "linear" | "radial" | "angular" | "diamond";
 

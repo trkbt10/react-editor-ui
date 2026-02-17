@@ -2,7 +2,7 @@
  * @file Utility functions for fill editing
  */
 
-import type { ColorValue } from "../ColorInput/ColorInput";
+import type { ColorValue } from "../../utils/color/types";
 import { createDefaultGradient } from "../GradientEditor/gradientUtils";
 import type {
   FillValue,
