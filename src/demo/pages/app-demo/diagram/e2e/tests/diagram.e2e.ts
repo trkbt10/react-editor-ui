@@ -334,7 +334,7 @@ test.describe("Diagram Editor", () => {
     // First add a text node
     const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
     await dropdownToggle.click();
-    const textOption = page.locator('button[role="option"]:has-text("Text")');
+    const textOption = page.locator('[role="option"]:has-text("Text")');
     await expect(textOption).toBeVisible();
     await textOption.click();
     const mainButton = page.locator('button[aria-label="Add shape"]');
@@ -565,7 +565,7 @@ test.describe("Diagram Editor", () => {
     await dropdownToggle.click();
 
     // Wait for dropdown to open and select Text option
-    const textOption = page.locator('button[role="option"]:has-text("Text")');
+    const textOption = page.locator('[role="option"]:has-text("Text")');
     await expect(textOption).toBeVisible();
     await textOption.click();
 
@@ -590,7 +590,7 @@ test.describe("Diagram Editor", () => {
     // First add a text node
     const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
     await dropdownToggle.click();
-    const textOption = page.locator('button[role="option"]:has-text("Text")');
+    const textOption = page.locator('[role="option"]:has-text("Text")');
     await expect(textOption).toBeVisible();
     await textOption.click();
     const mainButton = page.locator('button[aria-label="Add shape"]');
@@ -647,7 +647,7 @@ test.describe("Diagram Editor", () => {
     // Add a text node
     const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
     await dropdownToggle.click();
-    const textOption = page.locator('button[role="option"]:has-text("Text")');
+    const textOption = page.locator('[role="option"]:has-text("Text")');
     await expect(textOption).toBeVisible();
     await textOption.click();
     const mainButton = page.locator('button[aria-label="Add shape"]');
@@ -858,5 +858,206 @@ test.describe("Diagram Editor", () => {
     expect(Math.abs(roundedDeltaX)).toBeLessThanOrEqual(80);
     expect(Math.abs(roundedDeltaY)).toBeGreaterThanOrEqual(20);
     expect(Math.abs(roundedDeltaY)).toBeLessThanOrEqual(80);
+  });
+
+  // =============================================================================
+  // Connection Property Editing Tests
+  // =============================================================================
+
+  test.describe("Connection Properties", () => {
+    /**
+     * Helper to select a connection and verify inspector is visible.
+     */
+    async function selectConnection(page: Page) {
+      const connectionGroup = page.locator('[data-connection-id]').first();
+      const count = await connectionGroup.count();
+      if (count === 0) {
+        return null;
+      }
+
+      const clickablePath = connectionGroup.locator("path").first();
+      await clickablePath.evaluate((el) => {
+        const event = new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        });
+        el.dispatchEvent(event);
+      });
+
+      await page.waitForTimeout(100);
+      return connectionGroup;
+    }
+
+    test("should edit connection label", async ({ page }) => {
+      const connection = await selectConnection(page);
+      if (!connection) {
+        test.skip();
+        return;
+      }
+
+      // Verify inspector shows connection properties
+      const connectionHeader = page.locator('text=Connection Properties');
+      await expect(connectionHeader).toBeVisible();
+
+      // Find the label input
+      const labelInput = page.locator('input[placeholder="Enter label..."]');
+      await expect(labelInput).toBeVisible();
+
+      // Enter a label
+      await labelInput.fill("Test Label");
+      await page.waitForTimeout(100);
+
+      // Verify the label appears on the connection (in SVG)
+      const labelText = page.locator('text:has-text("Test Label")');
+      await expect(labelText).toBeVisible();
+    });
+
+    test("should change connection stroke width", async ({ page }) => {
+      const connection = await selectConnection(page);
+      if (!connection) {
+        test.skip();
+        return;
+      }
+
+      // Find the width input (UnitInput's internal input element)
+      const widthInputContainer = page.locator('[data-testid="unit-input"]').first();
+      await expect(widthInputContainer).toBeVisible();
+      const widthInput = widthInputContainer.locator('input');
+      await expect(widthInput).toBeVisible();
+
+      // Get initial stroke width from the connection path
+      const visiblePath = connection.locator("path").nth(2); // Third path is the visible one
+      const initialWidth = await visiblePath.getAttribute("stroke-width");
+
+      // Change the width
+      await widthInput.fill("5");
+      await page.keyboard.press("Enter");
+      await page.waitForTimeout(100);
+
+      // Verify the stroke width changed
+      const newWidth = await visiblePath.getAttribute("stroke-width");
+      expect(newWidth).toBe("5");
+      expect(newWidth).not.toBe(initialWidth);
+    });
+
+    test("should change connection stroke style to dashed", async ({ page }) => {
+      const connection = await selectConnection(page);
+      if (!connection) {
+        test.skip();
+        return;
+      }
+
+      // Find the stroke style select
+      const styleSelect = page.locator('button[aria-label="Stroke style"]');
+      await expect(styleSelect).toBeVisible();
+
+      // Open the dropdown and select "Dashed"
+      await styleSelect.click();
+      const dashedOption = page.locator('[role="option"]:has-text("Dashed")');
+      await expect(dashedOption).toBeVisible();
+      await dashedOption.click();
+      await page.waitForTimeout(100);
+
+      // Verify the stroke-dasharray changed on the connection
+      const visiblePath = connection.locator("path").nth(2);
+      const dashArray = await visiblePath.getAttribute("stroke-dasharray");
+      expect(dashArray).toBe("8,4");
+    });
+
+    test("should change connection stroke style to dotted", async ({ page }) => {
+      const connection = await selectConnection(page);
+      if (!connection) {
+        test.skip();
+        return;
+      }
+
+      // Find the stroke style select
+      const styleSelect = page.locator('button[aria-label="Stroke style"]');
+      await styleSelect.click();
+
+      const dottedOption = page.locator('[role="option"]:has-text("Dotted")');
+      await expect(dottedOption).toBeVisible();
+      await dottedOption.click();
+      await page.waitForTimeout(100);
+
+      // Verify the stroke-dasharray changed
+      const visiblePath = connection.locator("path").nth(2);
+      const dashArray = await visiblePath.getAttribute("stroke-dasharray");
+      expect(dashArray).toBe("2,4");
+    });
+
+    test("should change end arrowhead type", async ({ page }) => {
+      const connection = await selectConnection(page);
+      if (!connection) {
+        test.skip();
+        return;
+      }
+
+      // Find the end arrowhead select
+      const arrowSelect = page.locator('button[aria-label="End arrowhead"]');
+      await expect(arrowSelect).toBeVisible();
+
+      // Open dropdown and select "Triangle"
+      await arrowSelect.click();
+      const triangleOption = page.locator('[role="option"]:has-text("Triangle")');
+      await expect(triangleOption).toBeVisible();
+      await triangleOption.click();
+      await page.waitForTimeout(100);
+
+      // Verify the marker-end changed on the connection
+      const visiblePath = connection.locator("path").nth(2);
+      const markerEnd = await visiblePath.getAttribute("marker-end");
+      expect(markerEnd).toContain("arrow-triangle");
+    });
+
+    test("should change start arrowhead type", async ({ page }) => {
+      const connection = await selectConnection(page);
+      if (!connection) {
+        test.skip();
+        return;
+      }
+
+      // Find the start arrowhead select
+      const arrowSelect = page.locator('button[aria-label="Start arrowhead"]');
+      await expect(arrowSelect).toBeVisible();
+
+      // Open dropdown and select "Circle"
+      await arrowSelect.click();
+      const circleOption = page.locator('[role="option"]:has-text("Circle")');
+      await expect(circleOption).toBeVisible();
+      await circleOption.click();
+      await page.waitForTimeout(100);
+
+      // Verify the marker-start changed on the connection
+      const visiblePath = connection.locator("path").nth(2);
+      const markerStart = await visiblePath.getAttribute("marker-start");
+      expect(markerStart).toContain("arrow-circle");
+    });
+
+    test("should delete connection", async ({ page }) => {
+      // Get initial connection count
+      const initialCount = await page.locator('[data-connection-id]').count();
+
+      const connection = await selectConnection(page);
+      if (!connection) {
+        test.skip();
+        return;
+      }
+
+      // Click the delete button
+      const deleteButton = page.locator('button[aria-label="Delete connection"]');
+      await expect(deleteButton).toBeVisible();
+      await deleteButton.click();
+      await page.waitForTimeout(100);
+
+      // Verify connection was deleted
+      const newCount = await page.locator('[data-connection-id]').count();
+      expect(newCount).toBe(initialCount - 1);
+
+      // Verify inspector shows empty state
+      const emptyState = page.locator('text=Select a shape or connection');
+      await expect(emptyState).toBeVisible();
+    });
   });
 });

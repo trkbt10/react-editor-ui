@@ -20,10 +20,30 @@ export type ShapeType =
 
 export type StrokeStyle = "solid" | "dashed" | "dotted";
 
+export type JoinType = "miter" | "round" | "bevel";
+
+export type WidthProfile = "uniform" | "taper-start" | "taper-end" | "taper-both" | "pressure";
+
+export type BrushType = "smooth" | "rough" | "spray";
+
+export type BrushDirection = "left" | "right";
+
 export type NodeStroke = {
   color: ColorValue;
   width: number;
   style: StrokeStyle;
+  // Advanced stroke settings (optional)
+  widthProfile?: WidthProfile;
+  join?: JoinType;
+  miterAngle?: number;
+  // Dynamic stroke settings
+  frequency?: number;
+  wiggle?: number;
+  smoothen?: number;
+  // Brush settings
+  brushType?: BrushType;
+  brushDirection?: BrushDirection;
+  brushWidthProfile?: WidthProfile;
 };
 
 export type TextAlign = "left" | "center" | "right";
@@ -102,7 +122,7 @@ export type SymbolInstance = {
 // Legacy Node Types (for standalone shapes/text not in symbols)
 // =============================================================================
 
-export type NodeType = ShapeType | "text" | "group" | "instance" | "frame";
+export type NodeType = ShapeType | "text" | "group" | "instance" | "frame" | "table";
 
 // =============================================================================
 // Frame Types
@@ -131,6 +151,25 @@ type BaseNodeProps = {
   width: number;
   height: number;
   rotation: number;
+};
+
+// =============================================================================
+// Table Types
+// =============================================================================
+
+export type TableCell = {
+  content: string;
+  textProps?: Partial<TextProperties>;
+};
+
+export type TableNode = BaseNodeProps & {
+  type: "table";
+  cells: TableCell[][];
+  columnWidths: number[];
+  rowHeights: number[];
+  stroke: NodeStroke;
+  hasHeaderRow: boolean;
+  defaultTextProps: TextProperties;
 };
 
 export type ShapeNode = BaseNodeProps & {
@@ -167,7 +206,7 @@ export type FrameNode = BaseNodeProps & {
 /**
  * Union type for all diagram nodes
  */
-export type DiagramNode = ShapeNode | TextNode | GroupNode | FrameNode | SymbolInstance;
+export type DiagramNode = ShapeNode | TextNode | GroupNode | FrameNode | SymbolInstance | TableNode;
 
 // =============================================================================
 // Connection Types
@@ -243,7 +282,14 @@ export function isSymbolInstance(node: DiagramNode): node is SymbolInstance {
  * Type guard for shape nodes
  */
 export function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame";
+  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame" && node.type !== "table";
+}
+
+/**
+ * Type guard for table nodes
+ */
+export function isTableNode(node: DiagramNode): node is TableNode {
+  return node.type === "table";
 }
 
 /**
@@ -295,7 +341,7 @@ export type ToolType = "select" | "pan" | "connection" | NodeType;
 export type ShapeCategory = "basic" | "flowchart" | "uml" | "misc";
 
 export type ShapeDefinition = {
-  type: ShapeType | "text";
+  type: ShapeType | "text" | "table";
   label: string;
   category: ShapeCategory;
   defaultWidth: number;
