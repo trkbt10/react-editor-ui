@@ -141,10 +141,13 @@ export function LayerItemDemo() {
   const [dropInfo, setDropInfo] = useState<DropInfo>(null);
   const [lastAction, setLastAction] = useState<string>("");
 
-  // Precompute maps for O(1) lookups
-  const layerMap = createLayerMap(layers);
-  const childrenMap = createChildrenMap(layers);
-  const visibleLayers = getVisibleLayersOrdered(childrenMap, expandedIds);
+  // Precompute maps for O(1) lookups (memoized to avoid recomputation on unrelated state changes)
+  const layerMap = useMemo(() => createLayerMap(layers), [layers]);
+  const childrenMap = useMemo(() => createChildrenMap(layers), [layers]);
+  const visibleLayers = useMemo(
+    () => getVisibleLayersOrdered(childrenMap, expandedIds),
+    [childrenMap, expandedIds]
+  );
 
   // Memoized icon elements to avoid creating new references each render
   const iconMap = useMemo(() => ({
@@ -331,14 +334,19 @@ export function LayerItemDemo() {
   const handleDragOver = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
     if (!draggedId || selectedIds.has(targetId)) {
-      setDropInfo(null);
+      // Only update if currently has a value
+      if (dropInfo !== null) {
+        setDropInfo(null);
+      }
       return;
     }
 
     // Prevent dropping onto descendants of any selected item
     for (const selId of selectedIds) {
       if (isDescendantWithMap(targetId, selId, layerMap)) {
-        setDropInfo(null);
+        if (dropInfo !== null) {
+          setDropInfo(null);
+        }
         return;
       }
     }
@@ -349,14 +357,20 @@ export function LayerItemDemo() {
     const targetLayer = layerMap.get(targetId);
 
     // Determine drop position based on mouse position
+    let newPosition: "before" | "inside" | "after";
     if (y < height * 0.25) {
-      setDropInfo({ targetId, position: "before" });
+      newPosition = "before";
     } else if (y > height * 0.75) {
-      setDropInfo({ targetId, position: "after" });
+      newPosition = "after";
     } else if (targetLayer && canHaveChildren(targetLayer.type)) {
-      setDropInfo({ targetId, position: "inside" });
+      newPosition = "inside";
     } else {
-      setDropInfo({ targetId, position: y < height * 0.5 ? "before" : "after" });
+      newPosition = y < height * 0.5 ? "before" : "after";
+    }
+
+    // Only update state if the value actually changed
+    if (dropInfo?.targetId !== targetId || dropInfo?.position !== newPosition) {
+      setDropInfo({ targetId, position: newPosition });
     }
   };
 
