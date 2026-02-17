@@ -3,67 +3,39 @@
  * Features: visibility toggle, lock toggle, rename, delete, reorder, context menu
  */
 
-import type { ReactNode, CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent, KeyboardEvent, DragEvent } from "react";
-import { memo, useState, useRef, useEffect, useCallback, useMemo } from "react";
+import type {
+  ReactNode,
+  CSSProperties,
+  PointerEvent as ReactPointerEvent,
+  MouseEvent as ReactMouseEvent,
+  DragEvent,
+} from "react";
+import { memo, useState, useRef, useCallback, useMemo } from "react";
 import {
   COLOR_HOVER,
   COLOR_SELECTED,
   COLOR_DROP_TARGET,
-  COLOR_TEXT,
-  COLOR_TEXT_MUTED,
-  COLOR_TEXT_DISABLED,
   COLOR_ICON,
-  COLOR_ICON_HOVER,
-  COLOR_ICON_ACTIVE,
   COLOR_PRIMARY,
-  SIZE_FONT_SM,
   SIZE_TREE_INDENT,
+  SIZE_LAYER_ITEM_HEIGHT,
+  SIZE_DRAG_HANDLE,
   SPACE_XS,
   SPACE_SM,
   SPACE_MD,
   DURATION_FAST,
   EASING_DEFAULT,
-  RADIUS_SM,
-  COLOR_INPUT_BG,
-  COLOR_INPUT_BORDER_FOCUS,
 } from "../../themes/styles";
 import { ContextMenu } from "../ContextMenu/ContextMenu";
 import type { ContextMenuItem } from "../ContextMenu/ContextMenu";
-import { EyeIcon, LockIcon, DragHandleIcon, ChevronRightIcon } from "../../icons";
-
-// ChevronIcon wrapper for expand/collapse with rotation
-const ChevronIcon = memo(function ChevronIcon({ expanded }: { expanded: boolean }) {
-  const style = useMemo<CSSProperties>(
-    () => ({
-      display: "inline-flex",
-      transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
-      transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
-    }),
-    [expanded],
-  );
-
-  return (
-    <span style={style}>
-      <ChevronRightIcon size={12} />
-    </span>
-  );
-});
+import { DragHandleIcon } from "../../icons";
+import { LayerExpander } from "./LayerExpander";
+import { LayerLabel } from "./LayerLabel";
+import { LayerActionButtons } from "./LayerActionButtons";
 
 // ========================================
 // STATIC STYLES
 // ========================================
-
-const expanderStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "16px",
-  height: "16px",
-  marginRight: SPACE_XS,
-  color: COLOR_ICON,
-  cursor: "pointer",
-  flexShrink: 0,
-};
 
 const iconStyle: CSSProperties = {
   display: "flex",
@@ -73,54 +45,8 @@ const iconStyle: CSSProperties = {
   flexShrink: 0,
 };
 
-const inputStyle: CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-  color: COLOR_TEXT,
-  fontSize: SIZE_FONT_SM,
-  backgroundColor: COLOR_INPUT_BG,
-  border: `1px solid ${COLOR_INPUT_BORDER_FOCUS}`,
-  borderRadius: RADIUS_SM,
-  padding: `${SPACE_XS} ${SPACE_SM}`,
-  outline: "none",
-  margin: `-${SPACE_XS} 0`,
-};
-
-const actionButtonStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "20px",
-  height: "20px",
-  padding: 0,
-  border: "none",
-  background: "transparent",
-  cursor: "pointer",
-  color: COLOR_ICON,
-  borderRadius: RADIUS_SM,
-  transition: `color ${DURATION_FAST} ${EASING_DEFAULT}, background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-  flexShrink: 0,
-  marginLeft: SPACE_XS,
-};
-
-const activeActionStyle: CSSProperties = {
-  ...actionButtonStyle,
-  color: COLOR_ICON_ACTIVE,
-};
-
-const hiddenActionStyle: CSSProperties = {
-  ...actionButtonStyle,
-  color: COLOR_TEXT_DISABLED,
-};
-
 const badgeStyle: CSSProperties = {
   marginLeft: SPACE_SM,
-  flexShrink: 0,
-};
-
-const expanderPlaceholderStyle: CSSProperties = {
-  width: "16px",
-  marginRight: SPACE_XS,
   flexShrink: 0,
 };
 
@@ -253,108 +179,84 @@ export const LayerItem = memo(function LayerItem({
   const [editValue, setEditValue] = useState(label);
   const [isHovered, setIsHovered] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastPointerDownTime = useRef(0);
 
-  // Focus input when entering edit mode
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
+  // ========================================
+  // EDIT HANDLERS
+  // ========================================
 
-  const handleStartEdit = useCallback(() => {
-    if (renamable && !locked) {
-      setIsEditing(true);
-      setEditValue(label);
-    }
-  }, [renamable, locked, label]);
+  const editHandlers = useMemo(
+    () => ({
+      start: () => {
+        if (renamable && !locked) {
+          setIsEditing(true);
+          setEditValue(label);
+        }
+      },
+      finish: () => {
+        setIsEditing(false);
+        const trimmedValue = editValue.trim();
+        if (trimmedValue && trimmedValue !== label) {
+          onRename?.(trimmedValue);
+        }
+        setEditValue(label);
+      },
+      cancel: () => {
+        setIsEditing(false);
+        setEditValue(label);
+      },
+      change: (value: string) => {
+        setEditValue(value);
+      },
+    }),
+    [renamable, locked, label, editValue, onRename],
+  );
 
-  const handleFinishEdit = useCallback(() => {
-    setIsEditing(false);
-    const trimmedValue = editValue.trim();
-    if (trimmedValue && trimmedValue !== label) {
-      onRename?.(trimmedValue);
-    }
-    setEditValue(label);
-  }, [editValue, label, onRename]);
+  // ========================================
+  // MEMOIZED STYLES
+  // ========================================
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleFinishEdit();
-    } else if (e.key === "Escape") {
-      setIsEditing(false);
-      setEditValue(label);
-    }
-  }, [handleFinishEdit, label]);
-
-  const handleContextMenuEvent = useCallback((e: ReactMouseEvent) => {
-    if (contextMenuItems && contextMenuItems.length > 0) {
-      e.preventDefault();
-      setContextMenuPos({ x: e.clientX, y: e.clientY });
-    }
-  }, [contextMenuItems]);
-
-  const handleContextMenuClose = useCallback(() => {
-    setContextMenuPos(null);
-  }, []);
-
-  const handleContextMenuSelect = useCallback((itemId: string) => {
-    onContextMenu?.(itemId);
-  }, [onContextMenu]);
-
-  const handleDoubleClickEvent = useCallback((e: ReactPointerEvent) => {
-    e.stopPropagation();
-    if (renamable && !locked) {
-      handleStartEdit();
-    } else {
-      onDoubleClick?.();
-    }
-  }, [renamable, locked, handleStartEdit, onDoubleClick]);
-
-  // Memoized styles
   const containerStyle = useMemo<CSSProperties>(
     () => ({
       display: "flex",
       alignItems: "center",
       padding: `${SPACE_XS} ${SPACE_MD}`,
       paddingLeft: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
-      backgroundColor: dropPosition === "inside" ? COLOR_DROP_TARGET : selected ? COLOR_SELECTED : "transparent",
+      backgroundColor:
+        dropPosition === "inside" ? COLOR_DROP_TARGET : selected ? COLOR_SELECTED : "transparent",
       cursor: locked ? "default" : "pointer",
       transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
       userSelect: "none",
       opacity: dimmed || !visible ? 0.5 : 1,
       position: "relative",
-      minHeight: "28px",
-      outline: dropPosition === "inside" ? `2px solid ${COLOR_PRIMARY}` : "none",
-      outlineOffset: "-2px",
+      minHeight: SIZE_LAYER_ITEM_HEIGHT,
+      outline: dropPosition === "inside" ? `${SPACE_XS} solid ${COLOR_PRIMARY}` : "none",
+      outlineOffset: `calc(-1 * ${SPACE_XS})`,
     }),
     [depth, dropPosition, selected, locked, dimmed, visible],
   );
 
-  const dropIndicatorBeforeStyle = useMemo<CSSProperties>(
+  const dropIndicatorStyles = useMemo(
     () => ({
-      position: "absolute",
-      left: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
-      right: SPACE_MD,
-      height: "2px",
-      backgroundColor: COLOR_PRIMARY,
-      pointerEvents: "none",
-      top: 0,
-    }),
-    [depth],
-  );
-
-  const dropIndicatorAfterStyle = useMemo<CSSProperties>(
-    () => ({
-      position: "absolute",
-      left: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
-      right: SPACE_MD,
-      height: "2px",
-      backgroundColor: COLOR_PRIMARY,
-      pointerEvents: "none",
-      bottom: 0,
+      before: {
+        position: "absolute",
+        left: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
+        right: SPACE_MD,
+        height: SPACE_XS,
+        backgroundColor: COLOR_PRIMARY,
+        pointerEvents: "none",
+        top: 0,
+      } as CSSProperties,
+      after: {
+        position: "absolute",
+        left: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
+        right: SPACE_MD,
+        height: SPACE_XS,
+        backgroundColor: COLOR_PRIMARY,
+        pointerEvents: "none",
+        bottom: 0,
+      } as CSSProperties,
     }),
     [depth],
   );
@@ -364,8 +266,8 @@ export const LayerItem = memo(function LayerItem({
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      width: "14px",
-      height: "14px",
+      width: SIZE_DRAG_HANDLE,
+      height: SIZE_DRAG_HANDLE,
       marginRight: SPACE_XS,
       color: COLOR_ICON,
       cursor: draggable ? "grab" : "default",
@@ -376,144 +278,79 @@ export const LayerItem = memo(function LayerItem({
     [draggable, isHovered],
   );
 
-  const labelStyle = useMemo<CSSProperties>(
-    () => ({
-      flex: 1,
-      minWidth: 0,
-      color: selected ? COLOR_TEXT : COLOR_TEXT_MUTED,
-      fontSize: SIZE_FONT_SM,
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-    }),
-    [selected],
+  // ========================================
+  // CONTAINER HANDLERS
+  // ========================================
+
+  const handlePointerEnter = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      setIsHovered(true);
+      if (!selected && dropPosition !== "inside") {
+        e.currentTarget.style.backgroundColor = COLOR_HOVER;
+      }
+    },
+    [selected, dropPosition],
   );
 
-  // Memoized handlers
-  const handlePointerEnter = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-    setIsHovered(true);
-    if (!selected && dropPosition !== "inside") {
-      e.currentTarget.style.backgroundColor = COLOR_HOVER;
-    }
-  }, [selected, dropPosition]);
+  const handlePointerLeave = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      setIsHovered(false);
+      if (!selected && dropPosition !== "inside") {
+        e.currentTarget.style.backgroundColor = "transparent";
+      }
+    },
+    [selected, dropPosition],
+  );
 
-  const handlePointerLeave = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-    setIsHovered(false);
-    if (!selected && dropPosition !== "inside") {
-      e.currentTarget.style.backgroundColor = "transparent";
-    }
-  }, [selected, dropPosition]);
+  const handlePointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      // Don't trigger selection when clicking on action buttons
+      const target = e.target as HTMLElement;
+      if (target.closest("button")) {
+        return;
+      }
+      onPointerDown?.(e);
+    },
+    [onPointerDown],
+  );
 
-  const handlePointerDownEvent = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-    // Don't trigger selection when clicking on action buttons
-    const target = e.target as HTMLElement;
-    if (target.closest("button")) {
-      return;
-    }
-    onPointerDown?.(e);
-  }, [onPointerDown]);
+  const handlePointerUp = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      const now = Date.now();
+      if (now - lastPointerDownTime.current < 300) {
+        // Double-tap detected
+        e.stopPropagation();
+        if (renamable && !locked) {
+          editHandlers.start();
+        } else {
+          onDoubleClick?.();
+        }
+      }
+      lastPointerDownTime.current = now;
+    },
+    [renamable, locked, editHandlers, onDoubleClick],
+  );
 
-  const handleExpanderClick = useCallback((e: ReactPointerEvent<HTMLSpanElement>) => {
-    e.stopPropagation();
-    onToggle?.();
-  }, [onToggle]);
+  const handleContextMenuEvent = useCallback(
+    (e: ReactMouseEvent) => {
+      if (contextMenuItems && contextMenuItems.length > 0) {
+        e.preventDefault();
+        setContextMenuPos({ x: e.clientX, y: e.clientY });
+      }
+    },
+    [contextMenuItems],
+  );
 
-  const handleVisibilityClick = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    onVisibilityChange?.(!visible);
-  }, [onVisibilityChange, visible]);
+  const contextMenuHandlers = useMemo(
+    () => ({
+      close: () => setContextMenuPos(null),
+      select: (itemId: string) => onContextMenu?.(itemId),
+    }),
+    [onContextMenu],
+  );
 
-  const handleLockClick = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    onLockChange?.(!locked);
-  }, [onLockChange, locked]);
-
-  const handleActionHoverEnter = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = COLOR_HOVER;
-    e.currentTarget.style.color = COLOR_ICON_HOVER;
-  }, []);
-
-  const handleVisibilityHoverLeave = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = "transparent";
-    e.currentTarget.style.color = visible ? COLOR_ICON : COLOR_TEXT_DISABLED;
-  }, [visible]);
-
-  const handleLockHoverLeave = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = "transparent";
-    e.currentTarget.style.color = locked ? COLOR_ICON_ACTIVE : COLOR_ICON;
-  }, [locked]);
-
-  const handleButtonPointerDown = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-  }, []);
-
-  const handleInputPointerDown = useCallback((e: ReactPointerEvent<HTMLInputElement>) => {
-    e.stopPropagation();
-  }, []);
-
-  const handleExpanderHoverEnter = useCallback((e: ReactPointerEvent<HTMLSpanElement>) => {
-    e.currentTarget.style.color = COLOR_ICON_HOVER;
-  }, []);
-
-  const handleExpanderHoverLeave = useCallback((e: ReactPointerEvent<HTMLSpanElement>) => {
-    e.currentTarget.style.color = COLOR_ICON;
-  }, []);
-
-  // Render expander
-  const renderExpander = () => {
-    if (!hasChildren) {
-      return <span style={expanderPlaceholderStyle} />;
-    }
-    return (
-      <span
-        role="button"
-        aria-label={expanded ? "Collapse" : "Expand"}
-        onClick={handleExpanderClick}
-        onPointerEnter={handleExpanderHoverEnter}
-        onPointerLeave={handleExpanderHoverLeave}
-        style={expanderStyle}
-      >
-        <ChevronIcon expanded={expanded} />
-      </span>
-    );
-  };
-
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditValue(e.target.value);
-  }, []);
-
-  // Render label or edit input
-  const renderLabel = () => {
-    if (isEditing) {
-      return (
-        <input
-          ref={inputRef}
-          type="text"
-          value={editValue}
-          onChange={handleInputChange}
-          onBlur={handleFinishEdit}
-          onKeyDown={handleKeyDown}
-          onPointerDown={handleInputPointerDown}
-          style={inputStyle}
-          aria-label="Layer name"
-          data-testid="layer-name-input"
-        />
-      );
-    }
-    return (
-      <span style={labelStyle} data-testid="layer-label">{label}</span>
-    );
-  };
-
-  // Track double-click with pointer events
-  const lastPointerDownTime = useRef(0);
-  const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const now = Date.now();
-    if (now - lastPointerDownTime.current < 300) {
-      handleDoubleClickEvent(e);
-    }
-    lastPointerDownTime.current = now;
-  };
+  // Determine if action buttons should be visible
+  const showActionButtons = (isHovered || !visible || locked) && !isEditing;
 
   return (
     <>
@@ -522,7 +359,7 @@ export const LayerItem = memo(function LayerItem({
         role="treeitem"
         aria-selected={selected}
         aria-expanded={hasChildren ? expanded : undefined}
-        onPointerDown={handlePointerDownEvent}
+        onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onContextMenu={handleContextMenuEvent}
         onPointerEnter={handlePointerEnter}
@@ -541,8 +378,12 @@ export const LayerItem = memo(function LayerItem({
         data-testid={`layer-item-${id}`}
       >
         {/* Drop Indicators */}
-        {dropPosition === "before" && <div style={dropIndicatorBeforeStyle} data-testid="drop-indicator-before" />}
-        {dropPosition === "after" && <div style={dropIndicatorAfterStyle} data-testid="drop-indicator-after" />}
+        {dropPosition === "before" && (
+          <div style={dropIndicatorStyles.before} data-testid="drop-indicator-before" />
+        )}
+        {dropPosition === "after" && (
+          <div style={dropIndicatorStyles.after} data-testid="drop-indicator-after" />
+        )}
 
         {/* Drag Handle */}
         {showDragHandle && (
@@ -552,54 +393,35 @@ export const LayerItem = memo(function LayerItem({
         )}
 
         {/* Expander */}
-        {renderExpander()}
+        <LayerExpander hasChildren={hasChildren} expanded={expanded} onToggle={onToggle} />
 
         {/* Icon */}
         {icon ? <span style={iconStyle}>{icon}</span> : null}
 
-        {/* Label or Input */}
-        {renderLabel()}
+        {/* Label */}
+        <LayerLabel
+          label={label}
+          selected={selected}
+          isEditing={isEditing}
+          editValue={editValue}
+          onEditValueChange={editHandlers.change}
+          onFinishEdit={editHandlers.finish}
+          onCancelEdit={editHandlers.cancel}
+        />
 
         {/* Badge */}
         {badge ? <span style={badgeStyle}>{badge}</span> : null}
 
         {/* Action Buttons (visible on hover or when active) */}
-        {(isHovered || !visible || locked) && !isEditing && (
-          <>
-            {/* Visibility Toggle */}
-            {showVisibilityToggle && onVisibilityChange && (
-              <button
-                type="button"
-                data-action="visibility"
-                aria-label={visible ? "Hide layer" : "Show layer"}
-                onPointerDown={handleButtonPointerDown}
-                onPointerUp={handleVisibilityClick}
-                onPointerEnter={handleActionHoverEnter}
-                onPointerLeave={handleVisibilityHoverLeave}
-                style={visible ? actionButtonStyle : hiddenActionStyle}
-                data-testid="visibility-toggle"
-              >
-                <EyeIcon visible={visible} size={14} />
-              </button>
-            )}
-
-            {/* Lock Toggle */}
-            {showLockToggle && onLockChange && (
-              <button
-                type="button"
-                data-action="lock"
-                aria-label={locked ? "Unlock layer" : "Lock layer"}
-                onPointerDown={handleButtonPointerDown}
-                onPointerUp={handleLockClick}
-                onPointerEnter={handleActionHoverEnter}
-                onPointerLeave={handleLockHoverLeave}
-                style={locked ? activeActionStyle : actionButtonStyle}
-                data-testid="lock-toggle"
-              >
-                <LockIcon locked={locked} size={14} />
-              </button>
-            )}
-          </>
+        {showActionButtons && (
+          <LayerActionButtons
+            showVisibilityToggle={showVisibilityToggle}
+            visible={visible}
+            onVisibilityChange={onVisibilityChange}
+            showLockToggle={showLockToggle}
+            locked={locked}
+            onLockChange={onLockChange}
+          />
         )}
       </div>
 
@@ -608,48 +430,52 @@ export const LayerItem = memo(function LayerItem({
         <ContextMenu
           items={contextMenuItems}
           position={contextMenuPos}
-          onSelect={handleContextMenuSelect}
-          onClose={handleContextMenuClose}
+          onSelect={contextMenuHandlers.select}
+          onClose={contextMenuHandlers.close}
         />
       )}
     </>
   );
-}, (prev, next) =>
-  prev.id === next.id &&
-  prev.label === next.label &&
-  prev.depth === next.depth &&
-  prev.hasChildren === next.hasChildren &&
-  prev.expanded === next.expanded &&
-  prev.selected === next.selected &&
-  prev.visible === next.visible &&
-  prev.locked === next.locked &&
-  prev.dimmed === next.dimmed &&
-  prev.dropPosition === next.dropPosition &&
-  prev.draggable === next.draggable &&
-  prev.canHaveChildren === next.canHaveChildren &&
-  prev.showVisibilityToggle === next.showVisibilityToggle &&
-  prev.showLockToggle === next.showLockToggle &&
-  prev.showDragHandle === next.showDragHandle &&
-  prev.renamable === next.renamable &&
-  prev.deletable === next.deletable &&
-  prev.icon === next.icon &&
-  prev.badge === next.badge &&
-  prev.className === next.className &&
-  prev.onToggle === next.onToggle &&
-  prev.onPointerDown === next.onPointerDown &&
-  prev.onDoubleClick === next.onDoubleClick &&
-  prev.onVisibilityChange === next.onVisibilityChange &&
-  prev.onLockChange === next.onLockChange &&
-  prev.onRename === next.onRename &&
-  prev.onDelete === next.onDelete &&
-  prev.onContextMenu === next.onContextMenu &&
-  prev.onDragStart === next.onDragStart &&
-  prev.onDrag === next.onDrag &&
-  prev.onDragOver === next.onDragOver &&
-  prev.onDragEnter === next.onDragEnter &&
-  prev.onDragLeave === next.onDragLeave &&
-  prev.onDragEnd === next.onDragEnd &&
-  prev.onDrop === next.onDrop
+}, arePropsEqual);
+
+function arePropsEqual(prev: LayerItemProps, next: LayerItemProps): boolean {
+  return (
+    prev.id === next.id &&
+    prev.label === next.label &&
+    prev.depth === next.depth &&
+    prev.hasChildren === next.hasChildren &&
+    prev.expanded === next.expanded &&
+    prev.selected === next.selected &&
+    prev.visible === next.visible &&
+    prev.locked === next.locked &&
+    prev.dimmed === next.dimmed &&
+    prev.dropPosition === next.dropPosition &&
+    prev.draggable === next.draggable &&
+    prev.canHaveChildren === next.canHaveChildren &&
+    prev.showVisibilityToggle === next.showVisibilityToggle &&
+    prev.showLockToggle === next.showLockToggle &&
+    prev.showDragHandle === next.showDragHandle &&
+    prev.renamable === next.renamable &&
+    prev.deletable === next.deletable &&
+    prev.icon === next.icon &&
+    prev.badge === next.badge &&
+    prev.className === next.className &&
+    prev.onToggle === next.onToggle &&
+    prev.onPointerDown === next.onPointerDown &&
+    prev.onDoubleClick === next.onDoubleClick &&
+    prev.onVisibilityChange === next.onVisibilityChange &&
+    prev.onLockChange === next.onLockChange &&
+    prev.onRename === next.onRename &&
+    prev.onDelete === next.onDelete &&
+    prev.onContextMenu === next.onContextMenu &&
+    prev.onDragStart === next.onDragStart &&
+    prev.onDrag === next.onDrag &&
+    prev.onDragOver === next.onDragOver &&
+    prev.onDragEnter === next.onDragEnter &&
+    prev.onDragLeave === next.onDragLeave &&
+    prev.onDragEnd === next.onDragEnd &&
+    prev.onDrop === next.onDrop
+  );
   // Note: contextMenuItems is intentionally excluded to avoid re-renders
   // when only the menu content changes. The menu reads items when opened.
-);
+}

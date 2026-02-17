@@ -311,7 +311,9 @@ describe("LayerItem", () => {
   it("highlights when dropPosition is inside", () => {
     render(<LayerItem id="layer-1" label="Frame 1" dropPosition="inside" />);
     const item = screen.getByTestId("layer-item-layer-1");
-    expect(item.style.outline).toContain("2px solid");
+    // CSS variable format: var(--rei-space-xs, 2px) solid var(--rei-color-primary, ...)
+    expect(item.style.outline).toContain("solid");
+    expect(item.style.outline).toContain("2px");
   });
 
   it("fires drag events", () => {
