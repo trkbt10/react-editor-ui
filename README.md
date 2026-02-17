@@ -689,26 +689,14 @@ import { CanvasRuler } from "react-editor-ui/canvas/CanvasRuler";
 
 ## Theming
 
-### CSS Custom Properties
-
 All components use CSS custom properties (CSS variables) with the `--rei-` prefix for consistent theming.
-
-```css
-:root {
-  --rei-color-bg: #1e1e1e;
-  --rei-color-text: #ffffff;
-  --rei-color-primary: #0066ff;
-  --rei-radius-sm: 4px;
-  --rei-space-sm: 8px;
-}
-```
 
 ### Built-in Themes
 
 ```tsx
 import { injectTheme } from "react-editor-ui/themes";
 
-// Available themes: "light" | "dark"
+// Available themes: "light" | "dark" | "high-contrast-light"
 injectTheme("dark");
 ```
 
@@ -718,10 +706,300 @@ Create a custom theme by overriding CSS variables:
 
 ```css
 .my-theme {
-  --rei-color-bg: #2d2d2d;
+  --rei-color-surface: #2d2d2d;
   --rei-color-primary: #ff6b00;
 }
 ```
+
+Or use `injectTheme` with custom tokens:
+
+```tsx
+import { injectTheme } from "react-editor-ui/themes";
+
+injectTheme({
+  "color-primary": "#ff6b00",
+  "color-surface": "#2d2d2d",
+});
+```
+
+## Token Reference
+
+<!-- AUTO:TOKENS -->
+### Base Tokens
+
+Theme-independent structural values shared across all themes.
+
+#### Spacing
+
+> Consistent spacing scale for margins, paddings, and gaps
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `space-xs` | `--rei-space-xs` | `2px` | Extra small spacing (2px) - tight spacing for dense UIs |
+| `space-sm` | `--rei-space-sm` | `4px` | Small spacing (4px) - default gap between related elements |
+| `space-md` | `--rei-space-md` | `8px` | Medium spacing (8px) - standard padding and margins |
+| `space-lg` | `--rei-space-lg` | `12px` | Large spacing (12px) - section separators |
+| `space-xl` | `--rei-space-xl` | `16px` | Extra large spacing (16px) - major section breaks |
+| `space-2xl` | `--rei-space-2xl` | `24px` | 2x extra large spacing (24px) - page-level spacing |
+
+#### Font Sizes
+
+> Typography scale for consistent text hierarchy
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `size-font-xs` | `--rei-size-font-xs` | `9px` | Extra small font (9px) - labels, badges, timestamps |
+| `size-font-sm` | `--rei-size-font-sm` | `11px` | Small font (11px) - secondary text, captions |
+| `size-font-md` | `--rei-size-font-md` | `12px` | Medium font (12px) - default body text |
+| `size-font-lg` | `--rei-size-font-lg` | `14px` | Large font (14px) - headings, emphasis |
+
+#### Icon Sizes
+
+> Standardized icon dimensions for visual consistency
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `size-icon-sm` | `--rei-size-icon-sm` | `12px` | Small icon (12px) - inline icons, indicators |
+| `size-icon-md` | `--rei-size-icon-md` | `14px` | Medium icon (14px) - default button icons |
+| `size-icon-lg` | `--rei-size-icon-lg` | `18px` | Large icon (18px) - toolbar icons, prominent actions |
+| `size-icon-xl` | `--rei-size-icon-xl` | `24px` | Extra large icon (24px) - hero icons, empty states |
+
+#### Component Heights
+
+> Standard heights for interactive elements
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `size-height-sm` | `--rei-size-height-sm` | `22px` | Small height (22px) - compact buttons, inputs |
+| `size-height-md` | `--rei-size-height-md` | `28px` | Medium height (28px) - default buttons, inputs |
+| `size-height-lg` | `--rei-size-height-lg` | `32px` | Large height (32px) - emphasized actions |
+| `size-height-xl` | `--rei-size-height-xl` | `40px` | Extra large height (40px) - primary CTAs, hero elements |
+
+#### Border Radius
+
+> Corner rounding for visual softness
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `radius-sm` | `--rei-radius-sm` | `5px` | Small radius (5px) - subtle rounding |
+| `radius-md` | `--rei-radius-md` | `6px` | Medium radius (6px) - default component rounding |
+| `radius-lg` | `--rei-radius-lg` | `10px` | Large radius (10px) - cards, modals |
+| `radius-full` | `--rei-radius-full` | `9999px` | Full radius (9999px) - pills, circular elements |
+
+#### Z-Index
+
+> Layering hierarchy for overlapping elements
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `z-dropdown` | `--rei-z-dropdown` | `1000` | Dropdown z-index (1000) - select menus, autocomplete |
+| `z-sticky` | `--rei-z-sticky` | `1100` | Sticky z-index (1100) - sticky headers, toolbars |
+| `z-modal` | `--rei-z-modal` | `1200` | Modal z-index (1200) - dialogs, modal overlays |
+| `z-popover` | `--rei-z-popover` | `1300` | Popover z-index (1300) - popovers, floating panels |
+| `z-tooltip` | `--rei-z-tooltip` | `1400` | Tooltip z-index (1400) - tooltips (topmost layer) |
+
+#### Transition Duration
+
+> Animation timing for smooth interactions
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `duration-fast` | `--rei-duration-fast` | `100ms` | Fast transition (100ms) - hover states, micro-interactions |
+| `duration-normal` | `--rei-duration-normal` | `200ms` | Normal transition (200ms) - standard animations |
+| `duration-slow` | `--rei-duration-slow` | `300ms` | Slow transition (300ms) - complex animations, modals |
+
+#### Transition Easing
+
+> Animation curves for natural motion
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `easing-default` | `--rei-easing-default` | `cubic-bezier(0.4, 0, 0.2, 1)` | Default easing - smooth acceleration and deceleration |
+| `easing-in` | `--rei-easing-in` | `cubic-bezier(0.4, 0, 1, 1)` | Ease-in - accelerating from zero velocity |
+| `easing-out` | `--rei-easing-out` | `cubic-bezier(0, 0, 0.2, 1)` | Ease-out - decelerating to zero velocity |
+
+#### Component Sizes
+
+> Fixed dimensions for specific UI components
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `size-toolbar-height` | `--rei-size-toolbar-height` | `44px` | Toolbar height (44px) - main application toolbar |
+| `size-tabbar-height` | `--rei-size-tabbar-height` | `32px` | Tab bar height (32px) - tab navigation |
+| `size-statusbar-height` | `--rei-size-statusbar-height` | `24px` | Status bar height (24px) - bottom status bar |
+| `size-panel-header-height` | `--rei-size-panel-header-height` | `40px` | Panel header height (40px) - collapsible panel headers |
+| `size-tree-indent` | `--rei-size-tree-indent` | `16px` | Tree indent (16px) - hierarchical tree view indentation |
+| `size-property-label` | `--rei-size-property-label` | `100px` | Property label width (100px) - form label column |
+| `size-checkbox-sm` | `--rei-size-checkbox-sm` | `12px` | Small checkbox (12px) - compact checkbox size |
+| `size-checkbox-md` | `--rei-size-checkbox-md` | `14px` | Medium checkbox (14px) - default checkbox size |
+| `size-color-swatch-sm` | `--rei-size-color-swatch-sm` | `14px` | Small color swatch (14px) - inline color indicators |
+| `size-color-swatch-md` | `--rei-size-color-swatch-md` | `18px` | Medium color swatch (18px) - default color picker swatch |
+| `size-color-swatch-lg` | `--rei-size-color-swatch-lg` | `22px` | Large color swatch (22px) - prominent color selection |
+| `size-divider-width` | `--rei-size-divider-width` | `1px` | Divider width (1px) - separator line thickness |
+| `canvas-ruler-size` | `--rei-canvas-ruler-size` | `20px` | Canvas ruler size (20px) - ruler bar width/height |
+
+### Color Tokens
+
+Theme-dependent color values. These are overridden by each theme preset.
+
+#### Primary Colors
+
+> Brand and accent colors for key actions
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-primary` | `--rei-color-primary` | Primary brand color - buttons, links, focus states |
+| `color-primary-hover` | `--rei-color-primary-hover` | Primary hover - slightly darker/lighter on hover |
+| `color-primary-active` | `--rei-color-primary-active` | Primary active - pressed/active state |
+
+#### Surface Colors
+
+> Background colors for containers and layers
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-surface` | `--rei-color-surface` | Base surface - main background color |
+| `color-surface-raised` | `--rei-color-surface-raised` | Raised surface - cards, elevated panels |
+| `color-surface-overlay` | `--rei-color-surface-overlay` | Overlay surface - modals, dropdowns |
+
+#### Text Colors
+
+> Typography colors for readability hierarchy
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-text` | `--rei-color-text` | Primary text - main content, headings |
+| `color-text-muted` | `--rei-color-text-muted` | Muted text - secondary info, descriptions |
+| `color-text-disabled` | `--rei-color-text-disabled` | Disabled text - inactive elements |
+
+#### Border Colors
+
+> Stroke colors for boundaries and separation
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-border` | `--rei-color-border` | Default border - containers, dividers |
+| `color-border-focus` | `--rei-color-border-focus` | Focus border - keyboard focus indicator |
+
+#### State Colors
+
+> Semantic colors for feedback and status
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-success` | `--rei-color-success` | Success state - confirmations, completed actions |
+| `color-warning` | `--rei-color-warning` | Warning state - cautions, important notices |
+| `color-error` | `--rei-color-error` | Error state - errors, destructive actions |
+
+#### Error State Colors
+
+> Extended error palette for complex error UIs
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-error-bg` | `--rei-color-error-bg` | Error background - subtle error container |
+| `color-error-bg-hover` | `--rei-color-error-bg-hover` | Error background hover - error element hover |
+| `color-error-bg-active` | `--rei-color-error-bg-active` | Error background active - error element pressed |
+| `color-error-border` | `--rei-color-error-border` | Error border - error container stroke |
+| `color-error-border-hover` | `--rei-color-error-border-hover` | Error border hover - error hover stroke |
+
+#### Backdrop
+
+> Overlay colors for modals and dialogs
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-backdrop` | `--rei-color-backdrop` | Modal backdrop - semi-transparent overlay |
+
+#### Interactive State Colors
+
+> Colors for hover, active, and selection states
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-hover` | `--rei-color-hover` | Hover state - subtle highlight on hover |
+| `color-active` | `--rei-color-active` | Active state - pressed/active highlight |
+| `color-selected` | `--rei-color-selected` | Selected state - selected items highlight |
+| `color-selected-subtle` | `--rei-color-selected-subtle` | Subtle selected - lighter selection for backgrounds |
+| `color-drop-target` | `--rei-color-drop-target` | Drop target - drag-and-drop target highlight |
+| `color-focus-ring` | `--rei-color-focus-ring` | Focus ring - keyboard focus outline |
+
+#### Icon Colors
+
+> Colors for iconography
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-icon` | `--rei-color-icon` | Default icon - neutral icon color |
+| `color-icon-hover` | `--rei-color-icon-hover` | Icon hover - icon on hover |
+| `color-icon-active` | `--rei-color-icon-active` | Icon active - active/selected icon |
+
+#### Divider Colors
+
+> Separator and rule colors
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-divider` | `--rei-color-divider` | Divider line - horizontal/vertical separators |
+
+#### Input Colors
+
+> Form input styling
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-input-bg` | `--rei-color-input-bg` | Input background - text field background |
+| `color-input-border` | `--rei-color-input-border` | Input border - text field stroke |
+| `color-input-border-focus` | `--rei-color-input-border-focus` | Input border focus - focused input stroke |
+
+#### Log Level Colors
+
+> Console/log output styling
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `color-log-info` | `--rei-color-log-info` | Info log - informational messages |
+| `color-log-warning` | `--rei-color-log-warning` | Warning log - warning messages |
+| `color-log-error` | `--rei-color-log-error` | Error log - error messages |
+| `color-log-debug` | `--rei-color-log-debug` | Debug log - debug messages |
+| `color-log-success` | `--rei-color-log-success` | Success log - success messages |
+
+#### Tooltip Colors
+
+> Tooltip styling
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `tooltip-bg` | `--rei-tooltip-bg` | Tooltip background - tooltip container |
+| `tooltip-color` | `--rei-tooltip-color` | Tooltip text - tooltip content color |
+
+#### Canvas Colors
+
+> Canvas/artboard specific colors
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `canvas-ruler-bg` | `--rei-canvas-ruler-bg` | Ruler background - canvas ruler bar |
+| `canvas-ruler-text` | `--rei-canvas-ruler-text` | Ruler text - ruler numbers |
+| `canvas-ruler-tick` | `--rei-canvas-ruler-tick` | Ruler tick - ruler tick marks |
+| `canvas-ruler-indicator` | `--rei-canvas-ruler-indicator` | Ruler indicator - current position marker |
+| `canvas-grid-major` | `--rei-canvas-grid-major` | Grid major - primary grid lines |
+| `canvas-grid-minor` | `--rei-canvas-grid-minor` | Grid minor - secondary grid lines |
+| `canvas-grid-origin` | `--rei-canvas-grid-origin` | Grid origin - origin axis lines |
+| `canvas-guide` | `--rei-canvas-guide` | Guide lines - alignment guides |
+| `canvas-checker-light` | `--rei-canvas-checker-light` | Checker light - transparency pattern light |
+| `canvas-checker-dark` | `--rei-canvas-checker-dark` | Checker dark - transparency pattern dark |
+
+#### Shadows
+
+> Elevation and depth effects
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `shadow-sm` | `--rei-shadow-sm` | Small shadow - subtle elevation |
+| `shadow-md` | `--rei-shadow-md` | Medium shadow - cards, dropdowns |
+| `shadow-lg` | `--rei-shadow-lg` | Large shadow - modals, popovers |
+<!-- /AUTO:TOKENS -->
 
 
 ## Documentation

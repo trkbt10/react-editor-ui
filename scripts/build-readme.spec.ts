@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { parseJSDocComment } from "./build-readme";
+import { parseJSDocComment, parseTokensFile } from "./build-readme";
 
 describe("parseJSDocComment", () => {
   it("extracts @file tag from simple comment", () => {
@@ -128,5 +128,110 @@ export const Button = memo(function Button() {});`;
       "Draggable slider supporting horizontal and vertical orientations."
     );
     expect(result.example).toBeUndefined();
+  });
+});
+
+describe("parseTokensFile", () => {
+  it("extracts BaseTokens groups and tokens", () => {
+    const content = `
+export type BaseTokens = {
+  // -------------------------------------------------------------------------
+  // @group Spacing
+  // Consistent spacing scale
+  // -------------------------------------------------------------------------
+
+  /** Extra small spacing (2px) */
+  "space-xs": string;
+  /** Small spacing (4px) */
+  "space-sm": string;
+
+  // -------------------------------------------------------------------------
+  // @group Font Sizes
+  // Typography scale
+  // -------------------------------------------------------------------------
+
+  /** Extra small font (9px) */
+  "size-font-xs": string;
+};
+
+export const baseTokens: BaseTokens = {
+  "space-xs": "2px",
+  "space-sm": "4px",
+  "size-font-xs": "9px",
+};
+`;
+
+    const result = parseTokensFile(content);
+
+    expect(result.baseTokens.groups).toHaveLength(2);
+    expect(result.baseTokens.groups[0].name).toBe("Spacing");
+    expect(result.baseTokens.groups[0].description).toBe("Consistent spacing scale");
+    expect(result.baseTokens.groups[0].tokens).toHaveLength(2);
+    expect(result.baseTokens.groups[0].tokens[0]).toEqual({
+      name: "space-xs",
+      cssVar: "--rei-space-xs",
+      description: "Extra small spacing (2px)",
+      defaultValue: "2px",
+    });
+    expect(result.baseTokens.groups[1].name).toBe("Font Sizes");
+  });
+
+  it("extracts ColorTokens groups and tokens", () => {
+    const content = `
+export type ColorTokens = {
+  // -------------------------------------------------------------------------
+  // @group Primary Colors
+  // Brand and accent colors
+  // -------------------------------------------------------------------------
+
+  /** Primary brand color */
+  "color-primary": string;
+  /** Primary hover state */
+  "color-primary-hover": string;
+};
+`;
+
+    const result = parseTokensFile(content);
+
+    expect(result.colorTokens.groups).toHaveLength(1);
+    expect(result.colorTokens.groups[0].name).toBe("Primary Colors");
+    expect(result.colorTokens.groups[0].tokens).toHaveLength(2);
+    expect(result.colorTokens.groups[0].tokens[0]).toEqual({
+      name: "color-primary",
+      cssVar: "--rei-color-primary",
+      description: "Primary brand color",
+    });
+  });
+
+  it("handles empty content", () => {
+    const content = "";
+
+    const result = parseTokensFile(content);
+
+    expect(result.baseTokens.groups).toHaveLength(0);
+    expect(result.colorTokens.groups).toHaveLength(0);
+  });
+
+  it("extracts default values from baseTokens const", () => {
+    const content = `
+export type BaseTokens = {
+  // @group Radius
+  // Corner rounding
+  /** Small radius */
+  "radius-sm": string;
+  /** Full radius */
+  "radius-full": string;
+};
+
+export const baseTokens: BaseTokens = {
+  "radius-sm": "5px",
+  "radius-full": "9999px",
+};
+`;
+
+    const result = parseTokensFile(content);
+
+    expect(result.baseTokens.groups[0].tokens[0].defaultValue).toBe("5px");
+    expect(result.baseTokens.groups[0].tokens[1].defaultValue).toBe("9999px");
   });
 });

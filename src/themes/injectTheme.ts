@@ -5,7 +5,8 @@
  * This approach uses a <style> element instead of inline styles.
  */
 
-import { themes, type ThemeName, type ThemeTokens } from "./tokens";
+import { themes, type ThemeName } from "./presets";
+import type { ThemeTokens } from "./tokens";
 import { CSS_VAR_PREFIX } from "../constants/styles";
 
 const STYLE_ID = "rei-theme-vars";

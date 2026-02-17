@@ -1,164 +1,361 @@
 /**
- * @file Theme token definitions
+ * @file Theme token type definitions and base tokens
  *
- * Each theme defines values for all CSS variables.
- * These are injected via ThemeProvider.
+ * This file contains only token types and theme-independent base values.
+ * Theme-specific color tokens are in ./presets/
  */
 
 /**
  * Base tokens - theme-independent structural values
+ * @category spacing
  */
 export type BaseTokens = {
-  // Spacing
+  // -------------------------------------------------------------------------
+  // @group Spacing
+  // Consistent spacing scale for margins, paddings, and gaps
+  // -------------------------------------------------------------------------
+
+  /** Extra small spacing (2px) - tight spacing for dense UIs */
   "space-xs": string;
+  /** Small spacing (4px) - default gap between related elements */
   "space-sm": string;
+  /** Medium spacing (8px) - standard padding and margins */
   "space-md": string;
+  /** Large spacing (12px) - section separators */
   "space-lg": string;
+  /** Extra large spacing (16px) - major section breaks */
   "space-xl": string;
+  /** 2x extra large spacing (24px) - page-level spacing */
   "space-2xl": string;
 
-  // Font sizes
+  // -------------------------------------------------------------------------
+  // @group Font Sizes
+  // Typography scale for consistent text hierarchy
+  // -------------------------------------------------------------------------
+
+  /** Extra small font (9px) - labels, badges, timestamps */
   "size-font-xs": string;
+  /** Small font (11px) - secondary text, captions */
   "size-font-sm": string;
+  /** Medium font (12px) - default body text */
   "size-font-md": string;
+  /** Large font (14px) - headings, emphasis */
   "size-font-lg": string;
 
-  // Icon sizes
+  // -------------------------------------------------------------------------
+  // @group Icon Sizes
+  // Standardized icon dimensions for visual consistency
+  // -------------------------------------------------------------------------
+
+  /** Small icon (12px) - inline icons, indicators */
   "size-icon-sm": string;
+  /** Medium icon (14px) - default button icons */
   "size-icon-md": string;
+  /** Large icon (18px) - toolbar icons, prominent actions */
   "size-icon-lg": string;
+  /** Extra large icon (24px) - hero icons, empty states */
   "size-icon-xl": string;
 
-  // Component heights
+  // -------------------------------------------------------------------------
+  // @group Component Heights
+  // Standard heights for interactive elements
+  // -------------------------------------------------------------------------
+
+  /** Small height (22px) - compact buttons, inputs */
   "size-height-sm": string;
+  /** Medium height (28px) - default buttons, inputs */
   "size-height-md": string;
+  /** Large height (32px) - emphasized actions */
   "size-height-lg": string;
+  /** Extra large height (40px) - primary CTAs, hero elements */
   "size-height-xl": string;
 
-  // Border radius
+  // -------------------------------------------------------------------------
+  // @group Border Radius
+  // Corner rounding for visual softness
+  // -------------------------------------------------------------------------
+
+  /** Small radius (5px) - subtle rounding */
   "radius-sm": string;
+  /** Medium radius (6px) - default component rounding */
   "radius-md": string;
+  /** Large radius (10px) - cards, modals */
   "radius-lg": string;
+  /** Full radius (9999px) - pills, circular elements */
   "radius-full": string;
 
-  // Z-index
+  // -------------------------------------------------------------------------
+  // @group Z-Index
+  // Layering hierarchy for overlapping elements
+  // -------------------------------------------------------------------------
+
+  /** Dropdown z-index (1000) - select menus, autocomplete */
   "z-dropdown": string;
+  /** Sticky z-index (1100) - sticky headers, toolbars */
   "z-sticky": string;
+  /** Modal z-index (1200) - dialogs, modal overlays */
   "z-modal": string;
+  /** Popover z-index (1300) - popovers, floating panels */
   "z-popover": string;
+  /** Tooltip z-index (1400) - tooltips (topmost layer) */
   "z-tooltip": string;
 
-  // Transitions - Duration
+  // -------------------------------------------------------------------------
+  // @group Transition Duration
+  // Animation timing for smooth interactions
+  // -------------------------------------------------------------------------
+
+  /** Fast transition (100ms) - hover states, micro-interactions */
   "duration-fast": string;
+  /** Normal transition (200ms) - standard animations */
   "duration-normal": string;
+  /** Slow transition (300ms) - complex animations, modals */
   "duration-slow": string;
 
-  // Transitions - Easing
+  // -------------------------------------------------------------------------
+  // @group Transition Easing
+  // Animation curves for natural motion
+  // -------------------------------------------------------------------------
+
+  /** Default easing - smooth acceleration and deceleration */
   "easing-default": string;
+  /** Ease-in - accelerating from zero velocity */
   "easing-in": string;
+  /** Ease-out - decelerating to zero velocity */
   "easing-out": string;
 
-  // Component-specific sizes
+  // -------------------------------------------------------------------------
+  // @group Component Sizes
+  // Fixed dimensions for specific UI components
+  // -------------------------------------------------------------------------
+
+  /** Toolbar height (44px) - main application toolbar */
   "size-toolbar-height": string;
+  /** Tab bar height (32px) - tab navigation */
   "size-tabbar-height": string;
+  /** Status bar height (24px) - bottom status bar */
   "size-statusbar-height": string;
+  /** Panel header height (40px) - collapsible panel headers */
   "size-panel-header-height": string;
+  /** Tree indent (16px) - hierarchical tree view indentation */
   "size-tree-indent": string;
+  /** Property label width (100px) - form label column */
   "size-property-label": string;
+  /** Small checkbox (12px) - compact checkbox size */
   "size-checkbox-sm": string;
+  /** Medium checkbox (14px) - default checkbox size */
   "size-checkbox-md": string;
+  /** Small color swatch (14px) - inline color indicators */
   "size-color-swatch-sm": string;
+  /** Medium color swatch (18px) - default color picker swatch */
   "size-color-swatch-md": string;
+  /** Large color swatch (22px) - prominent color selection */
   "size-color-swatch-lg": string;
+  /** Divider width (1px) - separator line thickness */
   "size-divider-width": string;
+  /** Canvas ruler size (20px) - ruler bar width/height */
   "canvas-ruler-size": string;
 };
 
 /**
  * Color tokens - theme-dependent values
+ * These are overridden by each theme preset (light, dark, etc.)
  */
 export type ColorTokens = {
-  // Colors - Primary
+  // -------------------------------------------------------------------------
+  // @group Primary Colors
+  // Brand and accent colors for key actions
+  // -------------------------------------------------------------------------
+
+  /** Primary brand color - buttons, links, focus states */
   "color-primary": string;
+  /** Primary hover - slightly darker/lighter on hover */
   "color-primary-hover": string;
+  /** Primary active - pressed/active state */
   "color-primary-active": string;
 
-  // Colors - Surface
+  // -------------------------------------------------------------------------
+  // @group Surface Colors
+  // Background colors for containers and layers
+  // -------------------------------------------------------------------------
+
+  /** Base surface - main background color */
   "color-surface": string;
+  /** Raised surface - cards, elevated panels */
   "color-surface-raised": string;
+  /** Overlay surface - modals, dropdowns */
   "color-surface-overlay": string;
 
-  // Colors - Text
+  // -------------------------------------------------------------------------
+  // @group Text Colors
+  // Typography colors for readability hierarchy
+  // -------------------------------------------------------------------------
+
+  /** Primary text - main content, headings */
   "color-text": string;
+  /** Muted text - secondary info, descriptions */
   "color-text-muted": string;
+  /** Disabled text - inactive elements */
   "color-text-disabled": string;
 
-  // Colors - Border
+  // -------------------------------------------------------------------------
+  // @group Border Colors
+  // Stroke colors for boundaries and separation
+  // -------------------------------------------------------------------------
+
+  /** Default border - containers, dividers */
   "color-border": string;
+  /** Focus border - keyboard focus indicator */
   "color-border-focus": string;
 
-  // Colors - State
+  // -------------------------------------------------------------------------
+  // @group State Colors
+  // Semantic colors for feedback and status
+  // -------------------------------------------------------------------------
+
+  /** Success state - confirmations, completed actions */
   "color-success": string;
+  /** Warning state - cautions, important notices */
   "color-warning": string;
+  /** Error state - errors, destructive actions */
   "color-error": string;
 
-  // Colors - Error states
+  // -------------------------------------------------------------------------
+  // @group Error State Colors
+  // Extended error palette for complex error UIs
+  // -------------------------------------------------------------------------
+
+  /** Error background - subtle error container */
   "color-error-bg": string;
+  /** Error background hover - error element hover */
   "color-error-bg-hover": string;
+  /** Error background active - error element pressed */
   "color-error-bg-active": string;
+  /** Error border - error container stroke */
   "color-error-border": string;
+  /** Error border hover - error hover stroke */
   "color-error-border-hover": string;
 
-  // Colors - Backdrop
+  // -------------------------------------------------------------------------
+  // @group Backdrop
+  // Overlay colors for modals and dialogs
+  // -------------------------------------------------------------------------
+
+  /** Modal backdrop - semi-transparent overlay */
   "color-backdrop": string;
 
-  // Colors - Interactive States
+  // -------------------------------------------------------------------------
+  // @group Interactive State Colors
+  // Colors for hover, active, and selection states
+  // -------------------------------------------------------------------------
+
+  /** Hover state - subtle highlight on hover */
   "color-hover": string;
+  /** Active state - pressed/active highlight */
   "color-active": string;
+  /** Selected state - selected items highlight */
   "color-selected": string;
+  /** Subtle selected - lighter selection for backgrounds */
   "color-selected-subtle": string;
+  /** Drop target - drag-and-drop target highlight */
   "color-drop-target": string;
+  /** Focus ring - keyboard focus outline */
   "color-focus-ring": string;
 
-  // Colors - Icon
+  // -------------------------------------------------------------------------
+  // @group Icon Colors
+  // Colors for iconography
+  // -------------------------------------------------------------------------
+
+  /** Default icon - neutral icon color */
   "color-icon": string;
+  /** Icon hover - icon on hover */
   "color-icon-hover": string;
+  /** Icon active - active/selected icon */
   "color-icon-active": string;
 
-  // Colors - Divider
+  // -------------------------------------------------------------------------
+  // @group Divider Colors
+  // Separator and rule colors
+  // -------------------------------------------------------------------------
+
+  /** Divider line - horizontal/vertical separators */
   "color-divider": string;
 
-  // Colors - Input
+  // -------------------------------------------------------------------------
+  // @group Input Colors
+  // Form input styling
+  // -------------------------------------------------------------------------
+
+  /** Input background - text field background */
   "color-input-bg": string;
+  /** Input border - text field stroke */
   "color-input-border": string;
+  /** Input border focus - focused input stroke */
   "color-input-border-focus": string;
 
-  // Colors - Log Levels
+  // -------------------------------------------------------------------------
+  // @group Log Level Colors
+  // Console/log output styling
+  // -------------------------------------------------------------------------
+
+  /** Info log - informational messages */
   "color-log-info": string;
+  /** Warning log - warning messages */
   "color-log-warning": string;
+  /** Error log - error messages */
   "color-log-error": string;
+  /** Debug log - debug messages */
   "color-log-debug": string;
+  /** Success log - success messages */
   "color-log-success": string;
 
-  // Colors - Tooltip
+  // -------------------------------------------------------------------------
+  // @group Tooltip Colors
+  // Tooltip styling
+  // -------------------------------------------------------------------------
+
+  /** Tooltip background - tooltip container */
   "tooltip-bg": string;
+  /** Tooltip text - tooltip content color */
   "tooltip-color": string;
 
-  // Colors - Canvas
+  // -------------------------------------------------------------------------
+  // @group Canvas Colors
+  // Canvas/artboard specific colors
+  // -------------------------------------------------------------------------
+
+  /** Ruler background - canvas ruler bar */
   "canvas-ruler-bg": string;
+  /** Ruler text - ruler numbers */
   "canvas-ruler-text": string;
+  /** Ruler tick - ruler tick marks */
   "canvas-ruler-tick": string;
+  /** Ruler indicator - current position marker */
   "canvas-ruler-indicator": string;
+  /** Grid major - primary grid lines */
   "canvas-grid-major": string;
+  /** Grid minor - secondary grid lines */
   "canvas-grid-minor": string;
+  /** Grid origin - origin axis lines */
   "canvas-grid-origin": string;
+  /** Guide lines - alignment guides */
   "canvas-guide": string;
+  /** Checker light - transparency pattern light */
   "canvas-checker-light": string;
+  /** Checker dark - transparency pattern dark */
   "canvas-checker-dark": string;
 
-  // Shadows
+  // -------------------------------------------------------------------------
+  // @group Shadows
+  // Elevation and depth effects
+  // -------------------------------------------------------------------------
+
+  /** Small shadow - subtle elevation */
   "shadow-sm": string;
+  /** Medium shadow - cards, dropdowns */
   "shadow-md": string;
+  /** Large shadow - modals, popovers */
   "shadow-lg": string;
 };
 
@@ -232,218 +429,3 @@ export const baseTokens: BaseTokens = {
   "size-divider-width": "1px",
   "canvas-ruler-size": "20px",
 };
-
-/**
- * Light theme color tokens
- */
-const lightColorTokens: ColorTokens = {
-  // Primary
-  "color-primary": "#2563eb",
-  "color-primary-hover": "#1d4ed8",
-  "color-primary-active": "#1e40af",
-
-  // Surface
-  "color-surface": "#ffffff",
-  "color-surface-raised": "#f9fafb",
-  "color-surface-overlay": "#f3f4f6",
-
-  // Text
-  "color-text": "#111827",
-  "color-text-muted": "#6b7280",
-  "color-text-disabled": "#9ca3af",
-
-  // Border
-  "color-border": "#e5e7eb",
-  "color-border-focus": "#2563eb",
-
-  // State
-  "color-success": "#16a34a",
-  "color-warning": "#d97706",
-  "color-error": "#dc2626",
-
-  // Error states
-  "color-error-bg": "rgba(239, 68, 68, 0.1)",
-  "color-error-bg-hover": "rgba(239, 68, 68, 0.15)",
-  "color-error-bg-active": "rgba(239, 68, 68, 0.2)",
-  "color-error-border": "rgba(239, 68, 68, 0.3)",
-  "color-error-border-hover": "rgba(239, 68, 68, 0.4)",
-
-  // Backdrop
-  "color-backdrop": "rgba(0, 0, 0, 0.4)",
-
-  // Interactive States
-  "color-hover": "rgba(0, 0, 0, 0.04)",
-  "color-active": "rgba(0, 0, 0, 0.08)",
-  "color-selected": "rgba(37, 99, 235, 0.1)",
-  "color-selected-subtle": "rgba(37, 99, 235, 0.05)",
-  "color-drop-target": "rgba(37, 99, 235, 0.15)",
-  "color-focus-ring": "rgba(37, 99, 235, 0.4)",
-
-  // Icon
-  "color-icon": "#6b7280",
-  "color-icon-hover": "#374151",
-  "color-icon-active": "#2563eb",
-
-  // Divider
-  "color-divider": "#e5e7eb",
-
-  // Input
-  "color-input-bg": "#ffffff",
-  "color-input-border": "#d1d5db",
-  "color-input-border-focus": "#2563eb",
-
-  // Log Levels
-  "color-log-info": "#6b7280",
-  "color-log-warning": "#d97706",
-  "color-log-error": "#dc2626",
-  "color-log-debug": "#7c3aed",
-  "color-log-success": "#16a34a",
-
-  // Tooltip
-  "tooltip-bg": "#1f2937",
-  "tooltip-color": "#ffffff",
-
-  // Canvas
-  "canvas-ruler-bg": "#f3f4f6",
-  "canvas-ruler-text": "#6b7280",
-  "canvas-ruler-tick": "#9ca3af",
-  "canvas-ruler-indicator": "#dc2626",
-  "canvas-grid-major": "rgba(0, 0, 0, 0.1)",
-  "canvas-grid-minor": "rgba(0, 0, 0, 0.04)",
-  "canvas-grid-origin": "rgba(37, 99, 235, 0.6)",
-  "canvas-guide": "rgba(37, 99, 235, 0.8)",
-  "canvas-checker-light": "#e5e7eb",
-  "canvas-checker-dark": "#d1d5db",
-
-  // Shadows
-  "shadow-sm": "0 1px 2px rgba(0, 0, 0, 0.05)",
-  "shadow-md": "0 4px 6px rgba(0, 0, 0, 0.07)",
-  "shadow-lg": "0 10px 15px rgba(0, 0, 0, 0.1)",
-};
-
-/**
- * Light theme (default)
- */
-export const lightTheme: ThemeTokens = {
-  ...baseTokens,
-  ...lightColorTokens,
-};
-
-/**
- * Dark theme color tokens
- */
-const darkColorTokens: ColorTokens = {
-  // Primary
-  "color-primary": "#3b82f6",
-  "color-primary-hover": "#2563eb",
-  "color-primary-active": "#1d4ed8",
-
-  // Surface
-  "color-surface": "#1e1f24",
-  "color-surface-raised": "#2b2d35",
-  "color-surface-overlay": "#3a3d47",
-
-  // Text
-  "color-text": "#e4e6eb",
-  "color-text-muted": "#9ca3af",
-  "color-text-disabled": "#6b7280",
-
-  // Border
-  "color-border": "rgba(255, 255, 255, 0.1)",
-  "color-border-focus": "#3b82f6",
-
-  // State
-  "color-success": "#22c55e",
-  "color-warning": "#f59e0b",
-  "color-error": "#ef4444",
-
-  // Error states
-  "color-error-bg": "rgba(239, 68, 68, 0.15)",
-  "color-error-bg-hover": "rgba(239, 68, 68, 0.2)",
-  "color-error-bg-active": "rgba(239, 68, 68, 0.25)",
-  "color-error-border": "rgba(239, 68, 68, 0.4)",
-  "color-error-border-hover": "rgba(239, 68, 68, 0.5)",
-
-  // Backdrop
-  "color-backdrop": "rgba(0, 0, 0, 0.6)",
-
-  // Interactive States
-  "color-hover": "rgba(255, 255, 255, 0.08)",
-  "color-active": "rgba(255, 255, 255, 0.12)",
-  "color-selected": "rgba(59, 130, 246, 0.2)",
-  "color-selected-subtle": "rgba(59, 130, 246, 0.1)",
-  "color-drop-target": "rgba(59, 130, 246, 0.25)",
-  "color-focus-ring": "rgba(59, 130, 246, 0.5)",
-
-  // Icon
-  "color-icon": "#9ca3af",
-  "color-icon-hover": "#e4e6eb",
-  "color-icon-active": "#3b82f6",
-
-  // Divider
-  "color-divider": "rgba(255, 255, 255, 0.1)",
-
-  // Input
-  "color-input-bg": "rgba(0, 0, 0, 0.2)",
-  "color-input-border": "rgba(255, 255, 255, 0.1)",
-  "color-input-border-focus": "#3b82f6",
-
-  // Log Levels
-  "color-log-info": "#9ca3af",
-  "color-log-warning": "#f59e0b",
-  "color-log-error": "#ef4444",
-  "color-log-debug": "#8b5cf6",
-  "color-log-success": "#22c55e",
-
-  // Tooltip
-  "tooltip-bg": "#374151",
-  "tooltip-color": "#ffffff",
-
-  // Canvas
-  "canvas-ruler-bg": "#1a1a1a",
-  "canvas-ruler-text": "#6b7280",
-  "canvas-ruler-tick": "#4b5563",
-  "canvas-ruler-indicator": "#ef4444",
-  "canvas-grid-major": "rgba(255, 255, 255, 0.08)",
-  "canvas-grid-minor": "rgba(255, 255, 255, 0.03)",
-  "canvas-grid-origin": "rgba(59, 130, 246, 0.5)",
-  "canvas-guide": "rgba(59, 130, 246, 0.7)",
-  "canvas-checker-light": "#2a2a2a",
-  "canvas-checker-dark": "#1f1f1f",
-
-  // Shadows
-  "shadow-sm": "0 1px 2px rgba(0, 0, 0, 0.3)",
-  "shadow-md": "0 4px 8px rgba(0, 0, 0, 0.4)",
-  "shadow-lg": "0 8px 24px rgba(0, 0, 0, 0.5)",
-};
-
-/**
- * Dark theme
- */
-export const darkTheme: ThemeTokens = {
-  ...baseTokens,
-  ...darkColorTokens,
-};
-
-/**
- * High contrast light theme
- */
-export const highContrastLightTheme: ThemeTokens = {
-  ...baseTokens,
-  ...lightColorTokens,
-  "color-text": "#000000",
-  "color-text-muted": "#374151",
-  "color-border": "#000000",
-  "color-divider": "#000000",
-};
-
-/**
- * All available themes
- */
-export const themes = {
-  light: lightTheme,
-  dark: darkTheme,
-  "high-contrast-light": highContrastLightTheme,
-} as const;
-
-export type ThemeName = keyof typeof themes;

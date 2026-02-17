@@ -2,9 +2,20 @@
  * @file Theme exports
  */
 
-// Theme tokens
-export { themes, lightTheme, darkTheme, highContrastLightTheme, baseTokens } from "./tokens";
-export type { ThemeTokens, ThemeName, BaseTokens, ColorTokens } from "./tokens";
+// Token types and base tokens
+export { baseTokens } from "./tokens";
+export type { ThemeTokens, BaseTokens, ColorTokens } from "./tokens";
+
+// Theme presets
+export {
+  themes,
+  lightTheme,
+  darkTheme,
+  highContrastLightTheme,
+  lightColorTokens,
+  darkColorTokens,
+} from "./presets";
+export type { ThemeName } from "./presets";
 
 // CSS injection utilities
 export { injectTheme, clearTheme, getThemeCss } from "./injectTheme";

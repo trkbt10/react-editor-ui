@@ -19,6 +19,7 @@ const TEMPLATES_DIR = join(DOCS_DIR, "readme");
 const CATEGORIES_PATH = join(DOCS_DIR, "component-categories.json");
 const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
 const README_PATH = join(ROOT_DIR, "README.md");
+const TOKENS_PATH = join(ROOT_DIR, "src/themes/tokens.ts");
 
 // -----------------------------------------------------------------------------
 // Types
@@ -54,6 +55,24 @@ interface ComponentDoc {
   details?: string;
   example?: string;
   exportPath: string;
+}
+
+interface TokenInfo {
+  name: string;
+  cssVar: string;
+  description: string;
+  defaultValue?: string;
+}
+
+interface TokenGroup {
+  name: string;
+  description: string;
+  tokens: TokenInfo[];
+}
+
+interface TokenCategory {
+  name: string;
+  groups: TokenGroup[];
 }
 
 // -----------------------------------------------------------------------------
@@ -116,6 +135,221 @@ export function parseJSDocComment(content: string): {
   }
 
   return result;
+}
+
+// -----------------------------------------------------------------------------
+// Token Parsing
+// -----------------------------------------------------------------------------
+
+/**
+ * Parse tokens.ts and extract token information from comments
+ */
+export function parseTokensFile(content: string): {
+  baseTokens: TokenCategory;
+  colorTokens: TokenCategory;
+} {
+  const baseTokens: TokenCategory = { name: "Base Tokens", groups: [] };
+  const colorTokens: TokenCategory = { name: "Color Tokens", groups: [] };
+
+  // Extract BaseTokens type block
+  const baseMatch = content.match(
+    /export type BaseTokens = \{([\s\S]*?)\n\};/
+  );
+  if (baseMatch) {
+    baseTokens.groups = parseTokenGroups(baseMatch[1]);
+  }
+
+  // Extract ColorTokens type block
+  const colorMatch = content.match(
+    /export type ColorTokens = \{([\s\S]*?)\n\};/
+  );
+  if (colorMatch) {
+    colorTokens.groups = parseTokenGroups(colorMatch[1]);
+  }
+
+  // Get default values from baseTokens const
+  const defaultsMatch = content.match(
+    /export const baseTokens: BaseTokens = \{([\s\S]*?)\n\};/
+  );
+  if (defaultsMatch) {
+    const defaults = parseDefaultValues(defaultsMatch[1]);
+    for (const group of baseTokens.groups) {
+      for (const token of group.tokens) {
+        if (defaults[token.name]) {
+          token.defaultValue = defaults[token.name];
+        }
+      }
+    }
+  }
+
+  return { baseTokens, colorTokens };
+}
+
+/**
+ * Parse token groups from type definition content
+ */
+function parseTokenGroups(content: string): TokenGroup[] {
+  const groups: TokenGroup[] = [];
+  const lines = content.split("\n");
+
+  let currentGroup: TokenGroup | null = null;
+
+  for (const line of lines) {
+    // Check for @group comment
+    const groupMatch = line.match(
+      /\/\/\s*@group\s+(.+)/
+    );
+    if (groupMatch) {
+      if (currentGroup) {
+        groups.push(currentGroup);
+      }
+      currentGroup = {
+        name: groupMatch[1].trim(),
+        description: "",
+        tokens: [],
+      };
+      continue;
+    }
+
+    // Check for group description (line after @group)
+    if (currentGroup && currentGroup.description === "") {
+      const descMatch = line.match(/\/\/\s*(.+)/);
+      if (descMatch && !descMatch[1].startsWith("-")) {
+        currentGroup.description = descMatch[1].trim();
+        continue;
+      }
+    }
+
+    // Check for token with JSDoc comment
+    const tokenMatch = line.match(
+      /\/\*\*\s*(.+?)\s*\*\/\s*\n?\s*"([^"]+)":\s*string;/
+    );
+    if (tokenMatch && currentGroup) {
+      currentGroup.tokens.push({
+        name: tokenMatch[2],
+        cssVar: `--rei-${tokenMatch[2]}`,
+        description: tokenMatch[1].trim(),
+      });
+      continue;
+    }
+
+    // Single line JSDoc + token on same line
+    const singleLineMatch = line.match(
+      /^\s*\/\*\*\s*(.+?)\s*\*\/$/
+    );
+    if (singleLineMatch && currentGroup) {
+      // Look ahead for the token name
+      const tokenDesc = singleLineMatch[1].trim();
+      // Store for next iteration
+      (currentGroup as TokenGroup & { _pendingDesc?: string })._pendingDesc =
+        tokenDesc;
+      continue;
+    }
+
+    // Token line (may have pending description)
+    const tokenLineMatch = line.match(/^\s*"([^"]+)":\s*string;$/);
+    if (tokenLineMatch && currentGroup) {
+      const pendingDesc = (
+        currentGroup as TokenGroup & { _pendingDesc?: string }
+      )._pendingDesc;
+      if (pendingDesc) {
+        currentGroup.tokens.push({
+          name: tokenLineMatch[1],
+          cssVar: `--rei-${tokenLineMatch[1]}`,
+          description: pendingDesc,
+        });
+        delete (currentGroup as TokenGroup & { _pendingDesc?: string })
+          ._pendingDesc;
+      }
+    }
+  }
+
+  // Don't forget the last group
+  if (currentGroup) {
+    groups.push(currentGroup);
+  }
+
+  return groups;
+}
+
+/**
+ * Parse default values from baseTokens const
+ */
+function parseDefaultValues(content: string): Record<string, string> {
+  const defaults: Record<string, string> = {};
+  const regex = /"([^"]+)":\s*"([^"]+)"/g;
+  let match;
+
+  while ((match = regex.exec(content)) !== null) {
+    defaults[match[1]] = match[2];
+  }
+
+  return defaults;
+}
+
+/**
+ * Generate markdown for tokens
+ */
+function generateTokensMarkdown(
+  baseTokens: TokenCategory,
+  colorTokens: TokenCategory
+): string {
+  const lines: string[] = [];
+
+  // Base Tokens section
+  lines.push("### Base Tokens");
+  lines.push("");
+  lines.push(
+    "Theme-independent structural values shared across all themes."
+  );
+  lines.push("");
+
+  for (const group of baseTokens.groups) {
+    lines.push(`#### ${group.name}`);
+    lines.push("");
+    if (group.description) {
+      lines.push(`> ${group.description}`);
+      lines.push("");
+    }
+    lines.push("| Token | CSS Variable | Default | Description |");
+    lines.push("|-------|--------------|---------|-------------|");
+    for (const token of group.tokens) {
+      const defaultVal = token.defaultValue
+        ? `\`${token.defaultValue}\``
+        : "-";
+      lines.push(
+        `| \`${token.name}\` | \`${token.cssVar}\` | ${defaultVal} | ${token.description} |`
+      );
+    }
+    lines.push("");
+  }
+
+  // Color Tokens section
+  lines.push("### Color Tokens");
+  lines.push("");
+  lines.push(
+    "Theme-dependent color values. These are overridden by each theme preset."
+  );
+  lines.push("");
+
+  for (const group of colorTokens.groups) {
+    lines.push(`#### ${group.name}`);
+    lines.push("");
+    if (group.description) {
+      lines.push(`> ${group.description}`);
+      lines.push("");
+    }
+    lines.push("| Token | CSS Variable | Description |");
+    lines.push("|-------|--------------|-------------|");
+    for (const token of group.tokens) {
+      lines.push(
+        `| \`${token.name}\` | \`${token.cssVar}\` | ${token.description} |`
+      );
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n");
 }
 
 // -----------------------------------------------------------------------------
@@ -263,13 +497,24 @@ function generateComponentsMarkdown(
 
 function processTemplate(
   template: string,
-  componentsMarkdown: string
+  componentsMarkdown: string,
+  tokensMarkdown: string
 ): string {
+  let result = template;
+
   // Replace AUTO:COMPONENTS placeholder
-  return template.replace(
+  result = result.replace(
     /<!--\s*AUTO:COMPONENTS\s*-->[\s\S]*?<!--\s*\/AUTO:COMPONENTS\s*-->/g,
     `<!-- AUTO:COMPONENTS -->\n${componentsMarkdown}<!-- /AUTO:COMPONENTS -->`
   );
+
+  // Replace AUTO:TOKENS placeholder
+  result = result.replace(
+    /<!--\s*AUTO:TOKENS\s*-->[\s\S]*?<!--\s*\/AUTO:TOKENS\s*-->/g,
+    `<!-- AUTO:TOKENS -->\n${tokensMarkdown}<!-- /AUTO:TOKENS -->`
+  );
+
+  return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -287,6 +532,11 @@ export function buildReadme(): string {
     docs.set(entry.name, doc);
   }
 
+  // Load and parse tokens
+  const tokensContent = readFileSync(TOKENS_PATH, "utf-8");
+  const { baseTokens, colorTokens } = parseTokensFile(tokensContent);
+  const tokensMarkdown = generateTokensMarkdown(baseTokens, colorTokens);
+
   // Load and combine templates
   const templates = loadTemplates();
   const sections: string[] = [];
@@ -300,7 +550,7 @@ export function buildReadme(): string {
 
     // Process .tpl files with replacements
     if (filename.endsWith(".md.tpl")) {
-      processed = processTemplate(content, componentsMarkdown);
+      processed = processTemplate(content, componentsMarkdown, tokensMarkdown);
     }
 
     sections.push(processed);
@@ -334,11 +584,16 @@ function main(): void {
       docs.set(entry.name, doc);
     }
 
+    // Also include tokens in JSON output
+    const tokensContent = readFileSync(TOKENS_PATH, "utf-8");
+    const { baseTokens, colorTokens } = parseTokensFile(tokensContent);
+
     console.log(
       JSON.stringify(
         {
           categories: categories.categories,
           components: Object.fromEntries(docs),
+          tokens: { baseTokens, colorTokens },
         },
         null,
         2

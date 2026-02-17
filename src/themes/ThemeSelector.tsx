@@ -6,7 +6,7 @@
 
 import { useEffect } from "react";
 import { Select } from "../components/Select/Select";
-import { themes, type ThemeName } from "./tokens";
+import { themes, type ThemeName } from "./presets";
 import { injectTheme } from "./injectTheme";
 
 export type ThemeSelectorProps = {
