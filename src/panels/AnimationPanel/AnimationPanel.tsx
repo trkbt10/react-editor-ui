@@ -20,7 +20,7 @@
  * ```
  */
 
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useRef } from "react";
 import type { CSSProperties } from "react";
 import { Panel } from "../Panel/Panel";
 import { UnitInput } from "../../components/UnitInput/UnitInput";
@@ -32,6 +32,12 @@ import { EASING_PRESETS, matchPreset } from "../../components/BezierCurveEditor/
 import { EasingPresetSelect } from "./EasingPresetSelect";
 import { ClockIcon, HourglassIcon } from "../../icons";
 import { SPACE_MD } from "../../constants/styles";
+
+/** Ref object to hold mutable state for stable callbacks */
+type CallbackState = {
+  settings: AnimationSettings;
+  onChange: (settings: AnimationSettings) => void;
+};
 
 export type AnimationPanelProps = {
   settings: AnimationSettings;
@@ -53,39 +59,44 @@ export const AnimationPanel = memo(function AnimationPanel({
   width = 320,
   className,
 }: AnimationPanelProps) {
+  // Use ref object to hold mutable state for stable callbacks
+  // This prevents callback recreation when settings change
+  const stateRef = useRef<CallbackState>({ settings, onChange });
+  stateRef.current = { settings, onChange };
+
   const handleDurationChange = useCallback(
-    (v: string) => onChange({ ...settings, duration: v }),
-    [onChange, settings]
+    (v: string) => stateRef.current.onChange({ ...stateRef.current.settings, duration: v }),
+    []
   );
 
   const handleDelayChange = useCallback(
-    (v: string) => onChange({ ...settings, delay: v }),
-    [onChange, settings]
+    (v: string) => stateRef.current.onChange({ ...stateRef.current.settings, delay: v }),
+    []
   );
 
   const handlePresetChange = useCallback(
     (preset: EasingPreset) => {
       if (preset !== "custom") {
-        onChange({
-          ...settings,
+        stateRef.current.onChange({
+          ...stateRef.current.settings,
           easing: preset,
           bezierControlPoints: EASING_PRESETS[preset],
         });
       }
     },
-    [onChange, settings]
+    []
   );
 
   const handleBezierChange = useCallback(
     (points: BezierControlPoints) => {
       const preset = matchPreset(points);
-      onChange({
-        ...settings,
+      stateRef.current.onChange({
+        ...stateRef.current.settings,
         bezierControlPoints: points,
         easing: preset,
       });
     },
-    [onChange, settings]
+    []
   );
 
   // Main horizontal layout: bezier on left, controls on right

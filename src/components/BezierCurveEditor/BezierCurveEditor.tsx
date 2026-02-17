@@ -31,6 +31,12 @@ import {
 } from "../../constants/styles";
 import type { BezierControlPoints } from "./bezierTypes";
 
+/** Ref object to hold mutable state for stable callbacks */
+type CallbackState = {
+  value: BezierControlPoints;
+  onChange: (value: BezierControlPoints) => void;
+};
+
 export type BezierCurveEditorProps = {
   value: BezierControlPoints;
   onChange: (value: BezierControlPoints) => void;
@@ -112,6 +118,11 @@ export const BezierCurveEditor = memo(function BezierCurveEditor({
   const containerRef = useRef<SVGSVGElement>(null);
   const draggingHandle = useRef<DragHandle | null>(null);
 
+  // Use ref object to hold mutable state for stable callbacks
+  // This prevents handlePointerMove recreation during drag
+  const stateRef = useRef<CallbackState>({ value, onChange });
+  stateRef.current = { value, onChange };
+
   const [x1, y1, x2, y2] = value;
 
   // Content area dimensions (excluding padding)
@@ -185,7 +196,9 @@ export const BezierCurveEditor = memo(function BezierCurveEditor({
       const normalX = fromSvgX(svgX);
       const normalY = fromSvgY(svgY);
 
-      const newValue: BezierControlPoints = [...value];
+      // Use stateRef for stable callback - avoids recreating during drag
+      const { value: currentValue, onChange: currentOnChange } = stateRef.current;
+      const newValue: BezierControlPoints = [...currentValue];
       if (draggingHandle.current === "p1") {
         newValue[0] = normalX;
         newValue[1] = normalY;
@@ -194,9 +207,9 @@ export const BezierCurveEditor = memo(function BezierCurveEditor({
         newValue[3] = normalY;
       }
 
-      onChange(newValue);
+      currentOnChange(newValue);
     },
-    [disabled, fromSvgX, fromSvgY, onChange, value]
+    [disabled, fromSvgX, fromSvgY]
   );
 
   const handlePointerUp = useCallback(() => {

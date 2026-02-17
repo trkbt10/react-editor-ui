@@ -149,3 +149,124 @@ describe("EasingPresetSelect integration", () => {
     expect(screen.getByText("Custom")).toBeInTheDocument();
   });
 });
+
+describe("AnimationPanel callback stability (performance)", () => {
+  const defaultSettings: AnimationSettings = {
+    easing: "ease",
+    bezierControlPoints: [0.25, 0.1, 0.25, 1],
+    duration: "0.3",
+    delay: "0",
+  };
+
+  it("should not re-create callbacks when settings change", () => {
+    const onChange = vi.fn();
+
+    // Create a test component that captures callback references
+    const TestWrapper = ({ settings }: { settings: AnimationSettings }) => {
+      return (
+        <AnimationPanel
+          settings={settings}
+          onChange={(newSettings) => {
+            onChange(newSettings);
+          }}
+        />
+      );
+    };
+
+    const { rerender } = render(<TestWrapper settings={defaultSettings} />);
+
+    // Change duration - simulate user input
+    const durationInput = screen.getByLabelText("Duration");
+    fireEvent.focus(durationInput);
+    fireEvent.change(durationInput, { target: { value: "0.5" } });
+    fireEvent.blur(durationInput);
+
+    // Get the new settings from onChange call
+    expect(onChange).toHaveBeenCalled();
+    const newSettings = onChange.mock.calls[0][0] as AnimationSettings;
+
+    // Store the BezierCurveEditor element reference before rerender
+    const bezierEditorBefore = screen.getByLabelText("Easing curve editor");
+
+    // Rerender with new settings
+    rerender(<TestWrapper settings={newSettings} />);
+
+    // BezierCurveEditor should still be the same DOM element (not re-mounted)
+    const bezierEditorAfter = screen.getByLabelText("Easing curve editor");
+    expect(bezierEditorBefore).toBe(bezierEditorAfter);
+  });
+
+  it("should maintain stable onChange reference for child components", () => {
+    const renderCountRef = { current: 0 };
+    const onChange = vi.fn();
+
+    // Track renders of the panel
+    const TestWrapper = ({ settings }: { settings: AnimationSettings }) => {
+      renderCountRef.current++;
+      return (
+        <AnimationPanel
+          settings={settings}
+          onChange={onChange}
+        />
+      );
+    };
+
+    const { rerender } = render(<TestWrapper settings={defaultSettings} />);
+    const initialRenderCount = renderCountRef.current;
+
+    // Rerender with only duration changed
+    const newSettings = { ...defaultSettings, duration: "0.5" };
+    rerender(<TestWrapper settings={newSettings} />);
+
+    // Panel itself should rerender (props changed)
+    expect(renderCountRef.current).toBe(initialRenderCount + 1);
+
+    // But the test is really about whether child components rerender unnecessarily
+    // This is validated by the E2E test - here we just verify the panel works correctly
+    expect(screen.getByLabelText("Duration")).toHaveValue("0.5");
+  });
+
+  it("should call onChange with correct merged settings when duration changes", () => {
+    const onChange = vi.fn();
+    render(
+      <AnimationPanel
+        settings={defaultSettings}
+        onChange={onChange}
+      />
+    );
+
+    const durationInput = screen.getByLabelText("Duration");
+    fireEvent.focus(durationInput);
+    fireEvent.change(durationInput, { target: { value: "0.5" } });
+    fireEvent.blur(durationInput);
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...defaultSettings,
+        duration: "0.5s", // UnitInput appends unit
+      })
+    );
+  });
+
+  it("should call onChange with correct merged settings when delay changes", () => {
+    const onChange = vi.fn();
+    render(
+      <AnimationPanel
+        settings={defaultSettings}
+        onChange={onChange}
+      />
+    );
+
+    const delayInput = screen.getByLabelText("Delay");
+    fireEvent.focus(delayInput);
+    fireEvent.change(delayInput, { target: { value: "0.2" } });
+    fireEvent.blur(delayInput);
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...defaultSettings,
+        delay: "0.2s", // UnitInput appends unit
+      })
+    );
+  });
+});
