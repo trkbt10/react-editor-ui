@@ -79,6 +79,11 @@ export function shouldPan(
     return false;
   }
 
+  // Check custom callback first
+  if (config.shouldAllowPan && !config.shouldAllowPan(e.nativeEvent)) {
+    return false;
+  }
+
   const triggers = config.panTriggers;
 
   // Middle mouse button

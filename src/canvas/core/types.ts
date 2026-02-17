@@ -49,6 +49,8 @@ export type GestureConfig = {
   readonly wheelZoomFactor: number;
   /** Enabled pan triggers */
   readonly panTriggers: readonly PanTrigger[];
+  /** Callback to determine if pan should be allowed for a given event */
+  readonly shouldAllowPan?: (e: PointerEvent) => boolean;
 };
 
 /**
@@ -114,6 +116,9 @@ export type CanvasProps = {
 
   /** Accessibility label */
   "aria-label"?: string;
+
+  /** Called when clicking on the canvas background (not on content/SVG layers) */
+  onBackgroundPointerDown?: (e: React.PointerEvent<HTMLDivElement>) => void;
 };
 
 // ========================================

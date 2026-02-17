@@ -73,28 +73,37 @@ export function Canvas({
   viewportRef.current = viewport;
 
   // Stable screen-to-canvas converter (reads viewport from ref)
+  // Accounts for CSS transforms on parent containers (e.g., scale())
   const screenToCanvas = useCallback((screenX: number, screenY: number): Point => {
-    const rect = containerRef.current?.getBoundingClientRect();
+    const container = containerRef.current;
+    const rect = container?.getBoundingClientRect();
     const vp = viewportRef.current;
-    if (!rect) {
+    if (!rect || !container) {
       return { x: 0, y: 0 };
     }
+    // Compute outer scale by comparing visual size (getBoundingClientRect) to CSS size (offsetWidth)
+    // This accounts for CSS transform: scale() on parent containers
+    const outerScale = rect.width / container.offsetWidth;
     return {
-      x: (screenX - rect.left) / vp.scale + vp.x,
-      y: (screenY - rect.top) / vp.scale + vp.y,
+      x: (screenX - rect.left) / outerScale / vp.scale + vp.x,
+      y: (screenY - rect.top) / outerScale / vp.scale + vp.y,
     };
   }, []);
 
   // Stable canvas-to-screen converter (reads viewport from ref)
+  // Accounts for CSS transforms on parent containers (e.g., scale())
   const canvasToScreen = useCallback((canvasX: number, canvasY: number): Point => {
-    const rect = containerRef.current?.getBoundingClientRect();
+    const container = containerRef.current;
+    const rect = container?.getBoundingClientRect();
     const vp = viewportRef.current;
-    if (!rect) {
+    if (!rect || !container) {
       return { x: 0, y: 0 };
     }
+    // Compute outer scale by comparing visual size (getBoundingClientRect) to CSS size (offsetWidth)
+    const outerScale = rect.width / container.offsetWidth;
     return {
-      x: (canvasX - vp.x) * vp.scale + rect.left,
-      y: (canvasY - vp.y) * vp.scale + rect.top,
+      x: (canvasX - vp.x) * vp.scale * outerScale + rect.left,
+      y: (canvasY - vp.y) * vp.scale * outerScale + rect.top,
     };
   }, []);
 
