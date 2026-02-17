@@ -306,6 +306,12 @@
       "import": "./dist/components/UnitInput.js",
       "require": "./dist/components/UnitInput.cjs"
     },
+    "./utils/color": {
+      "source": "./src/utils/color/index.ts",
+      "types": "./dist/utils/color/index.d.ts",
+      "import": "./dist/utils/color/index.js",
+      "require": "./dist/utils/color/index.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [

@@ -27,10 +27,6 @@ import { createCheckerboardCSS } from "../../utils/color/checkerboard";
 import { parsePercentageInput } from "../../utils/color/rangeValidation";
 import type { ColorValue } from "../../utils/color/types";
 
-// Re-export type for backward compatibility
-// eslint-disable-next-line custom/no-parent-reexport -- backward compatibility: external consumers import ColorValue from ColorInput
-export type { ColorValue } from "../../utils/color/types";
-
 export type ColorInputProps = {
   value: ColorValue;
   onChange: (value: ColorValue) => void;
