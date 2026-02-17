@@ -735,6 +735,7 @@ Theme-independent structural values shared across all themes.
 
 | Token | CSS Variable | Default | Description |
 |-------|--------------|---------|-------------|
+| `space-2xs` | `--rei-space-2xs` | `1px` | 2x extra small spacing (1px) - hairline gaps, minimal separators |
 | `space-xs` | `--rei-space-xs` | `2px` | Extra small spacing (2px) - tight spacing for dense UIs |
 | `space-sm` | `--rei-space-sm` | `4px` | Small spacing (4px) - default gap between related elements |
 | `space-md` | `--rei-space-md` | `8px` | Medium spacing (8px) - standard padding and margins |
@@ -770,6 +771,7 @@ Theme-independent structural values shared across all themes.
 
 | Token | CSS Variable | Default | Description |
 |-------|--------------|---------|-------------|
+| `size-height-xs` | `--rei-size-height-xs` | `14px` | Extra small height (14px) - badges, micro elements |
 | `size-height-sm` | `--rei-size-height-sm` | `22px` | Small height (22px) - compact buttons, inputs |
 | `size-height-md` | `--rei-size-height-md` | `28px` | Medium height (28px) - default buttons, inputs |
 | `size-height-lg` | `--rei-size-height-lg` | `32px` | Large height (32px) - emphasized actions |
@@ -836,7 +838,31 @@ Theme-independent structural values shared across all themes.
 | `size-color-swatch-md` | `--rei-size-color-swatch-md` | `18px` | Medium color swatch (18px) - default color picker swatch |
 | `size-color-swatch-lg` | `--rei-size-color-swatch-lg` | `22px` | Large color swatch (22px) - prominent color selection |
 | `size-divider-width` | `--rei-size-divider-width` | `1px` | Divider width (1px) - separator line thickness |
+| `size-badge-sm` | `--rei-size-badge-sm` | `14px` | Small badge (14px) - compact badge height |
+| `size-badge-md` | `--rei-size-badge-md` | `18px` | Medium badge (18px) - default badge height |
+| `size-thumbnail-sm` | `--rei-size-thumbnail-sm` | `32px` | Small thumbnail (32px) - inline asset previews |
+| `size-thumbnail-md` | `--rei-size-thumbnail-md` | `48px` | Medium thumbnail (48px) - default asset previews |
+| `size-thumbnail-lg` | `--rei-size-thumbnail-lg` | `64px` | Large thumbnail (64px) - expanded asset previews |
 | `canvas-ruler-size` | `--rei-canvas-ruler-size` | `20px` | Canvas ruler size (20px) - ruler bar width/height |
+| `bounding-box-handle-size` | `--rei-bounding-box-handle-size` | `8px` | Bounding box handle size (8px) - resize handle dimensions |
+| `bounding-box-stroke-width` | `--rei-bounding-box-stroke-width` | `1px` | Bounding box stroke width (1px) - selection outline thickness |
+| `size-action-button` | `--rei-size-action-button` | `20px` | Action button size (20px) - small icon buttons in panels |
+| `size-expander` | `--rei-size-expander` | `16px` | Expander button size (16px) - tree expand/collapse toggle |
+| `size-close-button` | `--rei-size-close-button` | `16px` | Close button size (16px) - tab/panel close buttons |
+| `size-dirty-indicator` | `--rei-size-dirty-indicator` | `8px` | Dirty indicator size (8px) - unsaved changes dot |
+| `size-drag-handle` | `--rei-size-drag-handle` | `14px` | Drag handle size (14px) - reorder handle width |
+| `size-layer-item-height` | `--rei-size-layer-item-height` | `28px` | Layer item min height (28px) - tree item row height |
+
+#### Font Weights
+
+> Typography weight scale
+
+| Token | CSS Variable | Default | Description |
+|-------|--------------|---------|-------------|
+| `font-weight-normal` | `--rei-font-weight-normal` | `400` | Normal weight (400) - default body text |
+| `font-weight-medium` | `--rei-font-weight-medium` | `500` | Medium weight (500) - slight emphasis |
+| `font-weight-semibold` | `--rei-font-weight-semibold` | `600` | Semibold weight (600) - strong emphasis, headings |
+| `font-weight-bold` | `--rei-font-weight-bold` | `700` | Bold weight (700) - maximum emphasis |
 
 ### Color Tokens
 
@@ -871,6 +897,8 @@ Theme-dependent color values. These are overridden by each theme preset.
 | `color-text` | `--rei-color-text` | Primary text - main content, headings |
 | `color-text-muted` | `--rei-color-text-muted` | Muted text - secondary info, descriptions |
 | `color-text-disabled` | `--rei-color-text-disabled` | Disabled text - inactive elements |
+| `color-text-on-emphasis` | `--rei-color-text-on-emphasis` | Text on emphasis - text on primary/accent backgrounds |
+| `color-text-on-warning` | `--rei-color-text-on-warning` | Text on warning - text on warning backgrounds |
 
 #### Border Colors
 
@@ -999,6 +1027,19 @@ Theme-dependent color values. These are overridden by each theme preset.
 | `shadow-sm` | `--rei-shadow-sm` | Small shadow - subtle elevation |
 | `shadow-md` | `--rei-shadow-md` | Medium shadow - cards, dropdowns |
 | `shadow-lg` | `--rei-shadow-lg` | Large shadow - modals, popovers |
+| `shadow-thumb` | `--rei-shadow-thumb` | Thumb shadow - slider/scrollbar thumbs |
+
+#### Bounding Box Colors
+
+> Selection and transform handle styling
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `bounding-box-stroke` | `--rei-bounding-box-stroke` | Bounding box stroke - selection outline color |
+| `bounding-box-handle-fill` | `--rei-bounding-box-handle-fill` | Handle fill - resize handle background |
+| `bounding-box-handle-stroke` | `--rei-bounding-box-handle-stroke` | Handle stroke - resize handle border |
+| `bounding-box-label-bg` | `--rei-bounding-box-label-bg` | Label background - dimension label background |
+| `bounding-box-label-text` | `--rei-bounding-box-label-text` | Label text - dimension label text color |
 <!-- /AUTO:TOKENS -->
 
 

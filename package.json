@@ -42,6 +42,12 @@
       "import": "./dist/panels/AnimationPanel.js",
       "require": "./dist/panels/AnimationPanel.cjs"
     },
+    "./ArrowheadSelect": {
+      "source": "./src/components/ArrowheadSelect/ArrowheadSelect.tsx",
+      "types": "./dist/components/ArrowheadSelect/ArrowheadSelect.d.ts",
+      "import": "./dist/components/ArrowheadSelect.js",
+      "require": "./dist/components/ArrowheadSelect.cjs"
+    },
     "./Badge": {
       "source": "./src/components/Badge/Badge.tsx",
       "types": "./dist/components/Badge/Badge.d.ts",
