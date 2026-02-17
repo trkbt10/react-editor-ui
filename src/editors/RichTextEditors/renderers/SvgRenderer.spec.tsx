@@ -5,8 +5,64 @@
  */
 
 import { render } from "@testing-library/react";
+import { beforeAll, afterAll } from "vitest";
 import { SvgRenderer } from "./SvgRenderer";
 import type { TokenCache, Token } from "./types";
+
+// =============================================================================
+// Canvas Mock for JSDOM
+// =============================================================================
+
+/**
+ * Mock Canvas 2D context for JSDOM environment.
+ * SvgRenderer uses Canvas 2D for style-aware text measurement.
+ */
+function createMockCanvas2DContext(measureText: (text: string) => number): CanvasRenderingContext2D {
+  return {
+    font: "",
+    measureText: (text: string) => ({
+      width: measureText(text),
+      actualBoundingBoxAscent: 0,
+      actualBoundingBoxDescent: 0,
+      actualBoundingBoxLeft: 0,
+      actualBoundingBoxRight: 0,
+      fontBoundingBoxAscent: 0,
+      fontBoundingBoxDescent: 0,
+      alphabeticBaseline: 0,
+      emHeightAscent: 0,
+      emHeightDescent: 0,
+      hangingBaseline: 0,
+      ideographicBaseline: 0,
+    }),
+  } as unknown as CanvasRenderingContext2D;
+}
+
+// Store original getContext
+const originalGetContext = HTMLCanvasElement.prototype.getContext;
+
+// Global measureText function for mocking
+let globalMockMeasureText: ((text: string) => number) | null = null;
+
+/**
+ * Set the mock measureText function for Canvas context.
+ */
+function setMockMeasureText(fn: (text: string) => number): void {
+  globalMockMeasureText = fn;
+}
+
+// Mock HTMLCanvasElement.getContext
+beforeAll(() => {
+  HTMLCanvasElement.prototype.getContext = function (contextId: string) {
+    if (contextId === "2d" && globalMockMeasureText) {
+      return createMockCanvas2DContext(globalMockMeasureText);
+    }
+    return originalGetContext.call(this, contextId);
+  } as typeof HTMLCanvasElement.prototype.getContext;
+});
+
+afterAll(() => {
+  HTMLCanvasElement.prototype.getContext = originalGetContext;
+});
 
 // =============================================================================
 // Test Helpers
@@ -68,6 +124,7 @@ describe("SvgRenderer", () => {
   describe("CJK character measurement", () => {
     it("renders cursor at correct position for CJK text", () => {
       const measureText = createMockMeasureText();
+      setMockMeasureText(measureText);
       const tokenCache = createSimpleTokenCache();
       const lines = ["日本語"];
 
@@ -102,6 +159,7 @@ describe("SvgRenderer", () => {
 
     it("renders cursor at correct position for mixed ASCII and CJK text", () => {
       const measureText = createMockMeasureText();
+      setMockMeasureText(measureText);
       const tokenCache = createSimpleTokenCache();
       const lines = ["ABC日本語DEF"];
 
@@ -135,6 +193,7 @@ describe("SvgRenderer", () => {
 
     it("renders cursor at start of line correctly", () => {
       const measureText = createMockMeasureText();
+      setMockMeasureText(measureText);
       const tokenCache = createSimpleTokenCache();
       const lines = ["日本語"];
 
@@ -167,6 +226,7 @@ describe("SvgRenderer", () => {
 
     it("renders cursor at end of CJK line correctly", () => {
       const measureText = createMockMeasureText();
+      setMockMeasureText(measureText);
       const tokenCache = createSimpleTokenCache();
       const lines = ["日本語"];
 
@@ -200,6 +260,7 @@ describe("SvgRenderer", () => {
 
     it("renders selection highlight with correct width for CJK text", () => {
       const measureText = createMockMeasureText();
+      setMockMeasureText(measureText);
       const tokenCache = createSimpleTokenCache();
       const lines = ["日本語"];
 
