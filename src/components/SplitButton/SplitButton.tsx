@@ -5,7 +5,6 @@
 import {
   useState,
   useRef,
-  useEffect,
   useEffectEvent,
   useLayoutEffect,
   useCallback,
@@ -16,6 +15,7 @@ import {
   type PointerEvent,
 } from "react";
 import { Portal } from "../Portal/Portal";
+import { calculateFloatingPosition, rectToAnchor, useFloatingInteractions } from "../../hooks";
 import {
   COLOR_SURFACE_RAISED,
   COLOR_HOVER,
@@ -225,25 +225,27 @@ function SplitButtonInner<T extends string = string>({
   const updateDropdownPosition = useEffectEvent(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const minWidth = 180;
+      const dropdownWidth = Math.max(rect.width, minWidth);
+      const anchor = rectToAnchor(rect);
+      const { x, y } = calculateFloatingPosition({
+        anchor,
+        floatingWidth: dropdownWidth,
+        floatingHeight: 200, // Estimated dropdown height
+        placement: "bottom",
+        offset: 4,
+      });
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-        width: Math.max(rect.width, 180),
+        top: y,
+        left: x,
+        width: dropdownWidth,
       });
     }
   });
 
-  const handleClickOutside = useEffectEvent((event: globalThis.PointerEvent) => {
-    const target = event.target as Node;
-    if (
-      containerRef.current &&
-      !containerRef.current.contains(target) &&
-      dropdownRef.current &&
-      !dropdownRef.current.contains(target)
-    ) {
-      setIsOpen(false);
-    }
-  });
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -251,18 +253,13 @@ function SplitButtonInner<T extends string = string>({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("pointerdown", handleClickOutside);
-      window.addEventListener("scroll", updateDropdownPosition, true);
-      window.addEventListener("resize", updateDropdownPosition);
-      return () => {
-        document.removeEventListener("pointerdown", handleClickOutside);
-        window.removeEventListener("scroll", updateDropdownPosition, true);
-        window.removeEventListener("resize", updateDropdownPosition);
-      };
-    }
-  }, [isOpen]);
+  useFloatingInteractions({
+    isOpen,
+    onClose: handleClose,
+    anchorRef: containerRef,
+    floatingRef: dropdownRef,
+    onReposition: updateDropdownPosition,
+  });
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

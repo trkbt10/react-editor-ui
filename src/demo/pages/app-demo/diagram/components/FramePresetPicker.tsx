@@ -8,7 +8,6 @@ import {
   useRef,
   useCallback,
   useMemo,
-  useEffect,
   useEffectEvent,
   useLayoutEffect,
   type CSSProperties,
@@ -18,6 +17,7 @@ import { createPortal } from "react-dom";
 
 import { IconButton } from "../../../../../components/IconButton/IconButton";
 import { Tooltip } from "../../../../../components/Tooltip/Tooltip";
+import { calculateFloatingPosition, rectToAnchor, useFloatingInteractions } from "../../../../../hooks";
 import type { FramePreset } from "../types";
 import { framePresets, framePresetCategories } from "../mockData";
 
@@ -113,6 +113,8 @@ const PresetItem = memo(function PresetItem({ preset, onSelect }: PresetItemProp
   );
 });
 
+const DROPDOWN_ESTIMATED_HEIGHT = 300;
+
 export const FramePresetPicker = memo(function FramePresetPicker({
   onSelect,
 }: FramePresetPickerProps) {
@@ -124,24 +126,21 @@ export const FramePresetPicker = memo(function FramePresetPicker({
   const updatePosition = useEffectEvent(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
+      const anchor = rectToAnchor(rect);
+      const { x, y } = calculateFloatingPosition({
+        anchor,
+        floatingWidth: 200, // minWidth from dropdownStyle
+        floatingHeight: DROPDOWN_ESTIMATED_HEIGHT,
+        placement: "bottom",
+        offset: 4,
       });
+      setPosition({ top: y, left: x });
     }
   });
 
-  const handleClickOutside = useEffectEvent((event: PointerEvent) => {
-    const target = event.target as Node;
-    if (
-      buttonRef.current &&
-      !buttonRef.current.contains(target) &&
-      dropdownRef.current &&
-      !dropdownRef.current.contains(target)
-    ) {
-      setIsOpen(false);
-    }
-  });
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -149,18 +148,13 @@ export const FramePresetPicker = memo(function FramePresetPicker({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("pointerdown", handleClickOutside);
-      window.addEventListener("scroll", updatePosition, true);
-      window.addEventListener("resize", updatePosition);
-      return () => {
-        document.removeEventListener("pointerdown", handleClickOutside);
-        window.removeEventListener("scroll", updatePosition, true);
-        window.removeEventListener("resize", updatePosition);
-      };
-    }
-  }, [isOpen]);
+  useFloatingInteractions({
+    isOpen,
+    onClose: handleClose,
+    anchorRef: buttonRef,
+    floatingRef: dropdownRef,
+    onReposition: updatePosition,
+  });
 
   const handleToggle = useCallback(() => {
     setIsOpen(!isOpen);

@@ -33,8 +33,9 @@ import {
   SPACE_MD,
   Z_TOOLTIP,
 } from "../../themes/styles";
+import { calculateFloatingPosition, rectToAnchor, type FloatingPlacement } from "../../hooks";
 
-export type TooltipPlacement = "top" | "bottom" | "left" | "right";
+export type TooltipPlacement = FloatingPlacement;
 
 export type TooltipProps = {
   content: ReactNode;
@@ -192,59 +193,7 @@ function computeSvgOffset(
   }
 }
 
-function computeRawPosition(
-  placement: TooltipPlacement,
-  triggerRect: DOMRect,
-  tooltipWidth: number,
-  tooltipHeight: number,
-  arrowSize: number,
-): { top: number; left: number } {
-  switch (placement) {
-    case "top":
-      return {
-        top:
-          triggerRect.top - tooltipHeight - TOOLTIP_OFFSET - arrowSize,
-        left: triggerRect.left + (triggerRect.width - tooltipWidth) / 2,
-      };
-    case "bottom":
-      return {
-        top: triggerRect.bottom + TOOLTIP_OFFSET,
-        left: triggerRect.left + (triggerRect.width - tooltipWidth) / 2,
-      };
-    case "left":
-      return {
-        top: triggerRect.top + (triggerRect.height - tooltipHeight) / 2,
-        left:
-          triggerRect.left - tooltipWidth - TOOLTIP_OFFSET - arrowSize,
-      };
-    case "right":
-      return {
-        top: triggerRect.top + (triggerRect.height - tooltipHeight) / 2,
-        left: triggerRect.right + TOOLTIP_OFFSET,
-      };
-  }
-}
-
-function clampToViewport(
-  position: { top: number; left: number },
-  width: number,
-  height: number,
-): { top: number; left: number } {
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-
-  const clampedLeft = Math.min(
-    Math.max(position.left, VIEWPORT_PADDING),
-    viewportWidth - width - VIEWPORT_PADDING,
-  );
-
-  const clampedTop = Math.min(
-    Math.max(position.top, VIEWPORT_PADDING),
-    viewportHeight - height - VIEWPORT_PADDING,
-  );
-
-  return { top: clampedTop, left: clampedLeft };
-}
+// Note: computeRawPosition and clampToViewport have been replaced by calculateFloatingPosition from hooks
 
 /**
  * Tooltip displays contextual information on hover.
@@ -262,6 +211,7 @@ export const Tooltip = memo(function Tooltip({
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [contentSize, setContentSize] = useState({ width: 0, height: 0 });
+  const [actualPlacement, setActualPlacement] = useState<TooltipPlacement>(placement);
   const triggerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -280,20 +230,27 @@ export const Tooltip = memo(function Tooltip({
     }
 
     const triggerRect = triggerRef.current.getBoundingClientRect();
-    const rawPosition = computeRawPosition(
-      placement,
-      triggerRect,
-      contentSize.width,
-      contentSize.height,
-      arrowSize,
-    );
-    const clampedPosition = clampToViewport(
-      rawPosition,
-      contentSize.width,
-      contentSize.height,
-    );
+    const anchor = rectToAnchor(triggerRect);
 
-    setPosition(clampedPosition);
+    // Calculate total floating size including arrow
+    const isHorizontal = placement === "left" || placement === "right";
+    const isVertical = placement === "top" || placement === "bottom";
+    const floatingWidth = isHorizontal ? contentSize.width + arrowSize : contentSize.width;
+    const floatingHeight = isVertical ? contentSize.height + arrowSize : contentSize.height;
+
+    const result = calculateFloatingPosition({
+      anchor,
+      floatingWidth,
+      floatingHeight,
+      placement,
+      offset: TOOLTIP_OFFSET,
+      viewportPadding: VIEWPORT_PADDING,
+      allowFlip: true,
+      includeScrollOffset: false, // Tooltip uses fixed positioning
+    });
+
+    setPosition({ top: result.y, left: result.x });
+    setActualPlacement(result.actualPlacement);
   }, [placement, contentSize, arrowSize]);
 
   useEffect(() => {
@@ -338,24 +295,24 @@ export const Tooltip = memo(function Tooltip({
     [],
   );
 
-  // Calculate SVG dimensions and offset
+  // Calculate SVG dimensions and offset based on actual placement (after potential flip)
   const svgDimensions = useMemo(
     () =>
       computeSvgDimensions(
         contentSize.width,
         contentSize.height,
         arrowSize,
-        placement,
+        actualPlacement,
       ),
-    [contentSize, arrowSize, placement],
+    [contentSize, arrowSize, actualPlacement],
   );
 
   const svgOffset = useMemo(
-    () => computeSvgOffset(arrowSize, placement),
-    [arrowSize, placement],
+    () => computeSvgOffset(arrowSize, actualPlacement),
+    [arrowSize, actualPlacement],
   );
 
-  // Generate SVG path
+  // Generate SVG path based on actual placement
   const tooltipPath = useMemo(
     () =>
       generateTooltipPath(
@@ -363,9 +320,9 @@ export const Tooltip = memo(function Tooltip({
         contentSize.height,
         BORDER_RADIUS,
         arrowSize,
-        placement,
+        actualPlacement,
       ),
-    [contentSize, arrowSize, placement],
+    [contentSize, arrowSize, actualPlacement],
   );
 
   const tooltipContainerStyle = useMemo<CSSProperties>(
@@ -393,7 +350,7 @@ export const Tooltip = memo(function Tooltip({
     [],
   );
 
-  // Content offset based on placement (to position content within the SVG bounds)
+  // Content offset based on actual placement (to position content within the SVG bounds)
   const contentContainerStyle = useMemo<CSSProperties>(() => {
     const base: CSSProperties = {
       position: "relative",
@@ -404,7 +361,7 @@ export const Tooltip = memo(function Tooltip({
       whiteSpace: "nowrap",
     };
 
-    switch (placement) {
+    switch (actualPlacement) {
       case "top":
         return base;
       case "bottom":
@@ -414,7 +371,7 @@ export const Tooltip = memo(function Tooltip({
       case "right":
         return { ...base, marginLeft: arrowSize };
     }
-  }, [placement, arrowSize]);
+  }, [actualPlacement, arrowSize]);
 
   return (
     <>

@@ -23,8 +23,9 @@
  * ```
  */
 
-import React, { memo, useState, useRef, useEffect, useEffectEvent, useLayoutEffect, useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
+import React, { memo, useState, useRef, useEffectEvent, useLayoutEffect, useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
 import { Portal } from "../Portal/Portal";
+import { calculateFloatingPosition, rectToAnchor, useFloatingInteractions } from "../../hooks";
 import {
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER,
@@ -194,7 +195,6 @@ type DropdownPosition = {
   top: number;
   left: number;
   width: number;
-  openUpward: boolean;
 };
 
 // =============================================================================
@@ -260,10 +260,7 @@ const SelectDropdownInner = <T extends string>(
     zIndex: Z_DROPDOWN,
     maxHeight: "240px",
     overflowY: "auto",
-    ...(dropdownPosition.openUpward && {
-      transform: "translateY(-100%)",
-    }),
-  }), [dropdownPosition]);
+  }), [dropdownPosition.top, dropdownPosition.left, dropdownPosition.width]);
 
   return (
     <div ref={dropdownRef} role="listbox" style={dropdownStyle}>
@@ -291,6 +288,8 @@ const SelectDropdown = memo(React.forwardRef(SelectDropdownInner)) as <T extends
 // Main Select component
 // =============================================================================
 
+const DROPDOWN_MAX_HEIGHT = 240;
+
 export const Select = memo(function Select<T extends string = string>({
   options,
   value,
@@ -302,7 +301,7 @@ export const Select = memo(function Select<T extends string = string>({
   className,
 }: SelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0, width: 0, openUpward: false });
+  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownHandleRef = useRef<SelectDropdownHandle>(null);
@@ -313,33 +312,21 @@ export const Select = memo(function Select<T extends string = string>({
   const updateDropdownPosition = useEffectEvent(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const dropdownMaxHeight = 240;
-      const gap = 4;
-      const viewportHeight = window.innerHeight;
-
-      // Calculate available space above and below the trigger
-      const spaceBelow = viewportHeight - rect.bottom - gap;
-      const spaceAbove = rect.top - gap;
-
-      // Open upward if there's not enough space below but enough space above
-      const openUpward = spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow;
-
-      const top = openUpward ? rect.top + window.scrollY - gap : rect.bottom + window.scrollY + gap;
-      setDropdownPosition({ top, left: rect.left + window.scrollX, width: rect.width, openUpward });
+      const anchor = rectToAnchor(rect);
+      const { x, y } = calculateFloatingPosition({
+        anchor,
+        floatingWidth: rect.width,
+        floatingHeight: DROPDOWN_MAX_HEIGHT,
+        placement: "bottom",
+        offset: 4,
+      });
+      setDropdownPosition({ top: y, left: x, width: rect.width });
     }
   });
 
-  const handleClickOutside = useEffectEvent((event: PointerEvent) => {
-    const target = event.target as Node;
-    if (
-      containerRef.current &&
-      !containerRef.current.contains(target) &&
-      dropdownRef.current &&
-      !dropdownRef.current.contains(target)
-    ) {
-      setIsOpen(false);
-    }
-  });
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -347,18 +334,13 @@ export const Select = memo(function Select<T extends string = string>({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("pointerdown", handleClickOutside);
-      window.addEventListener("scroll", updateDropdownPosition, true);
-      window.addEventListener("resize", updateDropdownPosition);
-      return () => {
-        document.removeEventListener("pointerdown", handleClickOutside);
-        window.removeEventListener("scroll", updateDropdownPosition, true);
-        window.removeEventListener("resize", updateDropdownPosition);
-      };
-    }
-  }, [isOpen]);
+  useFloatingInteractions({
+    isOpen,
+    onClose: handleClose,
+    anchorRef: containerRef,
+    floatingRef: dropdownRef,
+    onReposition: updateDropdownPosition,
+  });
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (disabled) {

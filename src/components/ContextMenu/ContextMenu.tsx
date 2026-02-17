@@ -2,7 +2,7 @@
  * @file ContextMenu component - Reusable context menu for right-click actions
  */
 
-import { memo, useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { memo, useState, useMemo, useCallback, useEffect, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ReactNode, CSSProperties } from "react";
 import {
@@ -170,6 +170,8 @@ const MenuItem = memo(function MenuItem({
   );
 });
 
+const VIEWPORT_PADDING = 8;
+
 export const ContextMenu = memo(function ContextMenu({
   items,
   position,
@@ -182,7 +184,9 @@ export const ContextMenu = memo(function ContextMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const [openSubmenuId, setOpenSubmenuId] = useState<string | null>(null);
   const [submenuPosition, setSubmenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [adjustedPosition, setAdjustedPosition] = useState({ x: position.x, y: position.y });
 
+  // Handle click outside and escape key (only for root menu)
   useEffect(() => {
     if (nestLevel > 0) {
       return;
@@ -208,7 +212,8 @@ export const ContextMenu = memo(function ContextMenu({
     };
   }, [onClose, nestLevel]);
 
-  useEffect(() => {
+  // Calculate adjusted position to fit within viewport
+  useLayoutEffect(() => {
     if (!menuRef.current) {
       return;
     }
@@ -218,28 +223,26 @@ export const ContextMenu = memo(function ContextMenu({
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    const computeAdjustedX = () => {
-      const margin = 8;
+    const computeAdjustedX = (): number => {
       if (position.x + rect.width > viewportWidth) {
         if (nestLevel > 0) {
+          // Submenu: flip to the left side
           const flipped = position.x - rect.width - SUBMENU_OFFSET;
-          return Math.max(flipped, margin);
+          return Math.max(flipped, VIEWPORT_PADDING);
         }
-        return viewportWidth - rect.width - margin;
+        return viewportWidth - rect.width - VIEWPORT_PADDING;
       }
-      return Math.max(position.x, margin);
+      return Math.max(position.x, VIEWPORT_PADDING);
     };
 
-    const computeAdjustedY = () => {
-      const margin = 8;
+    const computeAdjustedY = (): number => {
       if (position.y + rect.height > viewportHeight) {
-        return viewportHeight - rect.height - margin;
+        return viewportHeight - rect.height - VIEWPORT_PADDING;
       }
-      return Math.max(position.y, margin);
+      return Math.max(position.y, VIEWPORT_PADDING);
     };
 
-    menu.style.left = `${computeAdjustedX()}px`;
-    menu.style.top = `${computeAdjustedY()}px`;
+    setAdjustedPosition({ x: computeAdjustedX(), y: computeAdjustedY() });
   }, [position, nestLevel]);
 
   const handleItemClick = useCallback(
@@ -280,8 +283,8 @@ export const ContextMenu = memo(function ContextMenu({
   const menuStyle = useMemo<CSSProperties>(
     () => ({
       position: "fixed",
-      left: position.x,
-      top: position.y,
+      left: adjustedPosition.x,
+      top: adjustedPosition.y,
       backgroundColor: COLOR_INPUT_BG,
       border: `1px solid ${COLOR_BORDER}`,
       borderRadius: RADIUS_LG,
@@ -294,7 +297,7 @@ export const ContextMenu = memo(function ContextMenu({
       zIndex: Z_POPOVER + nestLevel,
       boxShadow: SHADOW_MD,
     }),
-    [position.x, position.y, maxHeight, nestLevel],
+    [adjustedPosition.x, adjustedPosition.y, maxHeight, nestLevel],
   );
 
   const dividerStyle = useMemo<CSSProperties>(

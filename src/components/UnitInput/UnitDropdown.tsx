@@ -8,7 +8,7 @@
  * - Position calculation based on anchor element
  */
 
-import { memo, useRef, useEffect, useMemo, useCallback, type CSSProperties, type RefObject } from "react";
+import { memo, useRef, useMemo, useCallback, type CSSProperties, type RefObject } from "react";
 import {
   COLOR_INPUT_BORDER,
   COLOR_TEXT,
@@ -22,6 +22,7 @@ import {
   Z_DROPDOWN,
 } from "../../themes/styles";
 import { Portal } from "../Portal/Portal";
+import { calculateFloatingPosition, rectToAnchor, useFloatingInteractions } from "../../hooks";
 import type { UnitOption } from "./unitInputUtils";
 
 export type UnitDropdownProps = {
@@ -39,16 +40,28 @@ type DropdownPosition = {
   width: number;
 };
 
+const DROPDOWN_MAX_HEIGHT = 200;
+const DROPDOWN_MIN_WIDTH = 60;
+
 function calculatePosition(anchorRef: RefObject<HTMLElement | null>): DropdownPosition {
   if (!anchorRef.current) {
-    return { top: 0, left: 0, width: 60 };
+    return { top: 0, left: 0, width: DROPDOWN_MIN_WIDTH };
   }
 
   const rect = anchorRef.current.getBoundingClientRect();
+  const dropdownWidth = Math.max(rect.width, DROPDOWN_MIN_WIDTH);
+  const anchor = rectToAnchor(rect);
+  const { x, y } = calculateFloatingPosition({
+    anchor,
+    floatingWidth: dropdownWidth,
+    floatingHeight: DROPDOWN_MAX_HEIGHT,
+    placement: "bottom",
+    offset: 4,
+  });
   return {
-    top: rect.bottom + window.scrollY + 4,
-    left: rect.left + window.scrollX,
-    width: Math.max(rect.width, 60),
+    top: y,
+    left: x,
+    width: dropdownWidth,
   };
 }
 
@@ -109,34 +122,14 @@ export const UnitDropdown = memo(function UnitDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const position = calculatePosition(anchorRef);
 
-  // Close on pointer outside (supports both mouse and touch)
-  useEffect(() => {
-    const handlePointerOutside = (e: PointerEvent) => {
-      const target = e.target as Node;
-      if (
-        anchorRef.current &&
-        !anchorRef.current.contains(target) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target)
-      ) {
-        onClose();
-      }
-    };
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerOutside);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [anchorRef, onClose]);
+  // Handle click outside and escape key
+  useFloatingInteractions({
+    isOpen: true, // Always open when this component is rendered
+    onClose,
+    anchorRef,
+    floatingRef: dropdownRef,
+    // No repositioning needed as position is calculated on each render
+  });
 
   const dropdownStyle = useMemo<CSSProperties>(
     () => ({
