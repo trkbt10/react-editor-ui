@@ -82,6 +82,7 @@ export const TextEditor = forwardRef(function TextEditor(
     onSelectionChange,
     onTextSelectionChange,
     tabSize = 4,
+    viewportConfig,
   } = props;
 
   // Extract styles from BlockDocument (converted to global offsets for rendering)
@@ -152,6 +153,7 @@ export const TextEditor = forwardRef(function TextEditor(
       overscan: editorConfig.overscan,
       tabSize,
       readOnly,
+      viewportConfig,
     },
     getOffsetFromPosition,
     onCursorChange,
@@ -350,6 +352,7 @@ export const TextEditor = forwardRef(function TextEditor(
         onPointerMove={core.handleCodePointerMove}
         onPointerUp={core.handleCodePointerUp}
         onPointerLeave={core.handleCodePointerUp}
+        onContextMenu={core.handleCodeContextMenu}
         onScroll={core.handleScroll}
       >
         {isReady && (
@@ -370,6 +373,14 @@ export const TextEditor = forwardRef(function TextEditor(
             fontSize={editorConfig.fontSize}
             startLineNumber={core.visibleBlockInfo.startLineNumber}
             renderer={renderer}
+            // Viewport mode props
+            viewportConfig={core.viewportConfig}
+            viewport={core.viewport}
+            visibleLines={core.visibleLines}
+            documentHeight={core.documentHeight}
+            documentWidth={core.documentWidth}
+            // Cursor color auto-contrast
+            backgroundColor={style?.backgroundColor as string | undefined}
           />
         )}
       </div>

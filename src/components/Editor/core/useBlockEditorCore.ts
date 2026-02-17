@@ -69,6 +69,7 @@ import {
   getCompositionRange,
 } from "../block/useBlockComposition";
 import { useVirtualScroll, type UseVirtualScrollResult } from "../renderers/useVirtualScroll";
+import type { ViewportConfig, ViewportState, VisibleLineItem } from "../renderers/viewport/types";
 import { useHistory } from "../history/useHistory";
 import { useCursorRestoration } from "../history/useCursorRestoration";
 import { useKeyHandlers } from "../user-actions/useKeyHandlers";
@@ -93,6 +94,8 @@ export type UseBlockEditorCoreConfig = {
   readonly tabSize: number;
   /** Whether editor is read-only */
   readonly readOnly: boolean;
+  /** Viewport configuration for fixed viewport mode */
+  readonly viewportConfig?: ViewportConfig;
 };
 
 export type UseBlockEditorCoreResult = {
@@ -118,6 +121,13 @@ export type UseBlockEditorCoreResult = {
   readonly cursorPosition: BlockPosition | null;
   readonly virtualScroll: UseVirtualScrollResult;
 
+  // Viewport-based rendering (optional)
+  readonly viewportConfig?: ViewportConfig;
+  readonly viewport?: ViewportState;
+  readonly visibleLines?: readonly VisibleLineItem[];
+  readonly documentHeight?: number;
+  readonly documentWidth?: number;
+
   // Legacy compatibility (for gradual migration)
   readonly textValue: string;
   readonly allHighlights: readonly HighlightRange[];
@@ -128,6 +138,7 @@ export type UseBlockEditorCoreResult = {
   readonly handleCodePointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
   readonly handleCodePointerMove: (e: ReactPointerEvent<HTMLDivElement>) => void;
   readonly handleCodePointerUp: () => void;
+  readonly handleCodeContextMenu: () => void;
   readonly handleScroll: (e: React.UIEvent<HTMLDivElement>) => void;
   readonly updateCursorPosition: () => void;
 
@@ -249,7 +260,7 @@ export function useBlockEditorCore(
   onCursorChange?: (pos: CursorPosition) => void,
   onSelectionChange?: (selection: { start: CursorPosition; end: CursorPosition } | undefined) => void
 ): UseBlockEditorCoreResult {
-  const { lineHeight, overscan, tabSize, readOnly } = config;
+  const { lineHeight, overscan, tabSize, readOnly, viewportConfig } = config;
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -570,10 +581,16 @@ export function useBlockEditorCore(
           hasSelection && offset >= selectionStart && offset <= selectionEnd;
 
         if (isWithinSelection) {
+          // Save selection to restore in contextmenu handler
+          // (browser may clear it between pointerdown and contextmenu)
+          preservedSelectionRef.current = { start: selectionStart, end: selectionEnd };
           textarea.focus();
+          // Re-apply selection immediately to fight browser clearing it
+          textarea.setSelectionRange(selectionStart, selectionEnd);
           return; // Preserve selection for context menu
         }
         // Right-click outside selection: set cursor position
+        preservedSelectionRef.current = null;
         textarea.focus();
         textarea.setSelectionRange(offset, offset);
         requestAnimationFrame(updateCursorPosition);
@@ -641,10 +658,50 @@ export function useBlockEditorCore(
     dragStartOffsetRef.current = null;
   }, []);
 
-  // Scroll handler
+  // Track selection to preserve on right-click
+  const preservedSelectionRef = useRef<{ start: number; end: number } | null>(null);
+
+  // Context menu handler - preserves selection when right-clicking
+  const handleCodeContextMenu = useCallback(
+    () => {
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        return;
+      }
+
+      // If we preserved a selection in pointerdown, restore it immediately
+      // and schedule additional restoration to fight browser clearing it
+      if (preservedSelectionRef.current) {
+        const { start, end } = preservedSelectionRef.current;
+
+        // Restore now
+        textarea.setSelectionRange(start, end);
+
+        // Also restore after a microtask (handles some browser behaviors)
+        queueMicrotask(() => {
+          textarea.setSelectionRange(start, end);
+        });
+
+        // And after next frame (handles React state updates)
+        requestAnimationFrame(() => {
+          textarea.setSelectionRange(start, end);
+          preservedSelectionRef.current = null;
+        });
+      }
+
+      // Don't prevent default - allow native context menu for copy/paste
+    },
+    []
+  );
+
+  // Horizontal scroll state
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Scroll handler - tracks both vertical and horizontal scroll
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
       virtualScroll.setScrollTop(e.currentTarget.scrollTop);
+      setScrollLeft(e.currentTarget.scrollLeft);
     },
     [virtualScroll]
   );
@@ -746,6 +803,58 @@ export function useBlockEditorCore(
     return highlights;
   }, [selectionHighlight, compositionHighlight]);
 
+  // Viewport mode values
+  // Tracks both horizontal and vertical scroll for smooth viewport rendering
+  const computeViewport = (): ViewportState | undefined => {
+    if (!viewportConfig?.fixedViewport) {
+      return undefined;
+    }
+    return {
+      offset: { x: scrollLeft, y: virtualScroll.state.scrollTop },
+      size: { width: 800, height: virtualScroll.state.viewportHeight },
+    };
+  };
+  const viewport = computeViewport();
+
+  const computeVisibleLines = (): VisibleLineItem[] | undefined => {
+    if (!viewportConfig?.fixedViewport) {
+      return undefined;
+    }
+    return document.blocks.slice(
+      visibleBlockInfo.visibleRange.start,
+      visibleBlockInfo.visibleRange.end
+    ).flatMap((block, blockIdx) => {
+      const blockInfo = visibleBlockInfo.visibleBlocks[blockIdx];
+      if (!blockInfo) {
+        return [];
+      }
+      const lines = block.content.split("\n");
+      return lines.map((_, lineIdx) => {
+        const lineNumber = visibleBlockInfo.startLineNumber - 1 + blockIdx + lineIdx;
+        const docY = lineNumber * lineHeight;
+        return {
+          index: lineNumber,
+          documentX: 0,
+          documentY: docY,
+          viewportX: 0,
+          viewportY: docY - virtualScroll.state.scrollTop,
+          width: 0, // Will be measured
+          height: lineHeight,
+          visibility: "full" as const,
+        };
+      });
+    });
+  };
+  const visibleLines = computeVisibleLines();
+
+  const computeDocumentHeight = (): number | undefined => {
+    if (!viewportConfig?.fixedViewport) {
+      return undefined;
+    }
+    return lineCount * lineHeight;
+  };
+  const documentHeight = computeDocumentHeight();
+
   return {
     containerRef,
     textareaRef,
@@ -757,6 +866,13 @@ export function useBlockEditorCore(
     visibleBlockInfo,
     cursorPosition,
     virtualScroll,
+    // Viewport mode
+    viewportConfig,
+    viewport,
+    visibleLines,
+    documentHeight,
+    documentWidth: undefined, // Will be measured
+    // Legacy
     textValue,
     allHighlights,
     handleChange,
@@ -764,6 +880,7 @@ export function useBlockEditorCore(
     handleCodePointerDown,
     handleCodePointerMove,
     handleCodePointerUp,
+    handleCodeContextMenu,
     handleScroll,
     updateCursorPosition,
     compositionHandlers,

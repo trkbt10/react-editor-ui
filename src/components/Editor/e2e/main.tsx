@@ -23,6 +23,8 @@ const TextEditorMount = lazy(() => import("./pages/TextEditorMount"));
 const CodeEditorMount = lazy(() => import("./pages/CodeEditorMount"));
 const TextEditorPerfMount = lazy(() => import("./pages/TextEditorPerfMount"));
 const TextEditorCanvasMount = lazy(() => import("./pages/TextEditorCanvasMount"));
+const CodeEditorViewportMount = lazy(() => import("./pages/CodeEditorViewportMount"));
+const CodeEditorContextMenuMount = lazy(() => import("./pages/CodeEditorContextMenuMount"));
 
 const App = () => {
   return (
@@ -61,6 +63,22 @@ const App = () => {
           }
         />
         <Route
+          path="/code-editor-viewport"
+          element={
+            <Suspense fallback={null}>
+              <CodeEditorViewportMount />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/code-editor-context-menu"
+          element={
+            <Suspense fallback={null}>
+              <CodeEditorContextMenuMount />
+            </Suspense>
+          }
+        />
+        <Route
           path="/"
           element={
             <div style={{ padding: 20 }}>
@@ -70,6 +88,8 @@ const App = () => {
                 <li><a href="#/code-editor">CodeEditor</a></li>
                 <li><a href="#/text-editor-perf">TextEditor Performance (50 lines)</a></li>
                 <li><a href="#/text-editor-canvas">TextEditor Canvas</a></li>
+                <li><a href="#/code-editor-viewport">CodeEditor Viewport (100 lines)</a></li>
+                <li><a href="#/code-editor-context-menu">CodeEditor Context Menu</a></li>
               </ul>
             </div>
           }

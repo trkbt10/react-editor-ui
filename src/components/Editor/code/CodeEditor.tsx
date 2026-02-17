@@ -71,6 +71,7 @@ export const CodeEditor = memo(function CodeEditor({
   onCursorChange,
   onSelectionChange,
   tabSize = 4,
+  viewportConfig,
 }: CodeEditorProps): ReactNode {
   // Merge config with defaults
   const editorConfig = { ...DEFAULT_EDITOR_CONFIG, ...config };
@@ -114,6 +115,7 @@ export const CodeEditor = memo(function CodeEditor({
       overscan: editorConfig.overscan,
       tabSize,
       readOnly,
+      viewportConfig,
     },
     getOffsetFromPosition,
     onCursorChange,
@@ -156,6 +158,7 @@ export const CodeEditor = memo(function CodeEditor({
         onPointerMove={core.handleCodePointerMove}
         onPointerUp={core.handleCodePointerUp}
         onPointerLeave={core.handleCodePointerUp}
+        onContextMenu={core.handleCodeContextMenu}
         onScroll={core.handleScroll}
       >
         {isReady && (
@@ -177,6 +180,14 @@ export const CodeEditor = memo(function CodeEditor({
             fontSize={editorConfig.fontSize}
             startLineNumber={core.visibleBlockInfo.startLineNumber}
             renderer={renderer}
+            // Viewport mode props
+            viewportConfig={core.viewportConfig}
+            viewport={core.viewport}
+            visibleLines={core.visibleLines}
+            documentHeight={core.documentHeight}
+            documentWidth={core.documentWidth}
+            // Cursor color auto-contrast
+            backgroundColor={style?.backgroundColor as string | undefined}
           />
         )}
       </div>

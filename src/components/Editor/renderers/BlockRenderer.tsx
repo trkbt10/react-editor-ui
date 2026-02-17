@@ -40,8 +40,9 @@ import {
   EDITOR_LINE_NUMBER_BG_RAW,
   EDITOR_LINE_NUMBER_COLOR_RAW,
   EDITOR_LINE_NUMBER_BORDER_RAW,
-  EDITOR_CURSOR_COLOR_RAW,
 } from "../styles/tokens";
+import { getContrastCursorColor, CURSOR_COLOR_DARK } from "../styles/colorUtils";
+import type { ViewportConfig, ViewportState, VisibleLineItem } from "./viewport/types";
 
 // =============================================================================
 // Types
@@ -64,6 +65,8 @@ export type BlockRendererProps = {
   readonly padding: number;
   /** Container width */
   readonly width?: number;
+  /** Container height */
+  readonly height?: number;
   /** Function to measure text width */
   readonly measureText?: MeasureTextFn;
   /** Show line numbers */
@@ -86,6 +89,26 @@ export type BlockRendererProps = {
   readonly startLineNumber?: number;
   /** Renderer type: svg (default) or canvas */
   readonly renderer?: RendererType;
+
+  // === Viewport-based rendering (optional) ===
+
+  /** Viewport configuration */
+  readonly viewportConfig?: ViewportConfig;
+  /** Current viewport state */
+  readonly viewport?: ViewportState;
+  /** Visible lines with pre-computed viewport positions */
+  readonly visibleLines?: readonly VisibleLineItem[];
+  /** Total document height (for scroll overlay) */
+  readonly documentHeight?: number;
+  /** Total document width (for horizontal scroll) */
+  readonly documentWidth?: number;
+
+  // === Cursor color (optional) ===
+
+  /** Background color for auto-contrast cursor (e.g., "#282c34") */
+  readonly backgroundColor?: string;
+  /** Explicit cursor color (overrides auto-contrast) */
+  readonly cursorColor?: string;
 };
 
 /**
@@ -173,6 +196,28 @@ const blockContainerStyle: CSSProperties = {
   minHeight: "100%",
 };
 
+const viewportContainerStyle: CSSProperties = {
+  position: "relative",
+  overflow: "hidden",
+};
+
+const scrollOverlayStyle: CSSProperties = {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  overflow: "auto",
+  pointerEvents: "auto",
+};
+
+const viewportCanvasContainerStyle: CSSProperties = {
+  position: "sticky",
+  top: 0,
+  left: 0,
+  pointerEvents: "none",
+};
+
 // =============================================================================
 // Canvas Drawing Context
 // =============================================================================
@@ -186,6 +231,7 @@ type CanvasDrawContext = {
   readonly tokenStyles?: TokenStyleMap;
   readonly fontFamily: string;
   readonly fontSize: number;
+  readonly cursorColor: string;
 };
 
 // =============================================================================
@@ -262,7 +308,7 @@ function drawCanvasHighlight(
 
   // Draw composition underline
   if (highlight.type === "composition") {
-    ctx.strokeStyle = EDITOR_CURSOR_COLOR_RAW;
+    ctx.strokeStyle = context.cursorColor;
     ctx.lineWidth = 2;
     ctx.setLineDash([2, 2]);
     ctx.beginPath();
@@ -281,8 +327,8 @@ function drawCanvasCursor(
   x: number,
   y: number
 ): void {
-  const { ctx, lineHeight } = context;
-  ctx.fillStyle = EDITOR_CURSOR_COLOR_RAW;
+  const { ctx, lineHeight, cursorColor } = context;
+  ctx.fillStyle = cursorColor;
   ctx.fillRect(x, y, 2, lineHeight);
 }
 
@@ -326,111 +372,29 @@ function drawCanvasToken(
   ctx.font = `normal normal ${fontSize}px ${fontFamily}`;
 }
 
-/**
- * Calculate per-character cumulative positions for a token.
- * Returns array where positions[i] is the X position at the start of character i.
- */
-function calculateCharacterPositions(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  startX: number
-): readonly number[] {
-  const positions: number[] = [startX];
-  const acc = { x: startX };
-
-  for (const char of text) {
-    const charWidth = ctx.measureText(char).width;
-    acc.x += charWidth;
-    positions.push(acc.x);
-  }
-
-  return positions;
-}
-
-/**
- * Token character positions cache type.
- * charPositions[i] = X position at start of character i within the token.
- * charPositions[charPositions.length - 1] = X position at end of token.
- */
-type TokenCharPositions = {
-  readonly tokenStart: number; // token.start (0-based column in line)
-  readonly charPositions: readonly number[]; // Per-character cumulative X positions
-};
-
-/**
- * Line token cache with per-character positions for fast column lookup.
- */
-type LineTokenCacheEntry = {
-  tokens: readonly Token[];
-  positions: readonly number[]; // Token start X positions
-  charPositionsPerToken: readonly TokenCharPositions[]; // Per-character positions
-  lineText: string;
-  lineEndX: number; // X position at end of line
-};
-
-/**
- * Get X position for a column using cached character positions.
- * This is O(tokens) + O(1) instead of requiring measureText calls.
- */
-function getColumnXFromCachedPositions(
-  cached: LineTokenCacheEntry,
-  column: number,
-  codeXOffset: number
-): number {
-  const { tokens, charPositionsPerToken, lineEndX } = cached;
-
-  // Column is 1-based, token.start/end are 0-based
-  const targetCol = column - 1;
-
-  // Empty line
-  if (tokens.length === 0 || charPositionsPerToken.length === 0) {
-    // For empty lines, just return the base offset
-    return codeXOffset;
-  }
-
-  // Find which token contains this column
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    const charPos = charPositionsPerToken[i];
-
-    // Before this token
-    if (targetCol < token.start) {
-      return charPos.charPositions[0];
-    }
-
-    // Within this token
-    if (targetCol <= token.end) {
-      const offsetInToken = targetCol - token.start;
-      // charPositions has length = text.length + 1 (includes end position)
-      if (offsetInToken < charPos.charPositions.length) {
-        return charPos.charPositions[offsetInToken];
-      }
-      // Fallback to end of token
-      return charPos.charPositions[charPos.charPositions.length - 1];
-    }
-  }
-
-  // Past end of line - return end position
-  return lineEndX;
-}
-
 // =============================================================================
 // Helper Functions
 // =============================================================================
 
 /**
  * Compute block render info for visible blocks.
+ *
+ * @param useDocumentCoordinates - When true, y positions are absolute document coordinates.
+ *                                 When false (default), y positions are relative (start at 0).
  */
 function computeBlockRenderInfo(
   blocks: readonly Block[],
   visibleRange: { start: number; end: number },
   lineHeight: number,
-  startLineNumber: number
+  startLineNumber: number,
+  useDocumentCoordinates: boolean = false
 ): readonly BlockRenderInfo[] {
   const result: BlockRenderInfo[] = [];
-  // Start at y=0 (after top spacer) with the provided startLineNumber
-  // The top spacer already accounts for the height of all lines before the visible range
-  const state = { currentLine: startLineNumber, y: 0 };
+
+  // For document coordinates, y starts at the document position of the first visible line
+  // For relative coordinates (legacy), y starts at 0 (after top spacer)
+  const initialY = useDocumentCoordinates ? (startLineNumber - 1) * lineHeight : 0;
+  const state = { currentLine: startLineNumber, y: initialY };
 
   // Compute info for visible blocks
   for (let i = visibleRange.start; i < visibleRange.end && i < blocks.length; i++) {
@@ -1032,6 +996,11 @@ type CanvasBlockRendererProps = {
   readonly fontSize: number;
   readonly width: number;
   readonly totalHeight: number;
+  // Viewport mode props
+  readonly isViewportMode?: boolean;
+  readonly viewport?: ViewportState;
+  // Cursor color
+  readonly cursorColor: string;
 };
 
 /**
@@ -1052,9 +1021,24 @@ function canvasBlockRendererPropsAreEqual(
     prev.fontFamily !== next.fontFamily ||
     prev.fontSize !== next.fontSize ||
     prev.width !== next.width ||
-    prev.totalHeight !== next.totalHeight
+    prev.totalHeight !== next.totalHeight ||
+    prev.isViewportMode !== next.isViewportMode ||
+    prev.cursorColor !== next.cursorColor
   ) {
     return false;
+  }
+
+  // Compare viewport by value (offset and size)
+  if (prev.viewport !== next.viewport) {
+    if (!prev.viewport || !next.viewport) {
+      return false;
+    }
+    if (prev.viewport.offset.x !== next.viewport.offset.x ||
+        prev.viewport.offset.y !== next.viewport.offset.y ||
+        prev.viewport.size.width !== next.viewport.size.width ||
+        prev.viewport.size.height !== next.viewport.size.height) {
+      return false;
+    }
   }
 
   // Compare cursor by reference (cursor object is recreated on change)
@@ -1097,223 +1081,26 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
   fontSize,
   width,
   totalHeight,
+  isViewportMode,
+  viewport,
+  cursorColor,
 }: CanvasBlockRendererProps): ReactNode {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafIdRef = useRef<number | null>(null);
 
-  // Offscreen canvas for text layer (cached)
-  const textCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const textCacheKeyRef = useRef<string>("");
+  // Calculate the base Y position of the first visible block (line-aligned)
+  const firstBlockDocY = blockInfos.length > 0 ? blockInfos[0].y : 0;
 
-  // Cached token positions per line (lineNumber -> LineTokenCacheEntry)
-  // Includes per-character positions for fast column X lookup without measureText
-  const lineTokenCacheRef = useRef<Map<number, LineTokenCacheEntry>>(new Map());
+  // Viewport offset for smooth scrolling
+  const viewportOffsetY = isViewportMode && viewport
+    ? viewport.offset.y - firstBlockDocY
+    : 0;
+  const viewportOffsetX = isViewportMode && viewport
+    ? viewport.offset.x
+    : 0;
 
-  // Generate cache key for text layer (changes when text content changes)
-  const textCacheKey = useMemo(() => {
-    return blockInfos.map((info) => `${info.block.id}:${info.block.content}`).join("|");
-  }, [blockInfos]);
-
-  // Draw text layer to offscreen canvas (only when text changes)
-  const drawTextLayer = useEffectEvent((dpr: number) => {
-    // Check if we need to redraw text layer
-    if (textCacheKeyRef.current === textCacheKey && textCanvasRef.current) {
-      return textCanvasRef.current;
-    }
-
-    // Clear line token cache when text changes
-    lineTokenCacheRef.current.clear();
-
-    // Create or resize offscreen canvas
-    if (!textCanvasRef.current) {
-      textCanvasRef.current = document.createElement("canvas");
-    }
-    const textCanvas = textCanvasRef.current;
-    textCanvas.width = width * dpr;
-    textCanvas.height = totalHeight * dpr;
-
-    const ctx = textCanvas.getContext("2d");
-    if (!ctx) {
-      return null;
-    }
-
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, width, totalHeight);
-
-    const drawContext: CanvasDrawContext = {
-      ctx,
-      lineHeight,
-      padding,
-      showLineNumbers,
-      lineNumberWidth,
-      tokenStyles,
-      fontFamily,
-      fontSize,
-    };
-
-    const codeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
-
-    // Draw each block (text and line numbers only)
-    for (const info of blockInfos) {
-      const { block, startLine, y: blockY } = info;
-      const lines = block.content.split("\n");
-
-      for (let i = 0; i < lines.length; i++) {
-        const lineText = lines[i];
-        const lineNumber = startLine + i;
-        const lineY = blockY + i * lineHeight;
-        const lineIndex = startLine + i - 1;
-
-        // Draw line number
-        if (showLineNumbers) {
-          drawCanvasLineNumber(drawContext, lineNumber, lineY);
-        }
-
-        // Get tokens for this line
-        const tokens = tokenCache.getTokens(lineText, lineIndex);
-
-        // Calculate token positions and per-character positions
-        const tokenPositions: number[] = [];
-        const charPositionsPerToken: TokenCharPositions[] = [];
-        const acc = { x: codeXOffset };
-
-        for (const token of tokens) {
-          tokenPositions.push(acc.x);
-
-          // Set font for this token
-          const style = tokenStyles?.[token.type];
-          const fontWeight = (style?.fontWeight as string) ?? "normal";
-          const fontStyle = (style?.fontStyle as string) ?? "normal";
-          const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
-          const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
-          ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
-
-          // Calculate per-character positions for this token
-          const charPositions = calculateCharacterPositions(ctx, token.text, acc.x);
-          charPositionsPerToken.push({
-            tokenStart: token.start,
-            charPositions,
-          });
-
-          // Update acc.x to end of token
-          acc.x = charPositions[charPositions.length - 1];
-        }
-
-        // Calculate line end X (for cursor at end of line)
-        const lineEndX = tokens.length > 0 ? acc.x : codeXOffset;
-
-        // Cache tokens and positions for overlay drawing
-        lineTokenCacheRef.current.set(lineNumber, {
-          tokens,
-          positions: tokenPositions,
-          charPositionsPerToken,
-          lineText,
-          lineEndX,
-        });
-
-        // Draw tokens
-        for (let j = 0; j < tokens.length; j++) {
-          drawCanvasToken(drawContext, tokens[j], tokenPositions[j], lineY);
-        }
-      }
-    }
-
-    // Reset scale for future use
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    textCacheKeyRef.current = textCacheKey;
-
-    return textCanvas;
-  });
-
-  // Helper to get column X position using cached per-character positions
-  // This is now O(tokens) instead of requiring measureText calls
-  const getColumnXFromCache = (
-    lineNumber: number,
-    column: number,
-    codeXOffset: number
-  ): number => {
-    const cached = lineTokenCacheRef.current.get(lineNumber);
-    if (!cached) {
-      // Fallback: rough estimate based on font size
-      return codeXOffset + (column - 1) * fontSize * 0.6;
-    }
-
-    return getColumnXFromCachedPositions(cached, column, codeXOffset);
-  };
-
-  // Draw overlay (highlights and cursor) - runs every frame when needed
-  const drawOverlay = useEffectEvent((
-    ctx: CanvasRenderingContext2D,
-    textCanvas: HTMLCanvasElement,
-    dpr: number
-  ) => {
-    // Clear canvas
-    ctx.clearRect(0, 0, width * dpr, totalHeight * dpr);
-
-    // Scale for drawing
-    ctx.save();
-    ctx.scale(dpr, dpr);
-
-    const drawContext: CanvasDrawContext = {
-      ctx,
-      lineHeight,
-      padding,
-      showLineNumbers,
-      lineNumberWidth,
-      tokenStyles,
-      fontFamily,
-      fontSize,
-    };
-
-    const codeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
-
-    // First pass: Draw highlights (behind text) - uses cached token positions
-    for (const info of blockInfos) {
-      const { block, startLine, y: blockY } = info;
-      const lines = block.content.split("\n");
-      const blockHighlights = getBlockHighlights(startLine, lines.length, highlights);
-
-      for (let i = 0; i < lines.length; i++) {
-        const lineNumber = startLine + i;
-        const lineY = blockY + i * lineHeight;
-        const lineText = lines[i];
-
-        const lineHighlights = getLineHighlights(lineNumber, lineText.length, blockHighlights);
-        for (const h of lineHighlights) {
-          const startX = getColumnXFromCache(lineNumber, h.startColumn, codeXOffset);
-          const endX = getColumnXFromCache(lineNumber, h.endColumn, codeXOffset);
-          drawCanvasHighlight(drawContext, h, lineY, startX, endX);
-        }
-      }
-    }
-
-    ctx.restore();
-
-    // Draw text layer on top of highlights
-    ctx.drawImage(textCanvas, 0, 0);
-
-    // Second pass: Draw cursor (on top of text) - uses cached token positions
-    if (cursor?.visible) {
-      ctx.save();
-      ctx.scale(dpr, dpr);
-
-      // Find cursor line Y position
-      for (const info of blockInfos) {
-        const { startLine, y: blockY, lineCount } = info;
-        if (cursor.line >= startLine && cursor.line < startLine + lineCount) {
-          const lineOffset = cursor.line - startLine;
-          const lineY = blockY + lineOffset * lineHeight;
-          const cursorX = getColumnXFromCache(cursor.line, cursor.column, codeXOffset);
-          drawCanvasCursor(drawContext, cursorX, lineY);
-          break;
-        }
-      }
-
-      ctx.restore();
-    }
-  });
-
-  // Main draw function
+  // Unified draw function - renders everything in a single pass
+  // This ensures highlights, text, and cursor are always aligned
   const draw = useEffectEvent(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -1333,14 +1120,117 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
       canvas.height = totalHeight * dpr;
     }
 
-    // Draw text layer (cached)
-    const textCanvas = drawTextLayer(dpr);
-    if (!textCanvas) {
-      return;
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Set up drawing context with DPR scaling and viewport transform
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    // Apply viewport transform for smooth scrolling (single transform for all content)
+    if (isViewportMode) {
+      ctx.translate(-viewportOffsetX, -viewportOffsetY);
     }
 
-    // Draw overlay (highlights + cursor)
-    drawOverlay(ctx, textCanvas, dpr);
+    const drawContext: CanvasDrawContext = {
+      ctx,
+      lineHeight,
+      padding,
+      showLineNumbers,
+      lineNumberWidth,
+      tokenStyles,
+      fontFamily,
+      fontSize,
+      cursorColor,
+    };
+
+    const codeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
+
+    // Draw each block - highlights, line numbers, tokens all in one pass
+    for (const info of blockInfos) {
+      const { block, startLine, y: blockY } = info;
+      const lines = block.content.split("\n");
+      const blockHighlights = getBlockHighlights(startLine, lines.length, highlights);
+
+      for (let i = 0; i < lines.length; i++) {
+        const lineText = lines[i];
+        const lineNumber = startLine + i;
+        // All drawing uses relative position (y=0 for first visible line)
+        const lineY = blockY - firstBlockDocY + i * lineHeight;
+        const lineIndex = startLine + i - 1;
+
+        // Get tokens and calculate positions
+        const tokens = tokenCache.getTokens(lineText, lineIndex);
+        const tokenPositions: number[] = [];
+        const acc = { x: codeXOffset };
+
+        // Pre-calculate token positions for highlights and cursor
+        for (const token of tokens) {
+          tokenPositions.push(acc.x);
+          const style = tokenStyles?.[token.type];
+          const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
+          const fontWeight = (style?.fontWeight as string) ?? "normal";
+          const fontStyle = (style?.fontStyle as string) ?? "normal";
+          const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+          ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+          acc.x += ctx.measureText(token.text).width;
+        }
+        const lineEndX = tokens.length > 0 ? acc.x : codeXOffset;
+
+        // Helper to get X position for a column
+        const getColumnX = (col: number): number => {
+          const targetCol = col - 1;
+          if (tokens.length === 0) {
+            return codeXOffset;
+          }
+          // Find which token contains this column
+          for (let j = 0; j < tokens.length; j++) {
+            const token = tokens[j];
+            if (targetCol < token.start) {
+              return tokenPositions[j];
+            }
+            if (targetCol <= token.end) {
+              // Position within this token
+              const style = tokenStyles?.[token.type];
+              const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
+              const fontWeight = (style?.fontWeight as string) ?? "normal";
+              const fontStyle = (style?.fontStyle as string) ?? "normal";
+              const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+              ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+              const textBefore = token.text.slice(0, targetCol - token.start);
+              return tokenPositions[j] + ctx.measureText(textBefore).width;
+            }
+          }
+          return lineEndX;
+        };
+
+        // 1. Draw highlights (behind everything)
+        const lineHighlights = getLineHighlights(lineNumber, lineText.length, blockHighlights);
+        for (const h of lineHighlights) {
+          const startX = getColumnX(h.startColumn);
+          const endX = getColumnX(h.endColumn);
+          drawCanvasHighlight(drawContext, h, lineY, startX, endX);
+        }
+
+        // 2. Draw line number
+        if (showLineNumbers) {
+          drawCanvasLineNumber(drawContext, lineNumber, lineY);
+        }
+
+        // 3. Draw tokens
+        for (let j = 0; j < tokens.length; j++) {
+          drawCanvasToken(drawContext, tokens[j], tokenPositions[j], lineY);
+        }
+
+        // 4. Draw cursor if on this line
+        if (cursor?.visible && cursor.line === lineNumber) {
+          const cursorX = getColumnX(cursor.column);
+          drawCanvasCursor(drawContext, cursorX, lineY);
+        }
+      }
+    }
+
+    ctx.restore();
   });
 
   // Redraw when dependencies change, throttled via requestAnimationFrame
@@ -1368,16 +1258,11 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
     tokenStyles,
     width,
     totalHeight,
-    textCacheKey,
+    isViewportMode,
+    viewportOffsetX,
+    viewportOffsetY,
+    cursorColor,
   ]);
-
-  // Cleanup offscreen canvas on unmount
-  useEffect(() => {
-    return () => {
-      textCanvasRef.current = null;
-      textCacheKeyRef.current = "";
-    };
-  }, []);
 
   return (
     <canvas
@@ -1401,6 +1286,10 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
  * Renders blocks as logical units, enabling block-level operations
  * and optimizations while maintaining compatibility with existing
  * line-based virtual scrolling.
+ *
+ * Supports two modes:
+ * - Legacy mode: spacer-based virtual scrolling
+ * - Viewport mode: fixed canvas with scroll overlay (canvas mode)
  */
 export const BlockRenderer = memo(function BlockRenderer({
   blocks,
@@ -1411,6 +1300,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   lineHeight,
   padding,
   width,
+  height,
   measureText: measureTextProp,
   showLineNumbers = false,
   lineNumberWidth = DEFAULT_LINE_NUMBER_WIDTH,
@@ -1421,14 +1311,39 @@ export const BlockRenderer = memo(function BlockRenderer({
   fontSize = DEFAULT_FONT_SIZE,
   startLineNumber = 1,
   renderer = "svg",
+  // Viewport mode props
+  viewportConfig,
+  viewport,
+  visibleLines,
+  documentHeight,
+  documentWidth,
+  // Cursor color props
+  backgroundColor,
+  cursorColor: cursorColorProp,
 }: BlockRendererProps): ReactNode {
   // Require measureText (for SVG; Canvas uses ctx.measureText)
   const measureText = assertMeasureText(measureTextProp, "BlockRenderer");
 
+  // Calculate cursor color: explicit prop > auto-contrast from background > default
+  const effectiveCursorColor = useMemo(() => {
+    if (cursorColorProp) {
+      return cursorColorProp;
+    }
+    if (backgroundColor) {
+      return getContrastCursorColor(backgroundColor);
+    }
+    return CURSOR_COLOR_DARK;
+  }, [cursorColorProp, backgroundColor]);
+
+  // Check if viewport mode is enabled
+  const isViewportMode = !!(viewportConfig?.fixedViewport && viewport && visibleLines);
+  const isCanvasMode = viewportConfig?.mode === "canvas";
+
   // Compute render info for visible blocks
+  // Use document coordinates in viewport mode so ctx.translate works correctly
   const blockInfos = useMemo(
-    () => computeBlockRenderInfo(blocks, visibleRange, lineHeight, startLineNumber),
-    [blocks, visibleRange, lineHeight, startLineNumber]
+    () => computeBlockRenderInfo(blocks, visibleRange, lineHeight, startLineNumber, isViewportMode),
+    [blocks, visibleRange, lineHeight, startLineNumber, isViewportMode]
   );
 
   // Calculate total height of visible area
@@ -1437,7 +1352,8 @@ export const BlockRenderer = memo(function BlockRenderer({
   }, [blockInfos]);
 
   // Default width for canvas
-  const canvasWidth = width ?? 800;
+  const canvasWidth = width ?? (isViewportMode ? viewport.size.width : 800);
+  const canvasHeight = height ?? (isViewportMode ? viewport.size.height : totalHeight);
 
   const renderContent = (): ReactNode => {
     if (renderer === "canvas") {
@@ -1455,37 +1371,108 @@ export const BlockRenderer = memo(function BlockRenderer({
           fontFamily={fontFamily}
           fontSize={fontSize}
           width={canvasWidth}
-          totalHeight={totalHeight}
+          totalHeight={isViewportMode ? canvasHeight : totalHeight}
+          isViewportMode={isViewportMode}
+          viewport={viewport}
+          cursorColor={effectiveCursorColor}
         />
       );
     }
     return (
       <svg
         width={width ?? "100%"}
-        height={totalHeight}
-        style={{ display: "block", overflow: "visible" }}
+        height={isViewportMode ? canvasHeight : totalHeight}
+        style={{ display: "block", overflow: isViewportMode ? "hidden" : "visible" }}
       >
-        {blockInfos.map((info) => (
-          <SingleBlock
-            key={info.block.id}
-            info={info}
-            padding={padding}
-            lineHeight={lineHeight}
-            showLineNumbers={showLineNumbers}
-            lineNumberWidth={lineNumberWidth}
-            highlights={highlights}
-            cursor={cursor}
-            measureText={measureText}
-            tokenCache={tokenCache}
-            tokenStyles={tokenStyles}
-            fontFamily={fontFamily}
-            fontSize={fontSize}
-          />
-        ))}
+        {isViewportMode && viewport ? (
+          <g transform={`translate(${-viewport.offset.x}, ${-viewport.offset.y})`}>
+            {blockInfos.map((info) => (
+              <SingleBlock
+                key={info.block.id}
+                info={info}
+                padding={padding}
+                lineHeight={lineHeight}
+                showLineNumbers={showLineNumbers}
+                lineNumberWidth={lineNumberWidth}
+                highlights={highlights}
+                cursor={cursor}
+                measureText={measureText}
+                tokenCache={tokenCache}
+                tokenStyles={tokenStyles}
+                fontFamily={fontFamily}
+                fontSize={fontSize}
+              />
+            ))}
+          </g>
+        ) : (
+          blockInfos.map((info) => (
+            <SingleBlock
+              key={info.block.id}
+              info={info}
+              padding={padding}
+              lineHeight={lineHeight}
+              showLineNumbers={showLineNumbers}
+              lineNumberWidth={lineNumberWidth}
+              highlights={highlights}
+              cursor={cursor}
+              measureText={measureText}
+              tokenCache={tokenCache}
+              tokenStyles={tokenStyles}
+              fontFamily={fontFamily}
+              fontSize={fontSize}
+            />
+          ))
+        )}
       </svg>
     );
   };
 
+  // Viewport mode with canvas scroll overlay
+  if (isViewportMode && isCanvasMode) {
+    const docHeight = documentHeight ?? totalHeight;
+    const docWidth = documentWidth ?? canvasWidth;
+
+    return (
+      <div style={{ ...viewportContainerStyle, width: canvasWidth, height: canvasHeight }}>
+        {/* Scroll overlay for capturing scroll events */}
+        <div style={scrollOverlayStyle}>
+          {/* Spacer to create scrollable area */}
+          <div style={{ width: docWidth, height: docHeight }} />
+        </div>
+
+        {/* Fixed canvas/svg that renders content */}
+        <div style={{ ...viewportCanvasContainerStyle, width: canvasWidth, height: canvasHeight }}>
+          {renderContent()}
+        </div>
+      </div>
+    );
+  }
+
+  // Viewport text mode: use spacers with sticky canvas
+  // This creates scrollable area in parent while keeping canvas fixed in viewport
+  if (isViewportMode && !isCanvasMode) {
+    const docHeight = documentHeight ?? totalHeight;
+
+    // Sticky canvas container style
+    const stickyCanvasStyle: CSSProperties = {
+      position: "sticky",
+      top: 0,
+      overflow: "hidden",
+      height: canvasHeight,
+      width: canvasWidth,
+    };
+
+    return (
+      <div style={{ position: "relative", height: docHeight, minHeight: "100%" }}>
+        {/* Canvas stays in view with position: sticky */}
+        <div style={stickyCanvasStyle}>
+          {renderContent()}
+        </div>
+      </div>
+    );
+  }
+
+  // Legacy mode: spacer-based virtual scroll
   return (
     <div style={blockContainerStyle}>
       {topSpacerHeight > 0 && <div style={{ height: topSpacerHeight }} />}
