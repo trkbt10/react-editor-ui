@@ -12,6 +12,7 @@ import { Canvas } from "../../../canvas/Canvas/Canvas";
 import { CanvasCheckerboard } from "../../../canvas/CanvasCheckerboard/CanvasCheckerboard";
 import { CanvasGridLayer } from "../../../canvas/CanvasGridLayer/CanvasGridLayer";
 import { BoundingBox } from "../../../canvas/BoundingBox/BoundingBox";
+import { useBoundingBoxHandlers } from "../../../canvas/hooks/useBoundingBoxHandlers";
 import { Button } from "../../../components/Button/Button";
 import {
   screenToLocalDelta,
@@ -286,31 +287,30 @@ const EventLogDisplay = memo(function EventLogDisplay({
 // ============================================================================
 // INTERACTIVE SECTION - Static wrapper with state management
 // ============================================================================
+const INITIAL_TRANSFORM: TransformState = {
+  x: 100,
+  y: 100,
+  width: 200,
+  height: 150,
+  rotation: 0,
+};
+
 const InteractiveBoundingBoxSection = memo(function InteractiveBoundingBoxSection() {
-  const [transform, setTransform] = useState<TransformState>({
-    x: 100,
-    y: 100,
-    width: 200,
-    height: 150,
-    rotation: 0,
-  });
+  const [transform, setTransform] = useState<TransformState>(INITIAL_TRANSFORM);
   const [interactionLog, setInteractionLog] = useState<string[]>([]);
 
   const addLog = useCallback((message: string) => {
     setInteractionLog((prev) => [...prev.slice(-4), message]);
   }, []);
 
-  const handleMove = useCallback((deltaX: number, deltaY: number) => {
-    setTransform((prev) => ({
-      ...prev,
-      x: prev.x + deltaX,
-      y: prev.y + deltaY,
-    }));
-  }, []);
-
-  const handleResize = useCallback((handle: HandlePosition, deltaX: number, deltaY: number) => {
-    setTransform((prev) => applyResize(prev, handle, deltaX, deltaY));
-  }, []);
+  // Use the hook for correct cumulative delta handling
+  const handlers = useBoundingBoxHandlers(transform, setTransform, {
+    applyResize,
+    onMoveStart: () => addLog("Move started"),
+    onMoveEnd: () => addLog("Move ended"),
+    onResizeStart: (h) => addLog(`Resize started: ${h}`),
+    onResizeEnd: (h) => addLog(`Resize ended: ${h}`),
+  });
 
   const handleRotate = useCallback((angle: number) => {
     setTransform((prev) => ({
@@ -320,20 +320,10 @@ const InteractiveBoundingBoxSection = memo(function InteractiveBoundingBoxSectio
   }, []);
 
   const resetTransform = useCallback(() => {
-    setTransform({
-      x: 100,
-      y: 100,
-      width: 200,
-      height: 150,
-      rotation: 0,
-    });
+    setTransform(INITIAL_TRANSFORM);
     setInteractionLog([]);
   }, []);
 
-  const handleMoveStart = useCallback(() => addLog("Move started"), [addLog]);
-  const handleMoveEnd = useCallback(() => addLog("Move ended"), [addLog]);
-  const handleResizeStart = useCallback((h: HandlePosition) => addLog(`Resize started: ${h}`), [addLog]);
-  const handleResizeEnd = useCallback((h: HandlePosition) => addLog(`Resize ended: ${h}`), [addLog]);
   const handleRotateStart = useCallback(() => addLog("Rotate started"), [addLog]);
   const handleRotateEnd = useCallback(() => addLog("Rotate ended"), [addLog]);
 
@@ -346,13 +336,13 @@ const InteractiveBoundingBoxSection = memo(function InteractiveBoundingBoxSectio
       <div style={{ display: "flex", gap: 16 }}>
         <InteractiveCanvas
           transform={transform}
-          onMove={handleMove}
-          onResize={handleResize}
+          onMove={handlers.onMove}
+          onResize={handlers.onResize}
           onRotate={handleRotate}
-          onMoveStart={handleMoveStart}
-          onMoveEnd={handleMoveEnd}
-          onResizeStart={handleResizeStart}
-          onResizeEnd={handleResizeEnd}
+          onMoveStart={handlers.onMoveStart}
+          onMoveEnd={handlers.onMoveEnd}
+          onResizeStart={handlers.onResizeStart}
+          onResizeEnd={handlers.onResizeEnd}
           onRotateStart={handleRotateStart}
           onRotateEnd={handleRotateEnd}
         />

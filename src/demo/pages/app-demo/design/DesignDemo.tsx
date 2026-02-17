@@ -39,6 +39,7 @@ import {
   CanvasRulerCorner,
 } from "../../../../canvas/CanvasRuler/CanvasRuler";
 import { BoundingBox, type HandlePosition } from "../../../../canvas/BoundingBox/BoundingBox";
+import { useBoundingBoxHandlers } from "../../../../canvas/hooks/useBoundingBoxHandlers";
 
 import { TabBar } from "../../../../components/TabBar/TabBar";
 import { PropertySection } from "../../../../components/PropertySection/PropertySection";
@@ -636,9 +637,6 @@ const CanvasArea = memo(function CanvasArea({
   const [viewport, setViewport] = useState(INITIAL_VIEWPORT);
   const [transform, setTransform] = useState(INITIAL_TRANSFORM);
 
-  // Store original transform when drag starts (BoundingBox provides cumulative deltas)
-  const dragStartRef = useRef<TransformState | null>(null);
-
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
@@ -659,39 +657,10 @@ const CanvasArea = memo(function CanvasArea({
     return () => observer.disconnect();
   }, []);
 
-  // Move handlers - BoundingBox provides cumulative deltas from start position
-  const handleMoveStart = useCallback(() => {
-    dragStartRef.current = transform;
-  }, [transform]);
-
-  const handleMove = useCallback((deltaX: number, deltaY: number) => {
-    const start = dragStartRef.current;
-    if (!start) return;
-    setTransform({
-      ...start,
-      x: start.x + deltaX,
-      y: start.y + deltaY,
-    });
-  }, []);
-
-  const handleMoveEnd = useCallback(() => {
-    dragStartRef.current = null;
-  }, []);
-
-  // Resize handlers - BoundingBox provides cumulative deltas from start position
-  const handleResizeStart = useCallback(() => {
-    dragStartRef.current = transform;
-  }, [transform]);
-
-  const handleResize = useCallback((handle: HandlePosition, deltaX: number, deltaY: number) => {
-    const start = dragStartRef.current;
-    if (!start) return;
-    setTransform(applyResize(start, handle, deltaX, deltaY));
-  }, []);
-
-  const handleResizeEnd = useCallback(() => {
-    dragStartRef.current = null;
-  }, []);
+  // Use hook for correct cumulative delta handling
+  const handlers = useBoundingBoxHandlers(transform, setTransform, {
+    applyResize,
+  });
 
   const handleRotate = useCallback((angle: number) => {
     setTransform((prev) => ({ ...prev, rotation: angle }));
@@ -737,17 +706,17 @@ const CanvasArea = memo(function CanvasArea({
           width={transform.width}
           height={transform.height}
           rotation={transform.rotation}
-          onMoveStart={handleMoveStart}
-          onMove={handleMove}
-          onMoveEnd={handleMoveEnd}
-          onResizeStart={handleResizeStart}
-          onResize={handleResize}
-          onResizeEnd={handleResizeEnd}
+          onMoveStart={handlers.onMoveStart}
+          onMove={handlers.onMove}
+          onMoveEnd={handlers.onMoveEnd}
+          onResizeStart={handlers.onResizeStart}
+          onResize={handlers.onResize}
+          onResizeEnd={handlers.onResizeEnd}
           onRotate={handleRotate}
         />
       ) : null}
     </>
-  ), [selectedId, transform.x, transform.y, transform.width, transform.height, transform.rotation, handleMoveStart, handleMove, handleMoveEnd, handleResizeStart, handleResize, handleResizeEnd, handleRotate]);
+  ), [selectedId, transform.x, transform.y, transform.width, transform.height, transform.rotation, handlers, handleRotate]);
 
   return (
     <div ref={containerRef} style={canvasContainerStyle}>

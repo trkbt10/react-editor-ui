@@ -18,6 +18,7 @@ import {
 import { CanvasGuides } from "../../../canvas/CanvasGuide/CanvasGuide";
 import { CanvasCheckerboard } from "../../../canvas/CanvasCheckerboard/CanvasCheckerboard";
 import { BoundingBox, type HandlePosition } from "../../../canvas/BoundingBox/BoundingBox";
+import { useBoundingBoxHandlers } from "../../../canvas/hooks/useBoundingBoxHandlers";
 import { Button } from "../../../components/Button/Button";
 import type { ViewportState } from "../../../canvas/core/types";
 
@@ -255,35 +256,33 @@ const RulersSection = memo(function RulersSection() {
   );
 });
 
+const INITIAL_TRANSFORM: TransformState = {
+  x: 100,
+  y: 100,
+  width: 200,
+  height: 150,
+  rotation: 0,
+};
+
 export function CanvasDemo() {
   const [viewport, setViewport] = useState<ViewportState>({ x: -50, y: -150, scale: 1 });
 
   // Interactive bounding box state
-  const [transform, setTransform] = useState<TransformState>({
-    x: 100,
-    y: 100,
-    width: 200,
-    height: 150,
-    rotation: 0,
-  });
-
+  const [transform, setTransform] = useState<TransformState>(INITIAL_TRANSFORM);
   const [interactionLog, setInteractionLog] = useState<string[]>([]);
 
   const addLog = useCallback((message: string) => {
     setInteractionLog((prev) => [...prev.slice(-4), message]);
   }, []);
 
-  const handleMove = useCallback((deltaX: number, deltaY: number) => {
-    setTransform((prev) => ({
-      ...prev,
-      x: prev.x + deltaX,
-      y: prev.y + deltaY,
-    }));
-  }, []);
-
-  const handleResize = useCallback((handle: HandlePosition, deltaX: number, deltaY: number) => {
-    setTransform((prev) => applyResize(prev, handle, deltaX, deltaY));
-  }, []);
+  // Use the hook for correct cumulative delta handling
+  const handlers = useBoundingBoxHandlers(transform, setTransform, {
+    applyResize,
+    onMoveStart: () => addLog("Move started"),
+    onMoveEnd: () => addLog("Move ended"),
+    onResizeStart: (h) => addLog(`Resize started: ${h}`),
+    onResizeEnd: (h) => addLog(`Resize ended: ${h}`),
+  });
 
   const handleRotate = useCallback((angle: number) => {
     setTransform((prev) => ({
@@ -293,21 +292,10 @@ export function CanvasDemo() {
   }, []);
 
   const resetTransform = useCallback(() => {
-    setTransform({
-      x: 100,
-      y: 100,
-      width: 200,
-      height: 150,
-      rotation: 0,
-    });
+    setTransform(INITIAL_TRANSFORM);
     setInteractionLog([]);
   }, []);
 
-  // Memoize event handlers for BoundingBox
-  const handleMoveStart = useCallback(() => addLog("Move started"), [addLog]);
-  const handleMoveEnd = useCallback(() => addLog("Move ended"), [addLog]);
-  const handleResizeStart = useCallback((h: HandlePosition) => addLog(`Resize started: ${h}`), [addLog]);
-  const handleResizeEnd = useCallback((h: HandlePosition) => addLog(`Resize ended: ${h}`), [addLog]);
   const handleRotateStart = useCallback(() => addLog("Rotate started"), [addLog]);
   const handleRotateEnd = useCallback(() => addLog("Rotate ended"), [addLog]);
 
@@ -323,12 +311,12 @@ export function CanvasDemo() {
           width={transform.width}
           height={transform.height}
           rotation={transform.rotation}
-          onMoveStart={handleMoveStart}
-          onMove={handleMove}
-          onMoveEnd={handleMoveEnd}
-          onResizeStart={handleResizeStart}
-          onResize={handleResize}
-          onResizeEnd={handleResizeEnd}
+          onMoveStart={handlers.onMoveStart}
+          onMove={handlers.onMove}
+          onMoveEnd={handlers.onMoveEnd}
+          onResizeStart={handlers.onResizeStart}
+          onResize={handlers.onResize}
+          onResizeEnd={handlers.onResizeEnd}
           onRotateStart={handleRotateStart}
           onRotate={handleRotate}
           onRotateEnd={handleRotateEnd}
@@ -341,12 +329,12 @@ export function CanvasDemo() {
       transform.width,
       transform.height,
       transform.rotation,
-      handleMoveStart,
-      handleMove,
-      handleMoveEnd,
-      handleResizeStart,
-      handleResize,
-      handleResizeEnd,
+      handlers.onMoveStart,
+      handlers.onMove,
+      handlers.onMoveEnd,
+      handlers.onResizeStart,
+      handlers.onResize,
+      handlers.onResizeEnd,
       handleRotateStart,
       handleRotate,
       handleRotateEnd,
