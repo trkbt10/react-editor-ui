@@ -48,10 +48,16 @@ export type NodeStroke = {
 
 export type TextAlign = "left" | "center" | "right";
 
+export type VerticalAlign = "top" | "middle" | "bottom";
+
 export type TextProperties = {
-  fontSize: number;
-  fontWeight: "normal" | "bold";
+  fontFamily: string;
+  fontWeight: string;
+  fontSize: string;
+  lineHeight: string;
+  letterSpacing: string;
   textAlign: TextAlign;
+  verticalAlign: VerticalAlign;
   color: ColorValue;
 };
 

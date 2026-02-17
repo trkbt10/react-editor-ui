@@ -77,16 +77,11 @@ async function addShapeByDrawing(page: Page): Promise<void> {
  * Helper to add a text node by entering drawing mode and drawing on canvas.
  */
 async function addTextByDrawing(page: Page): Promise<void> {
-  // Select Text from dropdown first
-  const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
-  await dropdownToggle.click();
-  const textOption = page.locator('[role="option"]:has-text("Text")');
-  await expect(textOption).toBeVisible();
-  await textOption.click();
+  // Click the Text tool button to enter text drawing mode
+  const textToolButton = page.locator('button[aria-label="Text tool"]');
+  await textToolButton.click();
 
-  // Click the main shape button to enter drawing mode
-  const mainButton = page.locator('button[aria-label="Add shape"]');
-  await mainButton.click();
+  // Draw on canvas
   await drawOnCanvas(page);
 }
 

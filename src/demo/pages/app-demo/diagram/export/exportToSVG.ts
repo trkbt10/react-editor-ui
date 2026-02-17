@@ -363,13 +363,14 @@ function generateTextPartSVG(
   const textX = instance.width / 2;
   const textY = instance.height / 2;
   const textColor = colorToHex(part.textProps.color);
-  const fontSize = Math.round(part.textProps.fontSize * Math.min(scaleX, scaleY));
+  const baseFontSize = parseFloat(part.textProps.fontSize) || 14;
+  const fontSize = Math.round(baseFontSize * Math.min(scaleX, scaleY));
 
   return `
     <text x="${textX}" y="${textY}"
       text-anchor="middle"
       dominant-baseline="middle"
-      font-family="system-ui, -apple-system, sans-serif"
+      font-family="${part.textProps.fontFamily || "system-ui, -apple-system, sans-serif"}"
       font-size="${fontSize}"
       font-weight="${part.textProps.fontWeight}"
       fill="${textColor}">${escapeXML(part.content)}</text>`;

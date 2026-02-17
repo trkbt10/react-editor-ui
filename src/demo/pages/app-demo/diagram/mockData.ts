@@ -103,9 +103,13 @@ export const defaultStroke = {
 };
 
 export const defaultTextProps: TextProperties = {
-  fontSize: 14,
-  fontWeight: "normal",
+  fontFamily: "Inter",
+  fontWeight: "400",
+  fontSize: "14px",
+  lineHeight: "1.5",
+  letterSpacing: "0px",
   textAlign: "center",
+  verticalAlign: "middle",
   color: { hex: "#333333", opacity: 100, visible: true },
 };
 

@@ -24,6 +24,8 @@ import { SizeSection } from "../../../../../sections/SizeSection/SizeSection";
 import { RotationSection } from "../../../../../sections/RotationSection/RotationSection";
 import { ExportSection, type ExportSectionData } from "../../../../../sections/ExportSection/ExportSection";
 import { StrokeSection } from "../../../../../sections/StrokeSection/StrokeSection";
+import { TypographySection } from "../../../../../sections/TypographySection/TypographySection";
+import type { TypographyData } from "../../../../../sections/TypographySection/types";
 import type { StrokeData, StrokeTab, BrushDirection as StrokeBrushDirection } from "../../../../../sections/StrokeSection/types";
 import type { JoinType as StrokeJoinType } from "../../../../../components/StrokeJoinControl/StrokeJoinControl";
 import type { WidthProfile as StrokeWidthProfile } from "../../../../../components/StrokeWidthProfileSelect/StrokeWidthProfileSelect";
@@ -480,6 +482,28 @@ export const DiagramInspector = memo(function DiagramInspector() {
           nodes.map((n) =>
             n.id === nodeId && isTextNode(n)
               ? { ...n, textProps: { ...n.textProps, color } }
+              : n,
+          ),
+        );
+      },
+      // For TextNode typography (via TypographySection)
+      setTypography: (data: TypographyData) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isTextNode(n)
+              ? {
+                  ...n,
+                  textProps: {
+                    ...n.textProps,
+                    fontFamily: data.fontFamily,
+                    fontWeight: data.fontWeight,
+                    fontSize: data.fontSize,
+                    lineHeight: data.lineHeight,
+                    letterSpacing: data.letterSpacing,
+                    textAlign: data.textAlign as import("../types").TextAlign,
+                    verticalAlign: data.verticalAlign as import("../types").VerticalAlign,
+                  },
+                }
               : n,
           ),
         );
@@ -1050,16 +1074,33 @@ export const DiagramInspector = memo(function DiagramInspector() {
             </>
           )}
 
-          {/* Text Color (only for text nodes) */}
+          {/* Typography (only for text nodes) */}
           {isTextNode(selectedNode) && (
-            <PropertySection title="Text Color">
-              <ColorInput
-                value={selectedNode.textProps.color}
-                onChange={nodeHandlers.setTextColor}
-                size="sm"
-                showVisibilityToggle
-              />
-            </PropertySection>
+            <>
+              <PropertySection title="Typography">
+                <TypographySection
+                  data={{
+                    fontFamily: selectedNode.textProps.fontFamily,
+                    fontWeight: selectedNode.textProps.fontWeight,
+                    fontSize: selectedNode.textProps.fontSize,
+                    lineHeight: selectedNode.textProps.lineHeight,
+                    letterSpacing: selectedNode.textProps.letterSpacing,
+                    textAlign: selectedNode.textProps.textAlign,
+                    verticalAlign: selectedNode.textProps.verticalAlign,
+                  }}
+                  onChange={nodeHandlers.setTypography}
+                  showFontIcon="never"
+                />
+              </PropertySection>
+              <PropertySection title="Text Color">
+                <ColorInput
+                  value={selectedNode.textProps.color}
+                  onChange={nodeHandlers.setTextColor}
+                  size="sm"
+                  showVisibilityToggle
+                />
+              </PropertySection>
+            </>
           )}
 
           {/* Frame Fill & Stroke */}
