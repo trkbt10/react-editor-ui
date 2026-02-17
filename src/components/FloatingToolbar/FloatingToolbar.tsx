@@ -38,6 +38,11 @@ import { Z_POPOVER } from "../../constants/styles";
 const DEFAULT_TOOLBAR_WIDTH = 200;
 const DEFAULT_TOOLBAR_HEIGHT = 36;
 
+/** Prevent text deselection on pointer down - defined outside to avoid recreating */
+const handlePointerDown = (e: React.PointerEvent) => {
+  e.preventDefault();
+};
+
 // =============================================================================
 // Sub-components
 // =============================================================================
@@ -71,7 +76,14 @@ const OperationButton = memo(function OperationButton({
     [id, onSelect],
   );
 
-  const tooltipContent = shortcut ? `${label} (${shortcut})` : label;
+  // Memoize tooltip content to prevent Tooltip re-renders
+  const tooltipContent = useMemo(
+    () => (shortcut ? `${label} (${shortcut})` : label),
+    [label, shortcut],
+  );
+
+  // Memoize variant to prevent unnecessary comparisons
+  const variant = active ? "selected" : "default";
 
   return (
     <Tooltip content={tooltipContent} placement="top" delay={400}>
@@ -79,7 +91,7 @@ const OperationButton = memo(function OperationButton({
         icon={icon}
         aria-label={label}
         size="sm"
-        variant={active ? "selected" : "default"}
+        variant={variant}
         disabled={disabled}
         onClick={handleClick}
       />
@@ -114,10 +126,16 @@ export const FloatingToolbar = memo(function FloatingToolbar({
   });
 
   // Measure actual toolbar dimensions after render
+  // Only update if dimensions actually changed to prevent unnecessary re-renders
   useLayoutEffect(() => {
     if (toolbarRef.current) {
       const { offsetWidth, offsetHeight } = toolbarRef.current;
-      setDimensions({ width: offsetWidth, height: offsetHeight });
+      setDimensions((prev) => {
+        if (prev.width === offsetWidth && prev.height === offsetHeight) {
+          return prev;
+        }
+        return { width: offsetWidth, height: offsetHeight };
+      });
     }
   }, [operations.length]);
 
@@ -138,11 +156,6 @@ export const FloatingToolbar = memo(function FloatingToolbar({
     // Prevent pointer events from affecting the selection
     userSelect: "none",
   }), [position.x, position.y]);
-
-  // Handle pointer down to prevent text deselection
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-  }, []);
 
   if (operations.length === 0) {
     return null;
