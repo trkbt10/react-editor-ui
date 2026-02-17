@@ -8,12 +8,6 @@ import type { ImageFillValue } from "../../sections/ImageFillSection/types";
 import type { PatternFillValue } from "../../sections/PatternFillSection/types";
 import type { VideoFillValue } from "../../sections/VideoFillSection/types";
 
-// FillType is defined in utils/fill/types.ts
-// Import directly from there: import type { FillType } from "../../utils/fill/types";
-import type { FillType as FillTypeImport } from "../../utils/fill/types";
-
-export type FillType = FillTypeImport;
-
 export type SolidFillValue = {
   type: "solid";
   color: ColorValue;

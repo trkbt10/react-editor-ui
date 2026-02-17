@@ -39,7 +39,7 @@ interface ComponentEntry {
   name: string;
   entryType: "index" | "named";
   relativePath: string;
-  category: "component" | "panel" | "canvas";
+  category: "component" | "panel" | "canvas" | "editor";
 }
 
 interface EntryCatalog {
@@ -138,6 +138,8 @@ function getExportPath(entry: ComponentEntry): string {
       return `react-editor-ui/panels/${entry.name}`;
     case "canvas":
       return `react-editor-ui/canvas/${entry.name}`;
+    case "editor":
+      return `react-editor-ui/editors/${entry.name}`;
     default:
       return `react-editor-ui/${entry.name}`;
   }

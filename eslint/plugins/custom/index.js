@@ -21,6 +21,7 @@ import noPanelsInSections from "./rules/no-panels-in-sections.js";
 import noSectionsInComponents from "./rules/no-sections-in-components.js";
 import noCanvasImport from "./rules/no-canvas-import.js";
 import noInlineHandlerInMap from "./rules/no-inline-handler-in-map.js";
+import noRedundantTypeAlias from "./rules/no-redundant-type-alias.js";
 
 export default {
   rules: {
@@ -44,5 +45,6 @@ export default {
     "no-sections-in-components": noSectionsInComponents,
     "no-canvas-import": noCanvasImport,
     "no-inline-handler-in-map": noInlineHandlerInMap,
+    "no-redundant-type-alias": noRedundantTypeAlias,
   },
 };

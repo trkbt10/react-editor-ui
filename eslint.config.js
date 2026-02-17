@@ -73,6 +73,7 @@ export default [
         "custom/prefer-pointer-events": "warn",
         "custom/no-iife": "error",
         "custom/no-inline-handler-in-map": "warn",
+        "custom/no-redundant-type-alias": "error",
         // Spread from modular groups
         ...rulesJSDoc,
         ...rulesRestrictedSyntax,
