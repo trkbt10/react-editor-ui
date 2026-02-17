@@ -220,5 +220,5 @@ function defineReadOnlyTests(editorType: EditorType, route: string): void {
 // Run Tests for Both Editor Types
 // =============================================================================
 
-defineReadOnlyTests("text", "/#/components/editor/text-editor");
-defineReadOnlyTests("code", "/#/components/editor/code-editor");
+defineReadOnlyTests("text", "/#/text-editor");
+defineReadOnlyTests("code", "/#/code-editor");

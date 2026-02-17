@@ -932,5 +932,5 @@ function defineCaretTests(editorType: EditorType, route: string): void {
 // Run Tests for Both Editor Types
 // =============================================================================
 
-defineCaretTests("text", "/#/components/editor/text-editor");
-defineCaretTests("code", "/#/components/editor/code-editor");
+defineCaretTests("text", "/#/text-editor");
+defineCaretTests("code", "/#/code-editor");

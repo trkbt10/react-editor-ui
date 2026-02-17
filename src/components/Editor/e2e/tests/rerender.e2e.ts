@@ -9,7 +9,7 @@
  * Uses react-scan logs to count component re-renders.
  */
 
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 
 test.describe("TextEditor Re-render Performance", () => {
   test("measure SingleBlock re-renders during cursor click", async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe("TextEditor Re-render Performance", () => {
       allLogs.push(`[${msg.type()}] ${msg.text()}`);
     });
 
-    await page.goto("http://localhost:5620/#/components/editor/text-editor-perf");
+    await page.goto("/#/text-editor-perf");
     await page.waitForTimeout(2000);
 
     // Wait for editor to render
@@ -26,7 +26,7 @@ test.describe("TextEditor Re-render Performance", () => {
 
     const editor = page.locator("div:has(> div > svg)").first();
     const box = await editor.boundingBox();
-    if (!box) throw new Error("Could not get editor bounding box");
+    if (!box) {throw new Error("Could not get editor bounding box");}
 
     // Clear logs before test
     const logsBefore = allLogs.length;
@@ -79,14 +79,14 @@ test.describe("TextEditor Re-render Performance", () => {
       allLogs.push(`[${msg.type()}] ${msg.text()}`);
     });
 
-    await page.goto("http://localhost:5620/#/components/editor/text-editor-perf");
+    await page.goto("/#/text-editor-perf");
     await page.waitForTimeout(2000);
 
     await page.waitForSelector("svg text", { timeout: 10000 });
 
     const editor = page.locator("div:has(> div > svg)").first();
     const box = await editor.boundingBox();
-    if (!box) throw new Error("Could not get editor bounding box");
+    if (!box) {throw new Error("Could not get editor bounding box");}
 
     const logsBefore = allLogs.length;
 
@@ -131,14 +131,14 @@ test.describe("TextEditor Re-render Performance", () => {
       allLogs.push(`[${msg.type()}] ${msg.text()}`);
     });
 
-    await page.goto("http://localhost:5620/#/components/editor/text-editor-perf");
+    await page.goto("/#/text-editor-perf");
     await page.waitForTimeout(2000);
 
     await page.waitForSelector("svg text", { timeout: 10000 });
 
     const editor = page.locator("div:has(> div > svg)").first();
     const box = await editor.boundingBox();
-    if (!box) throw new Error("Could not get editor bounding box");
+    if (!box) {throw new Error("Could not get editor bounding box");}
 
     // Click to focus
     await page.mouse.click(box.x + 50, box.y + 30);
@@ -174,12 +174,12 @@ test.describe("TextEditor Re-render Performance", () => {
   });
 
   test("count SVG elements in editor", async ({ page }) => {
-    await page.goto("http://localhost:5620/#/components/editor/text-editor-perf");
+    await page.goto("/#/text-editor-perf");
     await page.waitForSelector("svg text", { timeout: 10000 });
 
     const elementCounts = await page.evaluate(() => {
       const svg = document.querySelector("svg");
-      if (!svg) return { error: "No SVG found" };
+      if (!svg) {return { error: "No SVG found" };}
 
       const counts: Record<string, number> = {};
       const countElements = (el: Element) => {

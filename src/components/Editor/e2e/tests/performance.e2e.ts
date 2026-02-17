@@ -6,9 +6,15 @@
 
 import { test, expect } from "@playwright/test";
 
+/** Extended window type for performance monitoring. */
+type PerfWindow = Window & {
+  renderCounts?: number[];
+  perfObserver?: MutationObserver;
+};
+
 test.describe("TextEditor Performance", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/#/components/editor/text-editor");
+    await page.goto("/#/text-editor");
     await page.waitForSelector("textarea");
   });
 
@@ -22,9 +28,10 @@ test.describe("TextEditor Performance", () => {
 
     // Inject performance monitoring
     await page.evaluate(() => {
-      (window as unknown as { renderCounts: number[] }).renderCounts = [];
+      const win = window as PerfWindow;
+      win.renderCounts = [];
       const observer = new MutationObserver(() => {
-        (window as unknown as { renderCounts: number[] }).renderCounts.push(Date.now());
+        win.renderCounts?.push(Date.now());
       });
 
       // Observe the SVG content for mutations
@@ -53,7 +60,7 @@ test.describe("TextEditor Performance", () => {
 
     // Get mutation counts
     const renderCounts = await page.evaluate(
-      () => (window as unknown as { renderCounts: number[] }).renderCounts.length
+      () => (window as PerfWindow).renderCounts?.length ?? 0
     );
 
     // Verify text was typed
@@ -108,12 +115,12 @@ test.describe("TextEditor Performance", () => {
     await textarea.fill("Line 1\nLine 2\nLine 3");
 
     // Track cursor rect changes vs content changes
-    const metrics = await page.evaluate(() => {
+    await page.evaluate(() => {
       const cursorMutations: number[] = [];
       const contentMutations: number[] = [];
 
       const svg = document.querySelector("svg");
-      if (!svg) return { cursor: 0, content: 0 };
+      if (!svg) {return { cursor: 0, content: 0 };}
 
       const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
@@ -136,7 +143,7 @@ test.describe("TextEditor Performance", () => {
         attributes: true,
       });
 
-      (window as unknown as { perfObserver: MutationObserver }).perfObserver = observer;
+      (window as PerfWindow).perfObserver = observer;
       return { cursor: 0, content: 0 };
     });
 
@@ -152,9 +159,7 @@ test.describe("TextEditor Performance", () => {
 
     // Get final metrics
     const finalMetrics = await page.evaluate(() => {
-      const win = window as unknown as {
-        perfObserver?: MutationObserver;
-      };
+      const win = window as PerfWindow;
       win.perfObserver?.disconnect();
       return { success: true };
     });

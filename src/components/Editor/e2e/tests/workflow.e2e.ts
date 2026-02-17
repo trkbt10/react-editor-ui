@@ -643,5 +643,5 @@ function defineWorkflowTests(editorType: EditorType, route: string): void {
 // Run Tests for Both Editor Types
 // =============================================================================
 
-defineWorkflowTests("text", "/#/components/editor/text-editor");
-defineWorkflowTests("code", "/#/components/editor/code-editor");
+defineWorkflowTests("text", "/#/text-editor");
+defineWorkflowTests("code", "/#/code-editor");

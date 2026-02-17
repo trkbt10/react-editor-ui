@@ -10,7 +10,7 @@ test.describe("TextEditor Overflow Detection", () => {
   test("SVG should not overflow at narrow viewport width", async ({ page }) => {
     // Set narrow viewport to trigger overflow
     await page.setViewportSize({ width: 600, height: 600 });
-    await page.goto("/#/components/editor/text-editor");
+    await page.goto("/#/text-editor");
     await page.waitForSelector("svg text");
 
     // Find the first editor container
@@ -33,7 +33,7 @@ test.describe("TextEditor Overflow Detection", () => {
   });
 
   test("SVG should not overflow the editor container horizontally", async ({ page }) => {
-    await page.goto("/#/components/editor/text-editor");
+    await page.goto("/#/text-editor");
     await page.waitForSelector("svg text");
 
     // Find the first editor container (With Rich Text Styles section)
@@ -63,7 +63,7 @@ test.describe("TextEditor Overflow Detection", () => {
   });
 
   test("SVG width attribute should not be hardcoded larger than container", async ({ page }) => {
-    await page.goto("/#/components/editor/text-editor");
+    await page.goto("/#/text-editor");
     await page.waitForSelector("svg text");
 
     // Get the SVG width attribute
@@ -88,11 +88,11 @@ test.describe("TextEditor Overflow Detection", () => {
   test("Canvas renderer should not overflow at narrow viewport width", async ({ page }) => {
     // Set narrow viewport
     await page.setViewportSize({ width: 600, height: 600 });
-    await page.goto("/#/components/editor/text-editor");
+    await page.goto("/#/text-editor-canvas");
     await page.waitForSelector("svg text");
 
     // Switch to Canvas renderer
-    const canvasButton = page.locator("button", { hasText: "Canvas" });
+    const canvasButton = page.getByRole("button", { name: "Canvas" });
     await canvasButton.click();
 
     // Wait for canvas to render
@@ -119,7 +119,7 @@ test.describe("TextEditor Overflow Detection", () => {
   });
 
   test("editor should not have horizontal scrollbar unless content is wide", async ({ page }) => {
-    await page.goto("/#/components/editor/text-editor");
+    await page.goto("/#/text-editor");
     await page.waitForSelector("svg text");
 
     // Check for overflow in the code area

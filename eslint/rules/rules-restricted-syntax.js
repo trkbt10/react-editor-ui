@@ -5,7 +5,10 @@
 export default {
   "no-restricted-syntax": [
     "warn",
-    { selector: "ImportExpression", message: "dynamic import() is prohibited" },
+    {
+      selector: "ImportExpression:not(CallExpression[callee.name='lazy'] > ArrowFunctionExpression > ImportExpression)",
+      message: "dynamic import() is prohibited (except in lazy() for code splitting)",
+    },
     { selector: "TSImportType", message: "type import() (TS import type expression) is prohibited" },
     { selector: "TSInterfaceDeclaration", message: "Please use type instead of interface" },
     {

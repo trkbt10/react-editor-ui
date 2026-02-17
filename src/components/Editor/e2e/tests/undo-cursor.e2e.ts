@@ -389,5 +389,5 @@ function defineUndoCursorTests(editorType: EditorType, route: string): void {
 // Run Tests for Both Editor Types
 // =============================================================================
 
-defineUndoCursorTests("text", "/#/components/editor/text-editor");
-defineUndoCursorTests("code", "/#/components/editor/code-editor");
+defineUndoCursorTests("text", "/#/text-editor");
+defineUndoCursorTests("code", "/#/code-editor");

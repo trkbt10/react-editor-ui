@@ -877,5 +877,5 @@ function defineEditorTests(editorType: EditorType, route: string): void {
 // Run Tests for Both Editor Types
 // =============================================================================
 
-defineEditorTests("text", "/#/components/editor/text-editor");
-defineEditorTests("code", "/#/components/editor/code-editor");
+defineEditorTests("text", "/#/text-editor");
+defineEditorTests("code", "/#/code-editor");

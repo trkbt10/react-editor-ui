@@ -13,8 +13,8 @@ import { test, expect } from "@playwright/test";
 
 test.describe("TextEditor Canvas Renderer", () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to TextEditor demo page
-    await page.goto("/#/components/editor/text-editor");
+    // Navigate to TextEditor Canvas page
+    await page.goto("/#/text-editor-canvas");
 
     // Wait for page to load and SVG editor to render (with extended timeout for cold start)
     await page.waitForSelector("svg text", { timeout: 60000 });
@@ -40,7 +40,7 @@ test.describe("TextEditor Canvas Renderer", () => {
     const canvas = page.locator("canvas").first();
 
     // Get canvas CSS dimensions
-    const dimensions = await canvas.evaluate((el) => {
+    const dimensions = await canvas.evaluate((el: HTMLCanvasElement) => {
       const style = window.getComputedStyle(el);
       return {
         cssWidth: parseFloat(style.width),
@@ -65,7 +65,7 @@ test.describe("TextEditor Canvas Renderer", () => {
   }) => {
     const canvas = page.locator("canvas").first();
 
-    const { cssHeight, attrHeight, dpr } = await canvas.evaluate((el) => {
+    const { cssHeight, attrHeight, dpr } = await canvas.evaluate((el: HTMLCanvasElement) => {
       const style = window.getComputedStyle(el);
       return {
         cssHeight: parseFloat(style.height),
@@ -84,7 +84,7 @@ test.describe("TextEditor Canvas Renderer", () => {
   test("canvas has non-zero width", async ({ page }) => {
     const canvas = page.locator("canvas").first();
 
-    const dimensions = await canvas.evaluate((el) => {
+    const dimensions = await canvas.evaluate((el: HTMLCanvasElement) => {
       const style = window.getComputedStyle(el);
       return {
         cssWidth: parseFloat(style.width),
@@ -102,7 +102,7 @@ test.describe("TextEditor Canvas Renderer", () => {
     // Check if canvas has any non-transparent pixels (content was drawn)
     const hasContent = await canvas.evaluate((el: HTMLCanvasElement) => {
       const ctx = el.getContext("2d");
-      if (!ctx) return false;
+      if (!ctx) {return false;}
 
       // Sample a region of the canvas
       const imageData = ctx.getImageData(0, 0, el.width, el.height);
@@ -185,7 +185,7 @@ test.describe("TextEditor Canvas Renderer", () => {
     }
 
     const canvas = page.locator("canvas").first();
-    const dimensions = await canvas.evaluate((el) => {
+    const dimensions = await canvas.evaluate((el: HTMLCanvasElement) => {
       const style = window.getComputedStyle(el);
       return {
         cssHeight: parseFloat(style.height),
@@ -235,24 +235,17 @@ test.describe("TextEditor Canvas Renderer", () => {
     // Check if cursor is drawn (look for a thin vertical rectangle)
     const hasCursor = await canvas.evaluate((el: HTMLCanvasElement) => {
       const ctx = el.getContext("2d");
-      if (!ctx) return false;
+      if (!ctx) {return false;}
 
       // Sample pixels to look for cursor (black vertical line at x ~50)
       const imageData = ctx.getImageData(0, 0, el.width, el.height);
       const data = imageData.data;
 
-      // Count black pixels that could be cursor
-      let blackPixelCount = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const a = data[i + 3];
-        // Black pixel with full alpha
-        if (r === 0 && g === 0 && b === 0 && a === 255) {
-          blackPixelCount++;
-        }
-      }
+      // Count black pixels that could be cursor (black pixel with full alpha)
+      const pixelCount = data.length / 4;
+      const blackPixelCount = Array.from({ length: pixelCount }, (_, i) => i * 4)
+        .filter((i) => data[i] === 0 && data[i + 1] === 0 && data[i + 2] === 0 && data[i + 3] === 255)
+        .length;
 
       // Should have some black pixels for cursor and text
       return blackPixelCount > 10;
@@ -285,25 +278,24 @@ test.describe("TextEditor Canvas Renderer", () => {
     // Check if selection highlight is drawn (blue-ish background)
     const hasSelection = await canvas.evaluate((el: HTMLCanvasElement) => {
       const ctx = el.getContext("2d");
-      if (!ctx) return false;
+      if (!ctx) {return false;}
 
       const imageData = ctx.getImageData(0, 0, el.width, el.height);
       const data = imageData.data;
 
       // Look for selection color (rgba(51, 144, 255, 0.3) = semi-transparent blue)
       // When blended with white, this becomes approximately rgb(179, 213, 255)
-      let blueishPixelCount = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const a = data[i + 3];
-
-        // Check for blue-tinted pixels (selection highlight)
-        if (a > 0 && b > r && b > g && b > 100) {
-          blueishPixelCount++;
-        }
-      }
+      const pixelCount = data.length / 4;
+      const blueishPixelCount = Array.from({ length: pixelCount }, (_, i) => i * 4)
+        .filter((i) => {
+          const a = data[i + 3];
+          const b = data[i + 2];
+          const r = data[i];
+          const g = data[i + 1];
+          // Check for blue-tinted pixels (selection highlight)
+          return a > 0 && b > r && b > g && b > 100;
+        })
+        .length;
 
       // Should have significant number of blue pixels for selection
       return blueishPixelCount > 50;

@@ -438,5 +438,5 @@ function defineAdvancedSelectionTests(editorType: EditorType, route: string): vo
 // Run Tests for Both Editor Types
 // =============================================================================
 
-defineAdvancedSelectionTests("text", "/#/components/editor/text-editor");
-defineAdvancedSelectionTests("code", "/#/components/editor/code-editor");
+defineAdvancedSelectionTests("text", "/#/text-editor");
+defineAdvancedSelectionTests("code", "/#/code-editor");

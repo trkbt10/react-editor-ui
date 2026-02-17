@@ -51,7 +51,7 @@ async function goToDocumentEnd(page: Page) {
 
 test.describe("Editor Interaction: TextEditor", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/#/components/editor/text-editor");
+    await page.goto("/#/text-editor");
     await page.waitForSelector("svg text");
   });
 
@@ -85,7 +85,7 @@ test.describe("Editor Interaction: TextEditor", () => {
     expect(cursorsWhileFocused).toBeGreaterThan(0);
 
     // Click outside to blur (click on the page title)
-    await page.locator("h2").first().click();
+    await page.locator("h1").first().click();
     await page.waitForTimeout(100);
 
     // Cursor should disappear
@@ -438,7 +438,7 @@ test.describe("Editor Interaction: TextEditor", () => {
 
 test.describe("Editor Interaction: CodeEditor", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/#/components/editor/code-editor");
+    await page.goto("/#/code-editor");
     await page.waitForSelector("svg text");
   });
 

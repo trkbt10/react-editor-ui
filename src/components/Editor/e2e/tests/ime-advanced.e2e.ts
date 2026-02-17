@@ -411,5 +411,5 @@ function defineIMEAdvancedTests(editorType: EditorType, route: string): void {
 // Run Tests for Both Editor Types
 // =============================================================================
 
-defineIMEAdvancedTests("text", "/#/components/editor/text-editor");
-defineIMEAdvancedTests("code", "/#/components/editor/code-editor");
+defineIMEAdvancedTests("text", "/#/text-editor");
+defineIMEAdvancedTests("code", "/#/code-editor");

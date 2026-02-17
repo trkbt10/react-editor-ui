@@ -236,5 +236,5 @@ function defineIMETests(editorType: EditorType, route: string): void {
 // Run Tests for Both Editor Types
 // =============================================================================
 
-defineIMETests("text", "/#/components/editor/text-editor");
-defineIMETests("code", "/#/components/editor/code-editor");
+defineIMETests("text", "/#/text-editor");
+defineIMETests("code", "/#/code-editor");
