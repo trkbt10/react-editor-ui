@@ -282,3 +282,14 @@ export const COLOR_BOUNDING_BOX_LABEL_BG = cssVar("bounding-box-label-bg");
 export const COLOR_BOUNDING_BOX_LABEL_TEXT = cssVar("bounding-box-label-text");
 export const SIZE_BOUNDING_BOX_HANDLE = cssVar("bounding-box-handle-size");
 export const SIZE_BOUNDING_BOX_STROKE_WIDTH = cssVar("bounding-box-stroke-width");
+
+// ========================================
+// LAYER ITEM SIZES
+// ========================================
+
+export const SIZE_ACTION_BUTTON = cssVar("size-action-button");
+export const SIZE_EXPANDER = cssVar("size-expander");
+export const SIZE_CLOSE_BUTTON = cssVar("size-close-button");
+export const SIZE_DIRTY_INDICATOR = cssVar("size-dirty-indicator");
+export const SIZE_DRAG_HANDLE = cssVar("size-drag-handle");
+export const SIZE_LAYER_ITEM_HEIGHT = cssVar("size-layer-item-height");

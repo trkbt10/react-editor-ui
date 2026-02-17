@@ -173,6 +173,18 @@ export type BaseTokens = {
   "bounding-box-handle-size": string;
   /** Bounding box stroke width (1px) - selection outline thickness */
   "bounding-box-stroke-width": string;
+  /** Action button size (20px) - small icon buttons in panels */
+  "size-action-button": string;
+  /** Expander button size (16px) - tree expand/collapse toggle */
+  "size-expander": string;
+  /** Close button size (16px) - tab/panel close buttons */
+  "size-close-button": string;
+  /** Dirty indicator size (8px) - unsaved changes dot */
+  "size-dirty-indicator": string;
+  /** Drag handle size (14px) - reorder handle width */
+  "size-drag-handle": string;
+  /** Layer item min height (28px) - tree item row height */
+  "size-layer-item-height": string;
 
   // -------------------------------------------------------------------------
   // @group Font Weights
@@ -491,6 +503,12 @@ export const baseTokens: BaseTokens = {
   "canvas-ruler-size": "20px",
   "bounding-box-handle-size": "8px",
   "bounding-box-stroke-width": "1px",
+  "size-action-button": "20px",
+  "size-expander": "16px",
+  "size-close-button": "16px",
+  "size-dirty-indicator": "8px",
+  "size-drag-handle": "14px",
+  "size-layer-item-height": "28px",
 
   // Font weights
   "font-weight-normal": "400",
