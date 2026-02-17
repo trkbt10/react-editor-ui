@@ -26,8 +26,8 @@ import { CheckboxDemo } from "./pages/primitives/CheckboxDemo";
 import { SegmentedControlDemo } from "./pages/primitives/SegmentedControlDemo";
 import { ColorPickerDemo } from "./pages/primitives/ColorPickerDemo";
 import { ColorInputDemo } from "./pages/primitives/ColorInputDemo";
-import { GradientEditorDemo } from "./pages/primitives/GradientEditorDemo";
-import { FillEditorDemo } from "./pages/primitives/FillEditorDemo";
+import { GradientSectionDemo } from "./pages/primitives/GradientSectionDemo";
+import { FillPanelDemo } from "./pages/primitives/FillPanelDemo";
 import { SelectWithPreviewDemo } from "./pages/primitives/SelectWithPreviewDemo";
 import { TooltipDemo } from "./pages/primitives/TooltipDemo";
 import { SplitButtonDemo } from "./pages/primitives/SplitButtonDemo";
@@ -182,18 +182,6 @@ export const demoCategories: DemoCategory[] = [
         element: <ColorInputDemo />,
       },
       {
-        id: "gradient-editor",
-        label: "GradientEditor",
-        path: "gradient-editor",
-        element: <GradientEditorDemo />,
-      },
-      {
-        id: "fill-editor",
-        label: "FillEditor",
-        path: "fill-editor",
-        element: <FillEditorDemo />,
-      },
-      {
         id: "select-preview",
         label: "Select (Preview)",
         path: "select-preview",
@@ -293,6 +281,12 @@ export const demoCategories: DemoCategory[] = [
         path: "typography-panel",
         element: <TypographyPanelDemo />,
       },
+      {
+        id: "fill-panel",
+        label: "FillPanel",
+        path: "fill-panel",
+        element: <FillPanelDemo />,
+      },
     ],
   },
   {
@@ -354,6 +348,12 @@ export const demoCategories: DemoCategory[] = [
         label: "FontsSection",
         path: "fonts",
         element: <FontsSectionDemo />,
+      },
+      {
+        id: "gradient-section",
+        label: "GradientSection",
+        path: "gradient",
+        element: <GradientSectionDemo />,
       },
     ],
   },

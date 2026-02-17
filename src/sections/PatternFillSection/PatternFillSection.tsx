@@ -1,29 +1,26 @@
 /**
- * @file PatternEditor component - Editor for pattern fill settings
+ * @file PatternFillSection component - Section for pattern fill settings
  */
 
-import { memo, useMemo, useCallback, type CSSProperties, type PointerEvent, type KeyboardEvent } from "react";
-import { Button } from "../Button/Button";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import type { SegmentedControlOption } from "../SegmentedControl/SegmentedControl";
-import { Input } from "../Input/Input";
-import { PropertyRow } from "../PropertyRow/PropertyRow";
+import { memo, useMemo, useCallback, type CSSProperties } from "react";
+import { Button } from "../../components/Button/Button";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
+import type { SegmentedControlOption } from "../../components/SegmentedControl/SegmentedControl";
+import { Input } from "../../components/Input/Input";
+import { PropertyRow } from "../../components/PropertyRow/PropertyRow";
+import { AlignmentGrid } from "../../components/AlignmentGrid/AlignmentGrid";
+import type { AlignmentType } from "../../components/AlignmentGrid/types";
 import {
   COLOR_BORDER,
   COLOR_TEXT_MUTED,
-  COLOR_PRIMARY,
-  COLOR_HOVER,
-  COLOR_SURFACE,
   SIZE_FONT_SM,
   SPACE_SM,
   SPACE_MD,
   RADIUS_SM,
-  DURATION_FAST,
-  EASING_DEFAULT,
 } from "../../constants/styles";
-import type { PatternFillValue, TileType, AlignmentType } from "./fillTypes";
+import type { PatternFillValue, TileType } from "./types";
 
-export type PatternEditorProps = {
+export type PatternFillSectionProps = {
   value: PatternFillValue;
   onChange: (value: PatternFillValue) => void;
   onSelectSource?: () => void;
@@ -42,12 +39,6 @@ const tileTypeOptions: SegmentedControlOption<TileType>[] = [
   { value: "brick", label: "Brick" },
 ];
 
-const alignmentOptions: AlignmentType[] = [
-  "top-left", "top", "top-right",
-  "left", "center", "right",
-  "bottom-left", "bottom", "bottom-right",
-];
-
 function FolderIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -56,177 +47,7 @@ function FolderIcon() {
   );
 }
 
-// Static styles for AlignmentGrid
-const gridStyle: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: "2px",
-  width: "60px",
-  height: "60px",
-  padding: "2px",
-  borderRadius: RADIUS_SM,
-  backgroundColor: COLOR_SURFACE,
-  border: `1px solid ${COLOR_BORDER}`,
-};
-
-const dotBaseStyle: CSSProperties = {
-  width: "6px",
-  height: "6px",
-  borderRadius: "50%",
-  backgroundColor: "currentColor",
-};
-
-const dotSelectedStyle: CSSProperties = {
-  ...dotBaseStyle,
-  color: "#fff",
-};
-
-const dotUnselectedStyle: CSSProperties = {
-  ...dotBaseStyle,
-  color: COLOR_TEXT_MUTED,
-};
-
-type AlignmentCellProps = {
-  alignment: AlignmentType;
-  isSelected: boolean;
-  disabled: boolean;
-  onSelect: (alignment: AlignmentType) => void;
-};
-
-const AlignmentCell = memo(function AlignmentCell({
-  alignment,
-  isSelected,
-  disabled,
-  onSelect,
-}: AlignmentCellProps) {
-  const style = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: isSelected ? COLOR_PRIMARY : "transparent",
-      borderRadius: "2px",
-      cursor: disabled ? "not-allowed" : "pointer",
-      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-      opacity: disabled ? 0.5 : 1,
-    }),
-    [isSelected, disabled],
-  );
-
-  const handleClick = useCallback(() => {
-    if (!disabled) {
-      onSelect(alignment);
-    }
-  }, [disabled, onSelect, alignment]);
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
-      if (!disabled && (e.key === "Enter" || e.key === " ")) {
-        e.preventDefault();
-        onSelect(alignment);
-      }
-    },
-    [disabled, onSelect, alignment],
-  );
-
-  const handlePointerEnter = useCallback(
-    (e: PointerEvent<HTMLDivElement>) => {
-      if (disabled || isSelected) {
-        return;
-      }
-      e.currentTarget.style.backgroundColor = COLOR_HOVER;
-    },
-    [disabled, isSelected],
-  );
-
-  const handlePointerLeave = useCallback(
-    (e: PointerEvent<HTMLDivElement>) => {
-      if (disabled) {
-        return;
-      }
-      e.currentTarget.style.backgroundColor = isSelected ? COLOR_PRIMARY : "transparent";
-    },
-    [disabled, isSelected],
-  );
-
-  return (
-    <div
-      role="radio"
-      aria-checked={isSelected}
-      aria-label={alignment.replace("-", " ")}
-      tabIndex={disabled ? -1 : 0}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-      style={style}
-    >
-      <div style={isSelected ? dotSelectedStyle : dotUnselectedStyle} />
-    </div>
-  );
-});
-
-const AlignmentGrid = memo(function AlignmentGrid({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: AlignmentType;
-  onChange: (value: AlignmentType) => void;
-  disabled: boolean;
-}) {
-  return (
-    <div
-      role="group"
-      aria-label="Pattern alignment"
-      style={gridStyle}
-    >
-      {alignmentOptions.map((alignment) => (
-        <AlignmentCell
-          key={alignment}
-          alignment={alignment}
-          isSelected={value === alignment}
-          disabled={disabled}
-          onSelect={onChange}
-        />
-      ))}
-    </div>
-  );
-});
-
-function renderPreview(
-  hasSource: boolean,
-  sourceUrl: string,
-  previewImageStyle: CSSProperties,
-  placeholderStyle: CSSProperties,
-  iconStyle: CSSProperties,
-  textStyle: CSSProperties,
-) {
-  if (hasSource) {
-    return (
-      <img
-        src={sourceUrl}
-        alt="Pattern source preview"
-        style={previewImageStyle}
-      />
-    );
-  }
-  return (
-    <div style={placeholderStyle}>
-      <div style={iconStyle}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-      </div>
-      <span style={textStyle}>No pattern source</span>
-    </div>
-  );
-}
-
-// Static styles for PatternEditor
+// Static styles
 const previewContainerStyle: CSSProperties = {
   position: "relative",
   width: "100%",
@@ -274,13 +95,15 @@ const inputContainerStyle: CSSProperties = {
   minWidth: 0,
 };
 
-/** Pattern fill editor with tiling, scale, rotation, and offset controls */
-export const PatternEditor = memo(function PatternEditor({
+/**
+ * Pattern fill section with tiling, scale, spacing, and alignment controls.
+ */
+export const PatternFillSection = memo(function PatternFillSection({
   value,
   onChange,
   onSelectSource,
   disabled = false,
-}: PatternEditorProps) {
+}: PatternFillSectionProps) {
   const hasSource = Boolean(value.sourceUrl);
 
   const containerStyle = useMemo<CSSProperties>(
@@ -340,10 +163,35 @@ export const PatternEditor = memo(function PatternEditor({
     [onChange, value],
   );
 
+  const renderPreviewContent = () => {
+    if (hasSource) {
+      return (
+        <img
+          src={value.sourceUrl}
+          alt="Pattern source preview"
+          style={previewImageStyle}
+        />
+      );
+    }
+    return (
+      <div style={placeholderStyle}>
+        <div style={iconStyle}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+        </div>
+        <span style={textStyle}>No pattern source</span>
+      </div>
+    );
+  };
+
   return (
     <div style={containerStyle}>
       <div style={previewContainerStyle}>
-        {renderPreview(hasSource, value.sourceUrl, previewImageStyle, placeholderStyle, iconStyle, textStyle)}
+        {renderPreviewContent()}
       </div>
 
       <Button
@@ -415,6 +263,7 @@ export const PatternEditor = memo(function PatternEditor({
           value={value.alignment}
           onChange={handleAlignmentChange}
           disabled={disabled || !hasSource}
+          aria-label="Pattern alignment"
         />
       </PropertyRow>
     </div>

@@ -1,12 +1,12 @@
 /**
- * @file VideoFillEditor component - Editor for video fill settings
+ * @file VideoFillSection component - Section for video fill settings
  */
 
 import { memo, useMemo, useCallback, type CSSProperties } from "react";
-import { Input } from "../Input/Input";
-import { Checkbox } from "../Checkbox/Checkbox";
-import { Slider } from "../Slider/Slider";
-import { PropertyRow } from "../PropertyRow/PropertyRow";
+import { Input } from "../../components/Input/Input";
+import { Checkbox } from "../../components/Checkbox/Checkbox";
+import { Slider } from "../../components/Slider/Slider";
+import { PropertyRow } from "../../components/PropertyRow/PropertyRow";
 import {
   COLOR_BORDER,
   COLOR_TEXT,
@@ -16,9 +16,9 @@ import {
   SPACE_MD,
   RADIUS_SM,
 } from "../../constants/styles";
-import type { VideoFillValue } from "./fillTypes";
+import type { VideoFillValue } from "./types";
 
-export type VideoFillEditorProps = {
+export type VideoFillSectionProps = {
   value: VideoFillValue;
   onChange: (value: VideoFillValue) => void;
   disabled?: boolean;
@@ -30,39 +30,6 @@ function VideoIcon() {
       <rect x="3" y="5" width="14" height="14" rx="2" />
       <path d="M17 9L21 7V17L17 15" />
     </svg>
-  );
-}
-
-function renderPreview(
-  hasVideo: boolean,
-  url: string,
-  loop: boolean,
-  autoplay: boolean,
-  muted: boolean,
-  videoStyle: CSSProperties,
-  placeholderStyle: CSSProperties,
-  iconStyle: CSSProperties,
-  textStyle: CSSProperties,
-) {
-  if (hasVideo) {
-    return (
-      <video
-        src={url}
-        loop={loop}
-        autoPlay={autoplay}
-        muted={muted}
-        playsInline
-        style={videoStyle}
-      />
-    );
-  }
-  return (
-    <div style={placeholderStyle}>
-      <div style={iconStyle}>
-        <VideoIcon />
-      </div>
-      <span style={textStyle}>Enter video URL</span>
-    </div>
   );
 }
 
@@ -126,12 +93,14 @@ const sliderContainerStyle: CSSProperties = {
   flex: 1,
 };
 
-/** Video fill editor with URL input, sizing, and playback controls */
-export const VideoFillEditor = memo(function VideoFillEditor({
+/**
+ * Video fill section with URL input, playback controls, and opacity slider.
+ */
+export const VideoFillSection = memo(function VideoFillSection({
   value,
   onChange,
   disabled = false,
-}: VideoFillEditorProps) {
+}: VideoFillSectionProps) {
   const hasVideo = Boolean(value.url);
 
   const containerStyle = useMemo<CSSProperties>(
@@ -179,20 +148,33 @@ export const VideoFillEditor = memo(function VideoFillEditor({
     [onChange, value],
   );
 
+  const renderPreviewContent = () => {
+    if (hasVideo) {
+      return (
+        <video
+          src={value.url}
+          loop={value.loop}
+          autoPlay={value.autoplay}
+          muted={value.muted}
+          playsInline
+          style={videoStyle}
+        />
+      );
+    }
+    return (
+      <div style={placeholderStyle}>
+        <div style={iconStyle}>
+          <VideoIcon />
+        </div>
+        <span style={textStyle}>Enter video URL</span>
+      </div>
+    );
+  };
+
   return (
     <div style={containerStyle}>
       <div style={previewContainerStyle}>
-        {renderPreview(
-          hasVideo,
-          value.url,
-          value.loop,
-          value.autoplay,
-          value.muted,
-          videoStyle,
-          placeholderStyle,
-          iconStyle,
-          textStyle,
-        )}
+        {renderPreviewContent()}
       </div>
 
       <PropertyRow label="URL">

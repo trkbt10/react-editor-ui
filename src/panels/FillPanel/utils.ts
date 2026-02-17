@@ -1,27 +1,27 @@
 /**
- * @file Utility functions for fill editing
+ * @file Utility functions for FillPanel
  */
 
 import type { ColorValue } from "../../utils/color/types";
-import { createDefaultGradient } from "../GradientEditor/gradientUtils";
+import { createDefaultGradient } from "../../utils/gradient/utils";
+import type { ImageAdjustmentsData } from "../../components/ImageAdjustments/types";
+import type { ImageFillValue } from "../../sections/ImageFillSection/types";
+import type { PatternFillValue } from "../../sections/PatternFillSection/types";
+import type { VideoFillValue } from "../../sections/VideoFillSection/types";
 import type {
   FillValue,
   FillType,
-  ImageAdjustments,
-  ImageFillValue,
-  PatternFillValue,
-  VideoFillValue,
   SolidFillValue,
   GradientFillValue,
   ImageFill,
   PatternFill,
   VideoFill,
-} from "./fillTypes";
+} from "./types";
 
 /**
  * Create default image adjustments (all at 0)
  */
-export function createDefaultImageAdjustments(): ImageAdjustments {
+export function createDefaultImageAdjustments(): ImageAdjustmentsData {
   return {
     exposure: 0,
     contrast: 0,

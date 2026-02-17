@@ -9,8 +9,8 @@ import {
   COLOR_PRIMARY,
   RADIUS_SM,
 } from "../../constants/styles";
-import type { GradientValue, GradientStop } from "./gradientTypes";
-import { gradientToLinearCss, generateStopId, interpolateColor } from "./gradientUtils";
+import type { GradientValue, GradientStop } from "../../utils/gradient/types";
+import { gradientToLinearCss, generateStopId, interpolateColor } from "../../utils/gradient/utils";
 import { clamp } from "../../utils/color/clamp";
 import { createCheckerboardSVG } from "../../utils/color/checkerboard";
 
@@ -99,8 +99,10 @@ const StopHandle = memo(function StopHandle({
   );
 });
 
-
-
+/**
+ * Visual gradient bar with draggable stop handles.
+ * Double-click to add new stops.
+ */
 export const GradientBar = memo(function GradientBar({
   value,
   onChange,

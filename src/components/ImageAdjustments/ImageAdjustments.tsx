@@ -10,15 +10,15 @@ import {
   SIZE_FONT_SM,
   SPACE_SM,
 } from "../../constants/styles";
-import type { ImageAdjustments as ImageAdjustmentsType } from "./fillTypes";
+import type { ImageAdjustmentsData } from "./types";
 
 export type ImageAdjustmentsProps = {
-  value: ImageAdjustmentsType;
-  onChange: (value: ImageAdjustmentsType) => void;
+  value: ImageAdjustmentsData;
+  onChange: (value: ImageAdjustmentsData) => void;
   disabled?: boolean;
 };
 
-type AdjustmentKey = keyof ImageAdjustmentsType;
+type AdjustmentKey = keyof ImageAdjustmentsData;
 
 type AdjustmentConfig = {
   key: AdjustmentKey;
@@ -135,8 +135,10 @@ const AdjustmentSlider = memo(function AdjustmentSlider({
   );
 });
 
-/** Sliders for adjusting image exposure, contrast, saturation, temperature, and tint */
-export function ImageAdjustments({
+/**
+ * Sliders for adjusting image exposure, contrast, saturation, temperature, tint, highlights, and shadows.
+ */
+export const ImageAdjustments = memo(function ImageAdjustments({
   value,
   onChange,
   disabled = false,
@@ -164,4 +166,4 @@ export function ImageAdjustments({
       ))}
     </div>
   );
-}
+});

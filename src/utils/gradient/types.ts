@@ -2,7 +2,7 @@
  * @file Type definitions for gradient editing
  */
 
-import type { ColorValue } from "../../utils/color/types";
+import type { ColorValue } from "../color/types";
 
 export type GradientType = "linear" | "radial" | "angular" | "diamond";
 
@@ -17,9 +17,3 @@ export type GradientValue = {
   angle: number; // degrees (linear/angular)
   stops: GradientStop[];
 };
-
-export type FillType = "solid" | "gradient";
-
-export type FillValue =
-  | { type: "solid"; color: ColorValue }
-  | { type: "gradient"; gradient: GradientValue };

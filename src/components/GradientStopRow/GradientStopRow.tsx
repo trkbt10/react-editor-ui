@@ -18,7 +18,7 @@ import {
 } from "../../constants/styles";
 import { ColorInput } from "../ColorInput/ColorInput";
 import type { ColorValue } from "../../utils/color/types";
-import type { GradientStop } from "./gradientTypes";
+import type { GradientStop } from "../../utils/gradient/types";
 import { parsePercentageInput } from "../../utils/color/rangeValidation";
 
 export type GradientStopRowProps = {
@@ -33,8 +33,45 @@ export type GradientStopRowProps = {
   disabled?: boolean;
 };
 
-/** Single gradient color stop row with position, color, and remove controls */
-export const GradientStopRow = memo(function GradientStopRow({
+function areGradientStopRowPropsEqual(
+  prevProps: GradientStopRowProps,
+  nextProps: GradientStopRowProps,
+): boolean {
+  // Compare stop by actual content
+  if (prevProps.stop.id !== nextProps.stop.id) {
+    return false;
+  }
+  if (prevProps.stop.position !== nextProps.stop.position) {
+    return false;
+  }
+  if (prevProps.stop.color.hex !== nextProps.stop.color.hex) {
+    return false;
+  }
+  if (prevProps.stop.color.opacity !== nextProps.stop.color.opacity) {
+    return false;
+  }
+  if (prevProps.stop.color.visible !== nextProps.stop.color.visible) {
+    return false;
+  }
+
+  // Compare other props
+  if (prevProps.isSelected !== nextProps.isSelected) {
+    return false;
+  }
+  if (prevProps.removeDisabled !== nextProps.removeDisabled) {
+    return false;
+  }
+  if (prevProps.disabled !== nextProps.disabled) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Single gradient color stop row with position, color, and remove controls.
+ */
+const GradientStopRowInner = function GradientStopRow({
   stop,
   onChange,
   onRemove,
@@ -157,4 +194,6 @@ export const GradientStopRow = memo(function GradientStopRow({
       />
     </div>
   );
-});
+};
+
+export const GradientStopRow = memo(GradientStopRowInner, areGradientStopRowPropsEqual);

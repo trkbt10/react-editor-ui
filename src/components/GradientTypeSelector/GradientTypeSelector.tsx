@@ -3,7 +3,7 @@
  */
 
 import { memo, useCallback } from "react";
-import type { GradientType } from "./gradientTypes";
+import type { GradientType } from "../../utils/gradient/types";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import type { SegmentedControlOption } from "../SegmentedControl/SegmentedControl";
 import {
@@ -27,11 +27,9 @@ const gradientTypeOptions: SegmentedControlOption<GradientType>[] = [
   { value: "diamond", icon: <GradientDiamondIcon />, "aria-label": "Diamond gradient" },
 ];
 
-
-
-
-
-
+/**
+ * Selector for choosing gradient type (linear, radial, angular, diamond).
+ */
 export const GradientTypeSelector = memo(function GradientTypeSelector({
   value,
   onChange,

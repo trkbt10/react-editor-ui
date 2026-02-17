@@ -1,13 +1,13 @@
 /**
- * @file ImageFillEditor component - Editor for image fill settings
+ * @file ImageFillSection component - Section for image fill settings
  */
 
 import { memo, useMemo, useCallback, type CSSProperties } from "react";
-import { Button } from "../Button/Button";
-import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
-import type { SegmentedControlOption } from "../SegmentedControl/SegmentedControl";
-import { Slider } from "../Slider/Slider";
-import { PropertyRow } from "../PropertyRow/PropertyRow";
+import { Button } from "../../components/Button/Button";
+import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
+import type { SegmentedControlOption } from "../../components/SegmentedControl/SegmentedControl";
+import { Slider } from "../../components/Slider/Slider";
+import { PropertyRow } from "../../components/PropertyRow/PropertyRow";
 import {
   COLOR_BORDER,
   COLOR_TEXT,
@@ -17,10 +17,11 @@ import {
   SPACE_MD,
   RADIUS_SM,
 } from "../../constants/styles";
-import { ImageAdjustments } from "./ImageAdjustments";
-import type { ImageFillValue, ImageFillMode } from "./fillTypes";
+import { ImageAdjustments } from "../../components/ImageAdjustments/ImageAdjustments";
+import type { ImageAdjustmentsData } from "../../components/ImageAdjustments/types";
+import type { ImageFillValue, ImageFillMode } from "./types";
 
-export type ImageFillEditorProps = {
+export type ImageFillSectionProps = {
   value: ImageFillValue;
   onChange: (value: ImageFillValue) => void;
   onUpload?: () => void;
@@ -65,45 +66,6 @@ function getImageObjectFit(mode: ImageFillMode): CSSProperties["objectFit"] {
       return "none";
     }
   }
-}
-
-function renderImagePreview(
-  url: string,
-  mode: ImageFillMode,
-  previewImageStyle: CSSProperties,
-) {
-  if (!url) {
-    return null;
-  }
-  return (
-    <img
-      src={url}
-      alt="Image preview"
-      style={{
-        ...previewImageStyle,
-        objectFit: getImageObjectFit(mode),
-      }}
-    />
-  );
-}
-
-function renderPlaceholder(
-  placeholderStyle: CSSProperties,
-  iconStyle: CSSProperties,
-  textStyle: CSSProperties,
-) {
-  return (
-    <div style={placeholderStyle}>
-      <div style={iconStyle}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <circle cx="8.5" cy="8.5" r="1.5" />
-          <path d="M21 15l-5-5L5 21" />
-        </svg>
-      </div>
-      <span style={textStyle}>No image selected</span>
-    </div>
-  );
 }
 
 // Static styles
@@ -167,13 +129,15 @@ const sliderContainerStyle: CSSProperties = {
   flex: 1,
 };
 
-/** Image fill editor with sizing, positioning, and exposure/tint adjustments */
-export const ImageFillEditor = memo(function ImageFillEditor({
+/**
+ * Image fill section with sizing, positioning, and exposure/tint adjustments.
+ */
+export const ImageFillSection = memo(function ImageFillSection({
   value,
   onChange,
   onUpload,
   disabled = false,
-}: ImageFillEditorProps) {
+}: ImageFillSectionProps) {
   const hasImage = Boolean(value.url);
 
   const containerStyle = useMemo<CSSProperties>(
@@ -204,7 +168,7 @@ export const ImageFillEditor = memo(function ImageFillEditor({
   );
 
   const handleAdjustmentsChange = useCallback(
-    (adjustments: typeof value.adjustments) => {
+    (adjustments: ImageAdjustmentsData) => {
       onChange({ ...value, adjustments });
     },
     [onChange, value],
@@ -214,9 +178,29 @@ export const ImageFillEditor = memo(function ImageFillEditor({
 
   const renderPreviewContent = () => {
     if (hasImage) {
-      return renderImagePreview(value.url, value.mode, previewImageStyle);
+      return (
+        <img
+          src={value.url}
+          alt="Image preview"
+          style={{
+            ...previewImageStyle,
+            objectFit: getImageObjectFit(value.mode),
+          }}
+        />
+      );
     }
-    return renderPlaceholder(placeholderStyle, iconStyle, textStyle);
+    return (
+      <div style={placeholderStyle}>
+        <div style={iconStyle}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="M21 15l-5-5L5 21" />
+          </svg>
+        </div>
+        <span style={textStyle}>No image selected</span>
+      </div>
+    );
   };
 
   return (

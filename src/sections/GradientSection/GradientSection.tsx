@@ -1,5 +1,5 @@
 /**
- * @file GradientEditor component - Full gradient editing interface
+ * @file GradientSection component - Full gradient editing interface
  */
 
 import { memo, useState, useRef, useCallback, useMemo } from "react";
@@ -20,14 +20,14 @@ import {
   DURATION_FAST,
   EASING_DEFAULT,
 } from "../../constants/styles";
-import type { GradientValue, GradientType, GradientStop } from "./gradientTypes";
-import { generateStopId, sortStopsByPosition } from "./gradientUtils";
-import { GradientBar } from "./GradientBar";
-import { GradientStopRow } from "./GradientStopRow";
-import { GradientTypeSelector } from "./GradientTypeSelector";
+import type { GradientValue, GradientType, GradientStop } from "../../utils/gradient/types";
+import { generateStopId, sortStopsByPosition } from "../../utils/gradient/utils";
+import { GradientBar } from "../../components/GradientBar/GradientBar";
+import { GradientStopRow } from "../../components/GradientStopRow/GradientStopRow";
+import { GradientTypeSelector } from "../../components/GradientTypeSelector/GradientTypeSelector";
 import { normalizeAngle } from "../../utils/color/angleNormalization";
 
-export type GradientEditorProps = {
+export type GradientSectionProps = {
   value: GradientValue;
   onChange: (value: GradientValue) => void;
   disabled?: boolean;
@@ -50,17 +50,15 @@ function PlusIcon() {
   );
 }
 
-
-
-
-
-
-export const GradientEditor = memo(function GradientEditor({
+/**
+ * Gradient editing section with type selector, preview bar, and stop list.
+ */
+export const GradientSection = memo(function GradientSection({
   value,
   onChange,
   disabled = false,
   "aria-label": ariaLabel = "Gradient editor",
-}: GradientEditorProps) {
+}: GradientSectionProps) {
   const [selectedStopId, setSelectedStopId] = useState<string | null>(
     value.stops[0]?.id ?? null,
   );

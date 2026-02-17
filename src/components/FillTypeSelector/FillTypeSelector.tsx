@@ -5,7 +5,7 @@
 import { memo, useCallback } from "react";
 import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import type { SegmentedControlOption } from "../SegmentedControl/SegmentedControl";
-import type { FillType } from "./fillTypes";
+import type { FillType } from "../../utils/fill/types";
 import {
   FillSolidIcon,
   FillGradientIcon,
@@ -29,7 +29,9 @@ const fillTypeOptions: SegmentedControlOption<FillType>[] = [
   { value: "video", icon: <FillVideoIcon />, "aria-label": "Video fill" },
 ];
 
-/** Segmented control for selecting between solid, gradient, image, pattern, and video fills */
+/**
+ * Segmented control for selecting between solid, gradient, image, pattern, and video fills.
+ */
 export const FillTypeSelector = memo(function FillTypeSelector({
   value,
   onChange,

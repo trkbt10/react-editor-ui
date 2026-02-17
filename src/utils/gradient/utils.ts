@@ -2,10 +2,10 @@
  * @file Utility functions for gradient manipulation
  */
 
-import type { GradientStop, GradientValue, GradientType } from "./gradientTypes";
-import type { ColorValue } from "../../utils/color/types";
-import { hexToRgb, rgbToHex } from "../../utils/color/conversion";
-import { colorToRgba } from "../../utils/color/rgba";
+import type { GradientStop, GradientValue, GradientType } from "./types";
+import type { ColorValue } from "../color/types";
+import { hexToRgb, rgbToHex } from "../color/conversion";
+import { colorToRgba } from "../color/rgba";
 
 const stopIdState = { counter: 0 };
 
@@ -45,7 +45,6 @@ export function createDefaultGradient(): GradientValue {
     ],
   };
 }
-
 
 /**
  * Generate CSS gradient string from GradientValue
