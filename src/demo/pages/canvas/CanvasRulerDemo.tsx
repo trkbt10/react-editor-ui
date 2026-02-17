@@ -106,10 +106,10 @@ export function CanvasRulerDemo() {
         <div style={{ display: "inline-flex", flexDirection: "column", border: "1px solid var(--rei-color-border)" }}>
           <div style={{ display: "flex" }}>
             <CanvasRulerCorner size={20} />
-            <div style={{ width: 100, height: 20, background: "var(--rei-color-surface-alt)" }} />
+            <div style={{ width: 100, height: 20, background: "var(--rei-color-surface-raised)" }} />
           </div>
           <div style={{ display: "flex" }}>
-            <div style={{ width: 20, height: 60, background: "var(--rei-color-surface-alt)" }} />
+            <div style={{ width: 20, height: 60, background: "var(--rei-color-surface-raised)" }} />
             <div style={{ width: 100, height: 60 }} />
           </div>
         </div>

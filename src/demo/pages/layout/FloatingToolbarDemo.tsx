@@ -34,7 +34,7 @@ const surfaceStyle = {
 const selectionStyle = {
   display: "inline-block",
   padding: "4px 8px",
-  backgroundColor: "var(--rei-color-accent-bg)",
+  backgroundColor: "var(--rei-color-selected)",
   borderRadius: 4,
   fontSize: 14,
   userSelect: "none" as const,
@@ -104,7 +104,7 @@ export function FloatingToolbarDemo() {
       <DemoSection label="Interactive Demo">
         <div style={{ ...surfaceStyle, height: 200 }}>
           <div style={{ padding: 16 }}>
-            <p style={{ fontSize: 13, color: "var(--rei-color-text-secondary)", marginBottom: 12 }}>
+            <p style={{ fontSize: 13, color: "var(--rei-color-text-muted)", marginBottom: 12 }}>
               Click the operations in the toolbar to toggle formatting. The toolbar appears above the simulated selection.
             </p>
             <div ref={anchorRef} style={selectionStyle}>

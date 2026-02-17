@@ -19,9 +19,10 @@ import {
   SIZE_FONT_SM,
   SIZE_BADGE_SM,
   SIZE_BADGE_MD,
-  SPACE_2XS,
   SPACE_XS,
   SPACE_SM,
+  SPACE_MD,
+  SPACE_LG,
 } from "../../constants/styles";
 
 export type BadgeProps = {
@@ -57,12 +58,12 @@ const variantStyles = {
 const sizeStyles = {
   sm: {
     fontSize: SIZE_FONT_XS,
-    padding: `${SPACE_2XS} ${SPACE_XS}`,
+    padding: `${SPACE_XS} ${SPACE_MD}`,
     minHeight: SIZE_BADGE_SM,
   },
   md: {
     fontSize: SIZE_FONT_SM,
-    padding: `${SPACE_XS} ${SPACE_SM}`,
+    padding: `${SPACE_SM} ${SPACE_LG}`,
     minHeight: SIZE_BADGE_MD,
   },
 };

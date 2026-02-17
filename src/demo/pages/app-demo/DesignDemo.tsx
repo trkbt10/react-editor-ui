@@ -1149,7 +1149,7 @@ export function DesignDemo() {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "var(--rei-color-surface-sunken)",
+    backgroundColor: "var(--rei-color-surface-overlay)",
     overflow: "hidden",
   }), []);
 
