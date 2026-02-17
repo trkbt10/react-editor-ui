@@ -318,9 +318,9 @@ export const GradientEditor = memo(function GradientEditor({
             key={stop.id}
             stop={stop}
             onChange={handleStopChange}
-            onRemove={() => handleStopRemove(stop.id)}
+            onRemove={handleStopRemove}
             isSelected={stop.id === selectedStopId}
-            onSelect={() => setSelectedStopId(stop.id)}
+            onSelect={setSelectedStopId}
             removeDisabled={value.stops.length <= 2}
             disabled={disabled}
           />

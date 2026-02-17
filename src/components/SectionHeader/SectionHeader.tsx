@@ -16,6 +16,21 @@ import {
   EASING_DEFAULT,
 } from "../../constants/styles";
 
+const titleStyle: CSSProperties = {
+  flex: 1,
+  color: COLOR_TEXT,
+  fontSize: SIZE_FONT_SM,
+  fontWeight: FONT_WEIGHT_SEMIBOLD,
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+};
+
+const actionStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  marginLeft: SPACE_SM,
+};
+
 const ChevronIcon = memo(function ChevronIcon({
   isExpanded,
 }: {
@@ -86,27 +101,6 @@ export const SectionHeader = memo(function SectionHeader({
       backgroundColor: collapsible && isHovered ? COLOR_HOVER : "transparent",
     }),
     [collapsible, isHovered],
-  );
-
-  const titleStyle = useMemo<CSSProperties>(
-    () => ({
-      flex: 1,
-      color: COLOR_TEXT,
-      fontSize: SIZE_FONT_SM,
-      fontWeight: FONT_WEIGHT_SEMIBOLD,
-      textTransform: "uppercase",
-      letterSpacing: "0.05em",
-    }),
-    [],
-  );
-
-  const actionStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      alignItems: "center",
-      marginLeft: SPACE_SM,
-    }),
-    [],
   );
 
   const handleClick = useCallback(() => {

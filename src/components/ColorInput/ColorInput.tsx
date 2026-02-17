@@ -2,7 +2,7 @@
  * @file ColorInput component - Compact color input with swatch
  */
 
-import { useState, useRef, useEffect, useEffectEvent, useMemo } from "react";
+import { useState, useRef, useEffect, useEffectEvent, useMemo, useCallback, memo } from "react";
 import type { CSSProperties, PointerEvent, ChangeEvent } from "react";
 import {
   COLOR_INPUT_BG,
@@ -121,7 +121,7 @@ function MinusIcon({ size }: IconProps) {
 }
 
 /** Compact color input with swatch preview, hex input, and color picker popup */
-export function ColorInput({
+export const ColorInput = memo(function ColorInput({
   value,
   onChange,
   showVisibilityToggle = false,
@@ -178,16 +178,16 @@ export function ColorInput({
     };
   }, [showPicker]);
 
-  const handleSwatchClick = () => {
+  const handleSwatchClick = useCallback(() => {
     if (disabled) {
       return;
     }
-    setShowPicker(!showPicker);
-  };
+    setShowPicker((prev) => !prev);
+  }, [disabled]);
 
-  const handleColorChange = (hex: string) => {
+  const handleColorChange = useCallback((hex: string) => {
     onChange({ ...value, hex });
-  };
+  }, [onChange, value]);
 
   const handleHexInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newHex = e.target.value;
@@ -219,29 +219,29 @@ export function ColorInput({
     }
   };
 
-  const handleVisibilityToggle = () => {
+  const handleVisibilityToggle = useCallback(() => {
     if (disabled) {
       return;
     }
     onChange({ ...value, visible: !value.visible });
-  };
+  }, [disabled, onChange, value]);
 
-  const handleRemove = () => {
+  const handleRemove = useCallback(() => {
     if (disabled) {
       return;
     }
     onRemove?.();
-  };
+  }, [disabled, onRemove]);
 
-  const handleIconPointerEnter = (e: PointerEvent<HTMLButtonElement>) => {
+  const handleIconPointerEnter = useCallback((e: PointerEvent<HTMLButtonElement>) => {
     if (!disabled) {
       e.currentTarget.style.color = COLOR_ICON_HOVER;
     }
-  };
+  }, [disabled]);
 
-  const handleIconPointerLeave = (e: PointerEvent<HTMLButtonElement>) => {
+  const handleIconPointerLeave = useCallback((e: PointerEvent<HTMLButtonElement>) => {
     e.currentTarget.style.color = COLOR_ICON;
-  };
+  }, []);
 
   // Container wrapping everything
   const containerStyle: CSSProperties = {
@@ -438,7 +438,7 @@ export function ColorInput({
       {renderPicker(showPicker, pickerContainerStyle, value.hex, handleColorChange)}
     </div>
   );
-}
+});
 
 function getVisibilityAriaLabel(visible: boolean): string {
   if (visible) {

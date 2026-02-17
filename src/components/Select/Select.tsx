@@ -23,7 +23,7 @@
  * ```
  */
 
-import { memo, useState, useRef, useEffect, useEffectEvent, useLayoutEffect, type CSSProperties, type ReactNode } from "react";
+import { memo, useState, useRef, useEffect, useEffectEvent, useLayoutEffect, useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
 import { Portal } from "../Portal/Portal";
 import {
   COLOR_INPUT_BG,
@@ -85,8 +85,73 @@ const sizeMap = {
   lg: { height: SIZE_HEIGHT_LG, fontSize: SIZE_FONT_SM, padding: SPACE_LG },
 };
 
+// =============================================================================
+// Option Sub-component
+// =============================================================================
 
+type SelectOptionItemProps<T extends string> = {
+  option: SelectOption<T>;
+  index: number;
+  isSelected: boolean;
+  isFocused: boolean;
+  sizeConfig: typeof sizeMap.md;
+  onOptionClick: (value: T, disabled?: boolean) => void;
+  onOptionHover: (index: number) => void;
+};
 
+const optionPreviewStyle: CSSProperties = {
+  flex: 1,
+  display: "flex",
+  alignItems: "center",
+};
+
+const SelectOptionItem = memo(function SelectOptionItem<T extends string>({
+  option,
+  index,
+  isSelected,
+  isFocused,
+  sizeConfig,
+  onOptionClick,
+  onOptionHover,
+}: SelectOptionItemProps<T>) {
+  const handleClick = useCallback(() => {
+    onOptionClick(option.value, option.disabled);
+  }, [onOptionClick, option.value, option.disabled]);
+
+  const handlePointerEnter = useCallback(() => {
+    onOptionHover(index);
+  }, [onOptionHover, index]);
+
+  const style = useMemo<CSSProperties>(() => ({
+    display: "flex",
+    alignItems: "center",
+    padding: `${SPACE_SM} ${sizeConfig.padding}`,
+    backgroundColor: getOptionBackground(isSelected, isFocused),
+    color: option.disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
+    fontSize: sizeConfig.fontSize,
+    cursor: option.disabled ? "not-allowed" : "pointer",
+    opacity: option.disabled ? 0.5 : 1,
+    gap: SPACE_SM,
+  }), [sizeConfig.padding, sizeConfig.fontSize, isSelected, isFocused, option.disabled]);
+
+  return (
+    <div
+      role="option"
+      aria-selected={isSelected}
+      aria-disabled={option.disabled}
+      onClick={handleClick}
+      onPointerEnter={handlePointerEnter}
+      style={style}
+    >
+      {option.preview && (
+        <div style={optionPreviewStyle}>
+          {option.preview}
+        </div>
+      )}
+      {option.label && <span>{option.label}</span>}
+    </div>
+  );
+}) as <T extends string>(props: SelectOptionItemProps<T>) => React.ReactElement;
 
 
 
@@ -207,7 +272,7 @@ export const Select = memo(function Select<T extends string = string>({
     }
   };
 
-  const triggerStyle: CSSProperties = {
+  const triggerStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -225,18 +290,18 @@ export const Select = memo(function Select<T extends string = string>({
     outline: "none",
     boxShadow: isOpen ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
     gap: SPACE_SM,
-  };
+  }), [sizeConfig.height, sizeConfig.padding, sizeConfig.fontSize, isOpen, selectedOption, disabled]);
 
-  const previewContainerStyle: CSSProperties = {
+  const previewContainerStyle = useMemo<CSSProperties>(() => ({
     flex: 1,
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-start",
     minWidth: 0,
     overflow: "hidden",
-  };
+  }), []);
 
-  const dropdownStyle: CSSProperties = {
+  const dropdownStyle = useMemo<CSSProperties>(() => ({
     position: "absolute",
     top: dropdownPosition.top,
     left: dropdownPosition.left,
@@ -251,29 +316,50 @@ export const Select = memo(function Select<T extends string = string>({
     ...(dropdownPosition.openUpward && {
       transform: "translateY(-100%)",
     }),
-  };
+  }), [dropdownPosition]);
 
-  const getOptionStyle = (
-    isSelected: boolean,
-    isFocused: boolean,
-    isDisabled: boolean,
-  ): CSSProperties => ({
+  const handleTriggerClick = useCallback(() => {
+    if (!disabled) {
+      setIsOpen((prev) => !prev);
+    }
+  }, [disabled]);
+
+  const handleOptionClick = useCallback((optionValue: T, optionDisabled?: boolean) => {
+    if (!optionDisabled) {
+      onChange(optionValue);
+      setIsOpen(false);
+    }
+  }, [onChange]);
+
+  const handleOptionHover = useCallback((index: number) => {
+    setFocusedIndex(index);
+  }, []);
+
+  const containerStyle = useMemo<CSSProperties>(() => ({
+    position: "relative",
+    width: "100%",
+  }), []);
+
+  const labelStyle = useMemo<CSSProperties>(() => ({
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  }), []);
+
+  const chevronStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
-    alignItems: "center",
-    padding: `${SPACE_SM} ${sizeConfig.padding}`,
-    backgroundColor: getOptionBackground(isSelected, isFocused),
-    color: isDisabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
-    fontSize: sizeConfig.fontSize,
-    cursor: isDisabled ? "not-allowed" : "pointer",
-    opacity: isDisabled ? 0.5 : 1,
-    gap: SPACE_SM,
-  });
+    flexShrink: 0,
+    color: COLOR_ICON,
+    transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+    transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
+  }), [isOpen]);
+
 
   return (
     <div
       ref={containerRef}
       className={className}
-      style={{ position: "relative", width: "100%" }}
+      style={containerStyle}
     >
       <button
         type="button"
@@ -282,29 +368,17 @@ export const Select = memo(function Select<T extends string = string>({
         aria-haspopup="listbox"
         aria-label={ariaLabel}
         disabled={disabled}
-        onClick={() => {
-          if (!disabled) {
-            setIsOpen(!isOpen);
-          }
-        }}
+        onClick={handleTriggerClick}
         onKeyDown={handleKeyDown}
         style={triggerStyle}
       >
         {selectedOption?.preview && <div style={previewContainerStyle}>{selectedOption.preview}</div>}
         {!selectedOption?.preview && (
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={labelStyle}>
             {selectedOption?.label ?? placeholder}
           </span>
         )}
-        <span
-          style={{
-            display: "flex",
-            flexShrink: 0,
-            color: COLOR_ICON,
-            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-            transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
-          }}
-        >
+        <span style={chevronStyle}>
           <svg
             width="12"
             height="12"
@@ -321,31 +395,16 @@ export const Select = memo(function Select<T extends string = string>({
         <Portal>
           <div ref={dropdownRef} role="listbox" style={dropdownStyle}>
             {options.map((option, index) => (
-              <div
+              <SelectOptionItem
                 key={option.value}
-                role="option"
-                aria-selected={option.value === value}
-                aria-disabled={option.disabled}
-                onClick={() => {
-                  if (!option.disabled) {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }
-                }}
-                onPointerEnter={() => setFocusedIndex(index)}
-                style={getOptionStyle(
-                  option.value === value,
-                  index === focusedIndex,
-                  option.disabled ?? false,
-                )}
-              >
-                {option.preview && (
-                  <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-                    {option.preview}
-                  </div>
-                )}
-                {option.label && <span>{option.label}</span>}
-              </div>
+                option={option}
+                index={index}
+                isSelected={option.value === value}
+                isFocused={index === focusedIndex}
+                sizeConfig={sizeConfig}
+                onOptionClick={handleOptionClick}
+                onOptionHover={handleOptionHover}
+              />
             ))}
           </div>
         </Portal>

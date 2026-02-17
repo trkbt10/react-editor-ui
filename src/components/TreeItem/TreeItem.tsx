@@ -20,6 +20,19 @@ import {
 } from "../../constants/styles";
 import { ChevronRightIcon } from "../../icons";
 
+const iconStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  marginRight: SPACE_SM,
+  color: COLOR_ICON,
+  flexShrink: 0,
+};
+
+const badgeStyle: CSSProperties = {
+  marginLeft: SPACE_SM,
+  flexShrink: 0,
+};
+
 type ExpanderProps = {
   hasChildren: boolean;
   expanded: boolean;
@@ -152,17 +165,6 @@ export const TreeItem = memo(
       [expanded],
     );
 
-    const iconStyle = useMemo<CSSProperties>(
-      () => ({
-        display: "flex",
-        alignItems: "center",
-        marginRight: SPACE_SM,
-        color: COLOR_ICON,
-        flexShrink: 0,
-      }),
-      [],
-    );
-
     const labelStyle = useMemo<CSSProperties>(
       () => ({
         flex: 1,
@@ -174,14 +176,6 @@ export const TreeItem = memo(
         textOverflow: "ellipsis",
       }),
       [selected],
-    );
-
-    const badgeStyle = useMemo<CSSProperties>(
-      () => ({
-        marginLeft: SPACE_SM,
-        flexShrink: 0,
-      }),
-      [],
     );
 
     const handlePointerEnter = useCallback(() => {

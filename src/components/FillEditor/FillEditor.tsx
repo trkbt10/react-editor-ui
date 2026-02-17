@@ -2,7 +2,7 @@
  * @file FillEditor component - Switch between solid, gradient, image, pattern, and video fill modes
  */
 
-import type { CSSProperties } from "react";
+import { memo, useCallback, type CSSProperties } from "react";
 import { SPACE_MD } from "../../constants/styles";
 import { ColorInput } from "../ColorInput/ColorInput";
 import type { ColorValue } from "../ColorInput/ColorInput";
@@ -37,7 +37,7 @@ export type FillEditorProps = {
 };
 
 /** Editor panel that switches between solid, gradient, image, pattern, and video fill types */
-export function FillEditor({
+export const FillEditor = memo(function FillEditor({
   value,
   onChange,
   onImageUpload,
@@ -45,7 +45,7 @@ export function FillEditor({
   disabled = false,
   "aria-label": ariaLabel = "Fill editor",
 }: FillEditorProps) {
-  const handleTypeChange = (newType: FillType) => {
+  const handleTypeChange = useCallback((newType: FillType) => {
     if (newType === value.type) {
       return;
     }
@@ -77,37 +77,27 @@ export function FillEditor({
         break;
       }
     }
-  };
+  }, [value, onChange]);
 
-  const handleSolidColorChange = (color: ColorValue) => {
-    if (value.type === "solid") {
-      onChange({ type: "solid", color });
-    }
-  };
+  const handleSolidColorChange = useCallback((color: ColorValue) => {
+    onChange({ type: "solid", color });
+  }, [onChange]);
 
-  const handleGradientChange = (gradient: GradientValue) => {
-    if (value.type === "gradient") {
-      onChange({ type: "gradient", gradient });
-    }
-  };
+  const handleGradientChange = useCallback((gradient: GradientValue) => {
+    onChange({ type: "gradient", gradient });
+  }, [onChange]);
 
-  const handleImageChange = (image: ImageFillValue) => {
-    if (value.type === "image") {
-      onChange({ type: "image", image });
-    }
-  };
+  const handleImageChange = useCallback((image: ImageFillValue) => {
+    onChange({ type: "image", image });
+  }, [onChange]);
 
-  const handlePatternChange = (pattern: PatternFillValue) => {
-    if (value.type === "pattern") {
-      onChange({ type: "pattern", pattern });
-    }
-  };
+  const handlePatternChange = useCallback((pattern: PatternFillValue) => {
+    onChange({ type: "pattern", pattern });
+  }, [onChange]);
 
-  const handleVideoChange = (video: VideoFillValue) => {
-    if (value.type === "video") {
-      onChange({ type: "video", video });
-    }
-  };
+  const handleVideoChange = useCallback((video: VideoFillValue) => {
+    onChange({ type: "video", video });
+  }, [onChange]);
 
   const containerStyle: CSSProperties = {
     display: "flex",
@@ -142,7 +132,7 @@ export function FillEditor({
       )}
     </div>
   );
-}
+});
 
 function renderFillContent(
   value: FillValue,

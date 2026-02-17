@@ -4,7 +4,7 @@
  */
 
 import type { ReactNode, CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent, KeyboardEvent, DragEvent } from "react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { memo, useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   COLOR_HOVER,
   COLOR_SELECTED,
@@ -32,19 +32,97 @@ import type { ContextMenuItem } from "../ContextMenu/ContextMenu";
 import { EyeIcon, LockIcon, DragHandleIcon, ChevronRightIcon } from "../../icons";
 
 // ChevronIcon wrapper for expand/collapse with rotation
-function ChevronIcon({ expanded }: { expanded: boolean }) {
+const ChevronIcon = memo(function ChevronIcon({ expanded }: { expanded: boolean }) {
+  const style = useMemo<CSSProperties>(
+    () => ({
+      display: "inline-flex",
+      transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+      transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
+    }),
+    [expanded],
+  );
+
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
-        transition: `transform ${DURATION_FAST} ${EASING_DEFAULT}`,
-      }}
-    >
+    <span style={style}>
       <ChevronRightIcon size={12} />
     </span>
   );
-}
+});
+
+// ========================================
+// STATIC STYLES
+// ========================================
+
+const expanderStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "16px",
+  height: "16px",
+  marginRight: SPACE_XS,
+  color: COLOR_ICON,
+  cursor: "pointer",
+  flexShrink: 0,
+};
+
+const iconStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  marginRight: SPACE_SM,
+  color: COLOR_ICON,
+  flexShrink: 0,
+};
+
+const inputStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  color: COLOR_TEXT,
+  fontSize: SIZE_FONT_SM,
+  backgroundColor: COLOR_INPUT_BG,
+  border: `1px solid ${COLOR_INPUT_BORDER_FOCUS}`,
+  borderRadius: RADIUS_SM,
+  padding: `${SPACE_XS} ${SPACE_SM}`,
+  outline: "none",
+  margin: `-${SPACE_XS} 0`,
+};
+
+const actionButtonStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "20px",
+  height: "20px",
+  padding: 0,
+  border: "none",
+  background: "transparent",
+  cursor: "pointer",
+  color: COLOR_ICON,
+  borderRadius: RADIUS_SM,
+  transition: `color ${DURATION_FAST} ${EASING_DEFAULT}, background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+  flexShrink: 0,
+  marginLeft: SPACE_XS,
+};
+
+const activeActionStyle: CSSProperties = {
+  ...actionButtonStyle,
+  color: COLOR_ICON_ACTIVE,
+};
+
+const hiddenActionStyle: CSSProperties = {
+  ...actionButtonStyle,
+  color: COLOR_TEXT_DISABLED,
+};
+
+const badgeStyle: CSSProperties = {
+  marginLeft: SPACE_SM,
+  flexShrink: 0,
+};
+
+const expanderPlaceholderStyle: CSSProperties = {
+  width: "16px",
+  marginRight: SPACE_XS,
+  flexShrink: 0,
+};
 
 // ========================================
 // TYPES
@@ -136,7 +214,7 @@ export type LayerItemProps = {
 // ========================================
 
 /** Layer panel item row with expand/collapse, visibility, lock, and drag handle */
-export function LayerItem({
+export const LayerItem = memo(function LayerItem({
   id,
   label,
   icon,
@@ -235,210 +313,174 @@ export function LayerItem({
     }
   }, [renamable, locked, handleStartEdit, onDoubleClick]);
 
-  // Styles
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    padding: `${SPACE_XS} ${SPACE_MD}`,
-    paddingLeft: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
-    backgroundColor: dropPosition === "inside" ? COLOR_DROP_TARGET : selected ? COLOR_SELECTED : "transparent",
-    cursor: locked ? "default" : "pointer",
-    transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    userSelect: "none",
-    opacity: dimmed || !visible ? 0.5 : 1,
-    position: "relative",
-    minHeight: "28px",
-    outline: dropPosition === "inside" ? `2px solid ${COLOR_PRIMARY}` : "none",
-    outlineOffset: "-2px",
-  };
+  // Memoized styles
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      padding: `${SPACE_XS} ${SPACE_MD}`,
+      paddingLeft: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
+      backgroundColor: dropPosition === "inside" ? COLOR_DROP_TARGET : selected ? COLOR_SELECTED : "transparent",
+      cursor: locked ? "default" : "pointer",
+      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      userSelect: "none",
+      opacity: dimmed || !visible ? 0.5 : 1,
+      position: "relative",
+      minHeight: "28px",
+      outline: dropPosition === "inside" ? `2px solid ${COLOR_PRIMARY}` : "none",
+      outlineOffset: "-2px",
+    }),
+    [depth, dropPosition, selected, locked, dimmed, visible],
+  );
 
-  const dropIndicatorStyle: CSSProperties = {
-    position: "absolute",
-    left: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
-    right: SPACE_MD,
-    height: "2px",
-    backgroundColor: COLOR_PRIMARY,
-    pointerEvents: "none",
-  };
+  const dropIndicatorBeforeStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      left: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
+      right: SPACE_MD,
+      height: "2px",
+      backgroundColor: COLOR_PRIMARY,
+      pointerEvents: "none",
+      top: 0,
+    }),
+    [depth],
+  );
 
-  const dropIndicatorBeforeStyle: CSSProperties = {
-    ...dropIndicatorStyle,
-    top: 0,
-  };
+  const dropIndicatorAfterStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      left: `calc(${SPACE_MD} + ${SIZE_TREE_INDENT} * ${depth})`,
+      right: SPACE_MD,
+      height: "2px",
+      backgroundColor: COLOR_PRIMARY,
+      pointerEvents: "none",
+      bottom: 0,
+    }),
+    [depth],
+  );
 
-  const dropIndicatorAfterStyle: CSSProperties = {
-    ...dropIndicatorStyle,
-    bottom: 0,
-  };
+  const dragHandleStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "14px",
+      height: "14px",
+      marginRight: SPACE_XS,
+      color: COLOR_ICON,
+      cursor: draggable ? "grab" : "default",
+      opacity: isHovered && draggable ? 1 : 0,
+      transition: `opacity ${DURATION_FAST} ${EASING_DEFAULT}`,
+      flexShrink: 0,
+    }),
+    [draggable, isHovered],
+  );
 
-  const dragHandleStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "14px",
-    height: "14px",
-    marginRight: SPACE_XS,
-    color: COLOR_ICON,
-    cursor: draggable ? "grab" : "default",
-    opacity: isHovered && draggable ? 1 : 0,
-    transition: `opacity ${DURATION_FAST} ${EASING_DEFAULT}`,
-    flexShrink: 0,
-  };
+  const labelStyle = useMemo<CSSProperties>(
+    () => ({
+      flex: 1,
+      minWidth: 0,
+      color: selected ? COLOR_TEXT : COLOR_TEXT_MUTED,
+      fontSize: SIZE_FONT_SM,
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+    }),
+    [selected],
+  );
 
-  const expanderStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "16px",
-    height: "16px",
-    marginRight: SPACE_XS,
-    color: COLOR_ICON,
-    cursor: "pointer",
-    flexShrink: 0,
-  };
-
-  const iconStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    marginRight: SPACE_SM,
-    color: COLOR_ICON,
-    flexShrink: 0,
-  };
-
-  const labelStyle: CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-    color: selected ? COLOR_TEXT : COLOR_TEXT_MUTED,
-    fontSize: SIZE_FONT_SM,
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  };
-
-  const inputStyle: CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-    color: COLOR_TEXT,
-    fontSize: SIZE_FONT_SM,
-    backgroundColor: COLOR_INPUT_BG,
-    border: `1px solid ${COLOR_INPUT_BORDER_FOCUS}`,
-    borderRadius: RADIUS_SM,
-    padding: `${SPACE_XS} ${SPACE_SM}`,
-    outline: "none",
-    margin: `-${SPACE_XS} 0`,
-  };
-
-  const actionButtonStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "20px",
-    height: "20px",
-    padding: 0,
-    border: "none",
-    background: "transparent",
-    cursor: "pointer",
-    color: COLOR_ICON,
-    borderRadius: RADIUS_SM,
-    transition: `color ${DURATION_FAST} ${EASING_DEFAULT}, background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    flexShrink: 0,
-    marginLeft: SPACE_XS,
-  };
-
-  const activeActionStyle: CSSProperties = {
-    ...actionButtonStyle,
-    color: COLOR_ICON_ACTIVE,
-  };
-
-  const hiddenActionStyle: CSSProperties = {
-    ...actionButtonStyle,
-    color: COLOR_TEXT_DISABLED,
-  };
-
-  const badgeStyle: CSSProperties = {
-    marginLeft: SPACE_SM,
-    flexShrink: 0,
-  };
-
-  const handlePointerEnter = (e: ReactPointerEvent<HTMLDivElement>) => {
+  // Memoized handlers
+  const handlePointerEnter = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     setIsHovered(true);
     if (!selected && dropPosition !== "inside") {
       e.currentTarget.style.backgroundColor = COLOR_HOVER;
     }
-  };
+  }, [selected, dropPosition]);
 
-  const handlePointerLeave = (e: ReactPointerEvent<HTMLDivElement>) => {
+  const handlePointerLeave = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     setIsHovered(false);
     if (!selected && dropPosition !== "inside") {
       e.currentTarget.style.backgroundColor = "transparent";
     }
-  };
+  }, [selected, dropPosition]);
 
-  const handlePointerDownEvent = (e: ReactPointerEvent<HTMLDivElement>) => {
+  const handlePointerDownEvent = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     // Don't trigger selection when clicking on action buttons
     const target = e.target as HTMLElement;
     if (target.closest("button")) {
       return;
     }
     onPointerDown?.(e);
-  };
+  }, [onPointerDown]);
 
-  const handleExpanderClick = (e: ReactPointerEvent<HTMLSpanElement>) => {
+  const handleExpanderClick = useCallback((e: ReactPointerEvent<HTMLSpanElement>) => {
     e.stopPropagation();
     onToggle?.();
-  };
+  }, [onToggle]);
 
-  const handleVisibilityClick = (e: ReactPointerEvent<HTMLButtonElement>) => {
+  const handleVisibilityClick = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     onVisibilityChange?.(!visible);
-  };
+  }, [onVisibilityChange, visible]);
 
-  const handleLockClick = (e: ReactPointerEvent<HTMLButtonElement>) => {
+  const handleLockClick = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     onLockChange?.(!locked);
-  };
+  }, [onLockChange, locked]);
 
-  const handleActionHover = (e: ReactPointerEvent<HTMLButtonElement>, enter: boolean) => {
-    if (enter) {
-      e.currentTarget.style.backgroundColor = COLOR_HOVER;
-      e.currentTarget.style.color = COLOR_ICON_HOVER;
-    } else {
-      e.currentTarget.style.backgroundColor = "transparent";
-      const btn = e.currentTarget;
-      const isVisibility = btn.getAttribute("data-action") === "visibility";
-      const isLock = btn.getAttribute("data-action") === "lock";
-      if (isVisibility && !visible) {
-        e.currentTarget.style.color = COLOR_TEXT_DISABLED;
-      } else if (isLock && locked) {
-        e.currentTarget.style.color = COLOR_ICON_ACTIVE;
-      } else {
-        e.currentTarget.style.color = COLOR_ICON;
-      }
-    }
-  };
+  const handleActionHoverEnter = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = COLOR_HOVER;
+    e.currentTarget.style.color = COLOR_ICON_HOVER;
+  }, []);
+
+  const handleVisibilityHoverLeave = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = "transparent";
+    e.currentTarget.style.color = visible ? COLOR_ICON : COLOR_TEXT_DISABLED;
+  }, [visible]);
+
+  const handleLockHoverLeave = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.currentTarget.style.backgroundColor = "transparent";
+    e.currentTarget.style.color = locked ? COLOR_ICON_ACTIVE : COLOR_ICON;
+  }, [locked]);
+
+  const handleButtonPointerDown = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleInputPointerDown = useCallback((e: ReactPointerEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleExpanderHoverEnter = useCallback((e: ReactPointerEvent<HTMLSpanElement>) => {
+    e.currentTarget.style.color = COLOR_ICON_HOVER;
+  }, []);
+
+  const handleExpanderHoverLeave = useCallback((e: ReactPointerEvent<HTMLSpanElement>) => {
+    e.currentTarget.style.color = COLOR_ICON;
+  }, []);
 
   // Render expander
   const renderExpander = () => {
     if (!hasChildren) {
-      return <span style={{ width: "16px", marginRight: SPACE_XS, flexShrink: 0 }} />;
+      return <span style={expanderPlaceholderStyle} />;
     }
     return (
       <span
         role="button"
         aria-label={expanded ? "Collapse" : "Expand"}
         onClick={handleExpanderClick}
-        onPointerEnter={(e) => {
-          e.currentTarget.style.color = COLOR_ICON_HOVER;
-        }}
-        onPointerLeave={(e) => {
-          e.currentTarget.style.color = COLOR_ICON;
-        }}
+        onPointerEnter={handleExpanderHoverEnter}
+        onPointerLeave={handleExpanderHoverLeave}
         style={expanderStyle}
       >
         <ChevronIcon expanded={expanded} />
       </span>
     );
   };
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditValue(e.target.value);
+  }, []);
 
   // Render label or edit input
   const renderLabel = () => {
@@ -448,10 +490,10 @@ export function LayerItem({
           ref={inputRef}
           type="text"
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={handleInputChange}
           onBlur={handleFinishEdit}
           onKeyDown={handleKeyDown}
-          onPointerDown={(e) => e.stopPropagation()}
+          onPointerDown={handleInputPointerDown}
           style={inputStyle}
           aria-label="Layer name"
           data-testid="layer-name-input"
@@ -530,10 +572,10 @@ export function LayerItem({
                 type="button"
                 data-action="visibility"
                 aria-label={visible ? "Hide layer" : "Show layer"}
-                onPointerDown={(e) => e.stopPropagation()}
+                onPointerDown={handleButtonPointerDown}
                 onPointerUp={handleVisibilityClick}
-                onPointerEnter={(e) => handleActionHover(e, true)}
-                onPointerLeave={(e) => handleActionHover(e, false)}
+                onPointerEnter={handleActionHoverEnter}
+                onPointerLeave={handleVisibilityHoverLeave}
                 style={visible ? actionButtonStyle : hiddenActionStyle}
                 data-testid="visibility-toggle"
               >
@@ -547,10 +589,10 @@ export function LayerItem({
                 type="button"
                 data-action="lock"
                 aria-label={locked ? "Unlock layer" : "Lock layer"}
-                onPointerDown={(e) => e.stopPropagation()}
+                onPointerDown={handleButtonPointerDown}
                 onPointerUp={handleLockClick}
-                onPointerEnter={(e) => handleActionHover(e, true)}
-                onPointerLeave={(e) => handleActionHover(e, false)}
+                onPointerEnter={handleActionHoverEnter}
+                onPointerLeave={handleLockHoverLeave}
                 style={locked ? activeActionStyle : actionButtonStyle}
                 data-testid="lock-toggle"
               >
@@ -572,4 +614,42 @@ export function LayerItem({
       )}
     </>
   );
-}
+}, (prev, next) =>
+  prev.id === next.id &&
+  prev.label === next.label &&
+  prev.depth === next.depth &&
+  prev.hasChildren === next.hasChildren &&
+  prev.expanded === next.expanded &&
+  prev.selected === next.selected &&
+  prev.visible === next.visible &&
+  prev.locked === next.locked &&
+  prev.dimmed === next.dimmed &&
+  prev.dropPosition === next.dropPosition &&
+  prev.draggable === next.draggable &&
+  prev.canHaveChildren === next.canHaveChildren &&
+  prev.showVisibilityToggle === next.showVisibilityToggle &&
+  prev.showLockToggle === next.showLockToggle &&
+  prev.showDragHandle === next.showDragHandle &&
+  prev.renamable === next.renamable &&
+  prev.deletable === next.deletable &&
+  prev.icon === next.icon &&
+  prev.badge === next.badge &&
+  prev.className === next.className &&
+  prev.onToggle === next.onToggle &&
+  prev.onPointerDown === next.onPointerDown &&
+  prev.onDoubleClick === next.onDoubleClick &&
+  prev.onVisibilityChange === next.onVisibilityChange &&
+  prev.onLockChange === next.onLockChange &&
+  prev.onRename === next.onRename &&
+  prev.onDelete === next.onDelete &&
+  prev.onContextMenu === next.onContextMenu &&
+  prev.onDragStart === next.onDragStart &&
+  prev.onDrag === next.onDrag &&
+  prev.onDragOver === next.onDragOver &&
+  prev.onDragEnter === next.onDragEnter &&
+  prev.onDragLeave === next.onDragLeave &&
+  prev.onDragEnd === next.onDragEnd &&
+  prev.onDrop === next.onDrop
+  // Note: contextMenuItems is intentionally excluded to avoid re-renders
+  // when only the menu content changes. The menu reads items when opened.
+);

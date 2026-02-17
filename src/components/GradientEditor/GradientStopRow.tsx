@@ -2,7 +2,7 @@
  * @file GradientStopRow component - Single gradient stop editor row
  */
 
-import { useState, useRef } from "react";
+import { useState, useRef, memo, useCallback, useMemo } from "react";
 import type { CSSProperties, ChangeEvent } from "react";
 import {
   COLOR_INPUT_BG,
@@ -24,15 +24,17 @@ import { parsePercentageInput } from "../../utils/color/rangeValidation";
 export type GradientStopRowProps = {
   stop: GradientStop;
   onChange: (stop: GradientStop) => void;
-  onRemove: () => void;
+  /** Called with stop.id when remove is clicked */
+  onRemove: (stopId: string) => void;
   isSelected: boolean;
-  onSelect: () => void;
+  /** Called with stop.id when row is selected */
+  onSelect: (stopId: string) => void;
   removeDisabled?: boolean;
   disabled?: boolean;
 };
 
 /** Single gradient color stop row with position, color, and remove controls */
-export function GradientStopRow({
+export const GradientStopRow = memo(function GradientStopRow({
   stop,
   onChange,
   onRemove,
@@ -52,33 +54,41 @@ export function GradientStopRow({
     setPositionInput(String(stop.position));
   }
 
-  const handlePositionChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handlePositionChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     setPositionInput(inputValue);
     const result = parsePercentageInput(inputValue);
     if (result.isValid && result.parsed !== null) {
       onChange({ ...stop, position: result.parsed });
     }
-  };
+  }, [onChange, stop]);
 
-  const handlePositionBlur = () => {
+  const handlePositionBlur = useCallback(() => {
     const result = parsePercentageInput(positionInput);
     if (!result.isValid) {
       setPositionInput(String(stop.position));
     }
-  };
+  }, [positionInput, stop.position]);
 
-  const handleColorChange = (color: ColorValue) => {
+  const handleColorChange = useCallback((color: ColorValue) => {
     onChange({ ...stop, color });
-  };
+  }, [onChange, stop]);
 
-  const handleRemove = () => {
+  const handleRemove = useCallback(() => {
     if (!disabled && !removeDisabled) {
-      onRemove();
+      onRemove(stop.id);
     }
-  };
+  }, [disabled, removeDisabled, onRemove, stop.id]);
 
-  const containerStyle: CSSProperties = {
+  const handleSelect = useCallback(() => {
+    onSelect(stop.id);
+  }, [onSelect, stop.id]);
+
+  const handleInputClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const containerStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     gap: SPACE_SM,
@@ -87,9 +97,9 @@ export function GradientStopRow({
     borderRadius: RADIUS_SM,
     cursor: "pointer",
     opacity: disabled ? 0.5 : 1,
-  };
+  }), [isSelected, disabled]);
 
-  const positionContainerStyle: CSSProperties = {
+  const positionContainerStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     height: 22,
@@ -97,9 +107,9 @@ export function GradientStopRow({
     borderRadius: RADIUS_SM,
     backgroundColor: COLOR_INPUT_BG,
     flexShrink: 0,
-  };
+  }), []);
 
-  const positionInputStyle: CSSProperties = {
+  const positionInputStyle = useMemo<CSSProperties>(() => ({
     width: 36,
     height: "100%",
     padding: `0 ${SPACE_XS}`,
@@ -109,16 +119,16 @@ export function GradientStopRow({
     fontSize: SIZE_FONT_SM,
     outline: "none",
     textAlign: "right" as const,
-  };
+  }), [disabled]);
 
-  const suffixStyle: CSSProperties = {
+  const suffixStyle = useMemo<CSSProperties>(() => ({
     paddingRight: SPACE_XS,
     color: COLOR_TEXT_MUTED,
     fontSize: SIZE_FONT_SM,
-  };
+  }), []);
 
   return (
-    <div style={containerStyle} onClick={onSelect} role="row">
+    <div style={containerStyle} onClick={handleSelect} role="row">
       <div style={positionContainerStyle}>
         <input
           type="text"
@@ -129,7 +139,7 @@ export function GradientStopRow({
           disabled={disabled}
           aria-label="Position"
           style={positionInputStyle}
-          onClick={(e) => e.stopPropagation()}
+          onClick={handleInputClick}
         />
         <span style={suffixStyle}>%</span>
       </div>
@@ -147,4 +157,4 @@ export function GradientStopRow({
       />
     </div>
   );
-}
+});

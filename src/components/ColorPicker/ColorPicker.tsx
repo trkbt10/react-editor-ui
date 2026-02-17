@@ -174,7 +174,7 @@ export const ColorPicker = memo(function ColorPicker({
     setIsHexInputFocused(false);
   }, []);
 
-  const containerStyle: CSSProperties = {
+  const containerStyle = useMemo<CSSProperties>(() => ({
     width: 200,
     padding: SPACE_SM,
     backgroundColor: COLOR_SURFACE,
@@ -184,9 +184,9 @@ export const ColorPicker = memo(function ColorPicker({
     display: "flex",
     flexDirection: "column",
     gap: SPACE_SM,
-  };
+  }), []);
 
-  const saturationAreaStyle: CSSProperties = {
+  const saturationAreaStyle = useMemo<CSSProperties>(() => ({
     position: "relative",
     width: "100%",
     height: 130,
@@ -196,9 +196,9 @@ export const ColorPicker = memo(function ColorPicker({
       linear-gradient(to top, #000, transparent),
       linear-gradient(to right, #fff, hsl(${hsv.h}, 100%, 50%))
     `,
-  };
+  }), [hsv.h]);
 
-  const saturationHandleStyle: CSSProperties = {
+  const saturationHandleStyle = useMemo<CSSProperties>(() => ({
     position: "absolute",
     width: 10,
     height: 10,
@@ -209,9 +209,9 @@ export const ColorPicker = memo(function ColorPicker({
     left: `${hsv.s}%`,
     top: `${100 - hsv.v}%`,
     pointerEvents: "none",
-  };
+  }), [hsv.s, hsv.v]);
 
-  const hueSliderStyle: CSSProperties = {
+  const hueSliderStyle = useMemo<CSSProperties>(() => ({
     position: "relative",
     width: "100%",
     height: 10,
@@ -219,9 +219,9 @@ export const ColorPicker = memo(function ColorPicker({
     cursor: "pointer",
     background:
       "linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)",
-  };
+  }), []);
 
-  const hueHandleStyle: CSSProperties = {
+  const hueHandleStyle = useMemo<CSSProperties>(() => ({
     position: "absolute",
     width: 10,
     height: 10,
@@ -232,19 +232,19 @@ export const ColorPicker = memo(function ColorPicker({
     left: `${(hsv.h / 360) * 100}%`,
     top: 0,
     pointerEvents: "none",
-  };
+  }), [hsv.h]);
 
-  const hexInputContainerStyle: CSSProperties = {
+  const hexInputContainerStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     gap: SPACE_SM,
-  };
+  }), []);
 
-  const hexLabelStyle: CSSProperties = {
+  const hexLabelStyle = useMemo<CSSProperties>(() => ({
     color: COLOR_TEXT,
     fontSize: SIZE_FONT_SM,
     fontWeight: 500,
-  };
+  }), []);
 
   const hexInputStyle = useMemo<CSSProperties>(
     () => ({
@@ -263,13 +263,13 @@ export const ColorPicker = memo(function ColorPicker({
     [isHexInputFocused],
   );
 
-  const presetContainerStyle: CSSProperties = {
+  const presetContainerStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     flexWrap: "wrap",
     gap: SPACE_SM,
-  };
+  }), []);
 
-  const getPresetStyle = (color: string): CSSProperties => ({
+  const getPresetStyle = useCallback((color: string): CSSProperties => ({
     width: 18,
     height: 18,
     borderRadius: RADIUS_SM,
@@ -278,7 +278,11 @@ export const ColorPicker = memo(function ColorPicker({
     cursor: "pointer",
     padding: 0,
     outline: "none",
-  });
+  }), []);
+
+  const handleHexInputChangeEvent = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleHexInputChange(e.target.value);
+  }, []);
 
   return (
     <div
@@ -323,7 +327,7 @@ export const ColorPicker = memo(function ColorPicker({
         <input
           type="text"
           value={hexInput}
-          onChange={(e) => handleHexInputChange(e.target.value)}
+          onChange={handleHexInputChangeEvent}
           maxLength={6}
           aria-label="Hex color value"
           style={hexInputStyle}

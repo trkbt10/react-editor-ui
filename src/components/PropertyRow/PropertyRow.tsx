@@ -28,6 +28,23 @@ import {
   SPACE_MD,
 } from "../../constants/styles";
 
+const labelStyle: CSSProperties = {
+  width: SIZE_PROPERTY_LABEL,
+  flexShrink: 0,
+  color: COLOR_TEXT_MUTED,
+  fontSize: SIZE_FONT_SM,
+  lineHeight: 1.4,
+};
+
+const valueStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  color: COLOR_TEXT,
+  fontSize: SIZE_FONT_SM,
+  lineHeight: 1.4,
+  wordBreak: "break-word",
+};
+
 export type PropertyRowProps = {
   label: string;
   children: ReactNode;
@@ -53,29 +70,6 @@ export const PropertyRow = memo(function PropertyRow({
       backgroundColor: onClick && isHovered ? COLOR_HOVER : "transparent",
     }),
     [onClick, isHovered],
-  );
-
-  const labelStyle = useMemo<CSSProperties>(
-    () => ({
-      width: SIZE_PROPERTY_LABEL,
-      flexShrink: 0,
-      color: COLOR_TEXT_MUTED,
-      fontSize: SIZE_FONT_SM,
-      lineHeight: 1.4,
-    }),
-    [],
-  );
-
-  const valueStyle = useMemo<CSSProperties>(
-    () => ({
-      flex: 1,
-      minWidth: 0,
-      color: COLOR_TEXT,
-      fontSize: SIZE_FONT_SM,
-      lineHeight: 1.4,
-      wordBreak: "break-word",
-    }),
-    [],
   );
 
   const handlePointerEnter = useCallback(() => {
