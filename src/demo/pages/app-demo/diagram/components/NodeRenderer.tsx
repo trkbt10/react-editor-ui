@@ -105,7 +105,7 @@ const groupBorderStyle: CSSProperties = {
 // =============================================================================
 
 function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance";
+  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame";
 }
 
 function isTextNode(node: DiagramNode): node is TextNode {

@@ -2,7 +2,7 @@
  * @file DiagramInspector - Right panel for editing selected element properties
  */
 
-import { memo, useContext, useMemo, useState, type CSSProperties } from "react";
+import { memo, useCallback, useContext, useMemo, useState, type CSSProperties } from "react";
 import { LuTrash2 } from "react-icons/lu";
 
 import { PropertySection } from "../../../../../components/PropertySection/PropertySection";
@@ -13,10 +13,22 @@ import { ColorInput } from "../../../../../components/ColorInput/ColorInput";
 import { Select, type SelectOption } from "../../../../../components/Select/Select";
 import { IconButton } from "../../../../../components/IconButton/IconButton";
 import { TabBar } from "../../../../../components/TabBar/TabBar";
+import { Checkbox } from "../../../../../components/Checkbox/Checkbox";
 import type { ColorValue } from "../../../../../utils/color/types";
 
+import { PositionSection } from "../../../../../sections/PositionSection/PositionSection";
+import { SizeSection } from "../../../../../sections/SizeSection/SizeSection";
+import { RotationSection } from "../../../../../sections/RotationSection/RotationSection";
+import type { PositionData } from "../../../../../sections/PositionSection/types";
+import type { SizeData } from "../../../../../sections/SizeSection/types";
+import type { RotationData } from "../../../../../sections/RotationSection/types";
+import { StrokeStyleSelect } from "../../../../../sections/StrokeSection/parts/StrokeStyleSelect";
+import type { StrokeStyle as SectionStrokeStyle } from "../../../../../sections/StrokeSection/types";
+
 import { DocumentContext, SelectionContext, PageContext } from "../contexts";
-import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, ShapeType, Connection } from "../types";
+import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, FrameNode, FramePreset, ShapeType, Connection } from "../types";
+import { isFrameNode } from "../types";
+import { framePresets, type FramePresetInfo } from "../mockData";
 import { ThemeEditor } from "./ThemeEditor";
 
 // =============================================================================
@@ -24,7 +36,7 @@ import { ThemeEditor } from "./ThemeEditor";
 // =============================================================================
 
 function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance";
+  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame";
 }
 
 function isTextNode(node: DiagramNode): node is TextNode {
@@ -112,6 +124,14 @@ const shapeTypeOptions: SelectOption<ShapeType>[] = [
 
 const pixelUnits = [{ value: "px", label: "px" }];
 const degreeUnits = [{ value: "°", label: "°" }];
+
+// Frame preset options
+const framePresetOptions: SelectOption<FramePreset>[] = (Object.entries(framePresets) as [FramePreset, FramePresetInfo][]).map(
+  ([value, info]) => ({
+    value,
+    label: `${info.label} (${info.width} × ${info.height})`,
+  }),
+);
 
 // =============================================================================
 // Component
@@ -361,6 +381,69 @@ export const DiagramInspector = memo(function DiagramInspector() {
           ),
         );
       },
+      // For FrameNode preset
+      setFramePreset: (preset: FramePreset) => {
+        const presetInfo = framePresets[preset];
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isFrameNode(n)
+              ? { ...n, preset, width: presetInfo.width, height: presetInfo.height }
+              : n,
+          ),
+        );
+      },
+      // For FrameNode fill
+      setFrameFill: (fill: ColorValue) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isFrameNode(n) ? { ...n, fill } : n,
+          ),
+        );
+      },
+      // For FrameNode stroke
+      setFrameStrokeColor: (color: ColorValue) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isFrameNode(n)
+              ? { ...n, stroke: { ...n.stroke, color } }
+              : n,
+          ),
+        );
+      },
+      setFrameStrokeWidth: (value: string) => {
+        const width = Math.max(0, parseFloat(value) || 0);
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isFrameNode(n)
+              ? { ...n, stroke: { ...n.stroke, width } }
+              : n,
+          ),
+        );
+      },
+      setFrameStrokeStyle: (style: StrokeStyle) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isFrameNode(n)
+              ? { ...n, stroke: { ...n.stroke, style } }
+              : n,
+          ),
+        );
+      },
+      // For FrameNode options
+      setClipContent: (checked: boolean) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isFrameNode(n) ? { ...n, clipContent: checked } : n,
+          ),
+        );
+      },
+      setShowBackground: (checked: boolean) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isFrameNode(n) ? { ...n, showBackground: checked } : n,
+          ),
+        );
+      },
       delete: () => {
         updatePageNodesAndConnections(
           (nodes) => nodes.filter((n) => n.id !== nodeId),
@@ -373,6 +456,69 @@ export const DiagramInspector = memo(function DiagramInspector() {
       },
     };
   }, [selectedNode, updatePageNodes, updatePageNodesAndConnections, setSelectedNodeIds]);
+
+  // Section data for PositionSection/SizeSection/RotationSection
+  const positionData: PositionData = useMemo(
+    () => ({
+      x: selectedNode ? String(Math.round(selectedNode.x)) : "0",
+      y: selectedNode ? String(Math.round(selectedNode.y)) : "0",
+    }),
+    [selectedNode],
+  );
+
+  const sizeData: SizeData = useMemo(
+    () => ({
+      width: selectedNode ? String(Math.round(selectedNode.width)) : "0",
+      height: selectedNode ? String(Math.round(selectedNode.height)) : "0",
+    }),
+    [selectedNode],
+  );
+
+  const rotationData: RotationData = useMemo(
+    () => ({
+      rotation: selectedNode ? String(Math.round(selectedNode.rotation)) : "0",
+    }),
+    [selectedNode],
+  );
+
+  // Section handlers
+  const handlePositionChange = useCallback(
+    (data: PositionData) => {
+      if (!selectedNode) return;
+      const nodeId = selectedNode.id;
+      const x = parseFloat(data.x) || 0;
+      const y = parseFloat(data.y) || 0;
+      updatePageNodes((nodes) =>
+        nodes.map((n) => (n.id === nodeId ? { ...n, x, y } : n)),
+      );
+    },
+    [selectedNode, updatePageNodes],
+  );
+
+  const handleSizeChange = useCallback(
+    (data: SizeData) => {
+      if (!selectedNode) return;
+      const nodeId = selectedNode.id;
+      const width = Math.max(20, parseFloat(data.width) || 0);
+      const height = Math.max(20, parseFloat(data.height) || 0);
+      updatePageNodes((nodes) =>
+        nodes.map((n) => (n.id === nodeId ? { ...n, width, height } : n)),
+      );
+    },
+    [selectedNode, updatePageNodes],
+  );
+
+  const handleRotationChange = useCallback(
+    (data: RotationData) => {
+      if (!selectedNode) return;
+      const nodeId = selectedNode.id;
+      const rotation = parseFloat(data.rotation) || 0;
+      updatePageNodes((nodes) =>
+        nodes.map((n) => (n.id === nodeId ? { ...n, rotation } : n)),
+      );
+    },
+    [selectedNode, updatePageNodes],
+  );
 
   // Connection property handlers
   const connectionHandlers = useMemo(() => {
@@ -521,7 +667,9 @@ export const DiagramInspector = memo(function DiagramInspector() {
         ? "Shape Properties"
         : isTextNode(selectedNode)
           ? "Text Properties"
-          : "Group Properties";
+          : isFrameNode(selectedNode)
+            ? "Frame Properties"
+            : "Group Properties";
 
       return (
         <div style={contentStyle}>
@@ -560,51 +708,33 @@ export const DiagramInspector = memo(function DiagramInspector() {
             </PropertySection>
           )}
 
-          <PropertySection title="Position">
-            <PropertyRow label="X">
-              <UnitInput
-                value={String(Math.round(selectedNode.x))}
-                onChange={nodeHandlers.setX}
-                units={pixelUnits}
+          {/* Frame Preset (only for frames) */}
+          {isFrameNode(selectedNode) && (
+            <PropertySection title="Preset">
+              <Select
+                options={framePresetOptions}
+                value={selectedNode.preset}
+                onChange={nodeHandlers.setFramePreset}
                 size="sm"
               />
-            </PropertyRow>
-            <PropertyRow label="Y">
-              <UnitInput
-                value={String(Math.round(selectedNode.y))}
-                onChange={nodeHandlers.setY}
-                units={pixelUnits}
-                size="sm"
-              />
-            </PropertyRow>
-          </PropertySection>
+            </PropertySection>
+          )}
 
-          <PropertySection title="Size">
-            <PropertyRow label="Width">
-              <UnitInput
-                value={String(Math.round(selectedNode.width))}
-                onChange={nodeHandlers.setWidth}
-                units={pixelUnits}
-                size="sm"
-              />
-            </PropertyRow>
-            <PropertyRow label="Height">
-              <UnitInput
-                value={String(Math.round(selectedNode.height))}
-                onChange={nodeHandlers.setHeight}
-                units={pixelUnits}
-                size="sm"
-              />
-            </PropertyRow>
-            <PropertyRow label="Rotation">
-              <UnitInput
-                value={String(Math.round(selectedNode.rotation))}
-                onChange={nodeHandlers.setRotation}
-                units={degreeUnits}
-                size="sm"
-              />
-            </PropertyRow>
-          </PropertySection>
+          <PositionSection
+            data={positionData}
+            onChange={handlePositionChange}
+          />
+
+          <SizeSection
+            data={sizeData}
+            onChange={handleSizeChange}
+          />
+
+          <RotationSection
+            data={rotationData}
+            onChange={handleRotationChange}
+            showTransformButtons={false}
+          />
 
           {/* Fill & Stroke (only for shapes) */}
           {isShapeNode(selectedNode) && (
@@ -634,10 +764,9 @@ export const DiagramInspector = memo(function DiagramInspector() {
                   />
                 </PropertyRow>
                 <PropertyRow label="Style">
-                  <Select
-                    options={strokeStyleOptions}
-                    value={selectedNode.stroke.style}
-                    onChange={nodeHandlers.setStrokeStyle}
+                  <StrokeStyleSelect
+                    value={selectedNode.stroke.style as SectionStrokeStyle}
+                    onChange={nodeHandlers.setStrokeStyle as (v: SectionStrokeStyle) => void}
                     size="sm"
                   />
                 </PropertyRow>
@@ -655,6 +784,61 @@ export const DiagramInspector = memo(function DiagramInspector() {
                 showVisibilityToggle
               />
             </PropertySection>
+          )}
+
+          {/* Frame Fill & Stroke */}
+          {isFrameNode(selectedNode) && (
+            <>
+              <PropertySection title="Fill">
+                <ColorInput
+                  value={selectedNode.fill}
+                  onChange={nodeHandlers.setFrameFill}
+                  size="sm"
+                  showVisibilityToggle
+                />
+              </PropertySection>
+
+              <PropertySection title="Stroke">
+                <ColorInput
+                  value={selectedNode.stroke.color}
+                  onChange={nodeHandlers.setFrameStrokeColor}
+                  size="sm"
+                  showVisibilityToggle
+                />
+                <PropertyRow label="Width">
+                  <UnitInput
+                    value={String(selectedNode.stroke.width)}
+                    onChange={nodeHandlers.setFrameStrokeWidth}
+                    units={pixelUnits}
+                    size="sm"
+                  />
+                </PropertyRow>
+                <PropertyRow label="Style">
+                  <StrokeStyleSelect
+                    value={selectedNode.stroke.style as SectionStrokeStyle}
+                    onChange={nodeHandlers.setFrameStrokeStyle as (v: SectionStrokeStyle) => void}
+                    size="sm"
+                  />
+                </PropertyRow>
+              </PropertySection>
+
+              <PropertySection title="Options">
+                <PropertyRow label="Clip Content">
+                  <Checkbox
+                    checked={selectedNode.clipContent}
+                    onChange={nodeHandlers.setClipContent}
+                    size="sm"
+                  />
+                </PropertyRow>
+                <PropertyRow label="Show Background">
+                  <Checkbox
+                    checked={selectedNode.showBackground}
+                    onChange={nodeHandlers.setShowBackground}
+                    size="sm"
+                  />
+                </PropertyRow>
+              </PropertySection>
+            </>
           )}
         </div>
       );
@@ -700,10 +884,9 @@ export const DiagramInspector = memo(function DiagramInspector() {
               />
             </PropertyRow>
             <PropertyRow label="Style">
-              <Select
-                options={strokeStyleOptions}
-                value={selectedConnection.stroke.style}
-                onChange={connectionHandlers.setStrokeStyle}
+              <StrokeStyleSelect
+                value={selectedConnection.stroke.style as SectionStrokeStyle}
+                onChange={connectionHandlers.setStrokeStyle as (v: SectionStrokeStyle) => void}
                 size="sm"
               />
             </PropertyRow>

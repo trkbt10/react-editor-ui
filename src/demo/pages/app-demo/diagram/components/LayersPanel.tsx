@@ -3,13 +3,14 @@
  */
 
 import { memo, useContext, useMemo, useCallback, type CSSProperties, type ReactNode } from "react";
-import { LuSquare, LuCircle, LuType, LuLayers, LuComponent, LuPalette } from "react-icons/lu";
+import { LuSquare, LuCircle, LuType, LuLayers, LuComponent, LuPalette, LuFrame } from "react-icons/lu";
 
 import { LayerItem } from "../../../../../components/LayerItem/LayerItem";
 
 import { PageContext, SelectionContext } from "../contexts";
-import type { DiagramNode, ShapeType, GroupNode, SymbolPart } from "../types";
-import { isSymbolInstance } from "../types";
+import type { DiagramNode, ShapeType, GroupNode, FrameNode, SymbolPart } from "../types";
+import { isSymbolInstance, isFrameNode } from "../types";
+import { framePresets } from "../mockData";
 
 // =============================================================================
 // Type Guards
@@ -78,6 +79,9 @@ function getNodeIcon(node: DiagramNode): ReactNode {
   if (node.type === "group") {
     return <LuLayers size={14} />;
   }
+  if (isFrameNode(node)) {
+    return <LuFrame size={14} />;
+  }
   if (isSymbolInstance(node)) {
     return <LuComponent size={14} />;
   }
@@ -88,6 +92,9 @@ function getNodeLabel(node: DiagramNode): string {
   if (node.type === "text") {
     const content = (node as { content: string }).content;
     return content.length > 20 ? `${content.slice(0, 20)}...` : content || "Text";
+  }
+  if (isFrameNode(node)) {
+    return framePresets[node.preset].label;
   }
   if (isSymbolInstance(node)) {
     return `Instance (${node.variantId})`;
@@ -123,25 +130,28 @@ export const LayersPanel = memo(function LayersPanel() {
   // Get canvas page nodes
   const canvasNodes = canvasPage.nodes;
 
-  // Get top-level nodes (not children of any group)
+  // Get top-level nodes (not children of any group or frame)
   const topLevelNodes = useMemo(() => {
     const childIds = new Set<string>();
     canvasNodes.forEach((node) => {
-      if (isGroupNode(node)) {
+      if (isGroupNode(node) || isFrameNode(node)) {
         node.children.forEach((childId) => childIds.add(childId));
       }
     });
     return canvasNodes.filter((node) => !childIds.has(node.id));
   }, [canvasNodes]);
 
-  // Get children of a group
+  // Get children of a group or frame
   const getChildren = useCallback(
     (parentId: string): DiagramNode[] => {
       const parent = canvasNodes.find((n) => n.id === parentId);
-      if (!parent || !isGroupNode(parent)) return [];
-      return parent.children
-        .map((childId) => canvasNodes.find((n) => n.id === childId))
-        .filter((n): n is DiagramNode => n !== undefined);
+      if (!parent) return [];
+      if (isGroupNode(parent) || isFrameNode(parent)) {
+        return parent.children
+          .map((childId) => canvasNodes.find((n) => n.id === childId))
+          .filter((n): n is DiagramNode => n !== undefined);
+      }
+      return [];
     },
     [canvasNodes],
   );
@@ -170,8 +180,8 @@ export const LayersPanel = memo(function LayersPanel() {
   // Render a node and its children recursively
   const renderNode = useCallback(
     (node: DiagramNode, depth: number = 0): ReactNode => {
-      const isGroup = isGroupNode(node);
-      const children = isGroup ? getChildren(node.id) : [];
+      const isContainer = isGroupNode(node) || isFrameNode(node);
+      const children = isContainer ? getChildren(node.id) : [];
       const hasChildren = children.length > 0;
       const isSelected = selectedNodeIds.has(node.id);
 

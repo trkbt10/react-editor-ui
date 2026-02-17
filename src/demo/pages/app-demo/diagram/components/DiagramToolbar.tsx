@@ -25,8 +25,10 @@ import { Select, type SelectOption } from "../../../../../components/Select/Sele
 
 import { SegmentedControl, type SegmentedControlOption } from "../../../../../components/SegmentedControl/SegmentedControl";
 
-import { DocumentContext, GridContext, ToolContext, ViewportContext, PageContext } from "../contexts";
-import type { ExportFormat, PageId } from "../types";
+import { DocumentContext, GridContext, ToolContext, ViewportContext, PageContext, SelectionContext } from "../contexts";
+import { FramePresetPicker } from "./FramePresetPicker";
+import { createFrameNode } from "../mockData";
+import type { ExportFormat, PageId, FramePreset } from "../types";
 import { exportToSVG } from "../export/exportToSVG";
 import { exportToPNG } from "../export/exportToPNG";
 import { exportToMermaid } from "../export/exportToMermaid";
@@ -90,13 +92,15 @@ export const DiagramToolbar = memo(function DiagramToolbar() {
   const toolCtx = useContext(ToolContext);
   const viewportCtx = useContext(ViewportContext);
   const pageCtx = useContext(PageContext);
+  const selectionCtx = useContext(SelectionContext);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("svg");
 
-  if (!documentCtx || !gridCtx || !toolCtx || !viewportCtx || !pageCtx) {
+  if (!documentCtx || !gridCtx || !toolCtx || !viewportCtx || !pageCtx || !selectionCtx) {
     return null;
   }
 
-  const { document } = documentCtx;
+  const { document, setDocument } = documentCtx;
+  const { setSelectedNodeIds, setSelectedConnectionIds } = selectionCtx;
   const { gridEnabled, snapToGrid, toggleGrid, toggleSnap } = gridCtx;
   const { activeTool, setActiveTool } = toolCtx;
   const { zoom, setZoom } = viewportCtx;
@@ -148,6 +152,25 @@ export const DiagramToolbar = memo(function DiagramToolbar() {
     }
   }, [setActivePageId]);
 
+  const handleAddFrame = useCallback((preset: FramePreset) => {
+    // Create a new frame at a default position
+    const newFrame = createFrameNode(preset, 100, 100);
+    setDocument((prev) => ({
+      ...prev,
+      canvasPage: {
+        ...prev.canvasPage,
+        nodes: [...prev.canvasPage.nodes, newFrame],
+      },
+    }));
+    // Select the newly created frame
+    setSelectedNodeIds(new Set([newFrame.id]));
+    setSelectedConnectionIds(new Set());
+    // Switch to canvas page if not already there
+    if (activePageId !== "canvas") {
+      setActivePageId("canvas");
+    }
+  }, [setDocument, setSelectedNodeIds, setSelectedConnectionIds, activePageId, setActivePageId]);
+
   return (
     <div style={toolbarContainerStyle}>
       <span style={titleStyle}>Diagram Editor</span>
@@ -182,6 +205,7 @@ export const DiagramToolbar = memo(function DiagramToolbar() {
               onClick={toolHandlers.connection}
             />
           </Tooltip>
+          <FramePresetPicker onSelect={handleAddFrame} />
         </ToolbarGroup>
         <ToolbarDivider />
         <ToolbarGroup>

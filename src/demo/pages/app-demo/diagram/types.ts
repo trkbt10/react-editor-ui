@@ -102,7 +102,27 @@ export type SymbolInstance = {
 // Legacy Node Types (for standalone shapes/text not in symbols)
 // =============================================================================
 
-export type NodeType = ShapeType | "text" | "group" | "instance";
+export type NodeType = ShapeType | "text" | "group" | "instance" | "frame";
+
+// =============================================================================
+// Frame Types
+// =============================================================================
+
+export type FramePreset =
+  // Paper sizes (96 DPI)
+  | "a4"             // 794 × 1123
+  | "a3"             // 1123 × 1587
+  | "a5"             // 559 × 794
+  // Business
+  | "business-card"  // 252 × 168 (3.5" × 2")
+  // Web / SNS
+  | "instagram-square"   // 1080 × 1080
+  | "instagram-story"    // 1080 × 1920
+  | "twitter-header"     // 1500 × 500
+  | "web-1920"           // 1920 × 1080
+  | "web-1440"           // 1440 × 900
+  // Custom
+  | "custom";
 
 type BaseNodeProps = {
   id: string;
@@ -131,10 +151,23 @@ export type GroupNode = BaseNodeProps & {
   children: string[];
 };
 
+export type FrameNode = BaseNodeProps & {
+  type: "frame";
+  preset: FramePreset;
+  fill: ColorValue;
+  stroke: NodeStroke;
+  /** Child node IDs */
+  children: string[];
+  /** Whether to clip child content */
+  clipContent: boolean;
+  /** Whether to show the background fill */
+  showBackground: boolean;
+};
+
 /**
  * Union type for all diagram nodes
  */
-export type DiagramNode = ShapeNode | TextNode | GroupNode | SymbolInstance;
+export type DiagramNode = ShapeNode | TextNode | GroupNode | FrameNode | SymbolInstance;
 
 // =============================================================================
 // Connection Types
@@ -210,7 +243,7 @@ export function isSymbolInstance(node: DiagramNode): node is SymbolInstance {
  * Type guard for shape nodes
  */
 export function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance";
+  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame";
 }
 
 /**
@@ -225,6 +258,13 @@ export function isTextNode(node: DiagramNode): node is TextNode {
  */
 export function isGroupNode(node: DiagramNode): node is GroupNode {
   return node.type === "group";
+}
+
+/**
+ * Type guard for frame nodes
+ */
+export function isFrameNode(node: DiagramNode): node is FrameNode {
+  return node.type === "frame";
 }
 
 // =============================================================================

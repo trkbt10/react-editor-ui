@@ -27,21 +27,23 @@ import type { ViewportState, GestureConfig } from "../../../../../canvas/core/ty
 import { DocumentContext, SelectionContext, GridContext, ToolContext, PageContext } from "../contexts";
 import { createNode, createConnection } from "../mockData";
 import { snapToGrid } from "../hooks/useGridSnap";
-import type { DiagramNode, NodeType, ConnectionPosition, GroupNode, SymbolInstance, SymbolDefinition, SymbolsPage } from "../types";
-import { isSymbolInstance } from "../types";
+import type { DiagramNode, NodeType, ConnectionPosition, GroupNode, FrameNode, SymbolInstance, SymbolDefinition, SymbolsPage } from "../types";
+import { isSymbolInstance, isFrameNode } from "../types";
 
 // Type guard for group nodes
 function isGroupNode(node: DiagramNode): node is GroupNode {
   return node.type === "group";
 }
 
-// Get all child IDs for selected groups
+// Get all child IDs for selected groups and frames
 function getGroupChildIds(nodes: DiagramNode[], selectedIds: Set<string>): Set<string> {
   const childIds = new Set<string>();
   for (const node of nodes) {
-    if (selectedIds.has(node.id) && isGroupNode(node)) {
-      for (const childId of node.children) {
-        childIds.add(childId);
+    if (selectedIds.has(node.id)) {
+      if (isGroupNode(node) || isFrameNode(node)) {
+        for (const childId of node.children) {
+          childIds.add(childId);
+        }
       }
     }
   }
@@ -53,6 +55,7 @@ import { ConnectionRenderer, ArrowMarkerDefs } from "./ConnectionRenderer";
 import { FloatingShapeToolbar } from "./FloatingShapeToolbar";
 import { MarqueeSelection, intersectsMarquee, type MarqueeState } from "./MarqueeSelection";
 import { SymbolInstanceRenderer } from "./SymbolInstanceRenderer";
+import { FrameRenderer } from "./FrameRenderer";
 
 // =============================================================================
 // Styles
@@ -87,6 +90,16 @@ const NodeWrapper = memo(function NodeWrapper({ node, selected, editing, onConte
       <SymbolInstanceRenderer
         instance={node}
         symbolDef={symbolDef}
+        selected={selected}
+      />
+    );
+  }
+
+  // Render frame nodes using FrameRenderer
+  if (isFrameNode(node)) {
+    return (
+      <FrameRenderer
+        node={node}
         selected={selected}
       />
     );
@@ -279,6 +292,62 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
   // Get nodes for canvas page (symbols page has no nodes)
   const pageNodes = activePageId === "canvas" ? canvasPage.nodes : [];
   const pageConnections = activePageId === "canvas" ? canvasPage.connections : [];
+
+  // Separate frame nodes and get child IDs
+  const { frameNodes, childNodeIds, topLevelNodes } = useMemo(() => {
+    const frames: FrameNode[] = [];
+    const childIds = new Set<string>();
+
+    // Collect all frames and their children
+    for (const node of pageNodes) {
+      if (isFrameNode(node)) {
+        frames.push(node);
+        for (const childId of node.children) {
+          childIds.add(childId);
+        }
+      }
+    }
+
+    // Top-level nodes are non-frame nodes that are not children of any frame
+    const topLevel = pageNodes.filter(
+      (node) => !isFrameNode(node) && !childIds.has(node.id)
+    );
+
+    return { frameNodes: frames, childNodeIds: childIds, topLevelNodes: topLevel };
+  }, [pageNodes]);
+
+  // Get child nodes for a frame
+  const getFrameChildren = useCallback(
+    (frame: FrameNode): DiagramNode[] => {
+      return frame.children
+        .map((childId) => pageNodes.find((n) => n.id === childId))
+        .filter((n): n is DiagramNode => n !== undefined);
+    },
+    [pageNodes],
+  );
+
+  // Generate symbol variant previews for Symbols page
+  const symbolPreviewInstances = useMemo(() => {
+    if (activePageId !== "symbols" || !symbolDef) return [];
+
+    const variantEntries = Object.entries(symbolDef.variants);
+    const previewWidth = symbolDef.width;
+    const previewHeight = symbolDef.height;
+    const padding = 40;
+    const cols = 4;
+
+    return variantEntries.map(([variantId], index): SymbolInstance => ({
+      id: `preview-${variantId}`,
+      type: "instance",
+      symbolId: symbolDef.id,
+      variantId,
+      x: padding + (index % cols) * (previewWidth + padding),
+      y: padding + Math.floor(index / cols) * (previewHeight + padding + 30),
+      width: previewWidth,
+      height: previewHeight,
+      rotation: 0,
+    }));
+  }, [activePageId, symbolDef]);
 
   // Handle move start - capture original positions (including group children)
   const handleMoveStart = useCallback(() => {
@@ -594,9 +663,10 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
 
       isMarqueeDragging.current = false;
 
-      // Find nodes that intersect with the marquee
+      // Find nodes that intersect with the marquee (excluding Frames - Figma-like behavior)
       const intersectingNodeIds = pageNodes
         .filter((node) =>
+          !isFrameNode(node) && // Exclude Frames from marquee selection
           intersectsMarquee(node.x, node.y, node.width, node.height, marquee),
         )
         .map((node) => node.id);
@@ -672,18 +742,26 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
     e.dataTransfer.dropEffect = "copy";
   }, []);
 
+  // All selectable nodes (page nodes + symbol previews on Symbols page)
+  const allSelectableNodes = useMemo(() => {
+    if (activePageId === "symbols") {
+      return [...pageNodes, ...symbolPreviewInstances];
+    }
+    return pageNodes;
+  }, [activePageId, pageNodes, symbolPreviewInstances]);
+
   // Selection bounds for bounding box (works for single or multiple nodes)
   const selectionBounds = useMemo(() => {
     if (selectedNodeIds.size === 0) return null;
-    return calculateSelectionBounds(pageNodes, selectedNodeIds);
-  }, [pageNodes, selectedNodeIds]);
+    return calculateSelectionBounds(allSelectableNodes, selectedNodeIds);
+  }, [allSelectableNodes, selectedNodeIds]);
 
   // Single selected node for rotation (only supported for single selection)
   const singleSelectedNode = useMemo(() => {
     if (selectedNodeIds.size !== 1) return null;
     const nodeId = Array.from(selectedNodeIds)[0];
-    return pageNodes.find((n) => n.id === nodeId) ?? null;
-  }, [pageNodes, selectedNodeIds]);
+    return allSelectableNodes.find((n) => n.id === nodeId) ?? null;
+  }, [allSelectableNodes, selectedNodeIds]);
 
   // SVG layers (grid + connections + bounding box + marquee)
   const svgLayers = useMemo(
@@ -773,8 +851,62 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
             gestureConfig={gestureConfig}
             onBackgroundPointerDown={handleBackgroundPointerDown}
           >
-            {/* Nodes */}
-            {pageNodes.map((node) => {
+            {/* 1. Frames with children inside (relative coordinates) */}
+            {frameNodes.map((frame) => {
+              const isFrameSelected = selectedNodeIds.has(frame.id);
+              const frameChildren = getFrameChildren(frame);
+
+              return (
+                <FrameRenderer
+                  key={frame.id}
+                  node={frame}
+                  selected={isFrameSelected}
+                  onFrameSelect={(e) => {
+                    // Select frame when clicking on label or border
+                    handleNodePointerDown(frame.id, e);
+                  }}
+                >
+                  {/* Children rendered inside frame with relative coordinates */}
+                  {frameChildren.map((child) => {
+                    const isChildSelected = selectedNodeIds.has(child.id);
+                    const isChildEditing = editingNodeId === child.id;
+
+                    // Adjust coordinates relative to frame
+                    const adjustedChild = {
+                      ...child,
+                      x: child.x - frame.x,
+                      y: child.y - frame.y,
+                    };
+
+                    return (
+                      <div
+                        key={child.id}
+                        style={{
+                          pointerEvents: "auto",
+                          position: "relative",
+                          zIndex: isChildSelected ? 1 : 0,
+                        }}
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          handleNodePointerDown(child.id, e);
+                        }}
+                      >
+                        <NodeWrapper
+                          node={adjustedChild}
+                          selected={isChildSelected}
+                          editing={isChildEditing}
+                          onContentChange={handleContentChange}
+                          onEditEnd={handleEditEnd}
+                          symbolDef={symbolDef}
+                        />
+                      </div>
+                    );
+                  })}
+                </FrameRenderer>
+              );
+            })}
+            {/* 2. Top-level nodes (not inside any frame) */}
+            {topLevelNodes.map((node) => {
               const isSelected = selectedNodeIds.has(node.id);
               const isEditing = editingNodeId === node.id;
               const isDirectDragging = directDragNodeId === node.id;
@@ -782,10 +914,6 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                 <div
                   key={node.id}
                   style={{
-                    // When direct dragging: keep pointer events to track drag
-                    // When selected (and not editing/dragging): let BoundingBox handles work
-                    // When not selected: allow direct click + drag
-                    // When editing: allow text input
                     pointerEvents: isDirectDragging || isEditing || !isSelected ? "auto" : "none",
                   }}
                   onPointerDown={(e) => {
@@ -801,6 +929,58 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                     onEditEnd={handleEditEnd}
                     symbolDef={symbolDef}
                   />
+                </div>
+              );
+            })}
+            {/* 3. Symbol variant previews (Symbols page only) */}
+            {symbolPreviewInstances.map((instance) => {
+              const isSelected = selectedNodeIds.has(instance.id);
+
+              return (
+                <div
+                  key={instance.id}
+                  style={{
+                    pointerEvents: "auto",
+                    cursor: "pointer",
+                  }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    // Select the variant preview
+                    if (e.shiftKey) {
+                      setSelectedNodeIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(instance.id)) {
+                          next.delete(instance.id);
+                        } else {
+                          next.add(instance.id);
+                        }
+                        return next;
+                      });
+                    } else {
+                      setSelectedNodeIds(new Set([instance.id]));
+                      setSelectedConnectionIds(new Set());
+                    }
+                  }}
+                >
+                  <SymbolInstanceRenderer
+                    instance={instance}
+                    symbolDef={symbolDef}
+                    selected={isSelected}
+                  />
+                  {/* Variant label */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: instance.x,
+                      top: instance.y + instance.height + 8,
+                      fontSize: 12,
+                      color: "var(--rei-color-text-muted)",
+                      whiteSpace: "nowrap",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {symbolDef?.variants[instance.variantId]?.name ?? instance.variantId}
+                  </div>
                 </div>
               );
             })}

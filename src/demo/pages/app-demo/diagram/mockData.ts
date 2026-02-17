@@ -8,6 +8,8 @@ import type {
   ShapeNode,
   TextNode,
   GroupNode,
+  FrameNode,
+  FramePreset,
   Connection,
   ShapeDefinition,
   DiagramTheme,
@@ -41,6 +43,41 @@ export const shapeLibrary: ShapeDefinition[] = [
 
   // Text
   { type: "text", label: "Text", category: "basic", defaultWidth: 100, defaultHeight: 30 },
+];
+
+// =============================================================================
+// Frame Presets
+// =============================================================================
+
+export type FramePresetInfo = {
+  width: number;
+  height: number;
+  label: string;
+  category: "paper" | "business" | "web" | "custom";
+};
+
+export const framePresets: Record<FramePreset, FramePresetInfo> = {
+  // Paper
+  "a3": { width: 1123, height: 1587, label: "A3", category: "paper" },
+  "a4": { width: 794, height: 1123, label: "A4", category: "paper" },
+  "a5": { width: 559, height: 794, label: "A5", category: "paper" },
+  // Business
+  "business-card": { width: 252, height: 168, label: "名刺", category: "business" },
+  // Web / SNS
+  "instagram-square": { width: 1080, height: 1080, label: "Instagram", category: "web" },
+  "instagram-story": { width: 1080, height: 1920, label: "Instagram Story", category: "web" },
+  "twitter-header": { width: 1500, height: 500, label: "Twitter Header", category: "web" },
+  "web-1920": { width: 1920, height: 1080, label: "Desktop (1920)", category: "web" },
+  "web-1440": { width: 1440, height: 900, label: "Laptop (1440)", category: "web" },
+  // Custom
+  "custom": { width: 800, height: 600, label: "カスタム", category: "custom" },
+};
+
+export const framePresetCategories = [
+  { id: "paper", label: "紙サイズ", presets: ["a3", "a4", "a5"] as FramePreset[] },
+  { id: "business", label: "ビジネス", presets: ["business-card"] as FramePreset[] },
+  { id: "web", label: "Web / SNS", presets: ["instagram-square", "instagram-story", "twitter-header", "web-1920", "web-1440"] as FramePreset[] },
+  { id: "custom", label: "その他", presets: ["custom"] as FramePreset[] },
 ];
 
 // =============================================================================
@@ -175,6 +212,32 @@ export function createGroupNode(
     height,
     rotation: 0,
     children,
+  };
+}
+
+/**
+ * Create a frame node with preset size
+ */
+export function createFrameNode(
+  preset: FramePreset,
+  x: number,
+  y: number,
+): FrameNode {
+  const size = framePresets[preset];
+  return {
+    id: generateNodeId(),
+    type: "frame",
+    preset,
+    x,
+    y,
+    width: size.width,
+    height: size.height,
+    rotation: 0,
+    fill: { hex: "#ffffff", opacity: 100, visible: true },
+    stroke: { color: { hex: "#e0e0e0", opacity: 100, visible: true }, width: 1, style: "solid" },
+    children: [],
+    clipContent: true,
+    showBackground: true,
   };
 }
 
@@ -381,11 +444,17 @@ const instance4 = createSymbolInstance(flowchartSymbol.id, "process", 300, 340, 
 });
 const instance5 = createSymbolInstance(flowchartSymbol.id, "end", 100, 500, 140, 60);
 
+// Create a frame to contain the flowchart (with children)
+const flowchartFrame: FrameNode = {
+  ...createFrameNode("a4", 50, 50),
+  children: [instance1.id, instance2.id, instance3.id, instance4.id, instance5.id],
+};
+
 // Canvas page: contains symbol instances and standalone nodes
 const canvasPage: CanvasPage = {
   id: "canvas",
   name: "Canvas",
-  nodes: [instance1, instance2, instance3, instance4, instance5],
+  nodes: [flowchartFrame, instance1, instance2, instance3, instance4, instance5],
   connections: [
     createConnection(instance1.id, "bottom", instance2.id, "top"),
     createConnection(instance2.id, "bottom", instance3.id, "top"),
