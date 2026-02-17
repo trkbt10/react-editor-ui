@@ -348,14 +348,6 @@ import { FloatingToolbar } from "react-editor-ui/FloatingToolbar";
 />
 ```
 
-#### Panel
-
-Floating settings panel with header and close button
-
-```tsx
-import { Panel } from "react-editor-ui/panels/Panel";
-```
-
 #### PropertyGrid
 
 Grid layout for property panels
@@ -394,9 +386,9 @@ import { IconButton } from "react-editor-ui/IconButton";
 </Toolbar>
 ```
 
-### Composite
+### Panels
 
-> Complex components combining multiple primitives
+> Panel components for property editing and configuration
 
 #### FontsPanel
 
@@ -404,6 +396,14 @@ Floating font picker panel with search and category filter
 
 ```tsx
 import { FontsPanel } from "react-editor-ui/panels/FontsPanel";
+```
+
+#### Panel
+
+Floating settings panel with header and close button
+
+```tsx
+import { Panel } from "react-editor-ui/panels/Panel";
 ```
 
 #### PositionPanel
@@ -422,20 +422,24 @@ Comprehensive stroke settings panel
 import { StrokeSettingsPanel } from "react-editor-ui/panels/StrokeSettingsPanel";
 ```
 
-#### TransformButtons
-
-Flexible transform operation buttons
-
-```tsx
-import { TransformButtons } from "react-editor-ui/TransformButtons";
-```
-
 #### TypographyPanel
 
 Typography settings panel for text properties
 
 ```tsx
 import { TypographyPanel } from "react-editor-ui/panels/TypographyPanel";
+```
+
+### Composite
+
+> Complex components combining multiple primitives
+
+#### TransformButtons
+
+Flexible transform operation buttons
+
+```tsx
+import { TransformButtons } from "react-editor-ui/TransformButtons";
 ```
 
 ### Navigation

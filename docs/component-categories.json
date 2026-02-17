@@ -28,10 +28,22 @@
       "description": "Components for organizing and structuring UI",
       "components": [
         "FloatingToolbar",
-        "Panel",
         "PropertyGrid",
         "PropertySection",
         "Toolbar"
+      ]
+    },
+    {
+      "id": "panels",
+      "label": "Panels",
+      "description": "Panel components for property editing and configuration",
+      "components": [
+        "AnimationPanel",
+        "FontsPanel",
+        "Panel",
+        "PositionPanel",
+        "StrokeSettingsPanel",
+        "TypographyPanel"
       ]
     },
     {
@@ -39,12 +51,7 @@
       "label": "Composite",
       "description": "Complex components combining multiple primitives",
       "components": [
-        "AnimationPanel",
-        "FontsPanel",
-        "PositionPanel",
-        "StrokeSettingsPanel",
-        "TransformButtons",
-        "TypographyPanel"
+        "TransformButtons"
       ]
     },
     {

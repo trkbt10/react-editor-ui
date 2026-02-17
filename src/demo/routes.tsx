@@ -38,15 +38,17 @@ import { ToolbarDemo } from "./pages/layout/ToolbarDemo";
 import { FloatingToolbarDemo } from "./pages/layout/FloatingToolbarDemo";
 import { PropertyGridDemo } from "./pages/layout/PropertyGridDemo";
 import { PropertySectionDemo } from "./pages/layout/PropertySectionDemo";
-import { PanelDemo } from "./pages/layout/PanelDemo";
+
+// Panels demos
+import { PanelDemo } from "./pages/panels/PanelDemo";
+import { AnimationPanelDemo } from "./pages/panels/AnimationPanelDemo";
+import { FontsPanelDemo } from "./pages/panels/FontsPanelDemo";
+import { PositionPanelDemo } from "./pages/panels/PositionPanelDemo";
+import { StrokeSettingsPanelDemo } from "./pages/panels/StrokeSettingsPanelDemo";
+import { TypographyPanelDemo } from "./pages/panels/TypographyPanelDemo";
 
 // Composite demos
-import { StrokeSettingsPanelDemo } from "./pages/composite/StrokeSettingsPanelDemo";
 import { TransformButtonsDemo } from "./pages/composite/TransformButtonsDemo";
-import { TypographyPanelDemo } from "./pages/composite/TypographyPanelDemo";
-import { FontsPanelDemo } from "./pages/composite/FontsPanelDemo";
-import { PositionPanelDemo } from "./pages/composite/PositionPanelDemo";
-import { AnimationPanelDemo } from "./pages/composite/AnimationPanelDemo";
 
 // Data display demos
 import { PropertyRowDemo } from "./pages/data-display/PropertyRowDemo";
@@ -235,37 +237,25 @@ export const demoCategories: DemoCategory[] = [
         path: "property-section",
         element: <PropertySectionDemo />,
       },
+    ],
+  },
+  {
+    id: "panels",
+    label: "Panels",
+    icon: <LuLayers size={18} />,
+    base: "/components/panels",
+    pages: [
       {
         id: "panel",
         label: "Panel",
         path: "panel",
         element: <PanelDemo />,
       },
-    ],
-  },
-  {
-    id: "composite",
-    label: "Composite",
-    icon: <LuLayers size={18} />,
-    base: "/components/composite",
-    pages: [
       {
-        id: "stroke-settings-panel",
-        label: "StrokeSettingsPanel",
-        path: "stroke-settings-panel",
-        element: <StrokeSettingsPanelDemo />,
-      },
-      {
-        id: "transform-buttons",
-        label: "TransformButtons",
-        path: "transform-buttons",
-        element: <TransformButtonsDemo />,
-      },
-      {
-        id: "typography-panel",
-        label: "TypographyPanel",
-        path: "typography-panel",
-        element: <TypographyPanelDemo />,
+        id: "animation-panel",
+        label: "AnimationPanel",
+        path: "animation-panel",
+        element: <AnimationPanelDemo />,
       },
       {
         id: "fonts-panel",
@@ -280,10 +270,30 @@ export const demoCategories: DemoCategory[] = [
         element: <PositionPanelDemo />,
       },
       {
-        id: "animation-panel",
-        label: "AnimationPanel",
-        path: "animation-panel",
-        element: <AnimationPanelDemo />,
+        id: "stroke-settings-panel",
+        label: "StrokeSettingsPanel",
+        path: "stroke-settings-panel",
+        element: <StrokeSettingsPanelDemo />,
+      },
+      {
+        id: "typography-panel",
+        label: "TypographyPanel",
+        path: "typography-panel",
+        element: <TypographyPanelDemo />,
+      },
+    ],
+  },
+  {
+    id: "composite",
+    label: "Composite",
+    icon: <LuBox size={18} />,
+    base: "/components/composite",
+    pages: [
+      {
+        id: "transform-buttons",
+        label: "TransformButtons",
+        path: "transform-buttons",
+        element: <TransformButtonsDemo />,
       },
     ],
   },
