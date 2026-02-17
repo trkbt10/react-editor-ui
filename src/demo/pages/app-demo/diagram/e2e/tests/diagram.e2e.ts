@@ -33,6 +33,63 @@ async function dispatchPointerEvent(
   );
 }
 
+/**
+ * Helper to enter drawing mode and draw on canvas.
+ * This replaces the old behavior where clicking the button immediately added a shape.
+ */
+async function drawOnCanvas(page: Page): Promise<void> {
+  // Wait for cursor to change to crosshair (drawing mode active)
+  const canvas = page.locator('[role="application"]');
+  await expect(async () => {
+    const cursor = await canvas.evaluate((el) => window.getComputedStyle(el).cursor);
+    expect(cursor).toBe("crosshair");
+  }).toPass({ timeout: 2000 });
+
+  // Get the SVG element
+  const canvasSvg = page.locator('[data-testid="canvas-svg"]');
+  const svgBox = await canvasSvg.boundingBox();
+  if (!svgBox) throw new Error("Could not get SVG bounding box");
+
+  // Draw a shape on empty area
+  const startX = svgBox.x + svgBox.width - 200;
+  const startY = svgBox.y + svgBox.height - 200;
+  const endX = startX + 120;
+  const endY = startY + 80;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(endX, endY);
+  await page.mouse.up();
+  await page.waitForTimeout(200);
+}
+
+/**
+ * Helper to add a shape by entering drawing mode and drawing on canvas.
+ */
+async function addShapeByDrawing(page: Page): Promise<void> {
+  // Click the main shape button to enter drawing mode
+  const mainButton = page.locator('button[aria-label="Add shape"]');
+  await mainButton.click();
+  await drawOnCanvas(page);
+}
+
+/**
+ * Helper to add a text node by entering drawing mode and drawing on canvas.
+ */
+async function addTextByDrawing(page: Page): Promise<void> {
+  // Select Text from dropdown first
+  const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+  await dropdownToggle.click();
+  const textOption = page.locator('[role="option"]:has-text("Text")');
+  await expect(textOption).toBeVisible();
+  await textOption.click();
+
+  // Click the main shape button to enter drawing mode
+  const mainButton = page.locator('button[aria-label="Add shape"]');
+  await mainButton.click();
+  await drawOnCanvas(page);
+}
+
 test.describe("Diagram Editor", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/#/diagram");
@@ -168,10 +225,9 @@ test.describe("Diagram Editor", () => {
     await dropdownToggle.click();
     const rectOption = page.getByRole("option", { name: "Rectangle R", exact: true });
     await rectOption.click();
-    const mainButton = page.locator('button[aria-label="Add shape"]');
-    await mainButton.click();
 
-    await page.waitForTimeout(100);
+    // Add shape by drawing on canvas
+    await addShapeByDrawing(page);
 
     // The newly added node should be selected
     const boundingBoxVisible = page.locator('[data-testid="bounding-box"]');
@@ -313,8 +369,8 @@ test.describe("Diagram Editor", () => {
     const exportButton = page.locator('button:has-text("Export Frame")');
     await expect(exportButton).toBeVisible();
 
-    // Verify Preview section is visible
-    const previewHeader = page.locator('text=Preview');
+    // Verify Preview section is visible (use first() to avoid strict mode violation)
+    const previewHeader = page.locator('text=Preview').first();
     await expect(previewHeader).toBeVisible();
 
     // Verify preview image is rendered (SVG preview of the first frame)
@@ -331,15 +387,8 @@ test.describe("Diagram Editor", () => {
   });
 
   test("should edit text on double-click with position maintained", async ({ page }) => {
-    // First add a text node
-    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
-    await dropdownToggle.click();
-    const textOption = page.locator('[role="option"]:has-text("Text")');
-    await expect(textOption).toBeVisible();
-    await textOption.click();
-    const mainButton = page.locator('button[aria-label="Add shape"]');
-    await mainButton.click();
-    await page.waitForTimeout(100);
+    // First add a text node by drawing
+    await addTextByDrawing(page);
 
     // The newly added text node should be selected
     const boundingBox = page.locator('[data-testid="bounding-box-move-area"]');
@@ -400,13 +449,11 @@ test.describe("Diagram Editor", () => {
   test("should move multiple selected nodes together", async ({ page }) => {
     // First add two shape nodes so we have shapes to multi-select
     const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
-    const mainButton = page.locator('button[aria-label="Add shape"]');
 
-    // Add first rectangle
+    // Add first rectangle by drawing
     await dropdownToggle.click();
     await page.getByRole("option", { name: "Rectangle R", exact: true }).click();
-    await mainButton.click();
-    await page.waitForTimeout(50);
+    await addShapeByDrawing(page);
 
     // Click somewhere else to deselect
     const canvas = page.locator('[role="application"]');
@@ -416,9 +463,8 @@ test.describe("Diagram Editor", () => {
     await page.mouse.click(canvasBox.x + 400, canvasBox.y + 400);
     await page.waitForTimeout(50);
 
-    // Add second rectangle
-    await mainButton.click();
-    await page.waitForTimeout(50);
+    // Add second rectangle by drawing
+    await addShapeByDrawing(page);
 
     // Click somewhere else to deselect
     await page.mouse.click(canvasBox.x + 400, canvasBox.y + 400);
@@ -478,31 +524,67 @@ test.describe("Diagram Editor", () => {
   });
 
   test("should show multi-selection inspector", async ({ page }) => {
-    // First add multiple shape nodes so we have shapes to select
+    // Need to add ShapeNodes (not instances) for multi-selection inspector to show
     const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
-    const mainButton = page.locator('button[aria-label="Add shape"]');
 
-    // Add first rectangle
+    // Add first rectangle by drawing at bottom-right
     await dropdownToggle.click();
     await page.getByRole("option", { name: "Rectangle R", exact: true }).click();
-    await mainButton.click();
-    await page.waitForTimeout(50);
 
-    // Add second rectangle (clicking somewhere else first to deselect)
-    const canvas = page.locator('[role="application"]');
-    const canvasBox = await canvas.boundingBox();
-    expect(canvasBox).not.toBeNull();
-    if (!canvasBox) return;
-    await page.mouse.click(canvasBox.x + 400, canvasBox.y + 400);
-    await page.waitForTimeout(50);
+    // Click main button and draw first shape
+    const mainButton = page.locator('button[aria-label="Add shape"]');
     await mainButton.click();
+
+    // Wait for cursor to change
+    const canvas = page.locator('[role="application"]');
+    await expect(async () => {
+      const cursor = await canvas.evaluate((el) => window.getComputedStyle(el).cursor);
+      expect(cursor).toBe("crosshair");
+    }).toPass({ timeout: 2000 });
+
+    // Get SVG box and draw first shape
+    const canvasSvg = page.locator('[data-testid="canvas-svg"]');
+    const svgBox = await canvasSvg.boundingBox();
+    if (!svgBox) throw new Error("Could not get SVG bounding box");
+
+    // Draw first shape at position 1
+    const pos1X = svgBox.x + svgBox.width - 400;
+    const pos1Y = svgBox.y + svgBox.height - 300;
+    await page.mouse.move(pos1X, pos1Y);
+    await page.mouse.down();
+    await page.mouse.move(pos1X + 100, pos1Y + 60);
+    await page.mouse.up();
     await page.waitForTimeout(100);
 
-    // Now marquee select multiple shapes
-    const startX = canvasBox.x + 150;
-    const startY = canvasBox.y + 150;
-    const endX = startX + 200;
-    const endY = startY + 200;
+    // Click somewhere to deselect
+    await page.mouse.click(svgBox.x + 50, svgBox.y + 50);
+    await page.waitForTimeout(50);
+
+    // Add second rectangle - enter drawing mode
+    await mainButton.click();
+    await expect(async () => {
+      const cursor = await canvas.evaluate((el) => window.getComputedStyle(el).cursor);
+      expect(cursor).toBe("crosshair");
+    }).toPass({ timeout: 2000 });
+
+    // Draw second shape at position 2 (below the first)
+    const pos2X = svgBox.x + svgBox.width - 400;
+    const pos2Y = svgBox.y + svgBox.height - 200;
+    await page.mouse.move(pos2X, pos2Y);
+    await page.mouse.down();
+    await page.mouse.move(pos2X + 100, pos2Y + 60);
+    await page.mouse.up();
+    await page.waitForTimeout(100);
+
+    // Click somewhere to deselect
+    await page.mouse.click(svgBox.x + 50, svgBox.y + 50);
+    await page.waitForTimeout(50);
+
+    // Now marquee select both shapes
+    const startX = pos1X - 20;
+    const startY = pos1Y - 20;
+    const endX = pos2X + 150;
+    const endY = pos2Y + 100;
 
     await page.mouse.move(startX, startY);
     await page.mouse.down();
@@ -557,25 +639,8 @@ test.describe("Diagram Editor", () => {
   });
 
   test("should add text node from toolbar", async ({ page }) => {
-    // Find the SplitButton dropdown toggle
-    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
-    await expect(dropdownToggle).toBeVisible();
-
-    // Open the dropdown
-    await dropdownToggle.click();
-
-    // Wait for dropdown to open and select Text option
-    const textOption = page.locator('[role="option"]:has-text("Text")');
-    await expect(textOption).toBeVisible();
-    await textOption.click();
-
-    // Now click the main button to add the shape
-    // After selecting Text, the main button shows the Text icon
-    const mainButton = page.locator('button[aria-label="Add shape"]');
-    await expect(mainButton).toBeVisible();
-    await mainButton.click();
-
-    await page.waitForTimeout(100);
+    // Add text node by drawing
+    await addTextByDrawing(page);
 
     // Verify a bounding box appears (new node is selected)
     const boundingBox = page.locator('[data-testid="bounding-box"]');
@@ -587,15 +652,8 @@ test.describe("Diagram Editor", () => {
   });
 
   test("should edit text on direct double-click (without pre-selection)", async ({ page }) => {
-    // First add a text node
-    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
-    await dropdownToggle.click();
-    const textOption = page.locator('[role="option"]:has-text("Text")');
-    await expect(textOption).toBeVisible();
-    await textOption.click();
-    const mainButton = page.locator('button[aria-label="Add shape"]');
-    await mainButton.click();
-    await page.waitForTimeout(100);
+    // First add a text node by drawing
+    await addTextByDrawing(page);
 
     // Verify text node is selected
     const boundingBox = page.locator('[data-testid="bounding-box-move-area"]');
@@ -644,15 +702,8 @@ test.describe("Diagram Editor", () => {
   });
 
   test("should allow text selection and cursor positioning in edit mode", async ({ page }) => {
-    // Add a text node
-    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
-    await dropdownToggle.click();
-    const textOption = page.locator('[role="option"]:has-text("Text")');
-    await expect(textOption).toBeVisible();
-    await textOption.click();
-    const mainButton = page.locator('button[aria-label="Add shape"]');
-    await mainButton.click();
-    await page.waitForTimeout(100);
+    // Add a text node by drawing
+    await addTextByDrawing(page);
 
     // Double-click to enter edit mode
     const boundingBox = page.locator('[data-testid="bounding-box-move-area"]');
@@ -733,13 +784,11 @@ test.describe("Diagram Editor", () => {
 
     const initialCount = await getNodeCount();
 
-    // Add a new shape
+    // Add a new shape by drawing
     const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
     await dropdownToggle.click();
     await page.getByRole("option", { name: "Rectangle R", exact: true }).click();
-    const mainButton = page.locator('button[aria-label="Add shape"]');
-    await mainButton.click();
-    await page.waitForTimeout(100);
+    await addShapeByDrawing(page);
 
     // Verify node was added
     const afterAddCount = await getNodeCount();
@@ -769,10 +818,8 @@ test.describe("Diagram Editor", () => {
 
     const initialCount = await getNodeCount();
 
-    // Add a new shape
-    const mainButton = page.locator('button[aria-label="Add shape"]');
-    await mainButton.click();
-    await page.waitForTimeout(100);
+    // Add a new shape by drawing
+    await addShapeByDrawing(page);
 
     const afterAddCount = await getNodeCount();
     expect(afterAddCount).toBe(initialCount + 1);
@@ -799,13 +846,11 @@ test.describe("Diagram Editor", () => {
   });
 
   test("should track cursor accurately with snap enabled", async ({ page }) => {
-    // First add a new rectangle node (will be placed at grid-aligned position)
+    // First add a new rectangle node by drawing (will be placed at grid-aligned position)
     const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
     await dropdownToggle.click();
     await page.getByRole("option", { name: "Rectangle R", exact: true }).click();
-    const mainButton = page.locator('button[aria-label="Add shape"]');
-    await mainButton.click();
-    await page.waitForTimeout(100);
+    await addShapeByDrawing(page);
 
     // Get the bounding box (the newly added node is already selected)
     const moveArea = page.locator('[data-testid="bounding-box-move-area"]');
