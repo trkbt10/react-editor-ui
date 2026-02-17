@@ -1,0 +1,52 @@
+/**
+ * @file LibraryBrowser E2E minimal styles
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  background: #1e1e1e;
+  color: #ffffff;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+h1, h2 {
+  margin: 0 0 16px 0;
+}
+
+a {
+  color: #58a6ff;
+}
+
+.library-mount {
+  padding: 16px;
+  display: flex;
+  gap: 24px;
+}
+
+.library-container {
+  width: 320px;
+  height: 600px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.info-panel {
+  font-size: 14px;
+  color: #888;
+}
+
+.info-panel p {
+  margin: 8px 0;
+}
