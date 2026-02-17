@@ -11,7 +11,7 @@ interface ComponentEntry {
   name: string;
   entryType: "index" | "named";
   relativePath: string;
-  category: "component" | "panel" | "canvas";
+  category: "component" | "panel" | "canvas" | "editor" | "section";
 }
 
 interface EntryCatalog {
@@ -27,6 +27,10 @@ function getCategoryDir(category: ComponentEntry["category"]): string {
       return "panels";
     case "canvas":
       return "canvas";
+    case "editor":
+      return "editors";
+    case "section":
+      return "sections";
   }
 }
 
@@ -38,6 +42,7 @@ function loadEntries(): Record<string, string> {
   const baseEntries: Record<string, string> = {
     index: resolve(__dirname, "src/index.tsx"),
     "themes/index": resolve(__dirname, "src/themes/index.ts"),
+    "hooks/index": resolve(__dirname, "src/hooks/index.ts"),
   };
 
   const catalogPath = resolve(__dirname, "scripts/entry-catalog.json");

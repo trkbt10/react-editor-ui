@@ -10,7 +10,7 @@ import {
   DemoRow,
   DemoStateDisplay,
 } from "../../components";
-import { AnimationPanel } from "../../../panels/AnimationPanel";
+import { AnimationPanel } from "../../../panels/AnimationPanel/AnimationPanel";
 import { BezierCurveEditor } from "../../../components/BezierCurveEditor/BezierCurveEditor";
 import {
   EASING_PRESETS,
