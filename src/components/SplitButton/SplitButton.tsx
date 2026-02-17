@@ -329,6 +329,7 @@ function SplitButtonInner<T extends string = string>({
     top: 0,
     left: 0,
     width: 0,
+    maxHeight: 300,
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -353,18 +354,24 @@ function SplitButtonInner<T extends string = string>({
       const minWidth = 180;
       const dropdownWidth = Math.max(rect.width, minWidth);
       const anchor = rectToAnchor(rect);
+      const viewportPadding = 8;
+      const maxAllowedHeight = 300;
       const { x, y } = calculateFloatingPosition({
         anchor,
         floatingWidth: dropdownWidth,
-        floatingHeight: 200, // Estimated dropdown height
+        floatingHeight: maxAllowedHeight,
         placement: "bottom",
         offset: 4,
         includeScrollOffset: false, // Using position: fixed
       });
+      // Calculate maxHeight to fit within viewport
+      const availableHeight = window.innerHeight - y - viewportPadding;
+      const maxHeight = Math.min(maxAllowedHeight, availableHeight);
       setDropdownPosition({
         top: y,
         left: x,
         width: dropdownWidth,
+        maxHeight,
       });
     }
   });

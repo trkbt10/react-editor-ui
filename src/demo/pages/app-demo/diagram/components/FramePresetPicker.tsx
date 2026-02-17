@@ -2,75 +2,13 @@
  * @file FramePresetPicker - Dropdown for selecting frame presets
  */
 
-import {
-  memo,
-  useState,
-  useRef,
-  useCallback,
-  useMemo,
-  useEffectEvent,
-  useLayoutEffect,
-  type CSSProperties,
-} from "react";
+import { memo, useMemo, useCallback, useState } from "react";
 import { LuFrame } from "react-icons/lu";
-import { createPortal } from "react-dom";
 
-import { IconButton } from "../../../../../components/IconButton/IconButton";
+import { SplitButton, type SplitButtonCategory } from "../../../../../components/SplitButton/SplitButton";
 import { Tooltip } from "../../../../../components/Tooltip/Tooltip";
-import { calculateFloatingPosition, rectToAnchor, useFloatingInteractions } from "../../../../../hooks";
 import type { FramePreset } from "../types";
 import { framePresets, framePresetCategories } from "../mockData";
-
-// =============================================================================
-// Styles
-// =============================================================================
-
-const dropdownStyle: CSSProperties = {
-  position: "fixed",
-  backgroundColor: "var(--rei-color-surface-raised)",
-  border: "1px solid var(--rei-color-border)",
-  borderRadius: "var(--rei-radius-lg)",
-  boxShadow: "var(--rei-shadow-md)",
-  padding: "8px",
-  minWidth: "200px",
-  maxHeight: "300px",
-  overflowY: "auto",
-  zIndex: 1000,
-};
-
-const categoryHeaderStyle: CSSProperties = {
-  fontSize: 11,
-  fontWeight: 600,
-  color: "var(--rei-color-text-muted)",
-  textTransform: "uppercase",
-  letterSpacing: "0.5px",
-  padding: "8px 12px 4px",
-};
-
-const presetItemStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: "8px 12px",
-  fontSize: 13,
-  color: "var(--rei-color-text)",
-  cursor: "pointer",
-  borderRadius: "var(--rei-radius-sm)",
-  border: "none",
-  background: "transparent",
-  width: "100%",
-  textAlign: "left",
-};
-
-const presetItemHoverStyle: CSSProperties = {
-  ...presetItemStyle,
-  backgroundColor: "var(--rei-color-hover)",
-};
-
-const presetSizeStyle: CSSProperties = {
-  fontSize: 11,
-  color: "var(--rei-color-text-muted)",
-};
 
 // =============================================================================
 // Component
@@ -78,133 +16,59 @@ const presetSizeStyle: CSSProperties = {
 
 type FramePresetPickerProps = {
   onSelect: (preset: FramePreset) => void;
+  /** Called when main button is clicked to enter drawing mode */
+  onDrawMode?: () => void;
+  /** Whether the frame drawing tool is currently active */
+  isDrawMode?: boolean;
 };
-
-type PresetItemProps = {
-  preset: FramePreset;
-  onSelect: (preset: FramePreset) => void;
-};
-
-const PresetItem = memo(function PresetItem({ preset, onSelect }: PresetItemProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const info = framePresets[preset];
-
-  const handleClick = useCallback(() => {
-    onSelect(preset);
-  }, [preset, onSelect]);
-
-  const handlePointerEnter = useCallback(() => {
-    setIsHovered(true);
-  }, []);
-
-  const handlePointerLeave = useCallback(() => {
-    setIsHovered(false);
-  }, []);
-
-  return (
-    <button
-      type="button"
-      style={isHovered ? presetItemHoverStyle : presetItemStyle}
-      onClick={handleClick}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-    >
-      <span>{info.label}</span>
-      <span style={presetSizeStyle}>{info.width} × {info.height}</span>
-    </button>
-  );
-});
-
-const DROPDOWN_ESTIMATED_HEIGHT = 300;
 
 export const FramePresetPicker = memo(function FramePresetPicker({
   onSelect,
+  onDrawMode,
+  isDrawMode = false,
 }: FramePresetPickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const buttonRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  // Track selected preset for SplitButton (defaults to first preset)
+  const [selectedPreset, setSelectedPreset] = useState<FramePreset>("a4");
 
-  const updatePosition = useEffectEvent(() => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const anchor = rectToAnchor(rect);
-      const { x, y } = calculateFloatingPosition({
-        anchor,
-        floatingWidth: 200, // minWidth from dropdownStyle
-        floatingHeight: DROPDOWN_ESTIMATED_HEIGHT,
-        placement: "bottom",
-        offset: 4,
-        includeScrollOffset: false, // Using position: fixed
-      });
-      setPosition({ top: y, left: x });
-    }
-  });
-
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
+  // Convert framePresetCategories to SplitButtonCategory format
+  const categories = useMemo((): SplitButtonCategory<FramePreset>[] => {
+    return framePresetCategories.map((cat) => ({
+      id: cat.id,
+      label: cat.label,
+      options: cat.presets.map((preset) => {
+        const info = framePresets[preset];
+        return {
+          value: preset,
+          label: info.label,
+          icon: <LuFrame size={16} />,
+          shortcut: `${info.width} × ${info.height}`,
+        };
+      }),
+    }));
   }, []);
 
-  useLayoutEffect(() => {
-    if (isOpen) {
-      updatePosition();
-    }
-  }, [isOpen]);
-
-  useFloatingInteractions({
-    isOpen,
-    onClose: handleClose,
-    anchorRef: buttonRef,
-    floatingRef: dropdownRef,
-    onReposition: updatePosition,
-  });
-
-  const handleToggle = useCallback(() => {
-    setIsOpen(!isOpen);
-  }, [isOpen]);
-
-  const handleSelect = useCallback((preset: FramePreset) => {
+  const handleChange = useCallback((preset: FramePreset) => {
+    setSelectedPreset(preset);
     onSelect(preset);
-    setIsOpen(false);
   }, [onSelect]);
 
-  const dropdownPositionStyle = useMemo<CSSProperties>(() => ({
-    ...dropdownStyle,
-    top: position.top,
-    left: position.left,
-  }), [position.top, position.left]);
+  const handleAction = useCallback(() => {
+    if (onDrawMode) {
+      onDrawMode();
+    }
+  }, [onDrawMode]);
 
   return (
-    <>
-      <div ref={buttonRef}>
-        <Tooltip content="Add Frame (F)" placement="top">
-          <IconButton
-            icon={<LuFrame size={18} />}
-            aria-label="Add Frame"
-            aria-expanded={isOpen}
-            aria-haspopup="menu"
-            size="lg"
-            onClick={handleToggle}
-          />
-        </Tooltip>
-      </div>
-      {isOpen && createPortal(
-        <div ref={dropdownRef} style={dropdownPositionStyle} role="menu">
-          {framePresetCategories.map((category) => (
-            <div key={category.id}>
-              <div style={categoryHeaderStyle}>{category.label}</div>
-              {category.presets.map((preset) => (
-                <PresetItem
-                  key={preset}
-                  preset={preset}
-                  onSelect={handleSelect}
-                />
-              ))}
-            </div>
-          ))}
-        </div>,
-        document.body,
-      )}
-    </>
+    <Tooltip content="Add Frame (F)" placement="top">
+      <SplitButton
+        categories={categories}
+        value={selectedPreset}
+        onChange={handleChange}
+        onAction={handleAction}
+        size="lg"
+        variant={isDrawMode ? "selected" : "default"}
+        aria-label="Draw Frame"
+      />
+    </Tooltip>
   );
 });
