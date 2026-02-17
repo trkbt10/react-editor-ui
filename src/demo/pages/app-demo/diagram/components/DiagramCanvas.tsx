@@ -24,7 +24,7 @@ import {
 import { BoundingBox, type HandlePosition } from "../../../../../canvas/BoundingBox/BoundingBox";
 import type { ViewportState, GestureConfig } from "../../../../../canvas/core/types";
 
-import { DocumentContext, SelectionContext, GridContext, ToolContext, PageContext } from "../contexts";
+import { DocumentContext, SelectionContext, GridContext, ToolContext, PageContext, ViewportContext } from "../contexts";
 import { createNode, createConnection } from "../mockData";
 import { snapToGrid } from "../hooks/useGridSnap";
 import type { DiagramNode, NodeType, ConnectionPosition, GroupNode, FrameNode, SymbolInstance, SymbolDefinition, SymbolsPage } from "../types";
@@ -52,7 +52,7 @@ function getGroupChildIds(nodes: DiagramNode[], selectedIds: Set<string>): Set<s
 
 import { NodeRenderer } from "./NodeRenderer";
 import { ConnectionRenderer, ArrowMarkerDefs } from "./ConnectionRenderer";
-import { FloatingShapeToolbar } from "./FloatingShapeToolbar";
+import { DiagramBottomToolbar } from "./DiagramBottomToolbar";
 import { MarqueeSelection, intersectsMarquee, type MarqueeState } from "./MarqueeSelection";
 import { SymbolInstanceRenderer } from "./SymbolInstanceRenderer";
 import { FrameRenderer } from "./FrameRenderer";
@@ -162,10 +162,33 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
   const gridCtx = useContext(GridContext);
   const toolCtx = useContext(ToolContext);
   const pageCtx = useContext(PageContext);
+  const viewportCtx = useContext(ViewportContext);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [viewport, setViewport] = useState(INITIAL_VIEWPORT);
+  const [viewport, setViewportState] = useState(INITIAL_VIEWPORT);
+
+  // Sync viewport scale with ViewportContext zoom
+  const setViewport = useCallback((updater: ViewportState | ((prev: ViewportState) => ViewportState)) => {
+    setViewportState((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      // Sync scale to ViewportContext zoom (convert to percentage)
+      if (viewportCtx && next.scale !== prev.scale) {
+        viewportCtx.setZoom(Math.round(next.scale * 100));
+      }
+      return next;
+    });
+  }, [viewportCtx]);
+
+  // Sync ViewportContext zoom to viewport scale
+  useEffect(() => {
+    if (!viewportCtx) return;
+    const newScale = viewportCtx.zoom / 100;
+    setViewportState((prev) => {
+      if (Math.abs(prev.scale - newScale) < 0.001) return prev;
+      return { ...prev, scale: newScale };
+    });
+  }, [viewportCtx?.zoom]);
 
   // Connection tool state
   const [connectionStart, setConnectionStart] = useState<{
@@ -221,7 +244,7 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
     return () => observer.disconnect();
   }, []);
 
-  if (!documentCtx || !selectionCtx || !gridCtx || !toolCtx || !pageCtx) {
+  if (!documentCtx || !selectionCtx || !gridCtx || !toolCtx || !pageCtx || !viewportCtx) {
     return null;
   }
 
@@ -265,8 +288,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
   // Dynamic container style with theme background
   const containerStyle = useMemo((): CSSProperties => ({
     ...baseContainerStyle,
-    backgroundColor: document.theme.canvasBackground,
-  }), [document.theme.canvasBackground]);
+    backgroundColor: document.theme.canvasBackground.hex,
+  }), [document.theme.canvasBackground.hex]);
 
   // Gesture config to prevent pan when interacting with BoundingBox
   const gestureConfig = useMemo((): Partial<GestureConfig> => ({
@@ -988,8 +1011,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
         </div>
       </div>
 
-      {/* Floating toolbar */}
-      <FloatingShapeToolbar />
+      {/* Bottom toolbar */}
+      <DiagramBottomToolbar />
     </div>
   );
 });

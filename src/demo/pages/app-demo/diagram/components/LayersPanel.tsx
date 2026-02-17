@@ -6,6 +6,7 @@ import { memo, useContext, useMemo, useCallback, type CSSProperties, type ReactN
 import { LuSquare, LuCircle, LuType, LuLayers, LuComponent, LuPalette, LuFrame } from "react-icons/lu";
 
 import { LayerItem } from "../../../../../components/LayerItem/LayerItem";
+import { SectionHeader } from "../../../../../components/SectionHeader/SectionHeader";
 
 import { PageContext, SelectionContext } from "../contexts";
 import type { DiagramNode, ShapeType, GroupNode, FrameNode, SymbolPart } from "../types";
@@ -29,16 +30,6 @@ const containerStyle: CSSProperties = {
   flexDirection: "column",
   height: "100%",
   overflow: "auto",
-};
-
-const headerStyle: CSSProperties = {
-  padding: "12px 16px",
-  borderBottom: "1px solid var(--rei-color-border)",
-  fontSize: 12,
-  fontWeight: 600,
-  color: "var(--rei-color-text-muted)",
-  textTransform: "uppercase",
-  letterSpacing: "0.5px",
 };
 
 const listStyle: CSSProperties = {
@@ -288,9 +279,9 @@ export const LayersPanel = memo(function LayersPanel() {
 
   return (
     <div style={containerStyle}>
-      <div style={headerStyle}>
-        Layers ({activePageId === "canvas" ? "Canvas" : "Symbols"})
-      </div>
+      <SectionHeader
+        title={`Layers (${activePageId === "canvas" ? "Canvas" : "Symbols"})`}
+      />
       <div style={listStyle}>
         {activePageId === "canvas" ? (
           topLevelNodes.length === 0 ? (

@@ -9,7 +9,6 @@ import { PropertyRow } from "../../../../../components/PropertyRow/PropertyRow";
 import { UnitInput } from "../../../../../components/UnitInput/UnitInput";
 import { ColorInput } from "../../../../../components/ColorInput/ColorInput";
 import { Select, type SelectOption } from "../../../../../components/Select/Select";
-import { Input } from "../../../../../components/Input/Input";
 import type { ColorValue } from "../../../../../utils/color/types";
 
 import { StrokeStyleSelect, type StrokeStyle as SectionStrokeStyle } from "../../../../../components/StrokeStyleSelect/StrokeStyleSelect";
@@ -128,16 +127,16 @@ export const ThemeEditor = memo(function ThemeEditor() {
         }));
       },
       // Canvas
-      setCanvasBackground: (value: string) => {
+      setCanvasBackground: (color: ColorValue) => {
         setDocument((prev) => ({
           ...prev,
-          theme: { ...prev.theme, canvasBackground: value },
+          theme: { ...prev.theme, canvasBackground: color },
         }));
       },
-      setGridColor: (value: string) => {
+      setGridColor: (color: ColorValue) => {
         setDocument((prev) => ({
           ...prev,
-          theme: { ...prev.theme, gridColor: value },
+          theme: { ...prev.theme, gridColor: color },
         }));
       },
     }),
@@ -216,19 +215,19 @@ export const ThemeEditor = memo(function ThemeEditor() {
 
       <PropertySection title="Canvas">
         <PropertyRow label="Background">
-          <Input
+          <ColorInput
             value={theme.canvasBackground}
             onChange={handlers.setCanvasBackground}
-            placeholder="#f5f5f5"
             size="sm"
+            showVisibilityToggle
           />
         </PropertyRow>
         <PropertyRow label="Grid Color">
-          <Input
+          <ColorInput
             value={theme.gridColor}
             onChange={handlers.setGridColor}
-            placeholder="#cccccc"
             size="sm"
+            showVisibilityToggle
           />
         </PropertyRow>
       </PropertySection>

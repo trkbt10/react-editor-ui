@@ -3,7 +3,7 @@
  */
 
 import { memo, useCallback, useContext, useMemo, useState, type CSSProperties } from "react";
-import { LuTrash2 } from "react-icons/lu";
+import { LuTrash2, LuZoomIn, LuZoomOut, LuDownload } from "react-icons/lu";
 
 import { PropertySection } from "../../../../../components/PropertySection/PropertySection";
 import { PropertyRow } from "../../../../../components/PropertyRow/PropertyRow";
@@ -14,6 +14,9 @@ import { Select, type SelectOption } from "../../../../../components/Select/Sele
 import { IconButton } from "../../../../../components/IconButton/IconButton";
 import { TabBar } from "../../../../../components/TabBar/TabBar";
 import { Checkbox } from "../../../../../components/Checkbox/Checkbox";
+import { Button } from "../../../../../components/Button/Button";
+import { Tooltip } from "../../../../../components/Tooltip/Tooltip";
+import { SectionHeader } from "../../../../../components/SectionHeader/SectionHeader";
 import type { ColorValue } from "../../../../../utils/color/types";
 
 import { PositionSection } from "../../../../../sections/PositionSection/PositionSection";
@@ -23,12 +26,34 @@ import type { PositionData } from "../../../../../sections/PositionSection/types
 import type { SizeData } from "../../../../../sections/SizeSection/types";
 import type { RotationData } from "../../../../../sections/RotationSection/types";
 import { StrokeStyleSelect, type StrokeStyle as SectionStrokeStyle } from "../../../../../components/StrokeStyleSelect/StrokeStyleSelect";
+import {
+  COLOR_SURFACE,
+  COLOR_BORDER,
+  COLOR_TEXT,
+  COLOR_TEXT_MUTED,
+  SPACE_2XS,
+  SPACE_XS,
+  SPACE_SM,
+  SPACE_MD,
+  SPACE_LG,
+  SPACE_2XL,
+  SIZE_FONT_XS,
+  SIZE_FONT_SM,
+  FONT_WEIGHT_MEDIUM,
+  RADIUS_SM,
+  DURATION_FAST,
+  EASING_DEFAULT,
+} from "../../../../../themes/styles";
 
-import { DocumentContext, SelectionContext, PageContext } from "../contexts";
-import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, FrameNode, FramePreset, ShapeType, Connection } from "../types";
+import { DocumentContext, SelectionContext, PageContext, ViewportContext } from "../contexts";
+import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, FrameNode, FramePreset, ShapeType, Connection, ExportFormat } from "../types";
 import { isFrameNode } from "../types";
 import { framePresets, type FramePresetInfo } from "../mockData";
 import { ThemeEditor } from "./ThemeEditor";
+import { exportToSVG } from "../export/exportToSVG";
+import { exportToPNG } from "../export/exportToPNG";
+import { exportToMermaid } from "../export/exportToMermaid";
+import { exportToMarkdown } from "../export/exportToMarkdown";
 
 // =============================================================================
 // Type Guards
@@ -50,23 +75,9 @@ const containerStyle: CSSProperties = {
   height: "100%",
   display: "flex",
   flexDirection: "column",
-  backgroundColor: "var(--rei-color-surface)",
-  borderLeft: "1px solid var(--rei-color-border)",
-  overflow: "auto",
-};
-
-const headerStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: "12px 16px",
-  borderBottom: "1px solid var(--rei-color-border)",
-};
-
-const titleStyle: CSSProperties = {
-  fontSize: 14,
-  fontWeight: 600,
-  color: "var(--rei-color-text)",
+  backgroundColor: COLOR_SURFACE,
+  borderLeft: `1px solid ${COLOR_BORDER}`,
+  overflow: "hidden",
 };
 
 const emptyStateStyle: CSSProperties = {
@@ -74,15 +85,15 @@ const emptyStateStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: 32,
+  padding: SPACE_2XL,
   textAlign: "center",
-  color: "var(--rei-color-text-muted)",
-  fontSize: 13,
+  color: COLOR_TEXT_MUTED,
+  fontSize: SIZE_FONT_SM,
 };
 
 const tabBarContainerStyle: CSSProperties = {
-  padding: "8px 16px",
-  borderBottom: "1px solid var(--rei-color-border)",
+  padding: `${SPACE_SM} ${SPACE_LG}`,
+  borderBottom: `1px solid ${COLOR_BORDER}`,
 };
 
 const contentStyle: CSSProperties = {
@@ -90,7 +101,70 @@ const contentStyle: CSSProperties = {
   overflow: "auto",
 };
 
-type InspectorTab = "design" | "theme";
+const sectionWrapperStyle: CSSProperties = {
+  padding: `${SPACE_SM} ${SPACE_MD}`,
+};
+
+const footerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: SPACE_SM,
+  padding: `${SPACE_SM} ${SPACE_LG}`,
+  borderTop: `1px solid ${COLOR_BORDER}`,
+  backgroundColor: COLOR_SURFACE,
+};
+
+const zoomDisplayStyle: CSSProperties = {
+  fontSize: SIZE_FONT_XS,
+  color: COLOR_TEXT_MUTED,
+  minWidth: 48,
+  textAlign: "center",
+};
+
+const exportContentStyle: CSSProperties = {
+  flex: 1,
+  overflow: "auto",
+};
+
+const exportOptionsContainerStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: SPACE_XS,
+};
+
+const exportOptionBaseStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: SPACE_MD,
+  padding: `${SPACE_SM} ${SPACE_MD}`,
+  borderRadius: RADIUS_SM,
+  border: `1px solid ${COLOR_BORDER}`,
+  backgroundColor: "transparent",
+  cursor: "pointer",
+  transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
+  width: "100%",
+  textAlign: "left",
+};
+
+const exportOptionTitleStyle: CSSProperties = {
+  fontSize: SIZE_FONT_SM,
+  fontWeight: FONT_WEIGHT_MEDIUM,
+  color: COLOR_TEXT,
+};
+
+const exportOptionDescStyle: CSSProperties = {
+  fontSize: SIZE_FONT_XS,
+  color: COLOR_TEXT_MUTED,
+  marginTop: SPACE_2XS,
+};
+
+const exportButtonWrapperStyle: CSSProperties = {
+  padding: `${SPACE_MD} ${SPACE_LG}`,
+  borderTop: `1px solid ${COLOR_BORDER}`,
+};
+
+type InspectorTab = "design" | "export" | "theme";
 
 // =============================================================================
 // Options
@@ -125,12 +199,21 @@ const framePresetOptions: SelectOption<FramePreset>[] = (Object.entries(framePre
   }),
 );
 
+// Export format definitions
+const exportFormats: { value: ExportFormat; title: string; description: string }[] = [
+  { value: "svg", title: "SVG", description: "Scalable vector graphics" },
+  { value: "png", title: "PNG", description: "Raster image (high quality)" },
+  { value: "mermaid", title: "Mermaid", description: "Diagram as code" },
+  { value: "markdown", title: "Markdown", description: "Documentation format" },
+];
+
 // =============================================================================
 // Component
 // =============================================================================
 
 const inspectorTabs = [
   { id: "design" as const, label: "Design" },
+  { id: "export" as const, label: "Export" },
   { id: "theme" as const, label: "Theme" },
 ];
 
@@ -138,15 +221,18 @@ export const DiagramInspector = memo(function DiagramInspector() {
   const documentCtx = useContext(DocumentContext);
   const selectionCtx = useContext(SelectionContext);
   const pageCtx = useContext(PageContext);
+  const viewportCtx = useContext(ViewportContext);
   const [activeTab, setActiveTab] = useState<InspectorTab>("design");
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("svg");
 
-  if (!documentCtx || !selectionCtx || !pageCtx) {
+  if (!documentCtx || !selectionCtx || !pageCtx || !viewportCtx) {
     return null;
   }
 
   const { document, setDocument } = documentCtx;
   const { selectedNodeIds, selectedConnectionIds, setSelectedNodeIds, setSelectedConnectionIds } = selectionCtx;
   const { activePageId, canvasPage } = pageCtx;
+  const { zoom, setZoom } = viewportCtx;
 
   // Use canvas page nodes and connections (only canvas page has these)
   const pageNodes = canvasPage.nodes;
@@ -213,6 +299,41 @@ export const DiagramInspector = memo(function DiagramInspector() {
     const connId = Array.from(selectedConnectionIds)[0];
     return pageConnections.find((c: Connection) => c.id === connId) ?? null;
   }, [pageConnections, selectedConnectionIds]);
+
+  // Zoom handlers
+  const handleZoomIn = useCallback(() => {
+    setZoom(Math.min(zoom + 25, 400));
+  }, [zoom, setZoom]);
+
+  const handleZoomOut = useCallback(() => {
+    setZoom(Math.max(zoom - 25, 25));
+  }, [zoom, setZoom]);
+
+  // Export handler
+  const handleExport = useCallback(async () => {
+    switch (exportFormat) {
+      case "svg": {
+        const svg = exportToSVG(document);
+        downloadFile(svg, "diagram.svg", "image/svg+xml");
+        break;
+      }
+      case "png": {
+        const blob = await exportToPNG(document);
+        downloadBlob(blob, "diagram.png");
+        break;
+      }
+      case "mermaid": {
+        const mermaid = exportToMermaid(document);
+        downloadFile(mermaid, "diagram.mmd", "text/plain");
+        break;
+      }
+      case "markdown": {
+        const markdown = await exportToMarkdown(document);
+        downloadFile(markdown, "diagram.md", "text/markdown");
+        break;
+      }
+    }
+  }, [document, exportFormat]);
 
   // Multi-selection property handlers (apply to all selected shape nodes)
   const multiNodeHandlers = useMemo(() => {
@@ -593,16 +714,18 @@ export const DiagramInspector = memo(function DiagramInspector() {
 
       return (
         <div style={contentStyle}>
-          <div style={headerStyle}>
-            <span style={titleStyle}>{selectedShapeNodes.length} Shapes Selected</span>
-            <IconButton
-              icon={<LuTrash2 size={16} />}
-              aria-label="Delete shapes"
-              size="sm"
-              variant="ghost"
-              onClick={multiNodeHandlers.delete}
-            />
-          </div>
+          <SectionHeader
+            title={`${selectedShapeNodes.length} Shapes Selected`}
+            action={
+              <IconButton
+                icon={<LuTrash2 size={16} />}
+                aria-label="Delete shapes"
+                size="sm"
+                variant="ghost"
+                onClick={multiNodeHandlers.delete}
+              />
+            }
+          />
 
           <PropertySection title="Type">
             <Select
@@ -663,16 +786,18 @@ export const DiagramInspector = memo(function DiagramInspector() {
 
       return (
         <div style={contentStyle}>
-          <div style={headerStyle}>
-            <span style={titleStyle}>{nodeTitle}</span>
-            <IconButton
-              icon={<LuTrash2 size={16} />}
-              aria-label="Delete element"
-              size="sm"
-              variant="ghost"
-              onClick={nodeHandlers.delete}
-            />
-          </div>
+          <SectionHeader
+            title={nodeTitle}
+            action={
+              <IconButton
+                icon={<LuTrash2 size={16} />}
+                aria-label="Delete element"
+                size="sm"
+                variant="ghost"
+                onClick={nodeHandlers.delete}
+              />
+            }
+          />
 
           {/* Shape Type (only for shapes) */}
           {isShapeNode(selectedNode) && (
@@ -710,21 +835,27 @@ export const DiagramInspector = memo(function DiagramInspector() {
             </PropertySection>
           )}
 
-          <PositionSection
-            data={positionData}
-            onChange={handlePositionChange}
-          />
+          <div style={sectionWrapperStyle}>
+            <PositionSection
+              data={positionData}
+              onChange={handlePositionChange}
+            />
+          </div>
 
-          <SizeSection
-            data={sizeData}
-            onChange={handleSizeChange}
-          />
+          <div style={sectionWrapperStyle}>
+            <SizeSection
+              data={sizeData}
+              onChange={handleSizeChange}
+            />
+          </div>
 
-          <RotationSection
-            data={rotationData}
-            onChange={handleRotationChange}
-            showTransformButtons={false}
-          />
+          <div style={sectionWrapperStyle}>
+            <RotationSection
+              data={rotationData}
+              onChange={handleRotationChange}
+              showTransformButtons={false}
+            />
+          </div>
 
           {/* Fill & Stroke (only for shapes) */}
           {isShapeNode(selectedNode) && (
@@ -838,16 +969,18 @@ export const DiagramInspector = memo(function DiagramInspector() {
     if (selectedConnection && connectionHandlers) {
       return (
         <div style={contentStyle}>
-          <div style={headerStyle}>
-            <span style={titleStyle}>Connection Properties</span>
-            <IconButton
-              icon={<LuTrash2 size={16} />}
-              aria-label="Delete connection"
-              size="sm"
-              variant="ghost"
-              onClick={connectionHandlers.delete}
-            />
-          </div>
+          <SectionHeader
+            title="Connection Properties"
+            action={
+              <IconButton
+                icon={<LuTrash2 size={16} />}
+                aria-label="Delete connection"
+                size="sm"
+                variant="ghost"
+                onClick={connectionHandlers.delete}
+              />
+            }
+          />
 
           <PropertySection title="Label">
             <Input
@@ -912,6 +1045,48 @@ export const DiagramInspector = memo(function DiagramInspector() {
     );
   };
 
+  // Render export content
+  const renderExportContent = () => {
+    const getOptionStyle = (isSelected: boolean): CSSProperties => ({
+      ...exportOptionBaseStyle,
+      borderColor: isSelected ? "var(--rei-color-primary)" : "var(--rei-color-border)",
+      backgroundColor: isSelected ? "var(--rei-color-primary-soft)" : "transparent",
+    });
+
+    return (
+      <div style={exportContentStyle}>
+        <PropertySection title="Format">
+          <div style={exportOptionsContainerStyle}>
+            {exportFormats.map((format) => (
+              <button
+                key={format.value}
+                type="button"
+                style={getOptionStyle(exportFormat === format.value)}
+                onClick={() => setExportFormat(format.value)}
+              >
+                <div>
+                  <div style={exportOptionTitleStyle}>{format.title}</div>
+                  <div style={exportOptionDescStyle}>{format.description}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </PropertySection>
+
+        <div style={exportButtonWrapperStyle}>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleExport}
+          >
+            <LuDownload size={16} />
+            Export as {exportFormat.toUpperCase()}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div style={containerStyle}>
       <div style={tabBarContainerStyle}>
@@ -922,7 +1097,52 @@ export const DiagramInspector = memo(function DiagramInspector() {
           size="sm"
         />
       </div>
-      {activeTab === "design" ? renderDesignContent() : <ThemeEditor />}
+      {activeTab === "design" && renderDesignContent()}
+      {activeTab === "export" && renderExportContent()}
+      {activeTab === "theme" && <ThemeEditor />}
+
+      {/* Zoom controls footer */}
+      <div style={footerStyle}>
+        <Tooltip content="Zoom Out" placement="top">
+          <IconButton
+            icon={<LuZoomOut size={16} />}
+            aria-label="Zoom out"
+            size="sm"
+            variant="ghost"
+            onClick={handleZoomOut}
+          />
+        </Tooltip>
+        <span style={zoomDisplayStyle}>{zoom}%</span>
+        <Tooltip content="Zoom In" placement="top">
+          <IconButton
+            icon={<LuZoomIn size={16} />}
+            aria-label="Zoom in"
+            size="sm"
+            variant="ghost"
+            onClick={handleZoomIn}
+          />
+        </Tooltip>
+      </div>
     </div>
   );
 });
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+function downloadFile(content: string, filename: string, mimeType: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  downloadBlob(blob, filename);
+}
+
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = window.document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  window.document.body.appendChild(a);
+  a.click();
+  window.document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

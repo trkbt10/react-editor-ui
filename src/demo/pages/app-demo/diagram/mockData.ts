@@ -116,8 +116,8 @@ export const defaultTheme: DiagramTheme = {
     style: "solid",
   },
   defaultConnectionArrow: "arrow",
-  canvasBackground: "#f5f5f5",
-  gridColor: "#cccccc",
+  canvasBackground: { hex: "#f5f5f5", opacity: 100, visible: true },
+  gridColor: { hex: "#cccccc", opacity: 100, visible: true },
 };
 
 // =============================================================================

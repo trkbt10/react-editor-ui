@@ -201,8 +201,8 @@ export type DiagramTheme = {
   defaultNodeStroke: NodeStroke;
   defaultConnectionStroke: NodeStroke;
   defaultConnectionArrow: ArrowheadType;
-  canvasBackground: string;
-  gridColor: string;
+  canvasBackground: ColorValue;
+  gridColor: ColorValue;
 };
 
 // =============================================================================
