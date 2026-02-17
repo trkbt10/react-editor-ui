@@ -49,7 +49,7 @@ import {
   SIZE_HEIGHT_MD,
   SIZE_HEIGHT_LG,
   SIZE_HEIGHT_XL,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type IconButtonProps = {
   icon: ReactNode;

@@ -20,7 +20,7 @@ import {
   SPACE_SM,
   SHADOW_MD,
   Z_DROPDOWN,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { Portal } from "../Portal/Portal";
 import type { UnitOption } from "./unitInputUtils";
 

@@ -15,7 +15,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   RADIUS_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { VideoFillValue } from "./types";
 
 export type VideoFillSectionProps = {

@@ -5,7 +5,7 @@
 import { memo, useState, useMemo, useCallback } from "react";
 import type { ReactNode, CSSProperties } from "react";
 import { SectionHeader } from "../SectionHeader/SectionHeader";
-import { SPACE_SM, SPACE_MD } from "../../constants/styles";
+import { SPACE_SM, SPACE_MD } from "../../themes/styles";
 
 export type PropertySectionProps = {
   title: string;

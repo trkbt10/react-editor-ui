@@ -32,7 +32,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   Z_TOOLTIP,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type TooltipPlacement = "top" | "bottom" | "left" | "right";
 

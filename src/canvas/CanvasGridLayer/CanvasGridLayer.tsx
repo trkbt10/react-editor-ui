@@ -12,7 +12,7 @@ import {
   COLOR_CANVAS_GRID_MAJOR,
   COLOR_CANVAS_GRID_MINOR,
   COLOR_CANVAS_GRID_ORIGIN,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { GridLayerConfig } from "../core/types";
 import { DEFAULT_GRID_CONFIG } from "../core/types";
 
@@ -114,6 +114,7 @@ export const CanvasGridLayer = memo(function CanvasGridLayer(
         width={viewWidth}
         height={viewHeight}
         fill={`url(#${minorPatternId})`}
+        style={{ pointerEvents: "none" }}
       />
 
       {/* Major grid fill */}
@@ -124,11 +125,12 @@ export const CanvasGridLayer = memo(function CanvasGridLayer(
         width={viewWidth}
         height={viewHeight}
         fill={`url(#${majorPatternId})`}
+        style={{ pointerEvents: "none" }}
       />
 
       {/* Origin lines (individual elements for visibility) */}
       {showOrigin && (
-        <g data-testid="canvas-grid-origin">
+        <g data-testid="canvas-grid-origin" style={{ pointerEvents: "none" }}>
           {/* Vertical origin line (X=0) */}
           <line
             x1={0}

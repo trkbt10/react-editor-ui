@@ -10,7 +10,7 @@ import {
   COLOR_TEXT_MUTED,
   SIZE_FONT_XS,
   SPACE_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type StrokeDashEditorProps = {
   enabled: boolean;

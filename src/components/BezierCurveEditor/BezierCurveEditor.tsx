@@ -28,7 +28,7 @@ import {
   COLOR_TEXT_MUTED,
   COLOR_SURFACE,
   RADIUS_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { BezierControlPoints } from "./bezierTypes";
 
 /** Ref object to hold mutable state for stable callbacks */

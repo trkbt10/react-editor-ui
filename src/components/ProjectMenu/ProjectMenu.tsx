@@ -36,7 +36,7 @@ import {
   SPACE_MD,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type ProjectMenuBadge = {
   label: string;

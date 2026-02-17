@@ -21,7 +21,7 @@ import {
   AlignStartIcon,
   AlignEndIcon,
 } from "../../icons";
-import { SPACE_MD } from "../../constants/styles";
+import { SPACE_MD } from "../../themes/styles";
 
 export type StrokeArrowheadSelectProps = {
   value: ArrowheadSettings;

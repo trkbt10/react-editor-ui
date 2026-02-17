@@ -26,7 +26,7 @@ import {
   RADIUS_SM,
   COLOR_INPUT_BG,
   COLOR_INPUT_BORDER_FOCUS,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { ContextMenu } from "../ContextMenu/ContextMenu";
 import type { ContextMenuItem } from "../ContextMenu/ContextMenu";
 import { EyeIcon, LockIcon, DragHandleIcon, ChevronRightIcon } from "../../icons";

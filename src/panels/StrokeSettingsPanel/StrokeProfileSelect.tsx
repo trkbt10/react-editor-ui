@@ -7,7 +7,7 @@ import type { WidthProfile } from "./types";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { TooltipIconButton } from "../../components/TooltipIconButton/TooltipIconButton";
 import { FlipVerticalIcon as FlipIcon } from "../../icons";
-import { SPACE_SM } from "../../constants/styles";
+import { SPACE_SM } from "../../themes/styles";
 
 export type StrokeProfileSelectProps = {
   value: WidthProfile;

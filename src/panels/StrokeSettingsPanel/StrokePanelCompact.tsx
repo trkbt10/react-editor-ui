@@ -23,7 +23,7 @@ import {
   SIZE_FONT_SM,
   SPACE_SM,
   SPACE_MD,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import {
   FrequencyIcon,
   WiggleIcon,

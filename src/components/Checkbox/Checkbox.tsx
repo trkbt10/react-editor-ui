@@ -40,7 +40,7 @@ import {
   SIZE_CHECKBOX_MD,
   SPACE_SM,
   SHADOW_THUMB,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type CheckboxProps = {
   checked: boolean;

@@ -20,7 +20,7 @@ import {
   SHADOW_MD,
   COLOR_INPUT_BG,
   Z_POPOVER,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { ChevronRightIcon } from "../../icons";
 
 export type ContextMenuItem = {

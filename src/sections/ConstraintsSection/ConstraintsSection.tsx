@@ -6,7 +6,7 @@ import { memo, useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
 import { SectionLayout } from "../shared/SectionLayout";
 import { Select, type SelectOption } from "../../components/Select/Select";
-import { SPACE_MD } from "../../constants/styles";
+import { SPACE_MD } from "../../themes/styles";
 import { ConstraintVisualization } from "./ConstraintVisualization";
 import type { ConstraintsSectionProps, HorizontalConstraint, VerticalConstraint } from "./types";
 

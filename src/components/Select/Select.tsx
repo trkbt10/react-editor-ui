@@ -23,7 +23,7 @@
  * ```
  */
 
-import { memo, useState, useRef, useEffect, useEffectEvent, useLayoutEffect, useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
+import React, { memo, useState, useRef, useEffect, useEffectEvent, useLayoutEffect, useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
 import { Portal } from "../Portal/Portal";
 import {
   COLOR_INPUT_BG,
@@ -49,7 +49,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   SPACE_LG,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 function getOptionBackground(isSelected: boolean, isFocused: boolean): string {
   if (isSelected) {
@@ -99,13 +99,46 @@ type SelectOptionItemProps<T extends string> = {
   onOptionHover: (index: number) => void;
 };
 
+function areSelectOptionItemPropsEqual<T extends string>(
+  prevProps: SelectOptionItemProps<T>,
+  nextProps: SelectOptionItemProps<T>,
+): boolean {
+  // Compare option by actual content (skip preview which is ReactNode)
+  if (prevProps.option.value !== nextProps.option.value) {
+    return false;
+  }
+  if (prevProps.option.label !== nextProps.option.label) {
+    return false;
+  }
+  if (prevProps.option.disabled !== nextProps.option.disabled) {
+    return false;
+  }
+
+  // Compare other props
+  if (prevProps.index !== nextProps.index) {
+    return false;
+  }
+  if (prevProps.isSelected !== nextProps.isSelected) {
+    return false;
+  }
+  if (prevProps.isFocused !== nextProps.isFocused) {
+    return false;
+  }
+  if (prevProps.sizeConfig !== nextProps.sizeConfig) {
+    return false;
+  }
+
+  // Skip callback comparison - they work correctly via closures
+  return true;
+}
+
 const optionPreviewStyle: CSSProperties = {
   flex: 1,
   display: "flex",
   alignItems: "center",
 };
 
-const SelectOptionItem = memo(function SelectOptionItem<T extends string>({
+const SelectOptionItemInner = function SelectOptionItem<T extends string>({
   option,
   index,
   isSelected,
@@ -151,7 +184,9 @@ const SelectOptionItem = memo(function SelectOptionItem<T extends string>({
       {option.label && <span>{option.label}</span>}
     </div>
   );
-}) as <T extends string>(props: SelectOptionItemProps<T>) => React.ReactElement;
+};
+
+const SelectOptionItem = memo(SelectOptionItemInner, areSelectOptionItemPropsEqual) as <T extends string>(props: SelectOptionItemProps<T>) => React.ReactElement;
 
 
 
@@ -161,6 +196,100 @@ type DropdownPosition = {
   width: number;
   openUpward: boolean;
 };
+
+// =============================================================================
+// Dropdown Sub-component
+// =============================================================================
+
+type SelectDropdownHandle = {
+  moveFocus: (direction: "up" | "down") => void;
+  getFocusedIndex: () => number;
+  setInitialFocus: (index: number) => void;
+};
+
+type SelectDropdownProps<T extends string> = {
+  options: SelectOption<T>[];
+  value: T;
+  sizeConfig: typeof sizeMap.md;
+  dropdownPosition: DropdownPosition;
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
+  onOptionClick: (value: T, disabled?: boolean) => void;
+};
+
+const SelectDropdownInner = <T extends string>(
+  {
+    options,
+    value,
+    sizeConfig,
+    dropdownPosition,
+    dropdownRef,
+    onOptionClick,
+  }: SelectDropdownProps<T>,
+  ref: React.ForwardedRef<SelectDropdownHandle>,
+) => {
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+
+  React.useImperativeHandle(ref, () => ({
+    moveFocus: (direction: "up" | "down") => {
+      setFocusedIndex((prev) => {
+        if (direction === "down") {
+          return Math.min(prev + 1, options.length - 1);
+        }
+        return Math.max(prev - 1, 0);
+      });
+    },
+    getFocusedIndex: () => focusedIndex,
+    setInitialFocus: (index: number) => {
+      setFocusedIndex(index);
+    },
+  }), [focusedIndex, options.length]);
+
+  const handleOptionHover = useCallback((index: number) => {
+    setFocusedIndex(index);
+  }, []);
+
+  const dropdownStyle = useMemo<CSSProperties>(() => ({
+    position: "absolute",
+    top: dropdownPosition.top,
+    left: dropdownPosition.left,
+    width: dropdownPosition.width,
+    backgroundColor: COLOR_SURFACE_RAISED,
+    border: `1px solid ${COLOR_INPUT_BORDER}`,
+    borderRadius: RADIUS_SM,
+    boxShadow: SHADOW_MD,
+    zIndex: Z_DROPDOWN,
+    maxHeight: "240px",
+    overflowY: "auto",
+    ...(dropdownPosition.openUpward && {
+      transform: "translateY(-100%)",
+    }),
+  }), [dropdownPosition]);
+
+  return (
+    <div ref={dropdownRef} role="listbox" style={dropdownStyle}>
+      {options.map((option, index) => (
+        <SelectOptionItem
+          key={option.value}
+          option={option}
+          index={index}
+          isSelected={option.value === value}
+          isFocused={index === focusedIndex}
+          sizeConfig={sizeConfig}
+          onOptionClick={onOptionClick}
+          onOptionHover={handleOptionHover}
+        />
+      ))}
+    </div>
+  );
+};
+
+const SelectDropdown = memo(React.forwardRef(SelectDropdownInner)) as <T extends string>(
+  props: SelectDropdownProps<T> & { ref?: React.Ref<SelectDropdownHandle> },
+) => React.ReactElement;
+
+// =============================================================================
+// Main Select component
+// =============================================================================
 
 export const Select = memo(function Select<T extends string = string>({
   options,
@@ -173,10 +302,10 @@ export const Select = memo(function Select<T extends string = string>({
   className,
 }: SelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
-  const [focusedIndex, setFocusedIndex] = useState(-1);
   const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0, width: 0, openUpward: false });
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownHandleRef = useRef<SelectDropdownHandle>(null);
   const sizeConfig = sizeMap[size];
 
   const selectedOption = options.find((opt) => opt.value === value);
@@ -240,15 +369,21 @@ export const Select = memo(function Select<T extends string = string>({
       case "Enter":
       case " ":
         e.preventDefault();
-        if (isOpen && focusedIndex >= 0) {
-          const option = options[focusedIndex];
-          if (option && !option.disabled) {
-            onChange(option.value);
-            setIsOpen(false);
+        if (isOpen) {
+          const focusedIndex = dropdownHandleRef.current?.getFocusedIndex() ?? -1;
+          if (focusedIndex >= 0) {
+            const option = options[focusedIndex];
+            if (option && !option.disabled) {
+              onChange(option.value);
+              setIsOpen(false);
+            }
           }
         } else {
           setIsOpen(true);
-          setFocusedIndex(options.findIndex((o) => o.value === value));
+          // Set initial focus after dropdown mounts
+          requestAnimationFrame(() => {
+            dropdownHandleRef.current?.setInitialFocus(options.findIndex((o) => o.value === value));
+          });
         }
         break;
       case "Escape":
@@ -258,15 +393,17 @@ export const Select = memo(function Select<T extends string = string>({
         e.preventDefault();
         if (!isOpen) {
           setIsOpen(true);
-          setFocusedIndex(options.findIndex((o) => o.value === value));
+          requestAnimationFrame(() => {
+            dropdownHandleRef.current?.setInitialFocus(options.findIndex((o) => o.value === value));
+          });
         } else {
-          setFocusedIndex((prev) => Math.min(prev + 1, options.length - 1));
+          dropdownHandleRef.current?.moveFocus("down");
         }
         break;
       case "ArrowUp":
         e.preventDefault();
         if (isOpen) {
-          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          dropdownHandleRef.current?.moveFocus("up");
         }
         break;
     }
@@ -301,23 +438,6 @@ export const Select = memo(function Select<T extends string = string>({
     overflow: "hidden",
   }), []);
 
-  const dropdownStyle = useMemo<CSSProperties>(() => ({
-    position: "absolute",
-    top: dropdownPosition.top,
-    left: dropdownPosition.left,
-    width: dropdownPosition.width,
-    backgroundColor: COLOR_SURFACE_RAISED,
-    border: `1px solid ${COLOR_INPUT_BORDER}`,
-    borderRadius: RADIUS_SM,
-    boxShadow: SHADOW_MD,
-    zIndex: Z_DROPDOWN,
-    maxHeight: "240px",
-    overflowY: "auto",
-    ...(dropdownPosition.openUpward && {
-      transform: "translateY(-100%)",
-    }),
-  }), [dropdownPosition]);
-
   const handleTriggerClick = useCallback(() => {
     if (!disabled) {
       setIsOpen((prev) => !prev);
@@ -330,10 +450,6 @@ export const Select = memo(function Select<T extends string = string>({
       setIsOpen(false);
     }
   }, [onChange]);
-
-  const handleOptionHover = useCallback((index: number) => {
-    setFocusedIndex(index);
-  }, []);
 
   const containerStyle = useMemo<CSSProperties>(() => ({
     position: "relative",
@@ -393,20 +509,15 @@ export const Select = memo(function Select<T extends string = string>({
       </button>
       {isOpen && (
         <Portal>
-          <div ref={dropdownRef} role="listbox" style={dropdownStyle}>
-            {options.map((option, index) => (
-              <SelectOptionItem
-                key={option.value}
-                option={option}
-                index={index}
-                isSelected={option.value === value}
-                isFocused={index === focusedIndex}
-                sizeConfig={sizeConfig}
-                onOptionClick={handleOptionClick}
-                onOptionHover={handleOptionHover}
-              />
-            ))}
-          </div>
+          <SelectDropdown
+            ref={dropdownHandleRef}
+            options={options}
+            value={value}
+            sizeConfig={sizeConfig}
+            dropdownPosition={dropdownPosition}
+            dropdownRef={dropdownRef}
+            onOptionClick={handleOptionClick}
+          />
         </Portal>
       )}
     </div>

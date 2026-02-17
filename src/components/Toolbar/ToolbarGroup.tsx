@@ -4,7 +4,7 @@
 
 import { memo, useMemo } from "react";
 import type { ReactNode, CSSProperties } from "react";
-import { SPACE_SM } from "../../constants/styles";
+import { SPACE_SM } from "../../themes/styles";
 import { useToolbarOrientation } from "./Toolbar";
 
 export type ToolbarGroupProps = {

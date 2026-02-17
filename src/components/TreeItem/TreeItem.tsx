@@ -17,7 +17,7 @@ import {
   SPACE_MD,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { ChevronRightIcon } from "../../icons";
 
 const iconStyle: CSSProperties = {

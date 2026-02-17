@@ -15,7 +15,7 @@ import {
   SIZE_PANEL_HEADER_HEIGHT,
   SPACE_MD,
   SPACE_LG,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { CloseIcon } from "../../icons";
 
 export type PanelProps = {

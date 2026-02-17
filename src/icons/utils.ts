@@ -6,7 +6,7 @@ import {
   SIZE_ICON_SM,
   SIZE_ICON_MD,
   SIZE_ICON_LG,
-} from "../constants/styles";
+} from "../themes/styles";
 import type { IconProps } from "./types";
 
 const sizeMap = {

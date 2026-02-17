@@ -22,7 +22,7 @@ import {
   SPACE_MD,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 function renderTimestamp(
   timestamp: string | Date | undefined,

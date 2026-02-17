@@ -12,7 +12,7 @@ import {
   RADIUS_SM,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { AlignmentType } from "./types";
 
 export type AlignmentGridProps = {

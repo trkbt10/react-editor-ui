@@ -34,7 +34,7 @@ import {
   SPACE_MD,
   RADIUS_LG,
   SHADOW_MD,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type ToolbarOrientation = "horizontal" | "vertical";
 

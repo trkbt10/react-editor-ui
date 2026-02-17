@@ -8,7 +8,7 @@ import {
   COLOR_BORDER,
   COLOR_PRIMARY,
   RADIUS_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { GradientValue, GradientStop } from "../../utils/gradient/types";
 import { gradientToLinearCss, generateStopId, interpolateColor } from "../../utils/gradient/utils";
 import { clamp } from "../../utils/color/clamp";

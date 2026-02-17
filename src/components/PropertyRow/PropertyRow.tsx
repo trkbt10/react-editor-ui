@@ -26,7 +26,7 @@ import {
   SIZE_PROPERTY_LABEL,
   SPACE_SM,
   SPACE_MD,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 const labelStyle: CSSProperties = {
   width: SIZE_PROPERTY_LABEL,

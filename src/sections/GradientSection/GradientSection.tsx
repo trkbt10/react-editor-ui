@@ -19,7 +19,7 @@ import {
   SPACE_XS,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { GradientValue, GradientType, GradientStop } from "../../utils/gradient/types";
 import { generateStopId, sortStopsByPosition } from "../../utils/gradient/utils";
 import { GradientBar } from "../../components/GradientBar/GradientBar";

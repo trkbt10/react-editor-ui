@@ -35,7 +35,7 @@ import {
   SPACE_MD,
   SIZE_HEIGHT_SM,
   SIZE_HEIGHT_MD,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type ControlRowProps = {
   /** Control elements to render with equal flex widths */

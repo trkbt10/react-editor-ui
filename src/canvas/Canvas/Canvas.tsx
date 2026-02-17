@@ -10,8 +10,8 @@
  * - Context for children to access viewport state
  */
 
-import { useRef, useMemo, useCallback, type ReactNode, type CSSProperties } from "react";
-import { COLOR_SURFACE, COLOR_BORDER } from "../../constants/styles";
+import { useRef, useMemo, useCallback, type ReactNode, type CSSProperties, type PointerEvent } from "react";
+import { COLOR_SURFACE, COLOR_BORDER } from "../../themes/styles";
 import { CanvasContext, type CanvasContextValue, type Point } from "../core/CanvasContext";
 import { useGestures } from "../core/useGestures";
 import type { CanvasProps } from "../core/types";
@@ -37,6 +37,7 @@ export function Canvas({
   className,
   style,
   "aria-label": ariaLabel = "Canvas",
+  onBackgroundPointerDown,
 }: CanvasProps): ReactNode {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -106,6 +107,25 @@ export function Canvas({
     canvasToScreen,
   }), [viewport, width, height, screenToCanvas, canvasToScreen]);
 
+  // Wrapped pointer down handler to detect background clicks
+  const handlePointerDown = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      // Call the gesture handler
+      handlers.onPointerDown(e);
+
+      // Check if clicking on background (container itself or SVG layer)
+      if (onBackgroundPointerDown) {
+        const target = e.target as Element;
+        const isContainer = target === e.currentTarget;
+        const isSvgBackground = target.getAttribute?.("data-testid") === "canvas-svg";
+        if (isContainer || isSvgBackground) {
+          onBackgroundPointerDown(e);
+        }
+      }
+    },
+    [handlers, onBackgroundPointerDown],
+  );
+
   // Determine cursor based on state
   const getCursor = (): string => {
     if (isPanning) {
@@ -142,6 +162,9 @@ export function Canvas({
     left: 0,
     width: "100%",
     height: "100%",
+    // z-index: 1 ensures SVG layers (connections, bounding boxes) render above HTML content
+    zIndex: 1,
+    // Allow pointer events to pass through to HTML layer below, except for SVG elements
     pointerEvents: "none",
   };
 
@@ -151,6 +174,7 @@ export function Canvas({
     left: 0,
     width: 0,
     height: 0,
+    zIndex: 0,
     ...contentTransform,
   };
 
@@ -161,7 +185,10 @@ export function Canvas({
       style={containerStyle}
       role="application"
       aria-label={ariaLabel}
-      {...handlers}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlers.onPointerMove}
+      onPointerUp={handlers.onPointerUp}
+      onPointerCancel={handlers.onPointerCancel}
     >
       <CanvasContext.Provider value={contextValue}>
         {/* Background SVG layer */}

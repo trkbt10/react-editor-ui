@@ -20,7 +20,7 @@ import {
   SPACE_LG,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { useLocalFonts, type LocalFontFamily, type LocalFontsStatus } from "./useLocalFonts";
 import { FontPanelHeader } from "./FontPanelHeader";
 import { FontSearchInput } from "./FontSearchInput";

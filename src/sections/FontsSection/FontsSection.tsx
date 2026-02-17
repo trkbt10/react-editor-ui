@@ -15,7 +15,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   SPACE_LG,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { FontsSectionProps, FontItem, FontCategory } from "./types";
 
 const categoryOptions: SelectOption<FontCategory>[] = [

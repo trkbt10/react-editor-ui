@@ -15,7 +15,7 @@ import {
   SIZE_FONT_SM,
   SPACE_SM,
   SPACE_XS,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { ColorInput } from "../ColorInput/ColorInput";
 import type { ColorValue } from "../../utils/color/types";
 import type { GradientStop } from "../../utils/gradient/types";

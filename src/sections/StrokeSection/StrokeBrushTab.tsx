@@ -7,7 +7,7 @@ import type { CSSProperties } from "react";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { IconButton } from "../../components/IconButton/IconButton";
-import { SPACE_SM } from "../../constants/styles";
+import { SPACE_SM } from "../../themes/styles";
 import { FlipHorizontalIcon, ChevronLeftIcon, ChevronRightIcon } from "../../icons";
 import { StrokePropertyRow } from "./StrokePropertyRow";
 import { WidthProfilePreview, BrushPreview } from "./StrokePreviews";

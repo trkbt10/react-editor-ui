@@ -4,7 +4,7 @@
 
 import { memo, useCallback } from "react";
 import type { CSSProperties } from "react";
-import { COLOR_PRIMARY, COLOR_BORDER, COLOR_HOVER } from "../../constants/styles";
+import { COLOR_PRIMARY, COLOR_BORDER, COLOR_HOVER } from "../../themes/styles";
 import type { HorizontalConstraint, VerticalConstraint } from "./types";
 
 export type ConstraintVisualizationProps = {

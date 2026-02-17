@@ -14,7 +14,7 @@ import {
   RADIUS_SM,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type StatusBarItemProps = {
   children: ReactNode;

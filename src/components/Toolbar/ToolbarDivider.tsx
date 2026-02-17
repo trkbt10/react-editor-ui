@@ -9,7 +9,7 @@ import {
   SIZE_DIVIDER_WIDTH,
   SIZE_ICON_MD,
   SPACE_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { useToolbarOrientation } from "./Toolbar";
 
 export type ToolbarDividerProps = {

@@ -22,7 +22,7 @@
  * </ThemeProvider>
  */
 
-import { cssVar } from "../themes/cssVar";
+import { cssVar } from "./cssVar";
 
 // ========================================
 // COLORS

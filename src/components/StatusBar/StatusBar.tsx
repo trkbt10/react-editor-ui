@@ -9,7 +9,7 @@ import {
   COLOR_BORDER,
   SIZE_STATUSBAR_HEIGHT,
   SPACE_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type StatusBarProps = {
   children: ReactNode;

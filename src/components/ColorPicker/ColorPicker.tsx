@@ -19,7 +19,7 @@ import {
   SIZE_FONT_SM,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { hexToHsv, hsvToHex, isValidHex, normalizeHex } from "../../utils/color/conversion";
 import type { HSV } from "../../utils/color/types";
 import { clamp } from "../../utils/color/clamp";
@@ -359,6 +359,27 @@ function renderOpacitySlider(
   );
 }
 
+type PresetButtonProps = {
+  color: string;
+  onClick: (color: string) => void;
+  style: CSSProperties;
+};
+
+const PresetButton = memo(function PresetButton({ color, onClick, style }: PresetButtonProps) {
+  const handleClick = useCallback(() => {
+    onClick(color);
+  }, [onClick, color]);
+
+  return (
+    <button
+      type="button"
+      aria-label={`Select color ${color}`}
+      onClick={handleClick}
+      style={style}
+    />
+  );
+});
+
 function renderPresets(
   presetColors: string[],
   containerStyle: CSSProperties,
@@ -371,11 +392,10 @@ function renderPresets(
   return (
     <div style={containerStyle}>
       {presetColors.map((color) => (
-        <button
+        <PresetButton
           key={color}
-          type="button"
-          aria-label={`Select color ${color}`}
-          onClick={() => onClick(color)}
+          color={color}
+          onClick={onClick}
           style={getStyle(color)}
         />
       ))}

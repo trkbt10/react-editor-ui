@@ -9,7 +9,7 @@ import {
   COLOR_TEXT,
   SIZE_FONT_SM,
   SPACE_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { ImageAdjustmentsData } from "./types";
 
 export type ImageAdjustmentsProps = {

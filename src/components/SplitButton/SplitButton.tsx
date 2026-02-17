@@ -41,7 +41,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   SPACE_LG,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { CheckIcon, ChevronDownIcon } from "../../icons";
 
 export type SplitButtonOption<T extends string = string> = {

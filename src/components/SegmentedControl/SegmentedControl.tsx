@@ -29,7 +29,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   SHADOW_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type SegmentedControlOption<T extends string = string> = {
   value: T;
@@ -101,7 +101,42 @@ type SegmentButtonProps<T extends string> = {
   onClick: (value: T, disabled: boolean) => void;
 };
 
-const SegmentButton = memo(function SegmentButton<T extends string>({
+function areSegmentButtonPropsEqual<T extends string>(
+  prevProps: SegmentButtonProps<T>,
+  nextProps: SegmentButtonProps<T>,
+): boolean {
+  // Compare option by actual content (skip icon which is ReactNode)
+  if (prevProps.option.value !== nextProps.option.value) {
+    return false;
+  }
+  if (prevProps.option.label !== nextProps.option.label) {
+    return false;
+  }
+  if (prevProps.option.disabled !== nextProps.option.disabled) {
+    return false;
+  }
+  if (prevProps.option["aria-label"] !== nextProps.option["aria-label"]) {
+    return false;
+  }
+
+  // Compare other props
+  if (prevProps.selected !== nextProps.selected) {
+    return false;
+  }
+  if (prevProps.disabled !== nextProps.disabled) {
+    return false;
+  }
+  if (prevProps.multiple !== nextProps.multiple) {
+    return false;
+  }
+  if (prevProps.sizeConfig !== nextProps.sizeConfig) {
+    return false;
+  }
+
+  return true;
+}
+
+const SegmentButtonInner = function SegmentButton<T extends string>({
   option,
   selected,
   disabled: groupDisabled,
@@ -231,7 +266,9 @@ const SegmentButton = memo(function SegmentButton<T extends string>({
       {option.label ? <span>{option.label}</span> : null}
     </button>
   );
-}) as <T extends string>(props: SegmentButtonProps<T>) => React.ReactElement;
+};
+
+const SegmentButton = memo(SegmentButtonInner, areSegmentButtonPropsEqual) as <T extends string>(props: SegmentButtonProps<T>) => React.ReactElement;
 
 export const SegmentedControl = memo(function SegmentedControl<T extends string = string>({
   options,

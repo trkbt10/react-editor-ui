@@ -20,7 +20,7 @@ import {
   SPACE_SM,
   SPACE_XS,
   Z_POPOVER,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { ColorPicker } from "../ColorPicker/ColorPicker";
 import { isValidHex, normalizeHex } from "../../utils/color/conversion";
 import { createCheckerboardCSS } from "../../utils/color/checkerboard";
@@ -114,6 +114,53 @@ function MinusIcon({ size }: IconProps) {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
+}
+
+function areColorInputPropsEqual(
+  prevProps: ColorInputProps,
+  nextProps: ColorInputProps,
+): boolean {
+  // Compare value by actual content, not reference
+  if (prevProps.value.hex !== nextProps.value.hex) {
+    return false;
+  }
+  if (prevProps.value.opacity !== nextProps.value.opacity) {
+    return false;
+  }
+  if (prevProps.value.visible !== nextProps.value.visible) {
+    return false;
+  }
+
+  // Compare other props
+  if (prevProps.disabled !== nextProps.disabled) {
+    return false;
+  }
+  if (prevProps.size !== nextProps.size) {
+    return false;
+  }
+  if (prevProps.fullWidth !== nextProps.fullWidth) {
+    return false;
+  }
+  if (prevProps.showVisibilityToggle !== nextProps.showVisibilityToggle) {
+    return false;
+  }
+  if (prevProps.showRemove !== nextProps.showRemove) {
+    return false;
+  }
+  if (prevProps.removeDisabled !== nextProps.removeDisabled) {
+    return false;
+  }
+  if (prevProps["aria-label"] !== nextProps["aria-label"]) {
+    return false;
+  }
+  if (prevProps.className !== nextProps.className) {
+    return false;
+  }
+
+  // onChange/onRemove are callbacks - skip reference comparison
+  // They are captured in closures and will work correctly
+
+  return true;
 }
 
 /** Compact color input with swatch preview, hex input, and color picker popup */
@@ -240,17 +287,17 @@ export const ColorInput = memo(function ColorInput({
   }, []);
 
   // Container wrapping everything
-  const containerStyle: CSSProperties = {
+  const containerStyle = useMemo<CSSProperties>(() => ({
     position: "relative",
     display: fullWidth ? "flex" : "inline-flex",
     alignItems: "center",
     gap: SPACE_SM,
     opacity: disabled ? 0.5 : 1,
     width: fullWidth ? "100%" : undefined,
-  };
+  }), [fullWidth, disabled]);
 
   // Swatch with checkerboard background
-  const swatchWrapperStyle: CSSProperties = {
+  const swatchWrapperStyle = useMemo<CSSProperties>(() => ({
     position: "relative",
     width: sizeConfig.swatchSize,
     height: sizeConfig.swatchSize,
@@ -259,7 +306,7 @@ export const ColorInput = memo(function ColorInput({
     overflow: "hidden",
     cursor: disabled ? "not-allowed" : "pointer",
     flexShrink: 0,
-  };
+  }), [sizeConfig.swatchSize, disabled]);
 
   const swatchCheckerboardStyle = useMemo<CSSProperties>(
     () => ({
@@ -272,14 +319,14 @@ export const ColorInput = memo(function ColorInput({
     [],
   );
 
-  const swatchColorStyle: CSSProperties = {
+  const swatchColorStyle = useMemo<CSSProperties>(() => ({
     position: "absolute",
     inset: 0,
     backgroundColor: value.hex,
     opacity: value.opacity / 100,
-  };
+  }), [value.hex, value.opacity]);
 
-  const swatchButtonStyle: CSSProperties = {
+  const swatchButtonStyle = useMemo<CSSProperties>(() => ({
     position: "absolute",
     inset: 0,
     border: "none",
@@ -287,10 +334,10 @@ export const ColorInput = memo(function ColorInput({
     cursor: disabled ? "not-allowed" : "pointer",
     padding: 0,
     outline: "none",
-  };
+  }), [disabled]);
 
   // Compact input container (GradientStopRow style)
-  const inputContainerStyle: CSSProperties = {
+  const inputContainerStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     height: sizeConfig.height,
@@ -299,9 +346,9 @@ export const ColorInput = memo(function ColorInput({
     backgroundColor: COLOR_INPUT_BG,
     overflow: "hidden",
     flex: fullWidth ? 1 : undefined,
-  };
+  }), [sizeConfig.height, fullWidth]);
 
-  const hexInputStyle: CSSProperties = {
+  const hexInputStyle = useMemo<CSSProperties>(() => ({
     width: fullWidth ? undefined : 52,
     flex: fullWidth ? 1 : undefined,
     minWidth: fullWidth ? 52 : undefined,
@@ -314,9 +361,9 @@ export const ColorInput = memo(function ColorInput({
     fontFamily: "inherit",
     outline: "none",
     textTransform: "uppercase",
-  };
+  }), [fullWidth, disabled, sizeConfig.fontSize]);
 
-  const opacityInputStyle: CSSProperties = {
+  const opacityInputStyle = useMemo<CSSProperties>(() => ({
     width: 28,
     height: "100%",
     padding: `0 ${SPACE_XS}`,
@@ -328,17 +375,17 @@ export const ColorInput = memo(function ColorInput({
     fontFamily: "inherit",
     outline: "none",
     textAlign: "right",
-  };
+  }), [disabled, sizeConfig.fontSize]);
 
-  const suffixStyle: CSSProperties = {
+  const suffixStyle = useMemo<CSSProperties>(() => ({
     paddingRight: SPACE_XS,
     color: COLOR_TEXT_MUTED,
     fontSize: sizeConfig.fontSize,
     userSelect: "none",
-  };
+  }), [sizeConfig.fontSize]);
 
   // Icon button style
-  const iconButtonStyle: CSSProperties = {
+  const iconButtonStyle = useMemo<CSSProperties>(() => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -352,15 +399,15 @@ export const ColorInput = memo(function ColorInput({
     outline: "none",
     transition: `color ${DURATION_FAST} ${EASING_DEFAULT}`,
     flexShrink: 0,
-  };
+  }), [sizeConfig.height, disabled]);
 
-  const pickerContainerStyle: CSSProperties = {
+  const pickerContainerStyle = useMemo<CSSProperties>(() => ({
     position: "absolute",
     top: "100%",
     left: 0,
     marginTop: SPACE_SM,
     zIndex: Z_POPOVER,
-  };
+  }), []);
 
   return (
     <div
@@ -434,7 +481,7 @@ export const ColorInput = memo(function ColorInput({
       {renderPicker(showPicker, pickerContainerStyle, value.hex, handleColorChange)}
     </div>
   );
-});
+}, areColorInputPropsEqual);
 
 function getVisibilityAriaLabel(visible: boolean): string {
   if (visible) {

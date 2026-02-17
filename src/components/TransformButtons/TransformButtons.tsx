@@ -9,7 +9,7 @@ import { Tooltip } from "../Tooltip/Tooltip";
 import { IconButton } from "../IconButton/IconButton";
 import { ToolbarGroup } from "../Toolbar/ToolbarGroup";
 import { ToolbarDivider } from "../Toolbar/ToolbarDivider";
-import { SPACE_XS } from "../../constants/styles";
+import { SPACE_XS } from "../../themes/styles";
 
 export type TransformAction = {
   /** Unique identifier for the action */

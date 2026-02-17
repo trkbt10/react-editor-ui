@@ -76,7 +76,7 @@ import {
   RADIUS_MD,
   RADIUS_LG,
   SHADOW_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type TabBarTab = {
   id: string;
@@ -119,6 +119,44 @@ type TabButtonProps = {
   onClick: (tabId: string) => void;
   onClose?: (tabId: string) => void;
 };
+
+function areTabButtonPropsEqual(
+  prevProps: TabButtonProps,
+  nextProps: TabButtonProps,
+): boolean {
+  // Compare tab by actual content (skip icon which is ReactNode)
+  if (prevProps.tab.id !== nextProps.tab.id) {
+    return false;
+  }
+  if (prevProps.tab.label !== nextProps.tab.label) {
+    return false;
+  }
+  if (prevProps.tab.disabled !== nextProps.tab.disabled) {
+    return false;
+  }
+  if (prevProps.tab.closable !== nextProps.tab.closable) {
+    return false;
+  }
+  if (prevProps.tab.isDirty !== nextProps.tab.isDirty) {
+    return false;
+  }
+
+  // Compare other props
+  if (prevProps.active !== nextProps.active) {
+    return false;
+  }
+  if (prevProps.sizeConfig !== nextProps.sizeConfig) {
+    return false;
+  }
+  if (prevProps.fullWidth !== nextProps.fullWidth) {
+    return false;
+  }
+  if (prevProps.variant !== nextProps.variant) {
+    return false;
+  }
+
+  return true;
+}
 
 const sizeMap = {
   sm: {
@@ -244,7 +282,7 @@ const CloseButton = memo(function CloseButton({
   );
 });
 
-const TabButton = memo(function TabButton({
+const TabButtonInner = function TabButton({
   tab,
   active,
   sizeConfig,
@@ -423,7 +461,9 @@ const TabButton = memo(function TabButton({
       {renderContent()}
     </button>
   );
-});
+};
+
+const TabButton = memo(TabButtonInner, areTabButtonPropsEqual);
 
 export const TabBar = memo(function TabBar({
   tabs,

@@ -28,7 +28,7 @@ import {
   SIZE_FONT_SM,
   SPACE_SM,
   SPACE_MD,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type StrokePanelExpandedSettings = {
   weight: string;

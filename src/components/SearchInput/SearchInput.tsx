@@ -42,7 +42,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   SPACE_LG,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type SearchInputProps = {
   value: string;

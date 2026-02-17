@@ -29,7 +29,7 @@ import {
   DURATION_FAST,
   EASING_DEFAULT,
   SHADOW_THUMB,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type SliderProps = {
   value: number;

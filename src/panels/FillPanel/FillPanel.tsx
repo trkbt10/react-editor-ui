@@ -3,7 +3,7 @@
  */
 
 import { memo, useCallback, type CSSProperties } from "react";
-import { SPACE_MD } from "../../constants/styles";
+import { SPACE_MD } from "../../themes/styles";
 import { Panel } from "../Panel/Panel";
 import { ColorInput } from "../../components/ColorInput/ColorInput";
 import { FillTypeSelector } from "../../components/FillTypeSelector/FillTypeSelector";

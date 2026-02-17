@@ -12,7 +12,7 @@ import type { BezierControlPoints, EasingPreset } from "../../components/BezierC
 import { EASING_PRESETS, matchPreset } from "../../components/BezierCurveEditor/bezierPresets";
 import { EasingPresetSelect } from "./EasingPresetSelect";
 import { ClockIcon, HourglassIcon } from "../../icons";
-import { SPACE_MD } from "../../constants/styles";
+import { SPACE_MD } from "../../themes/styles";
 import type { AnimationSectionProps, AnimationData } from "./types";
 
 type CallbackState = {

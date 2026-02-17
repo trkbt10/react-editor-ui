@@ -16,7 +16,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   RADIUS_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { ImageAdjustments } from "../../components/ImageAdjustments/ImageAdjustments";
 import type { ImageAdjustmentsData } from "../../components/ImageAdjustments/types";
 import type { ImageFillValue, ImageFillMode } from "./types";

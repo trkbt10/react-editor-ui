@@ -8,7 +8,7 @@ import { SegmentedControl } from "../../components/SegmentedControl/SegmentedCon
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { UnitInput } from "../../components/UnitInput/UnitInput";
 import { IconButton } from "../../components/IconButton/IconButton";
-import { SPACE_SM } from "../../constants/styles";
+import { SPACE_SM } from "../../themes/styles";
 import {
   FlipHorizontalIcon,
   JoinMiterIcon,

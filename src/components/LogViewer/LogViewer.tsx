@@ -23,7 +23,7 @@ import {
   SIZE_HEIGHT_SM,
   DURATION_FAST,
   EASING_DEFAULT,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type LogItem = Omit<LogEntryProps, "selected" | "onClick">;
 

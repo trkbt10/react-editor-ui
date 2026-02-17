@@ -5,7 +5,7 @@
 import { memo } from "react";
 import type { CSSProperties } from "react";
 import { UnitInput } from "../../components/UnitInput/UnitInput";
-import { SPACE_SM } from "../../constants/styles";
+import { SPACE_SM } from "../../themes/styles";
 import { FrequencyIcon, WiggleIcon, SmoothIcon } from "../../icons";
 import { StrokePropertyRow } from "./StrokePropertyRow";
 

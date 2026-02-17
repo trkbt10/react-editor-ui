@@ -17,7 +17,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   RADIUS_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import type { PatternFillValue, TileType } from "./types";
 
 export type PatternFillSectionProps = {

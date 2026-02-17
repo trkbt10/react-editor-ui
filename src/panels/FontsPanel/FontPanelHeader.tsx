@@ -12,7 +12,7 @@ import {
   SIZE_PANEL_HEADER_HEIGHT,
   SPACE_SM,
   SPACE_LG,
-} from "../../constants/styles";
+} from "../../themes/styles";
 
 export type FontPanelHeaderProps = {
   title: string;

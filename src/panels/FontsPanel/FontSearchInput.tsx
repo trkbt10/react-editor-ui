@@ -5,7 +5,7 @@
 import type { CSSProperties } from "react";
 import { Input } from "../../components/Input/Input";
 import { SearchIcon } from "../../icons";
-import { COLOR_BORDER, SPACE_MD } from "../../constants/styles";
+import { COLOR_BORDER, SPACE_MD } from "../../themes/styles";
 
 export type FontSearchInputProps = {
   value: string;

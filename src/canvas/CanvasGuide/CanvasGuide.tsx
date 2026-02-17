@@ -6,7 +6,7 @@
  */
 
 import { memo, type ReactNode } from "react";
-import { COLOR_CANVAS_GUIDE } from "../../constants/styles";
+import { COLOR_CANVAS_GUIDE } from "../../themes/styles";
 import { useCanvasContext } from "../core/CanvasContext";
 
 type Orientation = "horizontal" | "vertical";

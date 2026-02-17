@@ -4,7 +4,7 @@
 
 import { memo } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { COLOR_TEXT_MUTED, SIZE_FONT_SM, SPACE_SM } from "../../constants/styles";
+import { COLOR_TEXT_MUTED, SIZE_FONT_SM, SPACE_SM } from "../../themes/styles";
 
 const rowStyle: CSSProperties = {
   display: "flex",

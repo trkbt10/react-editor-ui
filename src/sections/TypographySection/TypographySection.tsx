@@ -18,7 +18,7 @@ import {
   SPACE_SM,
   SPACE_MD,
   SIZE_FONT_SM,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { SettingsIcon } from "../../icons";
 import type {
   TypographySectionProps,

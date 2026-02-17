@@ -9,7 +9,7 @@ import { memo, useId, type ReactNode } from "react";
 import {
   COLOR_CANVAS_CHECKER_LIGHT,
   COLOR_CANVAS_CHECKER_DARK,
-} from "../../constants/styles";
+} from "../../themes/styles";
 import { useCanvasContext } from "../core/CanvasContext";
 
 export type CanvasCheckerboardProps = {

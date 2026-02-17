@@ -4,7 +4,7 @@
 
 import { memo, useMemo } from "react";
 import type { ReactNode, CSSProperties, HTMLAttributes } from "react";
-import { SPACE_SM, SPACE_MD, SPACE_LG } from "../../constants/styles";
+import { SPACE_SM, SPACE_MD, SPACE_LG } from "../../themes/styles";
 
 export type PropertyGridProps = HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
