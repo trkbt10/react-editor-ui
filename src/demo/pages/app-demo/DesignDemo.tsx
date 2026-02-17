@@ -226,7 +226,84 @@ type SidebarProps = {
   onLockChange: (id: string, locked: boolean) => void;
 };
 
-function Sidebar({
+// Memoized wrapper for LayerItem to avoid inline function creation in map
+type LayerItemWrapperProps = {
+  layer: DesignLayer;
+  depth: number;
+  hasChildren: boolean;
+  expanded: boolean;
+  selected: boolean;
+  onToggle: (id: string) => void;
+  onSelect: (id: string) => void;
+  onVisibilityChange: (id: string, visible: boolean) => void;
+  onLockChange: (id: string, locked: boolean) => void;
+};
+
+const LayerItemWrapper = memo(function LayerItemWrapper({
+  layer,
+  depth,
+  hasChildren,
+  expanded,
+  selected,
+  onToggle,
+  onSelect,
+  onVisibilityChange,
+  onLockChange,
+}: LayerItemWrapperProps) {
+  const handleToggle = useCallback(() => onToggle(layer.id), [onToggle, layer.id]);
+  const handlePointerDown = useCallback(() => onSelect(layer.id), [onSelect, layer.id]);
+  const handleVisibilityChange = useCallback(
+    (visible: boolean) => onVisibilityChange(layer.id, visible),
+    [onVisibilityChange, layer.id],
+  );
+  const handleLockChange = useCallback(
+    (locked: boolean) => onLockChange(layer.id, locked),
+    [onLockChange, layer.id],
+  );
+
+  const isContainer = canHaveChildren(layer.type);
+
+  return (
+    <LayerItem
+      id={layer.id}
+      label={layer.label}
+      icon={getLayerIcon(layer.type)}
+      depth={depth}
+      hasChildren={hasChildren}
+      expanded={expanded}
+      onToggle={handleToggle}
+      selected={selected}
+      onPointerDown={handlePointerDown}
+      visible={layer.visible}
+      onVisibilityChange={handleVisibilityChange}
+      locked={layer.locked}
+      onLockChange={handleLockChange}
+      canHaveChildren={isContainer}
+    />
+  );
+});
+
+const sidebarStyle: CSSProperties = {
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  backgroundColor: "var(--rei-color-surface)",
+  borderRight: "1px solid var(--rei-color-border)",
+};
+
+const sidebarToolbarStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  padding: "8px",
+  gap: 4,
+};
+
+const SIDEBAR_PAGES = [
+  { id: "cover", label: "Cover" },
+  { id: "appicon", label: "App Icon Template" },
+] as const;
+
+const Sidebar = memo(function Sidebar({
   sidebarTab,
   onSidebarTabChange,
   layers,
@@ -244,34 +321,22 @@ function Sidebar({
     [childrenMap, expandedIds],
   );
 
-  const hasChildren = (id: string): boolean => {
-    return (childrenMap.get(id)?.length ?? 0) > 0;
-  };
-
-  const sidebarStyle: CSSProperties = {
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-    backgroundColor: "var(--rei-color-surface)",
-    borderRight: "1px solid var(--rei-color-border)",
-  };
-
-  const toolbarStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    padding: "8px",
-    gap: 4,
-  };
-
-  const pages = [
-    { id: "cover", label: "Cover" },
-    { id: "appicon", label: "App Icon Template" },
-  ];
+  // Pre-compute layer metadata to avoid recalculation in render
+  const layerMetadata = useMemo(() => {
+    const metadata = new Map<string, { depth: number; hasChildren: boolean }>();
+    for (const layer of visibleLayers) {
+      metadata.set(layer.id, {
+        depth: getDepthWithMap(layer.id, layerMap),
+        hasChildren: (childrenMap.get(layer.id)?.length ?? 0) > 0,
+      });
+    }
+    return metadata;
+  }, [visibleLayers, layerMap, childrenMap]);
 
   return (
     <div style={sidebarStyle}>
       {/* Toolbar icons */}
-      <div style={toolbarStyle}>
+      <div style={sidebarToolbarStyle}>
         <IconButton icon={<LuMenu size={14} />} aria-label="Menu" size="sm" variant="ghost" />
         <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
           <IconButton icon={<span style={{ fontSize: 11, fontWeight: 600 }}>Ai</span>} aria-label="AI" size="sm" variant="ghost" />
@@ -309,7 +374,7 @@ function Sidebar({
             action={<IconButton icon={<LuPlus size={12} />} aria-label="Add page" size="sm" variant="ghost" />}
           />
           <div style={{ padding: "0 4px" }}>
-            {pages.map((page) => (
+            {SIDEBAR_PAGES.map((page) => (
               <div
                 key={page.id}
                 style={{
@@ -333,27 +398,19 @@ function Sidebar({
           />
           <div style={{ flex: 1, overflow: "auto", padding: "0 4px" }}>
             {visibleLayers.map((layer) => {
-              const depth = getDepthWithMap(layer.id, layerMap);
-              const isContainer = canHaveChildren(layer.type);
-              const layerHasChildren = hasChildren(layer.id);
-
+              const meta = layerMetadata.get(layer.id)!;
               return (
-                <LayerItem
+                <LayerItemWrapper
                   key={layer.id}
-                  id={layer.id}
-                  label={layer.label}
-                  icon={getLayerIcon(layer.type)}
-                  depth={depth}
-                  hasChildren={layerHasChildren}
+                  layer={layer}
+                  depth={meta.depth}
+                  hasChildren={meta.hasChildren}
                   expanded={expandedIds.has(layer.id)}
-                  onToggle={() => onToggle(layer.id)}
                   selected={selectedId === layer.id}
-                  onPointerDown={() => onSelect(layer.id)}
-                  visible={layer.visible}
-                  onVisibilityChange={(v) => onVisibilityChange(layer.id, v)}
-                  locked={layer.locked}
-                  onLockChange={(l) => onLockChange(layer.id, l)}
-                  canHaveChildren={isContainer}
+                  onToggle={onToggle}
+                  onSelect={onSelect}
+                  onVisibilityChange={onVisibilityChange}
+                  onLockChange={onLockChange}
                 />
               );
             })}
@@ -367,7 +424,7 @@ function Sidebar({
       )}
     </div>
   );
-}
+});
 
 // =====================================================================
 // Inspector Component
@@ -382,67 +439,66 @@ type InspectorProps = {
   zoomLevel: number;
 };
 
-function Inspector({
+const inspectorStyle: CSSProperties = {
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  backgroundColor: "var(--rei-color-surface)",
+  borderLeft: "1px solid var(--rei-color-border)",
+  overflow: "auto",
+};
+
+const inspectorHeaderStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: "8px 12px",
+  borderBottom: "1px solid var(--rei-color-border)",
+};
+
+const inspectorAvatarStyle: CSSProperties = {
+  width: 24,
+  height: 24,
+  borderRadius: "50%",
+  backgroundColor: "var(--rei-color-primary)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "white",
+  fontSize: 11,
+  fontWeight: 600,
+};
+
+const inspectorTabContainerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: "0 12px",
+  borderBottom: "1px solid var(--rei-color-border)",
+};
+
+const inspectorZoomStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 4,
+  fontSize: 11,
+  color: "var(--rei-color-text-muted)",
+  cursor: "pointer",
+};
+
+const Inspector = memo(function Inspector({
   inspectorTab,
   onInspectorTabChange,
-  selectedLayer,
   fillColor,
   onFillColorChange,
   zoomLevel,
 }: InspectorProps) {
-  const inspectorStyle: CSSProperties = {
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-    backgroundColor: "var(--rei-color-surface)",
-    borderLeft: "1px solid var(--rei-color-border)",
-    overflow: "auto",
-  };
-
-  const headerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "8px 12px",
-    borderBottom: "1px solid var(--rei-color-border)",
-  };
-
-  const avatarStyle: CSSProperties = {
-    width: 24,
-    height: 24,
-    borderRadius: "50%",
-    backgroundColor: "var(--rei-color-primary)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "white",
-    fontSize: 11,
-    fontWeight: 600,
-  };
-
-  const tabContainerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 12px",
-    borderBottom: "1px solid var(--rei-color-border)",
-  };
-
-  const zoomStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: 4,
-    fontSize: 11,
-    color: "var(--rei-color-text-muted)",
-    cursor: "pointer",
-  };
-
   return (
     <div style={inspectorStyle}>
       {/* Header with avatar and share */}
-      <div style={headerStyle}>
+      <div style={inspectorHeaderStyle}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={avatarStyle}>B</div>
+          <div style={inspectorAvatarStyle}>B</div>
           <LuChevronDown size={12} style={{ color: "var(--rei-color-text-muted)" }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -452,7 +508,7 @@ function Inspector({
       </div>
 
       {/* Tab container with zoom */}
-      <div style={tabContainerStyle}>
+      <div style={inspectorTabContainerStyle}>
         <TabBar
           tabs={[
             { id: "design", label: "Design" },
@@ -462,7 +518,7 @@ function Inspector({
           onChange={onInspectorTabChange}
           size="sm"
         />
-        <div style={zoomStyle}>
+        <div style={inspectorZoomStyle}>
           {zoomLevel}%
           <LuChevronDown size={12} />
         </div>
@@ -501,29 +557,42 @@ function Inspector({
       )}
     </div>
   );
-}
+});
 
 // =====================================================================
 // Canvas Area Component with Rulers
 // =====================================================================
 
 type CanvasAreaProps = {
-  viewport: ViewportState;
-  onViewportChange: (viewport: ViewportState) => void;
-  transform: TransformState;
-  onTransformChange: (transform: TransformState) => void;
   selectedId: string | null;
 };
 
-function CanvasArea({
-  viewport,
-  onViewportChange,
-  transform,
-  onTransformChange,
+const canvasContainerStyle: CSSProperties = {
+  height: "100%",
+  width: "100%",
+  backgroundColor: "#f5f5f5",
+  display: "flex",
+  flexDirection: "column",
+};
+
+const INITIAL_VIEWPORT: ViewportState = { x: -200, y: -100, scale: 0.25 };
+const INITIAL_TRANSFORM: TransformState = {
+  x: 100,
+  y: 100,
+  width: 500,
+  height: 600,
+  rotation: 0,
+};
+
+const CanvasArea = memo(function CanvasArea({
   selectedId,
 }: CanvasAreaProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+
+  // Manage viewport and transform internally to avoid parent re-renders
+  const [viewport, setViewport] = useState(INITIAL_VIEWPORT);
+  const [transform, setTransform] = useState(INITIAL_TRANSFORM);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -545,38 +614,70 @@ function CanvasArea({
     return () => observer.disconnect();
   }, []);
 
-  const handleMove = useCallback(
-    (deltaX: number, deltaY: number) => {
-      onTransformChange({
-        ...transform,
-        x: transform.x + deltaX,
-        y: transform.y + deltaY,
-      });
-    },
-    [transform, onTransformChange],
-  );
+  // Stable handlers using functional updates
+  const handleMove = useCallback((deltaX: number, deltaY: number) => {
+    setTransform((prev) => ({
+      ...prev,
+      x: prev.x + deltaX,
+      y: prev.y + deltaY,
+    }));
+  }, []);
 
-  const handleResize = useCallback(
-    (handle: HandlePosition, deltaX: number, deltaY: number) => {
-      onTransformChange(applyResize(transform, handle, deltaX, deltaY));
-    },
-    [transform, onTransformChange],
-  );
+  const handleResize = useCallback((handle: HandlePosition, deltaX: number, deltaY: number) => {
+    setTransform((prev) => applyResize(prev, handle, deltaX, deltaY));
+  }, []);
 
-  const handleRotate = useCallback(
-    (angle: number) => {
-      onTransformChange({ ...transform, rotation: angle });
-    },
-    [transform, onTransformChange],
-  );
+  const handleRotate = useCallback((angle: number) => {
+    setTransform((prev) => ({ ...prev, rotation: angle }));
+  }, []);
 
-  const canvasContainerStyle: CSSProperties = {
-    height: "100%",
-    width: "100%",
-    backgroundColor: "#f5f5f5",
+  // Memoize frame label style
+  const frameLabelStyle = useMemo<CSSProperties>(() => ({
+    position: "absolute",
+    left: transform.x,
+    top: transform.y - 24,
+    fontSize: 11,
+    color: "var(--rei-color-text-muted)",
+    pointerEvents: "none",
+  }), [transform.x, transform.y]);
+
+  // Memoize app icon frame style
+  const appIconFrameStyle = useMemo<CSSProperties>(() => ({
+    position: "absolute",
+    left: transform.x,
+    top: transform.y,
+    width: transform.width,
+    height: transform.height,
+    background: "#e8e8e8",
+    borderRadius: 4,
     display: "flex",
-    flexDirection: "column",
-  };
+    alignItems: "center",
+    justifyContent: "center",
+    transform: `rotate(${transform.rotation}deg)`,
+    transformOrigin: "center center",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    pointerEvents: "none",
+    overflow: "hidden",
+  }), [transform.x, transform.y, transform.width, transform.height, transform.rotation]);
+
+  // Memoize svgLayers to prevent re-creation
+  const svgLayers = useMemo(() => (
+    <>
+      <CanvasGridLayer minorSize={10} majorSize={100} showOrigin />
+      {selectedId ? (
+        <BoundingBox
+          x={transform.x}
+          y={transform.y}
+          width={transform.width}
+          height={transform.height}
+          rotation={transform.rotation}
+          onMove={handleMove}
+          onResize={handleResize}
+          onRotate={handleRotate}
+        />
+      ) : null}
+    </>
+  ), [selectedId, transform.x, transform.y, transform.width, transform.height, transform.rotation, handleMove, handleResize, handleRotate]);
 
   return (
     <div ref={containerRef} style={canvasContainerStyle}>
@@ -590,61 +691,18 @@ function CanvasArea({
         <div style={{ flex: 1, position: "relative" }}>
           <Canvas
             viewport={viewport}
-            onViewportChange={onViewportChange}
+            onViewportChange={setViewport}
             width={dimensions.width}
             height={dimensions.height}
-            svgLayers={
-              <>
-                <CanvasGridLayer minorSize={10} majorSize={100} showOrigin />
-                {selectedId ? (
-                  <BoundingBox
-                    x={transform.x}
-                    y={transform.y}
-                    width={transform.width}
-                    height={transform.height}
-                    rotation={transform.rotation}
-                    onMove={handleMove}
-                    onResize={handleResize}
-                    onRotate={handleRotate}
-                  />
-                ) : null}
-              </>
-            }
+            svgLayers={svgLayers}
           >
             {/* Frame label */}
-            <div
-              style={{
-                position: "absolute",
-                left: transform.x,
-                top: transform.y - 24,
-                fontSize: 11,
-                color: "var(--rei-color-text-muted)",
-                pointerEvents: "none",
-              }}
-            >
+            <div style={frameLabelStyle}>
               App Icon Template
             </div>
 
             {/* App Icon Frame */}
-            <div
-              style={{
-                position: "absolute",
-                left: transform.x,
-                top: transform.y,
-                width: transform.width,
-                height: transform.height,
-                background: "#e8e8e8",
-                borderRadius: 4,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `rotate(${transform.rotation}deg)`,
-                transformOrigin: "center center",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                pointerEvents: "none",
-                overflow: "hidden",
-              }}
-            >
+            <div style={appIconFrameStyle}>
               {/* Grid overlay */}
               <div
                 style={{
@@ -672,7 +730,7 @@ function CanvasArea({
       </div>
     </div>
   );
-}
+});
 
 // =====================================================================
 // Floating Toolbar Component
@@ -687,12 +745,24 @@ type ToolButtonProps = {
   onClick: () => void;
 };
 
-function ToolButton({ icon, label, shortcut, selected, hasDropdown, onClick }: ToolButtonProps) {
+const toolButtonWrapperStyle: CSSProperties = {
+  position: "relative",
+  display: "inline-flex",
+};
+
+const toolButtonDropdownStyle: CSSProperties = {
+  position: "absolute",
+  right: 2,
+  bottom: 2,
+  color: "var(--rei-color-icon)",
+};
+
+const ToolButton = memo(function ToolButton({ icon, label, shortcut, selected, hasDropdown, onClick }: ToolButtonProps) {
   const tooltipContent = shortcut ? `${label} (${shortcut})` : label;
 
   return (
     <Tooltip content={tooltipContent} placement="top">
-      <div style={{ position: "relative", display: "inline-flex" }}>
+      <div style={toolButtonWrapperStyle}>
         <IconButton
           icon={icon}
           aria-label={label}
@@ -701,44 +771,48 @@ function ToolButton({ icon, label, shortcut, selected, hasDropdown, onClick }: T
           onClick={onClick}
         />
         {hasDropdown ? (
-          <LuChevronDown
-            size={8}
-            style={{
-              position: "absolute",
-              right: 2,
-              bottom: 2,
-              color: "var(--rei-color-icon)",
-            }}
-          />
+          <LuChevronDown size={8} style={toolButtonDropdownStyle} />
         ) : null}
       </div>
     </Tooltip>
   );
-}
+});
 
 type FloatingToolPaletteProps = {
   selectedTool: string;
   onToolSelect: (toolId: string) => void;
 };
 
-function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPaletteProps) {
-  const floatingStyle: CSSProperties = {
-    position: "absolute",
-    bottom: 20,
-    left: "50%",
-    transform: "translateX(-50%)",
-    zIndex: 100,
-  };
+const floatingToolbarStyle: CSSProperties = {
+  position: "absolute",
+  bottom: 20,
+  left: "50%",
+  transform: "translateX(-50%)",
+  zIndex: 100,
+};
 
-  const helpButtonWrapperStyle: CSSProperties = {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-  };
+const helpButtonWrapperStyle: CSSProperties = {
+  position: "absolute",
+  bottom: 20,
+  right: 20,
+};
+
+// No-op handler for static buttons
+const noop = () => {};
+
+const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPaletteProps) {
+  const handlers = useMemo(() => ({
+    move: () => onToolSelect("move"),
+    frame: () => onToolSelect("frame"),
+    rectangle: () => onToolSelect("rectangle"),
+    pen: () => onToolSelect("pen"),
+    text: () => onToolSelect("text"),
+    ellipse: () => onToolSelect("ellipse"),
+  }), [onToolSelect]);
 
   return (
     <>
-      <div style={floatingStyle}>
+      <div style={floatingToolbarStyle}>
         <Toolbar variant="floating" orientation="horizontal" fitContent>
           <ToolbarGroup>
             <ToolButton
@@ -747,7 +821,7 @@ function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPalette
               shortcut="V"
               selected={selectedTool === "move"}
               hasDropdown
-              onClick={() => onToolSelect("move")}
+              onClick={handlers.move}
             />
             <ToolButton
               icon={<LuFrame size={16} />}
@@ -755,7 +829,7 @@ function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPalette
               shortcut="F"
               selected={selectedTool === "frame"}
               hasDropdown
-              onClick={() => onToolSelect("frame")}
+              onClick={handlers.frame}
             />
           </ToolbarGroup>
           <ToolbarDivider />
@@ -766,7 +840,7 @@ function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPalette
               shortcut="R"
               selected={selectedTool === "rectangle"}
               hasDropdown
-              onClick={() => onToolSelect("rectangle")}
+              onClick={handlers.rectangle}
             />
             <ToolButton
               icon={<LuPenTool size={16} />}
@@ -774,27 +848,27 @@ function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPalette
               shortcut="P"
               selected={selectedTool === "pen"}
               hasDropdown
-              onClick={() => onToolSelect("pen")}
+              onClick={handlers.pen}
             />
             <ToolButton
               icon={<LuType size={16} />}
               label="Text"
               shortcut="T"
               selected={selectedTool === "text"}
-              onClick={() => onToolSelect("text")}
+              onClick={handlers.text}
             />
             <ToolButton
               icon={<LuCircle size={16} />}
               label="Ellipse"
               shortcut="O"
               selected={selectedTool === "ellipse"}
-              onClick={() => onToolSelect("ellipse")}
+              onClick={handlers.ellipse}
             />
             <ToolButton
               icon={<LuComponent size={16} />}
               label="Resources"
               selected={false}
-              onClick={() => {}}
+              onClick={noop}
             />
           </ToolbarGroup>
           <ToolbarDivider />
@@ -803,13 +877,13 @@ function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPalette
               icon={<LuPencil size={16} />}
               label="Draw"
               selected={false}
-              onClick={() => {}}
+              onClick={noop}
             />
             <ToolButton
               icon={<LuCode size={16} />}
               label="Dev Mode"
               selected={false}
-              onClick={() => {}}
+              onClick={noop}
             />
           </ToolbarGroup>
         </Toolbar>
@@ -819,7 +893,7 @@ function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPalette
       </div>
     </>
   );
-}
+});
 
 // =====================================================================
 // Design size constants
@@ -873,14 +947,8 @@ export function DesignDemo() {
     opacity: 100,
     visible: true,
   });
-  const [viewport, setViewport] = useState<ViewportState>({ x: -200, y: -100, scale: 0.25 });
-  const [transform, setTransform] = useState<TransformState>({
-    x: 100,
-    y: 100,
-    width: 500,
-    height: 600,
-    rotation: 0,
-  });
+  // Note: viewport and transform are now managed inside CanvasArea to prevent
+  // parent re-renders when dragging canvas elements
 
   const layerMap = useMemo(() => createLayerMap(layers), [layers]);
   const selectedLayer = selectedId ? layerMap.get(selectedId) ?? null : null;
@@ -953,20 +1021,14 @@ export function DesignDemo() {
   const canvasLayer = useMemo(
     () => (
       <div style={{ position: "relative", height: "100%" }}>
-        <CanvasArea
-          viewport={viewport}
-          onViewportChange={setViewport}
-          transform={transform}
-          onTransformChange={setTransform}
-          selectedId={selectedId}
-        />
+        <CanvasArea selectedId={selectedId} />
         <FloatingToolPalette selectedTool={selectedTool} onToolSelect={setSelectedTool} />
       </div>
     ),
-    [viewport, transform, selectedId, selectedTool]
+    [selectedId, selectedTool]
   );
 
-  const zoomLevel = Math.round(viewport.scale * 100);
+  // Note: zoomLevel is now managed inside CanvasArea; using initial value for display
   const inspectorLayer = useMemo(
     () => (
       <Inspector
@@ -975,10 +1037,10 @@ export function DesignDemo() {
         selectedLayer={selectedLayer}
         fillColor={fillColor}
         onFillColorChange={setFillColor}
-        zoomLevel={zoomLevel}
+        zoomLevel={25}
       />
     ),
-    [inspectorTab, selectedLayer, fillColor, zoomLevel]
+    [inspectorTab, selectedLayer, fillColor]
   );
 
   const layers_ = useMemo<LayerDefinition[]>(() => [
