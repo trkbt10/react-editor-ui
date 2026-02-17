@@ -1092,12 +1092,8 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
   const firstBlockDocY = blockInfos.length > 0 ? blockInfos[0].y : 0;
 
   // Viewport offset for smooth scrolling
-  const viewportOffsetY = isViewportMode && viewport
-    ? viewport.offset.y - firstBlockDocY
-    : 0;
-  const viewportOffsetX = isViewportMode && viewport
-    ? viewport.offset.x
-    : 0;
+  const viewportOffsetY = isViewportMode && viewport ? viewport.offset.y - firstBlockDocY : 0;
+  const viewportOffsetX = isViewportMode && viewport ? viewport.offset.x : 0;
 
   // Unified draw function - renders everything in a single pass
   // This ensures highlights, text, and cursor are always aligned
@@ -1378,51 +1374,44 @@ export const BlockRenderer = memo(function BlockRenderer({
         />
       );
     }
+    const svgHeight = isViewportMode ? canvasHeight : totalHeight;
+    const svgOverflow = isViewportMode ? "hidden" : "visible";
+
+    const blockElements = blockInfos.map((info) => (
+      <SingleBlock
+        key={info.block.id}
+        info={info}
+        padding={padding}
+        lineHeight={lineHeight}
+        showLineNumbers={showLineNumbers}
+        lineNumberWidth={lineNumberWidth}
+        highlights={highlights}
+        cursor={cursor}
+        measureText={measureText}
+        tokenCache={tokenCache}
+        tokenStyles={tokenStyles}
+        fontFamily={fontFamily}
+        fontSize={fontSize}
+      />
+    ));
+
+    const renderSvgContent = (): ReactNode => {
+      if (isViewportMode && viewport) {
+        const transform = `translate(${-viewport.offset.x}, ${-viewport.offset.y})`;
+        return <g transform={transform}>{blockElements}</g>;
+      }
+      return blockElements;
+    };
+
+    const svgContent = renderSvgContent();
+
     return (
       <svg
         width={width ?? "100%"}
-        height={isViewportMode ? canvasHeight : totalHeight}
-        style={{ display: "block", overflow: isViewportMode ? "hidden" : "visible" }}
+        height={svgHeight}
+        style={{ display: "block", overflow: svgOverflow }}
       >
-        {isViewportMode && viewport ? (
-          <g transform={`translate(${-viewport.offset.x}, ${-viewport.offset.y})`}>
-            {blockInfos.map((info) => (
-              <SingleBlock
-                key={info.block.id}
-                info={info}
-                padding={padding}
-                lineHeight={lineHeight}
-                showLineNumbers={showLineNumbers}
-                lineNumberWidth={lineNumberWidth}
-                highlights={highlights}
-                cursor={cursor}
-                measureText={measureText}
-                tokenCache={tokenCache}
-                tokenStyles={tokenStyles}
-                fontFamily={fontFamily}
-                fontSize={fontSize}
-              />
-            ))}
-          </g>
-        ) : (
-          blockInfos.map((info) => (
-            <SingleBlock
-              key={info.block.id}
-              info={info}
-              padding={padding}
-              lineHeight={lineHeight}
-              showLineNumbers={showLineNumbers}
-              lineNumberWidth={lineNumberWidth}
-              highlights={highlights}
-              cursor={cursor}
-              measureText={measureText}
-              tokenCache={tokenCache}
-              tokenStyles={tokenStyles}
-              fontFamily={fontFamily}
-              fontSize={fontSize}
-            />
-          ))
-        )}
+        {svgContent}
       </svg>
     );
   };

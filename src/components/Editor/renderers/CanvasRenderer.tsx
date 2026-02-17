@@ -303,6 +303,127 @@ const codeDisplayStyle: CSSProperties = {
 };
 
 /**
+ * Draw line for viewport mode (using document Y coordinates).
+ */
+function drawLineAtDocumentY(
+  context: DrawContext,
+  lineNumber: number,
+  lineText: string,
+  tokens: readonly Token[],
+  lineHighlights: readonly LineHighlight[],
+  documentY: number,
+  cursorColumn: number | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Reserved for future animation
+  _cursorBlinking: boolean
+): void {
+  const { ctx, padding, lineHeight, showLineNumbers, lineNumberWidth, tokenStyles, fontFamily, fontSize } = context;
+  const codeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
+
+  // Calculate token positions
+  const tokenPositions = calculateCanvasTokenPositions(
+    ctx,
+    tokens,
+    tokenStyles,
+    codeXOffset,
+    fontSize,
+    fontFamily
+  );
+
+  // Draw line number
+  if (showLineNumbers) {
+    const textY = documentY + lineHeight * 0.75;
+
+    // Background
+    ctx.fillStyle = LINE_NUMBER_BG;
+    ctx.fillRect(padding, documentY, lineNumberWidth, lineHeight);
+
+    // Border
+    ctx.strokeStyle = LINE_NUMBER_BORDER;
+    ctx.beginPath();
+    ctx.moveTo(padding + lineNumberWidth, documentY);
+    ctx.lineTo(padding + lineNumberWidth, documentY + lineHeight);
+    ctx.stroke();
+
+    // Number text
+    ctx.fillStyle = LINE_NUMBER_COLOR;
+    ctx.textAlign = "right";
+    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.fillText(String(lineNumber), padding + lineNumberWidth - 8, textY);
+    ctx.textAlign = "left";
+  }
+
+  // Draw highlights
+  for (const highlight of lineHighlights) {
+    const startX = getStyledColumnX(
+      highlight.startColumn,
+      tokens,
+      tokenPositions,
+      tokenStyles,
+      fontSize,
+      codeXOffset,
+      ctx,
+      fontFamily,
+      lineText
+    );
+    const endX = getStyledColumnX(
+      highlight.endColumn,
+      tokens,
+      tokenPositions,
+      tokenStyles,
+      fontSize,
+      codeXOffset,
+      ctx,
+      fontFamily,
+      lineText
+    );
+    const width = Math.max(endX - startX, MIN_HIGHLIGHT_WIDTH);
+
+    ctx.fillStyle = HIGHLIGHT_COLORS_RAW[highlight.type];
+    ctx.beginPath();
+    ctx.roundRect(startX, documentY, width, lineHeight, 2);
+    ctx.fill();
+  }
+
+  // Draw tokens
+  const textY = documentY + lineHeight * 0.75;
+  for (let j = 0; j < tokens.length; j++) {
+    const token = tokens[j];
+    const x = tokenPositions[j];
+
+    const style = tokenStyles?.[token.type];
+    const color = (style?.color as string) ?? "#000000";
+    const tokenFontWeight = (style?.fontWeight as string) ?? "normal";
+    const tokenFontStyle = (style?.fontStyle as string) ?? "normal";
+    const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
+    const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+
+    ctx.font = `${tokenFontStyle} ${tokenFontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+    ctx.fillStyle = color;
+    ctx.fillText(token.text, x, textY);
+  }
+
+  // Draw cursor
+  if (cursorColumn !== undefined) {
+    const cursorX = getStyledColumnX(
+      cursorColumn,
+      tokens,
+      tokenPositions,
+      tokenStyles,
+      fontSize,
+      codeXOffset,
+      ctx,
+      fontFamily,
+      lineText
+    );
+    ctx.fillStyle = CURSOR_COLOR;
+    ctx.fillRect(cursorX, documentY, 2, lineHeight);
+  }
+
+  // Reset font
+  ctx.font = `normal normal ${fontSize}px ${fontFamily}`;
+}
+
+/**
  * Canvas-based unified code renderer.
  *
  * Features:
@@ -312,6 +433,7 @@ const codeDisplayStyle: CSSProperties = {
  * - Cursor rendering
  * - High performance for large files
  * - Virtual scrolling support
+ * - Viewport-based rendering (fixed size canvas with translate)
  *
  * Note: Canvas uses ctx.measureText directly for CJK support.
  * The measureText prop is not used - Canvas has its own measurement.
@@ -325,6 +447,7 @@ export const CanvasRenderer = memo(function CanvasRenderer({
   lineHeight,
   padding,
   width: widthProp,
+  height: heightProp,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Canvas uses ctx.measureText directly
   measureText: _measureText,
   showLineNumbers = false,
@@ -334,6 +457,10 @@ export const CanvasRenderer = memo(function CanvasRenderer({
   tokenStyles,
   fontFamily = DEFAULT_FONT_FAMILY,
   fontSize = DEFAULT_FONT_SIZE,
+  // Viewport mode props
+  viewportConfig,
+  viewport,
+  visibleLines,
 }: RendererProps): ReactNode {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -343,6 +470,35 @@ export const CanvasRenderer = memo(function CanvasRenderer({
   const handleWidthChange = useEffectEvent((width: number) => {
     setMeasuredWidth(width);
   });
+
+  // Check if viewport mode is enabled
+  const isViewportMode = viewportConfig?.fixedViewport && viewport && visibleLines;
+
+  // Helper to get effective start index
+  const getEffectiveStartIndex = (): number => {
+    if (isViewportMode && visibleLines.length > 0) {
+      return visibleLines[0].index;
+    }
+    if (isViewportMode) {
+      return 0;
+    }
+    return visibleRange.start;
+  };
+
+  // Helper to get effective end index
+  const getEffectiveEndIndex = (): number => {
+    if (isViewportMode && visibleLines.length > 0) {
+      return visibleLines[visibleLines.length - 1].index + 1;
+    }
+    if (isViewportMode) {
+      return 0;
+    }
+    return visibleRange.end;
+  };
+
+  // Get effective visible range
+  const effectiveStartIndex = getEffectiveStartIndex();
+  const effectiveEndIndex = getEffectiveEndIndex();
 
   // Observe container width for responsive canvas sizing
   useEffect(() => {
@@ -367,12 +523,12 @@ export const CanvasRenderer = memo(function CanvasRenderer({
   }, []);
 
   // Use provided width or measured width
-  const width = widthProp ?? measuredWidth;
+  const width = widthProp ?? (isViewportMode ? viewport?.size.width ?? measuredWidth : measuredWidth);
 
   // Pre-compute line highlights for visible range
   const lineHighlightsMap = useMemo(() => {
     const map = new Map<number, readonly LineHighlight[]>();
-    for (let i = visibleRange.start; i < visibleRange.end; i++) {
+    for (let i = effectiveStartIndex; i < effectiveEndIndex; i++) {
       const lineNumber = i + 1;
       const lineText = lines[i] ?? "";
       const lineHighlights = getLineHighlights(lineNumber, lineText.length, highlights);
@@ -381,26 +537,26 @@ export const CanvasRenderer = memo(function CanvasRenderer({
       }
     }
     return map;
-  }, [visibleRange.start, visibleRange.end, lines, highlights]);
+  }, [effectiveStartIndex, effectiveEndIndex, lines, highlights]);
 
   // Check if cursor is on a visible line
   const cursorOnLine = useMemo(() => {
     if (!cursor?.visible) {
       return undefined;
     }
-    if (cursor.line < visibleRange.start + 1 || cursor.line > visibleRange.end) {
+    if (cursor.line < effectiveStartIndex + 1 || cursor.line > effectiveEndIndex) {
       return undefined;
     }
     return cursor.line;
-  }, [cursor, visibleRange]);
+  }, [cursor, effectiveStartIndex, effectiveEndIndex]);
 
   // Calculate canvas dimensions
-  const canvasHeight = (visibleRange.end - visibleRange.start) * lineHeight;
+  const canvasHeight = isViewportMode ? heightProp ?? viewport?.size.height ?? 0 : (visibleRange.end - visibleRange.start) * lineHeight;
 
   // Draw on canvas when content changes
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) {
+    if (!canvas || width <= 0 || canvasHeight <= 0) {
       return;
     }
 
@@ -433,7 +589,47 @@ export const CanvasRenderer = memo(function CanvasRenderer({
       fontSize,
     };
 
-    // Draw visible lines
+    // Viewport mode rendering
+    if (isViewportMode) {
+      const { offset } = viewport;
+
+      // Save context and apply viewport transform
+      ctx.save();
+
+      // Set up clipping for viewport
+      ctx.beginPath();
+      ctx.rect(0, 0, width, canvasHeight);
+      ctx.clip();
+
+      // Transform to viewport coordinates
+      ctx.translate(-offset.x, -offset.y);
+
+      // Draw visible lines
+      for (const item of visibleLines) {
+        const lineIndex = item.index;
+        const lineNumber = lineIndex + 1;
+        const lineText = lines[lineIndex] ?? "";
+        const tokens = tokenCache.getTokens(lineText, lineIndex);
+        const lineHighlights = lineHighlightsMap.get(lineNumber) ?? [];
+        const lineCursor = cursorOnLine === lineNumber ? cursor?.column : undefined;
+
+        drawLineAtDocumentY(
+          drawContext,
+          lineNumber,
+          lineText,
+          tokens,
+          lineHighlights,
+          item.documentY,
+          lineCursor,
+          cursor?.blinking ?? false
+        );
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // Legacy mode rendering
     for (let i = visibleRange.start; i < visibleRange.end; i++) {
       const lineIndex = i - visibleRange.start;
       const lineNumber = i + 1;
@@ -522,8 +718,30 @@ export const CanvasRenderer = memo(function CanvasRenderer({
     tokenStyles,
     fontFamily,
     fontSize,
+    isViewportMode,
+    viewport,
+    visibleLines,
   ]);
 
+  // Viewport mode: fixed canvas without spacers
+  if (isViewportMode) {
+    return (
+      <div ref={wrapperRef}>
+        {width > 0 && canvasHeight > 0 && (
+          <canvas
+            ref={canvasRef}
+            style={{
+              width,
+              height: canvasHeight,
+              display: "block",
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Legacy mode: spacer-based virtual scroll
   return (
     <div ref={wrapperRef} style={codeDisplayStyle}>
       {topSpacerHeight > 0 && <div style={{ height: topSpacerHeight }} />}

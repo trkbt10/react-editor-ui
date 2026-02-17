@@ -509,13 +509,31 @@ export const SvgRenderer = memo(function SvgRenderer({
   // Check if viewport mode is enabled
   const isViewportMode = viewportConfig?.fixedViewport && viewport && visibleLines;
 
+  // Helper to get effective start index
+  const getEffectiveStartIndex = (): number => {
+    if (isViewportMode && visibleLines.length > 0) {
+      return visibleLines[0].index;
+    }
+    if (isViewportMode) {
+      return 0;
+    }
+    return visibleRange.start;
+  };
+
+  // Helper to get effective end index
+  const getEffectiveEndIndex = (): number => {
+    if (isViewportMode && visibleLines.length > 0) {
+      return visibleLines[visibleLines.length - 1].index + 1;
+    }
+    if (isViewportMode) {
+      return 0;
+    }
+    return visibleRange.end;
+  };
+
   // Get effective visible range
-  const effectiveStartIndex = isViewportMode
-    ? (visibleLines.length > 0 ? visibleLines[0].index : 0)
-    : visibleRange.start;
-  const effectiveEndIndex = isViewportMode
-    ? (visibleLines.length > 0 ? visibleLines[visibleLines.length - 1].index + 1 : 0)
-    : visibleRange.end;
+  const effectiveStartIndex = getEffectiveStartIndex();
+  const effectiveEndIndex = getEffectiveEndIndex();
 
   // Pre-compute line highlights for visible range
   const lineHighlightsMap = useMemo(() => {
