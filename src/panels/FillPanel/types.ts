@@ -39,3 +39,5 @@ export type FillValue =
   | ImageFill
   | PatternFill
   | VideoFill;
+
+export type FillType = FillValue["type"];

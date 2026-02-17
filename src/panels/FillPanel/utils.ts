@@ -99,6 +99,10 @@ export function createDefaultFill(type: FillType): FillValue {
     case "video": {
       return { type: "video", video: createDefaultVideoFill() };
     }
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
+    }
   }
 }
 
@@ -144,6 +148,10 @@ export function getFillTypeLabel(type: FillType): string {
     }
     case "video": {
       return "Video";
+    }
+    default: {
+      const _exhaustive: never = type;
+      return _exhaustive;
     }
   }
 }
