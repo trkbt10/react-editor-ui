@@ -822,10 +822,45 @@ function FloatingToolPalette({ selectedTool, onToolSelect }: FloatingToolPalette
 }
 
 // =====================================================================
+// Design size constants
+// =====================================================================
+
+const DESIGN_WIDTH = 1440;
+const DESIGN_HEIGHT = 900;
+
+// =====================================================================
 // Main Component
 // =====================================================================
 
 export function DesignDemo() {
+  // Container ref and size for contain-fit scaling
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        setContainerSize({ width, height });
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // Calculate scale to fit container while maintaining aspect ratio
+  const scale = useMemo(() => {
+    if (containerSize.width === 0 || containerSize.height === 0) return 1;
+    const scaleX = containerSize.width / DESIGN_WIDTH;
+    const scaleY = containerSize.height / DESIGN_HEIGHT;
+    return Math.min(scaleX, scaleY);
+  }, [containerSize.width, containerSize.height]);
+
   // State
   const [layers, setLayers] = useState(designLayers);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(["1", "4"]));
@@ -953,9 +988,32 @@ export function DesignDemo() {
     { id: "inspector", gridArea: "inspector", component: inspectorLayer },
   ], [fileTabBarLayer, sidebarLayer, canvasLayer, inspectorLayer]);
 
+  const containerStyle: CSSProperties = {
+    height: "100vh",
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "var(--rei-color-surface-sunken)",
+    overflow: "hidden",
+  };
+
+  const contentStyle: CSSProperties = {
+    width: DESIGN_WIDTH,
+    height: DESIGN_HEIGHT,
+    transform: `scale(${scale})`,
+    transformOrigin: "center center",
+    flexShrink: 0,
+    boxShadow: "0 4px 24px rgba(0, 0, 0, 0.15)",
+    borderRadius: 8,
+    overflow: "hidden",
+  };
+
   return (
-    <div style={{ height: "100vh", width: "100%" }}>
-      <GridLayout config={config} layers={layers_} />
+    <div ref={containerRef} style={containerStyle}>
+      <div style={contentStyle}>
+        <GridLayout config={config} layers={layers_} />
+      </div>
     </div>
   );
 }
