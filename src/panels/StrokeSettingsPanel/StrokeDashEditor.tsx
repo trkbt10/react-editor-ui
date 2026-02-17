@@ -2,7 +2,7 @@
  * @file StrokeDashEditor - Dashed line configuration
  */
 
-import type { CSSProperties } from "react";
+import { memo, useCallback, type CSSProperties } from "react";
 import type { DashPattern } from "./types";
 import { Checkbox } from "../../components/Checkbox/Checkbox";
 import { Input } from "../../components/Input/Input";
@@ -48,6 +48,39 @@ function getValues(pattern: DashPattern, columns: 2 | 6): string[] {
   return values;
 }
 
+type DashInputProps = {
+  index: number;
+  value: string;
+  label: string;
+  disabled: boolean;
+  onValueChange: (index: number, value: string) => void;
+};
+
+const DashInput = memo(function DashInput({
+  index,
+  value,
+  label,
+  disabled,
+  onValueChange,
+}: DashInputProps) {
+  const handleChange = useCallback(
+    (v: string) => {
+      onValueChange(index, v);
+    },
+    [onValueChange, index],
+  );
+
+  return (
+    <Input
+      value={value}
+      onChange={handleChange}
+      type="number"
+      disabled={disabled}
+      aria-label={label}
+    />
+  );
+});
+
 /** Dash pattern editor with toggle and repeating dash/gap value inputs */
 export function StrokeDashEditor({
   enabled,
@@ -57,11 +90,14 @@ export function StrokeDashEditor({
   disabled = false,
   columns = 6,
 }: StrokeDashEditorProps) {
-  const updateValue = (index: number, value: string) => {
-    const newValues = [...pattern.values];
-    newValues[index] = value;
-    onPatternChange({ values: newValues });
-  };
+  const handleValueChange = useCallback(
+    (index: number, value: string) => {
+      const newValues = [...pattern.values];
+      newValues[index] = value;
+      onPatternChange({ values: newValues });
+    },
+    [pattern.values, onPatternChange],
+  );
 
   const labels = getLabels(columns);
   const values = getValues(pattern, columns);
@@ -90,13 +126,13 @@ export function StrokeDashEditor({
           </div>
           <div style={gridStyle}>
             {values.map((value, i) => (
-              <Input
+              <DashInput
                 key={`input-${i}`}
+                index={i}
                 value={value}
-                onChange={(v) => updateValue(i, v)}
-                type="number"
+                label={labels[i]}
                 disabled={disabled}
-                aria-label={labels[i]}
+                onValueChange={handleValueChange}
               />
             ))}
           </div>

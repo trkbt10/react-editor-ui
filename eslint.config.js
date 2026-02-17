@@ -70,6 +70,7 @@ export default [
         "custom/no-use-state-in-use-effect": "error",
         "custom/prefer-pointer-events": "warn",
         "custom/no-iife": "error",
+        "custom/no-inline-handler-in-map": "warn",
         // Spread from modular groups
         ...rulesJSDoc,
         ...rulesRestrictedSyntax,

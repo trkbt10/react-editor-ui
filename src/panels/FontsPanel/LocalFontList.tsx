@@ -2,7 +2,7 @@
  * @file LocalFontList component - Display local fonts with permission request via queryLocalFonts API
  */
 
-import { useState, useMemo, type CSSProperties } from "react";
+import { useState, useMemo, useCallback, memo, type CSSProperties } from "react";
 import { RefreshIcon } from "../../icons";
 import {
   COLOR_SURFACE,
@@ -158,12 +158,20 @@ const errorMessageStyle: CSSProperties = {
 type FontFamilyItemProps = {
   family: LocalFontFamily;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelectFont: (fontFamily: string) => void;
 };
 
-function FontFamilyItem({ family, isSelected, onSelect }: FontFamilyItemProps) {
+const FontFamilyItem = memo(function FontFamilyItem({
+  family,
+  isSelected,
+  onSelectFont,
+}: FontFamilyItemProps) {
+  const handleSelect = useCallback(() => {
+    onSelectFont(family.family);
+  }, [onSelectFont, family.family]);
+
   return (
-    <FontListItemBase isSelected={isSelected} onSelect={onSelect}>
+    <FontListItemBase isSelected={isSelected} onSelect={handleSelect}>
       <div style={fontContentStyle}>
         <div style={{ ...fontNameStyle, fontFamily: `"${family.family}", sans-serif` }}>
           {family.family}
@@ -172,7 +180,7 @@ function FontFamilyItem({ family, isSelected, onSelect }: FontFamilyItemProps) {
       </div>
     </FontListItemBase>
   );
-}
+});
 
 // ============================================================================
 // Permission Request States
@@ -275,7 +283,7 @@ function FontListContent({ families, selectedFont, onSelectFont }: FontListConte
           key={family.family}
           family={family}
           isSelected={family.family === selectedFont}
-          onSelect={() => onSelectFont(family.family)}
+          onSelectFont={onSelectFont}
         />
       ))}
     </>

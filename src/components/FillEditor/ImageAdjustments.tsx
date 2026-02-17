@@ -2,7 +2,7 @@
  * @file ImageAdjustments component - Sliders for image adjustments
  */
 
-import type { CSSProperties } from "react";
+import { memo, useCallback, type CSSProperties } from "react";
 import { Slider } from "../Slider/Slider";
 import { PropertyRow } from "../PropertyRow/PropertyRow";
 import {
@@ -24,6 +24,8 @@ type AdjustmentConfig = {
   key: AdjustmentKey;
   label: string;
 };
+
+type OnAdjustmentChange = (key: AdjustmentKey, value: number) => void;
 
 const adjustmentConfigs: AdjustmentConfig[] = [
   { key: "exposure", label: "Exposure" },
@@ -78,39 +80,42 @@ function getSliderBackground(key: AdjustmentKey): string {
   }
 }
 
-function AdjustmentSlider({
+const sliderContainerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: SPACE_SM,
+  width: "100%",
+};
+
+const sliderStyle: CSSProperties = {
+  flex: 1,
+};
+
+const valueStyle: CSSProperties = {
+  width: "32px",
+  textAlign: "right",
+  fontSize: SIZE_FONT_SM,
+  color: COLOR_TEXT,
+  fontVariantNumeric: "tabular-nums",
+};
+
+const AdjustmentSlider = memo(function AdjustmentSlider({
   config,
   value,
-  onChange,
+  onAdjustmentChange,
   disabled,
 }: {
   config: AdjustmentConfig;
   value: number;
-  onChange: (value: number) => void;
+  onAdjustmentChange: OnAdjustmentChange;
   disabled: boolean;
 }) {
-  const sliderContainerStyle: CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: SPACE_SM,
-    width: "100%",
-  };
-
-  const sliderStyle: CSSProperties = {
-    flex: 1,
-  };
-
-  const valueStyle: CSSProperties = {
-    width: "32px",
-    textAlign: "right",
-    fontSize: SIZE_FONT_SM,
-    color: COLOR_TEXT,
-    fontVariantNumeric: "tabular-nums",
-  };
-
-  const handleSliderChange = (sliderValue: number) => {
-    onChange(sliderToAdjustment(sliderValue));
-  };
+  const handleSliderChange = useCallback(
+    (sliderValue: number) => {
+      onAdjustmentChange(config.key, sliderToAdjustment(sliderValue));
+    },
+    [onAdjustmentChange, config.key],
+  );
 
   return (
     <PropertyRow label={config.label}>
@@ -128,7 +133,7 @@ function AdjustmentSlider({
       </div>
     </PropertyRow>
   );
-}
+});
 
 /** Sliders for adjusting image exposure, contrast, saturation, temperature, and tint */
 export function ImageAdjustments({
@@ -136,12 +141,15 @@ export function ImageAdjustments({
   onChange,
   disabled = false,
 }: ImageAdjustmentsProps) {
-  const handleAdjustmentChange = (key: AdjustmentKey, newValue: number) => {
-    onChange({
-      ...value,
-      [key]: newValue,
-    });
-  };
+  const handleAdjustmentChange = useCallback(
+    (key: AdjustmentKey, newValue: number) => {
+      onChange({
+        ...value,
+        [key]: newValue,
+      });
+    },
+    [onChange, value],
+  );
 
   return (
     <div role="group" aria-label="Image adjustments">
@@ -150,7 +158,7 @@ export function ImageAdjustments({
           key={config.key}
           config={config}
           value={value[config.key]}
-          onChange={(newValue) => handleAdjustmentChange(config.key, newValue)}
+          onAdjustmentChange={handleAdjustmentChange}
           disabled={disabled}
         />
       ))}
