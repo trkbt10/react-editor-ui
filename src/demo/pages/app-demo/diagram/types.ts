@@ -1,0 +1,269 @@
+/**
+ * @file Diagram Editor type definitions
+ */
+
+import type { ColorValue } from "../../../../utils/color/types";
+
+// =============================================================================
+// Basic Types
+// =============================================================================
+
+export type ShapeType =
+  | "rectangle"
+  | "ellipse"
+  | "diamond"
+  | "parallelogram"
+  | "rounded-rect"
+  | "cylinder"
+  | "hexagon"
+  | "triangle";
+
+export type StrokeStyle = "solid" | "dashed" | "dotted";
+
+export type NodeStroke = {
+  color: ColorValue;
+  width: number;
+  style: StrokeStyle;
+};
+
+export type TextAlign = "left" | "center" | "right";
+
+export type TextProperties = {
+  fontSize: number;
+  fontWeight: "normal" | "bold";
+  textAlign: TextAlign;
+  color: ColorValue;
+};
+
+// =============================================================================
+// Symbol Parts (editable/replaceable units)
+// =============================================================================
+
+type BasePartProps = {
+  id: string;
+  name: string; // "background", "label", "icon"
+};
+
+export type ShapePart = BasePartProps & {
+  type: "shape";
+  shape: ShapeType;
+  fill: ColorValue;
+  stroke: NodeStroke;
+};
+
+export type TextPart = BasePartProps & {
+  type: "text";
+  content: string;
+  textProps: TextProperties;
+};
+
+export type SymbolPart = ShapePart | TextPart;
+
+// =============================================================================
+// Symbol Definition (template on Symbols page)
+// =============================================================================
+
+export type SymbolVariant = {
+  name: string;
+  /** Part overrides/replacements keyed by part ID */
+  parts: Record<string, Partial<SymbolPart>>;
+};
+
+export type SymbolDefinition = {
+  id: string;
+  name: string; // "FlowchartNode"
+  width: number;
+  height: number;
+  /** Parts list (render order) */
+  parts: SymbolPart[];
+  /** Variant definitions */
+  variants: Record<string, SymbolVariant>;
+};
+
+// =============================================================================
+// Symbol Instance (on Canvas page)
+// =============================================================================
+
+export type SymbolInstance = {
+  id: string;
+  type: "instance";
+  symbolId: string;
+  variantId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  /** Local part overrides */
+  partOverrides?: Record<string, Partial<SymbolPart>>;
+};
+
+// =============================================================================
+// Legacy Node Types (for standalone shapes/text not in symbols)
+// =============================================================================
+
+export type NodeType = ShapeType | "text" | "group" | "instance";
+
+type BaseNodeProps = {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+};
+
+export type ShapeNode = BaseNodeProps & {
+  type: ShapeType;
+  fill: ColorValue;
+  stroke: NodeStroke;
+};
+
+export type TextNode = BaseNodeProps & {
+  type: "text";
+  content: string;
+  textProps: TextProperties;
+};
+
+export type GroupNode = BaseNodeProps & {
+  type: "group";
+  /** Child node IDs or instance IDs */
+  children: string[];
+};
+
+/**
+ * Union type for all diagram nodes
+ */
+export type DiagramNode = ShapeNode | TextNode | GroupNode | SymbolInstance;
+
+// =============================================================================
+// Connection Types
+// =============================================================================
+
+export type ConnectionPosition = "top" | "right" | "bottom" | "left" | "center";
+
+export type ConnectionPoint = {
+  nodeId: string;
+  position: ConnectionPosition;
+};
+
+export type ArrowheadType = "none" | "arrow" | "triangle" | "diamond" | "circle";
+
+export type Connection = {
+  id: string;
+  source: ConnectionPoint;
+  target: ConnectionPoint;
+  stroke: NodeStroke;
+  startArrow: ArrowheadType;
+  endArrow: ArrowheadType;
+  label: string;
+};
+
+// =============================================================================
+// Theme
+// =============================================================================
+
+export type DiagramTheme = {
+  defaultNodeFill: ColorValue;
+  defaultNodeStroke: NodeStroke;
+  defaultConnectionStroke: NodeStroke;
+  defaultConnectionArrow: ArrowheadType;
+  canvasBackground: string;
+  gridColor: string;
+};
+
+// =============================================================================
+// Page Types
+// =============================================================================
+
+export type PageId = "canvas" | "symbols";
+
+/**
+ * Canvas page - contains instances and standalone nodes
+ */
+export type CanvasPage = {
+  id: "canvas";
+  name: string;
+  nodes: DiagramNode[];
+  connections: Connection[];
+};
+
+/**
+ * Symbols page - contains the single symbol definition
+ */
+export type SymbolsPage = {
+  id: "symbols";
+  name: string;
+  symbol: SymbolDefinition | null;
+};
+
+export type DiagramPage = CanvasPage | SymbolsPage;
+
+/**
+ * Check if a node is a symbol instance
+ */
+export function isSymbolInstance(node: DiagramNode): node is SymbolInstance {
+  return node.type === "instance";
+}
+
+/**
+ * Type guard for shape nodes
+ */
+export function isShapeNode(node: DiagramNode): node is ShapeNode {
+  return node.type !== "text" && node.type !== "group" && node.type !== "instance";
+}
+
+/**
+ * Type guard for text nodes
+ */
+export function isTextNode(node: DiagramNode): node is TextNode {
+  return node.type === "text";
+}
+
+/**
+ * Type guard for group nodes
+ */
+export function isGroupNode(node: DiagramNode): node is GroupNode {
+  return node.type === "group";
+}
+
+// =============================================================================
+// Document
+// =============================================================================
+
+export type DiagramDocument = {
+  /** Main canvas page */
+  canvasPage: CanvasPage;
+  /** Symbols page (definition) */
+  symbolsPage: SymbolsPage;
+  /** Currently active page */
+  activePageId: PageId;
+  gridSize: number;
+  theme: DiagramTheme;
+};
+
+// =============================================================================
+// Tool Types
+// =============================================================================
+
+export type ToolType = "select" | "pan" | "connection" | NodeType;
+
+// =============================================================================
+// Shape Library
+// =============================================================================
+
+export type ShapeCategory = "basic" | "flowchart" | "uml" | "misc";
+
+export type ShapeDefinition = {
+  type: ShapeType | "text";
+  label: string;
+  category: ShapeCategory;
+  defaultWidth: number;
+  defaultHeight: number;
+};
+
+// =============================================================================
+// Export Types
+// =============================================================================
+
+export type ExportFormat = "svg" | "png" | "mermaid" | "markdown";
