@@ -2,15 +2,26 @@
  * @file Markdown export for diagram documents
  */
 
-import type { DiagramDocument, DiagramNode, ShapeNode, TextNode, GroupNode } from "../types";
-import { exportToMermaid } from "./exportToMermaid";
+import type {
+  DiagramDocument,
+  DiagramNode,
+  ShapeNode,
+  TextNode,
+  GroupNode,
+  FrameNode,
+  Connection,
+  SymbolInstance,
+  SymbolDefinition,
+  TextPart,
+} from "../types";
+import { exportToMermaid, exportFrameToMermaid } from "./exportToMermaid";
 
 // =============================================================================
 // Type Guards
 // =============================================================================
 
 function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance";
+  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame";
 }
 
 function isTextNode(node: DiagramNode): node is TextNode {
@@ -19,6 +30,10 @@ function isTextNode(node: DiagramNode): node is TextNode {
 
 function isGroupNode(node: DiagramNode): node is GroupNode {
   return node.type === "group";
+}
+
+function isSymbolInstance(node: DiagramNode): node is SymbolInstance {
+  return node.type === "instance";
 }
 
 /**
@@ -48,21 +63,60 @@ function getGroupShapeType(group: GroupNode, nodes: DiagramNode[]): string {
 }
 
 /**
- * Convert blob to data URL
+ * Get label for a symbol instance from its variant
  */
-async function blobToDataURL(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Failed to read blob as data URL"));
-      }
-    };
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
+function getInstanceLabel(
+  instance: SymbolInstance,
+  symbolDef: SymbolDefinition | null,
+): string {
+  if (!symbolDef) return instance.variantId;
+
+  const variant = symbolDef.variants[instance.variantId];
+  if (!variant) return instance.variantId;
+
+  // Find the text part and get label from variant override or instance override
+  const textPart = symbolDef.parts.find((p) => p.type === "text") as TextPart | undefined;
+  if (!textPart) return instance.variantId;
+
+  // Check instance override first
+  const instanceOverride = instance.partOverrides?.[textPart.id];
+  if (instanceOverride && "content" in instanceOverride) {
+    return instanceOverride.content as string;
+  }
+
+  // Check variant override
+  const variantOverride = variant.parts[textPart.id];
+  if (variantOverride && "content" in variantOverride) {
+    return variantOverride.content as string;
+  }
+
+  // Fall back to base text part content
+  return textPart.content || instance.variantId;
+}
+
+/**
+ * Get shape type for a symbol instance from its variant
+ */
+function getInstanceShapeType(
+  instance: SymbolInstance,
+  symbolDef: SymbolDefinition | null,
+): string {
+  if (!symbolDef) return "instance";
+
+  const variant = symbolDef.variants[instance.variantId];
+  if (!variant) return "instance";
+
+  // Find the shape part
+  const shapePart = symbolDef.parts.find((p) => p.type === "shape");
+  if (!shapePart || shapePart.type !== "shape") return "instance";
+
+  // Check variant override for shape type
+  const variantOverride = variant.parts[shapePart.id];
+  if (variantOverride && "shape" in variantOverride) {
+    return variantOverride.shape as string;
+  }
+
+  return shapePart.shape;
 }
 
 /**
@@ -74,15 +128,19 @@ function formatDate(): string {
 }
 
 /**
- * Export diagram document to Markdown with Mermaid code block
+ * Core function to generate Markdown from nodes and connections
  */
-export async function exportToMarkdown(document: DiagramDocument): Promise<string> {
-  const mermaid = exportToMermaid(document);
-
+function generateMarkdown(
+  nodes: DiagramNode[],
+  connections: Connection[],
+  mermaidContent: string,
+  title: string,
+  symbolDef: SymbolDefinition | null,
+): string {
   const lines: string[] = [];
 
   // Header
-  lines.push("# Diagram Export");
+  lines.push(`# ${title}`);
   lines.push("");
   lines.push(`> Generated on ${formatDate()}`);
   lines.push("");
@@ -91,29 +149,25 @@ export async function exportToMarkdown(document: DiagramDocument): Promise<strin
   lines.push("## Diagram");
   lines.push("");
   lines.push("```mermaid");
-  lines.push(mermaid);
+  lines.push(mermaidContent);
   lines.push("```");
-  lines.push("");
-
-  // Use canvas page for export
-  const nodes = document.canvasPage.nodes;
-  const connections = document.canvasPage.connections;
-
-  // Statistics
-  lines.push("## Statistics");
-  lines.push("");
-  lines.push(`- **Nodes**: ${nodes.length}`);
-  lines.push(`- **Connections**: ${connections.length}`);
-  lines.push(`- **Grid Size**: ${document.gridSize}px`);
   lines.push("");
 
   // Get groups for node list (groups are the top-level elements)
   const groups = nodes.filter(isGroupNode);
+  const instances = nodes.filter(isSymbolInstance);
   const groupChildIds = new Set(groups.flatMap((g: GroupNode) => g.children));
   const standaloneShapes = nodes.filter(
     (n: DiagramNode) => isShapeNode(n) && !groupChildIds.has(n.id),
   );
-  const exportableNodes = [...groups, ...standaloneShapes];
+  const exportableNodes = [...groups, ...instances, ...standaloneShapes];
+
+  // Statistics
+  lines.push("## Statistics");
+  lines.push("");
+  lines.push(`- **Nodes**: ${exportableNodes.length}`);
+  lines.push(`- **Connections**: ${connections.length}`);
+  lines.push("");
 
   // Node list
   if (exportableNodes.length > 0) {
@@ -125,6 +179,10 @@ export async function exportToMarkdown(document: DiagramDocument): Promise<strin
       if (isGroupNode(node)) {
         const shapeType = getGroupShapeType(node, nodes);
         const label = getGroupLabel(node, nodes) || "(no label)";
+        lines.push(`| ${node.id} | ${shapeType} | ${label} |`);
+      } else if (isSymbolInstance(node)) {
+        const shapeType = getInstanceShapeType(node, symbolDef);
+        const label = getInstanceLabel(node, symbolDef);
         lines.push(`| ${node.id} | ${shapeType} | ${label} |`);
       } else if (isShapeNode(node)) {
         lines.push(`| ${node.id} | ${node.type} | (no label) |`);
@@ -143,13 +201,21 @@ export async function exportToMarkdown(document: DiagramDocument): Promise<strin
       const sourceNode = nodes.find((n: DiagramNode) => n.id === conn.source.nodeId);
       const targetNode = nodes.find((n: DiagramNode) => n.id === conn.target.nodeId);
 
-      // Get names from groups or use IDs
-      const sourceName = sourceNode && isGroupNode(sourceNode)
-        ? getGroupLabel(sourceNode, nodes) || conn.source.nodeId
-        : conn.source.nodeId;
-      const targetName = targetNode && isGroupNode(targetNode)
-        ? getGroupLabel(targetNode, nodes) || conn.target.nodeId
-        : conn.target.nodeId;
+      // Get names from groups, instances, or use IDs
+      let sourceName = conn.source.nodeId;
+      if (sourceNode && isGroupNode(sourceNode)) {
+        sourceName = getGroupLabel(sourceNode, nodes) || conn.source.nodeId;
+      } else if (sourceNode && isSymbolInstance(sourceNode)) {
+        sourceName = getInstanceLabel(sourceNode, symbolDef);
+      }
+
+      let targetName = conn.target.nodeId;
+      if (targetNode && isGroupNode(targetNode)) {
+        targetName = getGroupLabel(targetNode, nodes) || conn.target.nodeId;
+      } else if (targetNode && isSymbolInstance(targetNode)) {
+        targetName = getInstanceLabel(targetNode, symbolDef);
+      }
+
       const label = conn.label || "-";
       lines.push(`| ${sourceName} | ${targetName} | ${label} |`);
     }
@@ -157,4 +223,46 @@ export async function exportToMarkdown(document: DiagramDocument): Promise<strin
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Export diagram document to Markdown with Mermaid code block
+ */
+export async function exportToMarkdown(document: DiagramDocument): Promise<string> {
+  const mermaid = exportToMermaid(document);
+  return generateMarkdown(
+    document.canvasPage.nodes,
+    document.canvasPage.connections,
+    mermaid,
+    "Diagram Export",
+    document.symbolsPage.symbol,
+  );
+}
+
+/**
+ * Export a specific frame to Markdown with Mermaid code block
+ */
+export function exportFrameToMarkdown(
+  frame: FrameNode,
+  allNodes: DiagramNode[],
+  allConnections: Connection[],
+  symbolDef: SymbolDefinition | null,
+): string {
+  // Get child nodes within the frame
+  const childNodeIds = new Set(frame.children);
+  const childNodes = allNodes.filter((n) => childNodeIds.has(n.id));
+
+  // Filter connections that are between child nodes
+  const relevantConnections = allConnections.filter(
+    (c) => childNodeIds.has(c.source.nodeId) && childNodeIds.has(c.target.nodeId),
+  );
+
+  const mermaid = exportFrameToMermaid(frame, allNodes, allConnections, symbolDef);
+  return generateMarkdown(
+    childNodes,
+    relevantConnections,
+    mermaid,
+    `Frame: ${frame.preset}`,
+    symbolDef,
+  );
 }

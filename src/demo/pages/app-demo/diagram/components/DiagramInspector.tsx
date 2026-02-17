@@ -16,12 +16,17 @@ import { TabBar } from "../../../../../components/TabBar/TabBar";
 import { Checkbox } from "../../../../../components/Checkbox/Checkbox";
 import { Tooltip } from "../../../../../components/Tooltip/Tooltip";
 import { SectionHeader } from "../../../../../components/SectionHeader/SectionHeader";
+import { ArrowheadSelect, type ArrowheadType as ArrowheadSelectType } from "../../../../../components/ArrowheadSelect/ArrowheadSelect";
 import type { ColorValue } from "../../../../../utils/color/types";
 
 import { PositionSection } from "../../../../../sections/PositionSection/PositionSection";
 import { SizeSection } from "../../../../../sections/SizeSection/SizeSection";
 import { RotationSection } from "../../../../../sections/RotationSection/RotationSection";
 import { ExportSection, type ExportSectionData } from "../../../../../sections/ExportSection/ExportSection";
+import { StrokeSection } from "../../../../../sections/StrokeSection/StrokeSection";
+import type { StrokeData, StrokeTab, BrushDirection as StrokeBrushDirection } from "../../../../../sections/StrokeSection/types";
+import type { JoinType as StrokeJoinType } from "../../../../../components/StrokeJoinControl/StrokeJoinControl";
+import type { WidthProfile as StrokeWidthProfile } from "../../../../../components/StrokeWidthProfileSelect/StrokeWidthProfileSelect";
 import type { PositionData } from "../../../../../sections/PositionSection/types";
 import type { SizeData } from "../../../../../sections/SizeSection/types";
 import type { RotationData } from "../../../../../sections/RotationSection/types";
@@ -50,10 +55,9 @@ import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, Fram
 import { isFrameNode, isSymbolInstance } from "../types";
 import { framePresets, type FramePresetInfo } from "../mockData";
 import { ThemeEditor } from "./ThemeEditor";
+import { TextExportSection } from "./TextExportSection";
 import { exportFrameToSVG } from "../export/exportToSVG";
 import { exportToPNG } from "../export/exportToPNG";
-import { exportToMermaid } from "../export/exportToMermaid";
-import { exportToMarkdown } from "../export/exportToMarkdown";
 
 // =============================================================================
 // Type Guards
@@ -133,14 +137,6 @@ type InspectorTab = "design" | "export" | "theme";
 // Options
 // =============================================================================
 
-const arrowheadOptions: SelectOption<ArrowheadType>[] = [
-  { value: "none", label: "None" },
-  { value: "arrow", label: "Arrow" },
-  { value: "triangle", label: "Triangle" },
-  { value: "diamond", label: "Diamond" },
-  { value: "circle", label: "Circle" },
-];
-
 const shapeTypeOptions: SelectOption<ShapeType>[] = [
   { value: "rectangle", label: "Rectangle" },
   { value: "rounded-rect", label: "Rounded Rectangle" },
@@ -181,6 +177,8 @@ export const DiagramInspector = memo(function DiagramInspector() {
   const [exportData, setExportData] = useState<ExportSectionData>({
     settings: [{ id: "export-1", scale: "1x", format: "PNG" }],
   });
+  const [strokeTab, setStrokeTab] = useState<StrokeTab>("basic");
+  const [connectionStrokeTab, setConnectionStrokeTab] = useState<StrokeTab>("basic");
 
   if (!documentCtx || !selectionCtx || !pageCtx || !viewportCtx) {
     return null;
@@ -462,6 +460,31 @@ export const DiagramInspector = memo(function DiagramInspector() {
           ),
         );
       },
+      // For ShapeNode stroke settings (StrokeSection)
+      setStrokeSettings: (data: StrokeData) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isShapeNode(n)
+              ? {
+                  ...n,
+                  stroke: {
+                    ...n.stroke,
+                    style: data.style,
+                    widthProfile: data.widthProfile as import("../types").WidthProfile,
+                    join: data.join as import("../types").JoinType,
+                    miterAngle: parseFloat(data.miterAngle) || 0,
+                    frequency: parseFloat(data.frequency) || 0,
+                    wiggle: parseFloat(data.wiggle) || 0,
+                    smoothen: parseFloat(data.smoothen) || 0,
+                    brushType: data.brushType as import("../types").BrushType,
+                    brushDirection: data.brushDirection as import("../types").BrushDirection,
+                    brushWidthProfile: data.brushWidthProfile as import("../types").WidthProfile,
+                  },
+                }
+              : n,
+          ),
+        );
+      },
       // For TextNode color
       setTextColor: (color: ColorValue) => {
         updatePageNodes((nodes) =>
@@ -674,6 +697,30 @@ export const DiagramInspector = memo(function DiagramInspector() {
         updatePageConnections((connections) =>
           connections.map((c: Connection) =>
             c.id === connId ? { ...c, stroke: { ...c.stroke, style } } : c,
+          ),
+        );
+      },
+      setStrokeSettings: (data: StrokeData) => {
+        updatePageConnections((connections) =>
+          connections.map((c: Connection) =>
+            c.id === connId
+              ? {
+                  ...c,
+                  stroke: {
+                    ...c.stroke,
+                    style: data.style,
+                    widthProfile: data.widthProfile as import("../types").WidthProfile,
+                    join: data.join as import("../types").JoinType,
+                    miterAngle: parseFloat(data.miterAngle) || 0,
+                    frequency: parseFloat(data.frequency) || 0,
+                    wiggle: parseFloat(data.wiggle) || 0,
+                    smoothen: parseFloat(data.smoothen) || 0,
+                    brushType: data.brushType as import("../types").BrushType,
+                    brushDirection: data.brushDirection as import("../types").BrushDirection,
+                    brushWidthProfile: data.brushWidthProfile as import("../types").WidthProfile,
+                  },
+                }
+              : c,
           ),
         );
       },
@@ -897,13 +944,28 @@ export const DiagramInspector = memo(function DiagramInspector() {
                     size="sm"
                   />
                 </PropertyRow>
-                <PropertyRow label="Style">
-                  <StrokeStyleSelect
-                    value={selectedNode.stroke.style as SectionStrokeStyle}
-                    onChange={nodeHandlers.setStrokeStyle as (v: SectionStrokeStyle) => void}
-                    size="sm"
-                  />
-                </PropertyRow>
+              </PropertySection>
+
+              <PropertySection title="Stroke Settings">
+                <StrokeSection
+                  data={{
+                    tab: strokeTab,
+                    style: selectedNode.stroke.style as SectionStrokeStyle,
+                    widthProfile: (selectedNode.stroke.widthProfile ?? "uniform") as StrokeWidthProfile,
+                    join: (selectedNode.stroke.join ?? "miter") as StrokeJoinType,
+                    miterAngle: String(selectedNode.stroke.miterAngle ?? 0),
+                    frequency: String(selectedNode.stroke.frequency ?? 0),
+                    wiggle: String(selectedNode.stroke.wiggle ?? 0),
+                    smoothen: String(selectedNode.stroke.smoothen ?? 0),
+                    brushType: (selectedNode.stroke.brushType ?? "smooth") as import("../../../../../sections/StrokeSection/types").BrushType,
+                    brushDirection: (selectedNode.stroke.brushDirection ?? "left") as StrokeBrushDirection,
+                    brushWidthProfile: (selectedNode.stroke.brushWidthProfile ?? "uniform") as StrokeWidthProfile,
+                  }}
+                  onChange={(data) => {
+                    setStrokeTab(data.tab);
+                    nodeHandlers.setStrokeSettings(data);
+                  }}
+                />
               </PropertySection>
             </>
           )}
@@ -1029,30 +1091,47 @@ export const DiagramInspector = memo(function DiagramInspector() {
                 size="sm"
               />
             </PropertyRow>
-            <PropertyRow label="Style">
-              <StrokeStyleSelect
-                value={selectedConnection.stroke.style as SectionStrokeStyle}
-                onChange={connectionHandlers.setStrokeStyle as (v: SectionStrokeStyle) => void}
-                size="sm"
-              />
-            </PropertyRow>
+          </PropertySection>
+
+          <PropertySection title="Stroke Settings">
+            <StrokeSection
+              data={{
+                tab: connectionStrokeTab,
+                style: selectedConnection.stroke.style as SectionStrokeStyle,
+                widthProfile: (selectedConnection.stroke.widthProfile ?? "uniform") as StrokeWidthProfile,
+                join: (selectedConnection.stroke.join ?? "miter") as StrokeJoinType,
+                miterAngle: String(selectedConnection.stroke.miterAngle ?? 0),
+                frequency: String(selectedConnection.stroke.frequency ?? 0),
+                wiggle: String(selectedConnection.stroke.wiggle ?? 0),
+                smoothen: String(selectedConnection.stroke.smoothen ?? 0),
+                brushType: (selectedConnection.stroke.brushType ?? "smooth") as import("../../../../../sections/StrokeSection/types").BrushType,
+                brushDirection: (selectedConnection.stroke.brushDirection ?? "left") as StrokeBrushDirection,
+                brushWidthProfile: (selectedConnection.stroke.brushWidthProfile ?? "uniform") as StrokeWidthProfile,
+              }}
+              onChange={(data) => {
+                setConnectionStrokeTab(data.tab);
+                connectionHandlers.setStrokeSettings(data);
+              }}
+            />
           </PropertySection>
 
           <PropertySection title="Arrows">
             <PropertyRow label="Start">
-              <Select
-                options={arrowheadOptions}
-                value={selectedConnection.startArrow}
-                onChange={connectionHandlers.setStartArrow}
+              <ArrowheadSelect
+                value={selectedConnection.startArrow as ArrowheadSelectType}
+                onChange={connectionHandlers.setStartArrow as (v: ArrowheadSelectType) => void}
                 size="sm"
+                direction="start"
+                aria-label="Start arrowhead"
               />
             </PropertyRow>
             <PropertyRow label="End">
-              <Select
-                options={arrowheadOptions}
-                value={selectedConnection.endArrow}
-                onChange={connectionHandlers.setEndArrow}
+              <ArrowheadSelect
+                value={selectedConnection.endArrow as ArrowheadSelectType}
+                onChange={connectionHandlers.setEndArrow as (v: ArrowheadSelectType) => void}
                 size="sm"
+                direction="end"
+                aria-label="End arrowhead"
               />
             </PropertyRow>
           </PropertySection>
@@ -1088,6 +1167,12 @@ export const DiagramInspector = memo(function DiagramInspector() {
           selectionCount={allFrames.length}
           selectionLabel="Frame"
           onExport={handleExport}
+        />
+        <TextExportSection
+          frames={allFrames}
+          allNodes={pageNodes}
+          allConnections={pageConnections}
+          symbolDef={pageCtx.symbolsPage.symbol}
         />
       </div>
     );
