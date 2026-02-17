@@ -438,6 +438,48 @@ Typography settings panel for text properties
 import { TypographyPanel } from "react-editor-ui/panels/TypographyPanel";
 ```
 
+### Navigation
+
+> Components for navigation and wayfinding
+
+#### Breadcrumb
+
+Navigation path indicator
+
+Displays hierarchical navigation path with clickable items. Supports icons, custom separators, and overflow handling.
+
+```tsx
+import { Breadcrumb } from "react-editor-ui/Breadcrumb";
+
+<Breadcrumb
+  items={[
+    { label: "Project", icon: <LuFolder /> },
+    { label: "src", icon: <LuFolder /> },
+    { label: "index.tsx", icon: <LuFileCode /> },
+  ]}
+  onItemClick={(index) => navigateTo(index)}
+/>
+```
+
+#### ProjectMenu
+
+Sidebar project dropdown with status badges
+
+Displays project name with status badges in a compact dropdown format. Designed for sidebar use, extends SectionHeader patterns.
+
+```tsx
+import { ProjectMenu } from "react-editor-ui/ProjectMenu";
+
+<ProjectMenu
+  name="My Project"
+  badges={[
+    { label: "Drafts" },
+    { label: "Free", variant: "accent" },
+  ]}
+  onClick={() => openProjectMenu()}
+/>
+```
+
 ### Data Display
 
 > Components for displaying and organizing data
