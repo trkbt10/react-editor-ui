@@ -139,8 +139,8 @@ describe("TabBar", () => {
         />,
       );
 
-      // Dirty indicator is a small circle
-      const dirtyIndicator = container.querySelector('span[style*="border-radius: 50%"]');
+      // Dirty indicator is a small circle (uses RADIUS_FULL token which renders as CSS var)
+      const dirtyIndicator = container.querySelector('span[style*="border-radius"][style*="9999px"]');
       expect(dirtyIndicator).toBeInTheDocument();
     });
   });
