@@ -23,6 +23,8 @@ export const lightColorTokens: ColorTokens = {
   "color-text": "#111827",
   "color-text-muted": "#6b7280",
   "color-text-disabled": "#9ca3af",
+  "color-text-on-emphasis": "#ffffff",
+  "color-text-on-warning": "#000000",
 
   // Border
   "color-border": "#e5e7eb",
@@ -91,6 +93,14 @@ export const lightColorTokens: ColorTokens = {
   "shadow-sm": "0 1px 2px rgba(0, 0, 0, 0.05)",
   "shadow-md": "0 4px 6px rgba(0, 0, 0, 0.07)",
   "shadow-lg": "0 10px 15px rgba(0, 0, 0, 0.1)",
+  "shadow-thumb": "0 1px 2px rgba(0, 0, 0, 0.2)",
+
+  // Bounding Box
+  "bounding-box-stroke": "#18a0fb",
+  "bounding-box-handle-fill": "#ffffff",
+  "bounding-box-handle-stroke": "#18a0fb",
+  "bounding-box-label-bg": "#18a0fb",
+  "bounding-box-label-text": "#ffffff",
 };
 
 /**

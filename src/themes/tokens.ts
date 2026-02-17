@@ -15,6 +15,8 @@ export type BaseTokens = {
   // Consistent spacing scale for margins, paddings, and gaps
   // -------------------------------------------------------------------------
 
+  /** 2x extra small spacing (1px) - hairline gaps, minimal separators */
+  "space-2xs": string;
   /** Extra small spacing (2px) - tight spacing for dense UIs */
   "space-xs": string;
   /** Small spacing (4px) - default gap between related elements */
@@ -61,6 +63,8 @@ export type BaseTokens = {
   // Standard heights for interactive elements
   // -------------------------------------------------------------------------
 
+  /** Extra small height (14px) - badges, micro elements */
+  "size-height-xs": string;
   /** Small height (22px) - compact buttons, inputs */
   "size-height-sm": string;
   /** Medium height (28px) - default buttons, inputs */
@@ -153,8 +157,36 @@ export type BaseTokens = {
   "size-color-swatch-lg": string;
   /** Divider width (1px) - separator line thickness */
   "size-divider-width": string;
+  /** Small badge (14px) - compact badge height */
+  "size-badge-sm": string;
+  /** Medium badge (18px) - default badge height */
+  "size-badge-md": string;
+  /** Small thumbnail (32px) - inline asset previews */
+  "size-thumbnail-sm": string;
+  /** Medium thumbnail (48px) - default asset previews */
+  "size-thumbnail-md": string;
+  /** Large thumbnail (64px) - expanded asset previews */
+  "size-thumbnail-lg": string;
   /** Canvas ruler size (20px) - ruler bar width/height */
   "canvas-ruler-size": string;
+  /** Bounding box handle size (8px) - resize handle dimensions */
+  "bounding-box-handle-size": string;
+  /** Bounding box stroke width (1px) - selection outline thickness */
+  "bounding-box-stroke-width": string;
+
+  // -------------------------------------------------------------------------
+  // @group Font Weights
+  // Typography weight scale
+  // -------------------------------------------------------------------------
+
+  /** Normal weight (400) - default body text */
+  "font-weight-normal": string;
+  /** Medium weight (500) - slight emphasis */
+  "font-weight-medium": string;
+  /** Semibold weight (600) - strong emphasis, headings */
+  "font-weight-semibold": string;
+  /** Bold weight (700) - maximum emphasis */
+  "font-weight-bold": string;
 };
 
 /**
@@ -197,6 +229,10 @@ export type ColorTokens = {
   "color-text-muted": string;
   /** Disabled text - inactive elements */
   "color-text-disabled": string;
+  /** Text on emphasis - text on primary/accent backgrounds */
+  "color-text-on-emphasis": string;
+  /** Text on warning - text on warning backgrounds */
+  "color-text-on-warning": string;
 
   // -------------------------------------------------------------------------
   // @group Border Colors
@@ -357,6 +393,24 @@ export type ColorTokens = {
   "shadow-md": string;
   /** Large shadow - modals, popovers */
   "shadow-lg": string;
+  /** Thumb shadow - slider/scrollbar thumbs */
+  "shadow-thumb": string;
+
+  // -------------------------------------------------------------------------
+  // @group Bounding Box Colors
+  // Selection and transform handle styling
+  // -------------------------------------------------------------------------
+
+  /** Bounding box stroke - selection outline color */
+  "bounding-box-stroke": string;
+  /** Handle fill - resize handle background */
+  "bounding-box-handle-fill": string;
+  /** Handle stroke - resize handle border */
+  "bounding-box-handle-stroke": string;
+  /** Label background - dimension label background */
+  "bounding-box-label-bg": string;
+  /** Label text - dimension label text color */
+  "bounding-box-label-text": string;
 };
 
 export type ThemeTokens = BaseTokens & ColorTokens;
@@ -366,6 +420,7 @@ export type ThemeTokens = BaseTokens & ColorTokens;
  */
 export const baseTokens: BaseTokens = {
   // Spacing
+  "space-2xs": "1px",
   "space-xs": "2px",
   "space-sm": "4px",
   "space-md": "8px",
@@ -386,6 +441,7 @@ export const baseTokens: BaseTokens = {
   "size-icon-xl": "24px",
 
   // Component heights
+  "size-height-xs": "14px",
   "size-height-sm": "22px",
   "size-height-md": "28px",
   "size-height-lg": "32px",
@@ -427,5 +483,18 @@ export const baseTokens: BaseTokens = {
   "size-color-swatch-md": "18px",
   "size-color-swatch-lg": "22px",
   "size-divider-width": "1px",
+  "size-badge-sm": "14px",
+  "size-badge-md": "18px",
+  "size-thumbnail-sm": "32px",
+  "size-thumbnail-md": "48px",
+  "size-thumbnail-lg": "64px",
   "canvas-ruler-size": "20px",
+  "bounding-box-handle-size": "8px",
+  "bounding-box-stroke-width": "1px",
+
+  // Font weights
+  "font-weight-normal": "400",
+  "font-weight-medium": "500",
+  "font-weight-semibold": "600",
+  "font-weight-bold": "700",
 };

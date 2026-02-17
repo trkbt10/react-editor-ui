@@ -7,7 +7,7 @@
 
 import { themes, type ThemeName } from "./presets";
 import type { ThemeTokens } from "./tokens";
-import { CSS_VAR_PREFIX } from "../constants/styles";
+import { CSS_VAR_PREFIX } from "./cssVar";
 
 const STYLE_ID = "rei-theme-vars";
 

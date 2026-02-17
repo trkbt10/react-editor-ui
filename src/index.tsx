@@ -56,12 +56,14 @@ export type {
 
 // Panels
 export { AnimationPanel } from "./panels/AnimationPanel/AnimationPanel";
-export { EasingPresetSelect } from "./panels/AnimationPanel/EasingPresetSelect";
 export type { AnimationPanelProps } from "./panels/AnimationPanel/AnimationPanel";
-export type { EasingPresetSelectProps } from "./panels/AnimationPanel/EasingPresetSelect";
+
+// Animation Section components
+export { EasingPresetSelect } from "./sections/AnimationSection/EasingPresetSelect";
+export type { EasingPresetSelectProps } from "./sections/AnimationSection/EasingPresetSelect";
 
 // Animation icons
 export { ClockIcon, HourglassIcon } from "./icons/animation";
 
 // Style constants
-export { CSS_VAR_PREFIX } from "./constants/styles";
+export { CSS_VAR_PREFIX } from "./themes/cssVar";

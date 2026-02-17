@@ -5,7 +5,7 @@
  * All variables use the unified prefix: --rei-editor-*
  */
 
-import { CSS_VAR_PREFIX } from "../../../constants/styles";
+import { CSS_VAR_PREFIX } from "../../../themes/cssVar";
 
 // =============================================================================
 // Editor Prefix

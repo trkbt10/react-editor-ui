@@ -3,7 +3,7 @@
  * @file CSS Token Validator
  *
  * Detects undefined CSS tokens (--rei-*) used in the codebase.
- * Compares usage against definitions in src/constants/styles.ts.
+ * Compares usage against definitions in src/themes/tokens.ts (SSoT).
  *
  * Usage:
  *   bun scripts/check-tokens.ts [options]
@@ -17,9 +17,9 @@
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, extname } from "node:path";
+import { lightTheme } from "../src/themes/presets";
 
 const PROJECT_ROOT = join(import.meta.dirname, "..");
-const STYLES_PATH = join(PROJECT_ROOT, "src/constants/styles.ts");
 const SRC_PATH = join(PROJECT_ROOT, "src");
 
 // File extensions to scan
@@ -30,9 +30,6 @@ const SKIP_DIRS = new Set(["node_modules", "dist", "build", ".git"]);
 
 // Pattern to match CSS variable usage: var(--rei-*)
 const VAR_USAGE_PATTERN = /var\(--rei-([a-zA-Z0-9-]+)(?:,\s*[^)]+)?\)/g;
-
-// Pattern to extract token definitions from styles.ts
-const TOKEN_DEFINITION_PATTERN = /var\(--rei-([a-zA-Z0-9-]+),/g;
 
 // Demo-specific token prefix (excluded by default)
 const DEMO_TOKEN_PREFIX = "demo-";
@@ -57,17 +54,10 @@ type ValidationResult = {
 };
 
 /**
- * Extract defined tokens from styles.ts
+ * Extract defined tokens from themes/tokens.ts (via lightTheme)
  */
 function extractDefinedTokens(): Set<string> {
-  const content = readFileSync(STYLES_PATH, "utf-8");
-  const tokens = new Set<string>();
-
-  for (const match of content.matchAll(TOKEN_DEFINITION_PATTERN)) {
-    tokens.add(match[1]);
-  }
-
-  return tokens;
+  return new Set(Object.keys(lightTheme));
 }
 
 /**

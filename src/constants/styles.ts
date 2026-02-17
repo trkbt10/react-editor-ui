@@ -1,7 +1,7 @@
 /**
  * @file Style constants for react-editor-ui components
  *
- * All style values are defined here with CSS variable fallbacks.
+ * All style values are generated from theme tokens with CSS variable fallbacks.
  * Users can override these via CSS variables (--rei-*) or ThemeProvider.
  *
  * DEFAULT: Light theme (white-based)
@@ -22,15 +22,7 @@
  * </ThemeProvider>
  */
 
-// ========================================
-// CSS VARIABLE PREFIX
-// ========================================
-
-/**
- * Unified CSS variable prefix for all react-editor-ui variables
- * All theme variables use this prefix: --rei-*
- */
-export const CSS_VAR_PREFIX = "rei";
+import { cssVar } from "../themes/cssVar";
 
 // ========================================
 // COLORS
@@ -39,64 +31,64 @@ export const CSS_VAR_PREFIX = "rei";
 /**
  * Primary colors - used for interactive elements
  */
-export const COLOR_PRIMARY = "var(--rei-color-primary, #2563eb)";
-export const COLOR_PRIMARY_HOVER = "var(--rei-color-primary-hover, #1d4ed8)";
-export const COLOR_PRIMARY_ACTIVE = "var(--rei-color-primary-active, #1e40af)";
+export const COLOR_PRIMARY = cssVar("color-primary");
+export const COLOR_PRIMARY_HOVER = cssVar("color-primary-hover");
+export const COLOR_PRIMARY_ACTIVE = cssVar("color-primary-active");
 
 /**
  * Surface colors - backgrounds (Light theme default)
  */
-export const COLOR_SURFACE = "var(--rei-color-surface, #ffffff)";
-export const COLOR_SURFACE_RAISED = "var(--rei-color-surface-raised, #f9fafb)";
-export const COLOR_SURFACE_OVERLAY = "var(--rei-color-surface-overlay, #f3f4f6)";
+export const COLOR_SURFACE = cssVar("color-surface");
+export const COLOR_SURFACE_RAISED = cssVar("color-surface-raised");
+export const COLOR_SURFACE_OVERLAY = cssVar("color-surface-overlay");
 
 /**
  * Text colors (Light theme default)
  */
-export const COLOR_TEXT = "var(--rei-color-text, #111827)";
-export const COLOR_TEXT_MUTED = "var(--rei-color-text-muted, #6b7280)";
-export const COLOR_TEXT_DISABLED = "var(--rei-color-text-disabled, #9ca3af)";
-export const COLOR_TEXT_ON_EMPHASIS = "var(--rei-color-text-on-emphasis, #ffffff)";
-export const COLOR_TEXT_ON_WARNING = "var(--rei-color-text-on-warning, #000000)";
+export const COLOR_TEXT = cssVar("color-text");
+export const COLOR_TEXT_MUTED = cssVar("color-text-muted");
+export const COLOR_TEXT_DISABLED = cssVar("color-text-disabled");
+export const COLOR_TEXT_ON_EMPHASIS = cssVar("color-text-on-emphasis");
+export const COLOR_TEXT_ON_WARNING = cssVar("color-text-on-warning");
 
 /**
  * Border colors (Light theme default)
  */
-export const COLOR_BORDER = "var(--rei-color-border, #e5e7eb)";
-export const COLOR_BORDER_FOCUS = "var(--rei-color-border-focus, #2563eb)";
+export const COLOR_BORDER = cssVar("color-border");
+export const COLOR_BORDER_FOCUS = cssVar("color-border-focus");
 
 /**
  * State colors
  */
-export const COLOR_SUCCESS = "var(--rei-color-success, #16a34a)";
-export const COLOR_WARNING = "var(--rei-color-warning, #d97706)";
-export const COLOR_ERROR = "var(--rei-color-error, #dc2626)";
+export const COLOR_SUCCESS = cssVar("color-success");
+export const COLOR_WARNING = cssVar("color-warning");
+export const COLOR_ERROR = cssVar("color-error");
 
 /**
  * Error state colors (backgrounds and borders)
  */
-export const COLOR_ERROR_BG = "var(--rei-color-error-bg, rgba(239, 68, 68, 0.1))";
-export const COLOR_ERROR_BG_HOVER = "var(--rei-color-error-bg-hover, rgba(239, 68, 68, 0.15))";
-export const COLOR_ERROR_BG_ACTIVE = "var(--rei-color-error-bg-active, rgba(239, 68, 68, 0.2))";
-export const COLOR_ERROR_BORDER = "var(--rei-color-error-border, rgba(239, 68, 68, 0.3))";
-export const COLOR_ERROR_BORDER_HOVER = "var(--rei-color-error-border-hover, rgba(239, 68, 68, 0.4))";
+export const COLOR_ERROR_BG = cssVar("color-error-bg");
+export const COLOR_ERROR_BG_HOVER = cssVar("color-error-bg-hover");
+export const COLOR_ERROR_BG_ACTIVE = cssVar("color-error-bg-active");
+export const COLOR_ERROR_BORDER = cssVar("color-error-border");
+export const COLOR_ERROR_BORDER_HOVER = cssVar("color-error-border-hover");
 
 /**
  * Backdrop / overlay
  */
-export const COLOR_BACKDROP = "var(--rei-color-backdrop, rgba(0, 0, 0, 0.4))";
+export const COLOR_BACKDROP = cssVar("color-backdrop");
 
 // ========================================
 // SPACING
 // ========================================
 
-export const SPACE_2XS = "var(--rei-space-2xs, 1px)";
-export const SPACE_XS = "var(--rei-space-xs, 2px)";
-export const SPACE_SM = "var(--rei-space-sm, 4px)";
-export const SPACE_MD = "var(--rei-space-md, 8px)";
-export const SPACE_LG = "var(--rei-space-lg, 12px)";
-export const SPACE_XL = "var(--rei-space-xl, 16px)";
-export const SPACE_2XL = "var(--rei-space-2xl, 24px)";
+export const SPACE_2XS = cssVar("space-2xs");
+export const SPACE_XS = cssVar("space-xs");
+export const SPACE_SM = cssVar("space-sm");
+export const SPACE_MD = cssVar("space-md");
+export const SPACE_LG = cssVar("space-lg");
+export const SPACE_XL = cssVar("space-xl");
+export const SPACE_2XL = cssVar("space-2xl");
 
 // ========================================
 // SIZING
@@ -105,181 +97,188 @@ export const SPACE_2XL = "var(--rei-space-2xl, 24px)";
 /**
  * Font sizes (Figma-style compact)
  */
-export const SIZE_FONT_XS = "var(--rei-size-font-xs, 9px)";
-export const SIZE_FONT_SM = "var(--rei-size-font-sm, 11px)";
-export const SIZE_FONT_MD = "var(--rei-size-font-md, 12px)";
-export const SIZE_FONT_LG = "var(--rei-size-font-lg, 14px)";
+export const SIZE_FONT_XS = cssVar("size-font-xs");
+export const SIZE_FONT_SM = cssVar("size-font-sm");
+export const SIZE_FONT_MD = cssVar("size-font-md");
+export const SIZE_FONT_LG = cssVar("size-font-lg");
 
 /**
  * Font weights
  */
-export const FONT_WEIGHT_NORMAL = "var(--rei-font-weight-normal, 400)";
-export const FONT_WEIGHT_MEDIUM = "var(--rei-font-weight-medium, 500)";
-export const FONT_WEIGHT_SEMIBOLD = "var(--rei-font-weight-semibold, 600)";
-export const FONT_WEIGHT_BOLD = "var(--rei-font-weight-bold, 700)";
+export const FONT_WEIGHT_NORMAL = cssVar("font-weight-normal");
+export const FONT_WEIGHT_MEDIUM = cssVar("font-weight-medium");
+export const FONT_WEIGHT_SEMIBOLD = cssVar("font-weight-semibold");
+export const FONT_WEIGHT_BOLD = cssVar("font-weight-bold");
 
 /**
  * Icon sizes (Figma-style compact)
  */
-export const SIZE_ICON_SM = "var(--rei-size-icon-sm, 12px)";
-export const SIZE_ICON_MD = "var(--rei-size-icon-md, 14px)";
-export const SIZE_ICON_LG = "var(--rei-size-icon-lg, 18px)";
-export const SIZE_ICON_XL = "var(--rei-size-icon-xl, 24px)";
+export const SIZE_ICON_SM = cssVar("size-icon-sm");
+export const SIZE_ICON_MD = cssVar("size-icon-md");
+export const SIZE_ICON_LG = cssVar("size-icon-lg");
+export const SIZE_ICON_XL = cssVar("size-icon-xl");
 
 /**
  * Component heights (Figma-style compact)
  */
-export const SIZE_HEIGHT_XS = "var(--rei-size-height-xs, 14px)";
-export const SIZE_HEIGHT_SM = "var(--rei-size-height-sm, 22px)";
-export const SIZE_HEIGHT_MD = "var(--rei-size-height-md, 28px)";
-export const SIZE_HEIGHT_LG = "var(--rei-size-height-lg, 32px)";
-export const SIZE_HEIGHT_XL = "var(--rei-size-height-xl, 40px)";
+export const SIZE_HEIGHT_XS = cssVar("size-height-xs");
+export const SIZE_HEIGHT_SM = cssVar("size-height-sm");
+export const SIZE_HEIGHT_MD = cssVar("size-height-md");
+export const SIZE_HEIGHT_LG = cssVar("size-height-lg");
+export const SIZE_HEIGHT_XL = cssVar("size-height-xl");
 
 /**
  * Badge heights
  */
-export const SIZE_BADGE_SM = "var(--rei-size-badge-sm, 14px)";
-export const SIZE_BADGE_MD = "var(--rei-size-badge-md, 18px)";
+export const SIZE_BADGE_SM = cssVar("size-badge-sm");
+export const SIZE_BADGE_MD = cssVar("size-badge-md");
 
 // ========================================
 // BORDER RADIUS
 // ========================================
 
-export const RADIUS_SM = "var(--rei-radius-sm, 5px)";
-export const RADIUS_MD = "var(--rei-radius-md, 6px)";
-export const RADIUS_LG = "var(--rei-radius-lg, 10px)";
-export const RADIUS_FULL = "var(--rei-radius-full, 9999px)";
+export const RADIUS_SM = cssVar("radius-sm");
+export const RADIUS_MD = cssVar("radius-md");
+export const RADIUS_LG = cssVar("radius-lg");
+export const RADIUS_FULL = cssVar("radius-full");
 
 // ========================================
 // SHADOWS (Light theme default)
 // ========================================
 
-export const SHADOW_SM = "var(--rei-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05))";
-export const SHADOW_MD = "var(--rei-shadow-md, 0 4px 6px rgba(0, 0, 0, 0.07))";
-export const SHADOW_LG = "var(--rei-shadow-lg, 0 10px 15px rgba(0, 0, 0, 0.1))";
-export const SHADOW_THUMB = "var(--rei-shadow-thumb, 0 1px 2px rgba(0, 0, 0, 0.2))";
+export const SHADOW_SM = cssVar("shadow-sm");
+export const SHADOW_MD = cssVar("shadow-md");
+export const SHADOW_LG = cssVar("shadow-lg");
+export const SHADOW_THUMB = cssVar("shadow-thumb");
 
 // ========================================
 // Z-INDEX
 // ========================================
 
-export const Z_DROPDOWN = "var(--rei-z-dropdown, 1000)";
-export const Z_STICKY = "var(--rei-z-sticky, 1100)";
-export const Z_MODAL = "var(--rei-z-modal, 1200)";
-export const Z_POPOVER = "var(--rei-z-popover, 1300)";
-export const Z_TOOLTIP = "var(--rei-z-tooltip, 1400)";
+export const Z_DROPDOWN = cssVar("z-dropdown");
+export const Z_STICKY = cssVar("z-sticky");
+export const Z_MODAL = cssVar("z-modal");
+export const Z_POPOVER = cssVar("z-popover");
+export const Z_TOOLTIP = cssVar("z-tooltip");
 
 // ========================================
 // TRANSITIONS
 // ========================================
 
-export const DURATION_FAST = "var(--rei-duration-fast, 100ms)";
-export const DURATION_NORMAL = "var(--rei-duration-normal, 200ms)";
-export const DURATION_SLOW = "var(--rei-duration-slow, 300ms)";
+export const DURATION_FAST = cssVar("duration-fast");
+export const DURATION_NORMAL = cssVar("duration-normal");
+export const DURATION_SLOW = cssVar("duration-slow");
 
-export const EASING_DEFAULT = "var(--rei-easing-default, cubic-bezier(0.4, 0, 0.2, 1))";
-export const EASING_IN = "var(--rei-easing-in, cubic-bezier(0.4, 0, 1, 1))";
-export const EASING_OUT = "var(--rei-easing-out, cubic-bezier(0, 0, 0.2, 1))";
+export const EASING_DEFAULT = cssVar("easing-default");
+export const EASING_IN = cssVar("easing-in");
+export const EASING_OUT = cssVar("easing-out");
 
 // ========================================
 // INTERACTIVE STATES (Light theme default)
 // ========================================
 
-export const COLOR_HOVER = "var(--rei-color-hover, rgba(0, 0, 0, 0.04))";
-export const COLOR_ACTIVE = "var(--rei-color-active, rgba(0, 0, 0, 0.08))";
-export const COLOR_SELECTED = "var(--rei-color-selected, rgba(37, 99, 235, 0.1))";
-export const COLOR_SELECTED_SUBTLE = "var(--rei-color-selected-subtle, rgba(37, 99, 235, 0.05))";
-export const COLOR_DROP_TARGET = "var(--rei-color-drop-target, rgba(37, 99, 235, 0.15))";
-export const COLOR_FOCUS_RING = "var(--rei-color-focus-ring, rgba(37, 99, 235, 0.4))";
+export const COLOR_HOVER = cssVar("color-hover");
+export const COLOR_ACTIVE = cssVar("color-active");
+export const COLOR_SELECTED = cssVar("color-selected");
+export const COLOR_SELECTED_SUBTLE = cssVar("color-selected-subtle");
+export const COLOR_DROP_TARGET = cssVar("color-drop-target");
+export const COLOR_FOCUS_RING = cssVar("color-focus-ring");
 
 // ========================================
 // ICON COLORS (Light theme default)
 // ========================================
 
-export const COLOR_ICON = "var(--rei-color-icon, #6b7280)";
-export const COLOR_ICON_HOVER = "var(--rei-color-icon-hover, #374151)";
-export const COLOR_ICON_ACTIVE = "var(--rei-color-icon-active, #2563eb)";
+export const COLOR_ICON = cssVar("color-icon");
+export const COLOR_ICON_HOVER = cssVar("color-icon-hover");
+export const COLOR_ICON_ACTIVE = cssVar("color-icon-active");
 
 // ========================================
 // COMPONENT-SPECIFIC SIZES
 // ========================================
 
-export const SIZE_TOOLBAR_HEIGHT = "var(--rei-size-toolbar-height, 44px)";
-export const SIZE_TABBAR_HEIGHT = "var(--rei-size-tabbar-height, 32px)";
-export const SIZE_STATUSBAR_HEIGHT = "var(--rei-size-statusbar-height, 24px)";
-export const SIZE_PANEL_HEADER_HEIGHT = "var(--rei-size-panel-header-height, 40px)";
-export const SIZE_TREE_INDENT = "var(--rei-size-tree-indent, 16px)";
-export const SIZE_PROPERTY_LABEL = "var(--rei-size-property-label, 100px)";
+export const SIZE_TOOLBAR_HEIGHT = cssVar("size-toolbar-height");
+export const SIZE_TABBAR_HEIGHT = cssVar("size-tabbar-height");
+export const SIZE_STATUSBAR_HEIGHT = cssVar("size-statusbar-height");
+export const SIZE_PANEL_HEADER_HEIGHT = cssVar("size-panel-header-height");
+export const SIZE_TREE_INDENT = cssVar("size-tree-indent");
+export const SIZE_PROPERTY_LABEL = cssVar("size-property-label");
 
 /**
  * Checkbox sizes (Figma-style compact)
  */
-export const SIZE_CHECKBOX_SM = "var(--rei-size-checkbox-sm, 12px)";
-export const SIZE_CHECKBOX_MD = "var(--rei-size-checkbox-md, 14px)";
+export const SIZE_CHECKBOX_SM = cssVar("size-checkbox-sm");
+export const SIZE_CHECKBOX_MD = cssVar("size-checkbox-md");
 
 /**
  * Color swatch sizes (Figma-style compact)
  */
-export const SIZE_COLOR_SWATCH_SM = "var(--rei-size-color-swatch-sm, 14px)";
-export const SIZE_COLOR_SWATCH_MD = "var(--rei-size-color-swatch-md, 18px)";
-export const SIZE_COLOR_SWATCH_LG = "var(--rei-size-color-swatch-lg, 22px)";
+export const SIZE_COLOR_SWATCH_SM = cssVar("size-color-swatch-sm");
+export const SIZE_COLOR_SWATCH_MD = cssVar("size-color-swatch-md");
+export const SIZE_COLOR_SWATCH_LG = cssVar("size-color-swatch-lg");
+
+/**
+ * Thumbnail sizes (for library browser, asset panels)
+ */
+export const SIZE_THUMBNAIL_SM = cssVar("size-thumbnail-sm");
+export const SIZE_THUMBNAIL_MD = cssVar("size-thumbnail-md");
+export const SIZE_THUMBNAIL_LG = cssVar("size-thumbnail-lg");
 
 // ========================================
 // DIVIDER (Light theme default)
 // ========================================
 
-export const COLOR_DIVIDER = "var(--rei-color-divider, #e5e7eb)";
-export const SIZE_DIVIDER_WIDTH = "var(--rei-size-divider-width, 1px)";
+export const COLOR_DIVIDER = cssVar("color-divider");
+export const SIZE_DIVIDER_WIDTH = cssVar("size-divider-width");
 
 // ========================================
 // INPUT (Light theme default)
 // ========================================
 
-export const COLOR_INPUT_BG = "var(--rei-color-input-bg, #ffffff)";
-export const COLOR_INPUT_BORDER = "var(--rei-color-input-border, #d1d5db)";
-export const COLOR_INPUT_BORDER_FOCUS = "var(--rei-color-input-border-focus, #2563eb)";
+export const COLOR_INPUT_BG = cssVar("color-input-bg");
+export const COLOR_INPUT_BORDER = cssVar("color-input-border");
+export const COLOR_INPUT_BORDER_FOCUS = cssVar("color-input-border-focus");
 
 // ========================================
 // LOG LEVELS
 // ========================================
 
-export const COLOR_LOG_INFO = "var(--rei-color-log-info, #6b7280)";
-export const COLOR_LOG_WARNING = "var(--rei-color-log-warning, #d97706)";
-export const COLOR_LOG_ERROR = "var(--rei-color-log-error, #dc2626)";
-export const COLOR_LOG_DEBUG = "var(--rei-color-log-debug, #7c3aed)";
-export const COLOR_LOG_SUCCESS = "var(--rei-color-log-success, #16a34a)";
+export const COLOR_LOG_INFO = cssVar("color-log-info");
+export const COLOR_LOG_WARNING = cssVar("color-log-warning");
+export const COLOR_LOG_ERROR = cssVar("color-log-error");
+export const COLOR_LOG_DEBUG = cssVar("color-log-debug");
+export const COLOR_LOG_SUCCESS = cssVar("color-log-success");
 
 // ========================================
 // TOOLTIP
 // ========================================
 
-export const COLOR_TOOLTIP_BG = "var(--rei-tooltip-bg, #1f2937)";
-export const COLOR_TOOLTIP_TEXT = "var(--rei-tooltip-color, #ffffff)";
+export const COLOR_TOOLTIP_BG = cssVar("tooltip-bg");
+export const COLOR_TOOLTIP_TEXT = cssVar("tooltip-color");
 
 // ========================================
 // CANVAS
 // ========================================
 
-export const COLOR_CANVAS_RULER_BG = "var(--rei-canvas-ruler-bg, #2d2d2d)";
-export const COLOR_CANVAS_RULER_TEXT = "var(--rei-canvas-ruler-text, #9ca3af)";
-export const COLOR_CANVAS_RULER_TICK = "var(--rei-canvas-ruler-tick, #6b7280)";
-export const COLOR_CANVAS_RULER_INDICATOR = "var(--rei-canvas-ruler-indicator, #ef4444)";
-export const COLOR_CANVAS_GRID_MAJOR = "var(--rei-canvas-grid-major, rgba(255, 255, 255, 0.1))";
-export const COLOR_CANVAS_GRID_MINOR = "var(--rei-canvas-grid-minor, rgba(255, 255, 255, 0.04))";
-export const COLOR_CANVAS_GRID_ORIGIN = "var(--rei-canvas-grid-origin, rgba(59, 130, 246, 0.6))";
-export const COLOR_CANVAS_GUIDE = "var(--rei-canvas-guide, rgba(59, 130, 246, 0.8))";
-export const COLOR_CANVAS_CHECKER_LIGHT = "var(--rei-canvas-checker-light, #3a3a3a)";
-export const COLOR_CANVAS_CHECKER_DARK = "var(--rei-canvas-checker-dark, #2d2d2d)";
-export const SIZE_CANVAS_RULER = "var(--rei-canvas-ruler-size, 20px)";
+export const COLOR_CANVAS_RULER_BG = cssVar("canvas-ruler-bg");
+export const COLOR_CANVAS_RULER_TEXT = cssVar("canvas-ruler-text");
+export const COLOR_CANVAS_RULER_TICK = cssVar("canvas-ruler-tick");
+export const COLOR_CANVAS_RULER_INDICATOR = cssVar("canvas-ruler-indicator");
+export const COLOR_CANVAS_GRID_MAJOR = cssVar("canvas-grid-major");
+export const COLOR_CANVAS_GRID_MINOR = cssVar("canvas-grid-minor");
+export const COLOR_CANVAS_GRID_ORIGIN = cssVar("canvas-grid-origin");
+export const COLOR_CANVAS_GUIDE = cssVar("canvas-guide");
+export const COLOR_CANVAS_CHECKER_LIGHT = cssVar("canvas-checker-light");
+export const COLOR_CANVAS_CHECKER_DARK = cssVar("canvas-checker-dark");
+export const SIZE_CANVAS_RULER = cssVar("canvas-ruler-size");
 
 // ========================================
 // BOUNDING BOX
 // ========================================
 
-export const COLOR_BOUNDING_BOX_STROKE = "var(--rei-bounding-box-stroke, #18a0fb)";
-export const COLOR_BOUNDING_BOX_HANDLE_FILL = "var(--rei-bounding-box-handle-fill, #ffffff)";
-export const COLOR_BOUNDING_BOX_HANDLE_STROKE = "var(--rei-bounding-box-handle-stroke, #18a0fb)";
-export const COLOR_BOUNDING_BOX_LABEL_BG = "var(--rei-bounding-box-label-bg, #18a0fb)";
-export const COLOR_BOUNDING_BOX_LABEL_TEXT = "var(--rei-bounding-box-label-text, #ffffff)";
-export const SIZE_BOUNDING_BOX_HANDLE = "var(--rei-bounding-box-handle-size, 8px)";
-export const SIZE_BOUNDING_BOX_STROKE_WIDTH = "var(--rei-bounding-box-stroke-width, 1px)";
+export const COLOR_BOUNDING_BOX_STROKE = cssVar("bounding-box-stroke");
+export const COLOR_BOUNDING_BOX_HANDLE_FILL = cssVar("bounding-box-handle-fill");
+export const COLOR_BOUNDING_BOX_HANDLE_STROKE = cssVar("bounding-box-handle-stroke");
+export const COLOR_BOUNDING_BOX_LABEL_BG = cssVar("bounding-box-label-bg");
+export const COLOR_BOUNDING_BOX_LABEL_TEXT = cssVar("bounding-box-label-text");
+export const SIZE_BOUNDING_BOX_HANDLE = cssVar("bounding-box-handle-size");
+export const SIZE_BOUNDING_BOX_STROKE_WIDTH = cssVar("bounding-box-stroke-width");
