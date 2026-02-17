@@ -27,6 +27,7 @@ import {
   COLOR_ICON_HOVER,
   COLOR_BORDER,
   COLOR_FOCUS_RING,
+  COLOR_PRIMARY,
   RADIUS_SM,
   SHADOW_MD,
   Z_DROPDOWN,
@@ -57,9 +58,16 @@ export type SplitButtonOption<T extends string = string> = {
   disabled?: boolean;
 };
 
-export type SplitButtonProps<T extends string = string> = {
-  /** Available options */
+export type SplitButtonCategory<T extends string = string> = {
+  /** Unique category identifier */
+  id: string;
+  /** Category label displayed as header */
+  label: string;
+  /** Options within this category */
   options: SplitButtonOption<T>[];
+};
+
+type SplitButtonBaseProps<T extends string = string> = {
   /** Currently selected value */
   value: T;
   /** Called when an option is selected */
@@ -68,6 +76,8 @@ export type SplitButtonProps<T extends string = string> = {
   onAction?: () => void;
   /** Size variant */
   size?: "sm" | "md" | "lg";
+  /** Visual variant (selected shows active state) */
+  variant?: "default" | "selected";
   /** Disabled state */
   disabled?: boolean;
   /** Accessibility label */
@@ -75,6 +85,19 @@ export type SplitButtonProps<T extends string = string> = {
   /** Additional class name */
   className?: string;
 };
+
+export type SplitButtonProps<T extends string = string> = SplitButtonBaseProps<T> & (
+  | {
+      /** Available options (flat list) */
+      options: SplitButtonOption<T>[];
+      categories?: never;
+    }
+  | {
+      options?: never;
+      /** Categorized options with headers */
+      categories: SplitButtonCategory<T>[];
+    }
+);
 
 const sizeMap = {
   sm: { height: SIZE_HEIGHT_SM, iconSize: SIZE_ICON_SM, padding: SPACE_SM },
@@ -86,6 +109,7 @@ type DropdownPosition = {
   top: number;
   left: number;
   width: number;
+  maxHeight: number;
 };
 
 const checkIconWrapperStyle: CSSProperties = {
@@ -119,6 +143,15 @@ const optionShortcutStyle: CSSProperties = {
   color: COLOR_TEXT_MUTED,
   fontSize: SIZE_FONT_SM,
   flexShrink: 0,
+};
+
+const categoryHeaderStyle: CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 600,
+  color: COLOR_TEXT_MUTED,
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+  padding: `${SPACE_MD} ${SPACE_MD} ${SPACE_SM}`,
 };
 
 type SplitButtonOptionItemProps<T extends string> = {
@@ -195,20 +228,101 @@ const SplitButtonOptionItem = memo(function SplitButtonOptionItem<T extends stri
   );
 }) as <T extends string>(props: SplitButtonOptionItemProps<T>) => React.ReactElement;
 
+// =============================================================================
+// SplitButtonDropdownContent
+// =============================================================================
+
+type SplitButtonDropdownContentProps<T extends string> = {
+  categories: SplitButtonCategory<T>[] | undefined;
+  flatOptions: SplitButtonOption<T>[];
+  value: T;
+  focusedIndex: number;
+  categoryHeaderStyle: CSSProperties;
+  onOptionClick: (option: SplitButtonOption<T>) => void;
+  onPointerEnter: (index: number) => void;
+};
+
+function SplitButtonDropdownContent<T extends string>({
+  categories,
+  flatOptions,
+  value,
+  focusedIndex,
+  categoryHeaderStyle,
+  onOptionClick,
+  onPointerEnter,
+}: SplitButtonDropdownContentProps<T>) {
+  if (categories) {
+    // Calculate global indices for each category start
+    const categoryStartIndices = categories.reduce<number[]>(
+      (acc, category, i) => {
+        if (i === 0) {
+          return [0];
+        }
+        return [...acc, acc[i - 1] + categories[i - 1].options.length];
+      },
+      [],
+    );
+
+    return (
+      <>
+        {categories.map((category, catIndex) => (
+          <div key={category.id}>
+            <div style={categoryHeaderStyle}>{category.label}</div>
+            {category.options.map((option, optIndex) => {
+              const globalIndex = categoryStartIndices[catIndex] + optIndex;
+              return (
+                <SplitButtonOptionItem
+                  key={option.value}
+                  option={option}
+                  isSelected={option.value === value}
+                  isFocused={globalIndex === focusedIndex}
+                  index={globalIndex}
+                  onOptionClick={onOptionClick}
+                  onPointerEnter={onPointerEnter}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  // Render flat options
+  return (
+    <>
+      {flatOptions.map((option, index) => (
+        <SplitButtonOptionItem
+          key={option.value}
+          option={option}
+          isSelected={option.value === value}
+          isFocused={index === focusedIndex}
+          index={index}
+          onOptionClick={onOptionClick}
+          onPointerEnter={onPointerEnter}
+        />
+      ))}
+    </>
+  );
+}
+
 /**
  * SplitButton displays a main action button with a dropdown for additional options.
  * The main button executes the selected action, while the dropdown allows changing the selection.
  */
 function SplitButtonInner<T extends string = string>({
   options,
+  categories,
   value,
   onChange,
   onAction,
   size = "md",
+  variant = "default",
   disabled = false,
   "aria-label": ariaLabel,
   className,
 }: SplitButtonProps<T>) {
+  const isSelected = variant === "selected";
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({
@@ -220,7 +334,18 @@ function SplitButtonInner<T extends string = string>({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const sizeConfig = sizeMap[size];
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  // Flatten categories into a single options array for keyboard navigation
+  const flatOptions = useMemo(() => {
+    if (options) {
+      return options;
+    }
+    if (categories) {
+      return categories.flatMap((cat) => cat.options);
+    }
+    return [];
+  }, [options, categories]);
+
+  const selectedOption = flatOptions.find((opt) => opt.value === value);
 
   const updateDropdownPosition = useEffectEvent(() => {
     if (containerRef.current) {
@@ -273,14 +398,14 @@ function SplitButtonInner<T extends string = string>({
         case " ":
           e.preventDefault();
           if (isOpen && focusedIndex >= 0) {
-            const option = options[focusedIndex];
+            const option = flatOptions[focusedIndex];
             if (option && !option.disabled) {
               onChange(option.value);
               setIsOpen(false);
             }
           } else {
             setIsOpen(true);
-            setFocusedIndex(options.findIndex((o) => o.value === value));
+            setFocusedIndex(flatOptions.findIndex((o) => o.value === value));
           }
           break;
         case "Escape":
@@ -290,9 +415,9 @@ function SplitButtonInner<T extends string = string>({
           e.preventDefault();
           if (!isOpen) {
             setIsOpen(true);
-            setFocusedIndex(options.findIndex((o) => o.value === value));
+            setFocusedIndex(flatOptions.findIndex((o) => o.value === value));
           } else {
-            setFocusedIndex((prev) => Math.min(prev + 1, options.length - 1));
+            setFocusedIndex((prev) => Math.min(prev + 1, flatOptions.length - 1));
           }
           break;
         case "ArrowUp":
@@ -303,7 +428,7 @@ function SplitButtonInner<T extends string = string>({
           break;
       }
     },
-    [disabled, isOpen, focusedIndex, options, onChange, value],
+    [disabled, isOpen, focusedIndex, flatOptions, onChange, value],
   );
 
   const handleMainButtonClick = useCallback(() => {
@@ -321,9 +446,9 @@ function SplitButtonInner<T extends string = string>({
     }
     setIsOpen(!isOpen);
     if (!isOpen) {
-      setFocusedIndex(options.findIndex((o) => o.value === value));
+      setFocusedIndex(flatOptions.findIndex((o) => o.value === value));
     }
-  }, [disabled, isOpen, options, value]);
+  }, [disabled, isOpen, flatOptions, value]);
 
   const handleOptionClick = useCallback(
     (option: SplitButtonOption<T>) => {
@@ -357,17 +482,17 @@ function SplitButtonInner<T extends string = string>({
       alignItems: "center",
       justifyContent: "center",
       padding: `0 ${sizeConfig.padding}`,
-      border: `1px solid ${COLOR_BORDER}`,
+      border: `1px solid ${isSelected ? COLOR_PRIMARY : COLOR_BORDER}`,
       borderRight: "none",
       borderRadius: `${RADIUS_SM} 0 0 ${RADIUS_SM}`,
-      backgroundColor: "transparent",
-      color: COLOR_ICON,
+      backgroundColor: isSelected ? COLOR_HOVER : "transparent",
+      color: isSelected ? COLOR_PRIMARY : COLOR_ICON,
       cursor: disabled ? "not-allowed" : "pointer",
       opacity: disabled ? 0.5 : 1,
       transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}, color ${DURATION_FAST} ${EASING_DEFAULT}`,
       outline: "none",
     }),
-    [sizeConfig.padding, disabled],
+    [sizeConfig.padding, disabled, isSelected],
   );
 
   const dropdownButtonStyle = useMemo<CSSProperties>(
@@ -405,6 +530,8 @@ function SplitButtonInner<T extends string = string>({
       top: dropdownPosition.top,
       left: dropdownPosition.left,
       minWidth: dropdownPosition.width,
+      maxHeight: dropdownPosition.maxHeight,
+      overflowY: "auto",
       backgroundColor: COLOR_SURFACE_RAISED,
       border: `1px solid ${COLOR_BORDER}`,
       borderRadius: RADIUS_SM,
@@ -412,7 +539,7 @@ function SplitButtonInner<T extends string = string>({
       zIndex: Z_DROPDOWN,
       padding: SPACE_SM,
     }),
-    [dropdownPosition.top, dropdownPosition.left, dropdownPosition.width],
+    [dropdownPosition.top, dropdownPosition.left, dropdownPosition.width, dropdownPosition.maxHeight],
   );
 
   const handleMainPointerEnter = useCallback(
@@ -527,17 +654,15 @@ function SplitButtonInner<T extends string = string>({
       {isOpen && (
         <Portal>
           <div ref={dropdownRef} role="listbox" style={dropdownStyle}>
-            {options.map((option, index) => (
-              <SplitButtonOptionItem
-                key={option.value}
-                option={option}
-                isSelected={option.value === value}
-                isFocused={index === focusedIndex}
-                index={index}
-                onOptionClick={handleOptionClick}
-                onPointerEnter={handleOptionPointerEnter}
-              />
-            ))}
+            <SplitButtonDropdownContent
+              categories={categories}
+              flatOptions={flatOptions}
+              value={value}
+              focusedIndex={focusedIndex}
+              categoryHeaderStyle={categoryHeaderStyle}
+              onOptionClick={handleOptionClick}
+              onPointerEnter={handleOptionPointerEnter}
+            />
           </div>
         </Portal>
       )}

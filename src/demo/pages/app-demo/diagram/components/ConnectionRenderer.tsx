@@ -3,7 +3,7 @@
  */
 
 import { memo, useMemo, useCallback, type ReactNode } from "react";
-import type { Connection, DiagramNode, ConnectionPosition, ArrowheadType } from "../types";
+import type { Connection, DiagramNode, ConnectionPosition, ArrowheadType, WidthProfile, BrushType, BrushDirection } from "../types";
 
 // =============================================================================
 // Types
@@ -16,6 +16,15 @@ type ConnectionRendererProps = {
   nodes: DiagramNode[];
   selected: boolean;
   onSelect: (connectionId: string) => void;
+};
+
+type StrokeSettings = {
+  widthProfile: WidthProfile;
+  frequency: number;
+  wiggle: number;
+  smoothen: number;
+  brushType: BrushType;
+  brushDirection: BrushDirection;
 };
 
 // =============================================================================
@@ -63,6 +72,198 @@ function generateOrthogonalPath(start: Point, end: Point): string {
     // Go vertical first
     return `M ${start.x} ${start.y} L ${start.x} ${midY} L ${end.x} ${midY} L ${end.x} ${end.y}`;
   }
+}
+
+// =============================================================================
+// Path Effects
+// =============================================================================
+
+/**
+ * Parse path string into points array
+ */
+function parsePathToPoints(pathStr: string): Point[] {
+  const points: Point[] = [];
+  const matches = pathStr.match(/[ML]\s*([\d.-]+)\s+([\d.-]+)/g);
+  if (matches) {
+    for (const match of matches) {
+      const coords = match.match(/[ML]\s*([\d.-]+)\s+([\d.-]+)/);
+      if (coords) {
+        points.push({ x: parseFloat(coords[1]), y: parseFloat(coords[2]) });
+      }
+    }
+  }
+  return points;
+}
+
+/**
+ * Apply wiggle effect to path
+ */
+function applyWiggleToPath(pathStr: string, frequency: number, wiggle: number): string {
+  if (frequency === 0 || wiggle === 0) return pathStr;
+
+  const points = parsePathToPoints(pathStr);
+  if (points.length < 2) return pathStr;
+
+  const newPoints: Point[] = [points[0]];
+
+  for (let i = 1; i < points.length; i++) {
+    const start = points[i - 1];
+    const end = points[i];
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    // Number of subdivisions based on frequency
+    const numSubdivisions = Math.max(1, Math.round(length * frequency / 100));
+
+    for (let j = 1; j <= numSubdivisions; j++) {
+      const t = j / numSubdivisions;
+      const x = start.x + dx * t;
+      const y = start.y + dy * t;
+
+      // Add perpendicular wiggle
+      const perpX = -dy / length;
+      const perpY = dx / length;
+      const wiggleAmount = Math.sin(j * Math.PI) * wiggle * 0.5;
+
+      newPoints.push({
+        x: x + perpX * wiggleAmount,
+        y: y + perpY * wiggleAmount,
+      });
+    }
+  }
+
+  // Build new path
+  let result = `M ${newPoints[0].x} ${newPoints[0].y}`;
+  for (let i = 1; i < newPoints.length; i++) {
+    result += ` L ${newPoints[i].x} ${newPoints[i].y}`;
+  }
+  return result;
+}
+
+/**
+ * Generate width profile gradient stops
+ */
+function getWidthProfileStops(profile: WidthProfile): { offset: string; width: number }[] {
+  switch (profile) {
+    case "taper-start":
+      return [
+        { offset: "0%", width: 0.2 },
+        { offset: "100%", width: 1 },
+      ];
+    case "taper-end":
+      return [
+        { offset: "0%", width: 1 },
+        { offset: "100%", width: 0.2 },
+      ];
+    case "taper-both":
+      return [
+        { offset: "0%", width: 0.2 },
+        { offset: "50%", width: 1 },
+        { offset: "100%", width: 0.2 },
+      ];
+    default: // uniform
+      return [
+        { offset: "0%", width: 1 },
+        { offset: "100%", width: 1 },
+      ];
+  }
+}
+
+/**
+ * Generate outline path for variable width stroke
+ */
+function generateOutlinePath(
+  pathStr: string,
+  baseWidth: number,
+  profile: WidthProfile
+): string {
+  if (profile === "uniform") return "";
+
+  const points = parsePathToPoints(pathStr);
+  if (points.length < 2) return "";
+
+  const stops = getWidthProfileStops(profile);
+
+  // Calculate total path length
+  let totalLength = 0;
+  for (let i = 1; i < points.length; i++) {
+    const dx = points[i].x - points[i - 1].x;
+    const dy = points[i].y - points[i - 1].y;
+    totalLength += Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Generate upper and lower edges
+  const upperEdge: Point[] = [];
+  const lowerEdge: Point[] = [];
+  let currentLength = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    // Calculate progress along path (0 to 1)
+    const progress = totalLength > 0 ? currentLength / totalLength : 0;
+
+    // Interpolate width from stops
+    let widthMultiplier = 1;
+    for (let j = 0; j < stops.length - 1; j++) {
+      const startOffset = parseFloat(stops[j].offset) / 100;
+      const endOffset = parseFloat(stops[j + 1].offset) / 100;
+      if (progress >= startOffset && progress <= endOffset) {
+        const t = (progress - startOffset) / (endOffset - startOffset);
+        widthMultiplier = stops[j].width + (stops[j + 1].width - stops[j].width) * t;
+        break;
+      }
+    }
+
+    const halfWidth = (baseWidth * widthMultiplier) / 2;
+
+    // Calculate perpendicular direction
+    let perpX = 0, perpY = 0;
+    if (i < points.length - 1) {
+      const dx = points[i + 1].x - points[i].x;
+      const dy = points[i + 1].y - points[i].y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len > 0) {
+        perpX = -dy / len;
+        perpY = dx / len;
+      }
+    } else if (i > 0) {
+      const dx = points[i].x - points[i - 1].x;
+      const dy = points[i].y - points[i - 1].y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len > 0) {
+        perpX = -dy / len;
+        perpY = dx / len;
+      }
+    }
+
+    upperEdge.push({
+      x: points[i].x + perpX * halfWidth,
+      y: points[i].y + perpY * halfWidth,
+    });
+    lowerEdge.push({
+      x: points[i].x - perpX * halfWidth,
+      y: points[i].y - perpY * halfWidth,
+    });
+
+    // Update current length
+    if (i < points.length - 1) {
+      const dx = points[i + 1].x - points[i].x;
+      const dy = points[i + 1].y - points[i].y;
+      currentLength += Math.sqrt(dx * dx + dy * dy);
+    }
+  }
+
+  // Build closed outline path
+  let result = `M ${upperEdge[0].x} ${upperEdge[0].y}`;
+  for (let i = 1; i < upperEdge.length; i++) {
+    result += ` L ${upperEdge[i].x} ${upperEdge[i].y}`;
+  }
+  for (let i = lowerEdge.length - 1; i >= 0; i--) {
+    result += ` L ${lowerEdge[i].x} ${lowerEdge[i].y}`;
+  }
+  result += " Z";
+
+  return result;
 }
 
 // =============================================================================
@@ -148,12 +349,42 @@ export const ConnectionRenderer = memo(function ConnectionRenderer({
     onSelect(connection.id);
   }, [connection.id, onSelect]);
 
-  const path = useMemo(() => {
+  // Base path
+  const basePath = useMemo(() => {
     if (!sourceNode || !targetNode) return "";
     const start = getConnectionPointCoords(sourceNode, connection.source.position);
     const end = getConnectionPointCoords(targetNode, connection.target.position);
     return generateOrthogonalPath(start, end);
   }, [sourceNode, targetNode, connection.source.position, connection.target.position]);
+
+  // Stroke settings
+  const strokeSettings: StrokeSettings = useMemo(() => ({
+    widthProfile: connection.stroke.widthProfile ?? "uniform",
+    frequency: connection.stroke.frequency ?? 0,
+    wiggle: connection.stroke.wiggle ?? 0,
+    smoothen: connection.stroke.smoothen ?? 0,
+    brushType: connection.stroke.brushType ?? "smooth",
+    brushDirection: connection.stroke.brushDirection ?? "left",
+  }), [
+    connection.stroke.widthProfile,
+    connection.stroke.frequency,
+    connection.stroke.wiggle,
+    connection.stroke.smoothen,
+    connection.stroke.brushType,
+    connection.stroke.brushDirection,
+  ]);
+
+  // Apply wiggle effect to path
+  const path = useMemo(() => {
+    if (!basePath) return "";
+    return applyWiggleToPath(basePath, strokeSettings.frequency, strokeSettings.wiggle);
+  }, [basePath, strokeSettings.frequency, strokeSettings.wiggle]);
+
+  // Generate outline path for variable width
+  const outlinePath = useMemo(() => {
+    if (!path || strokeSettings.widthProfile === "uniform") return "";
+    return generateOutlinePath(path, connection.stroke.width, strokeSettings.widthProfile);
+  }, [path, connection.stroke.width, strokeSettings.widthProfile]);
 
   if (!sourceNode || !targetNode || !path) {
     return null;
@@ -177,15 +408,22 @@ export const ConnectionRenderer = memo(function ConnectionRenderer({
   const startMarkerId = getArrowMarkerId(connection.startArrow);
   const endMarkerId = getArrowMarkerId(connection.endArrow);
 
+  // Use outline path for variable width, otherwise use regular stroke
+  const useOutline = strokeSettings.widthProfile !== "uniform" && outlinePath;
+
   return (
-    <g data-connection-id={connection.id} style={{ color: strokeColor }}>
+    <g
+      data-connection-id={connection.id}
+      data-stroke-settings={JSON.stringify(strokeSettings)}
+      style={{ color: strokeColor }}
+    >
       {/* Invisible thick path for easier clicking */}
       <path
-        d={path}
+        d={basePath}
         stroke="transparent"
         strokeWidth={Math.max(connection.stroke.width + 10, 12)}
         fill="none"
-        style={{ cursor: "pointer" }}
+        style={{ cursor: "pointer", pointerEvents: "auto" }}
         onClick={handleClick}
       />
       {/* Selection highlight */}
@@ -199,20 +437,48 @@ export const ConnectionRenderer = memo(function ConnectionRenderer({
           style={{ pointerEvents: "none" }}
         />
       )}
-      {/* Visible connection line */}
-      <path
-        d={path}
-        stroke={strokeColor}
-        strokeWidth={connection.stroke.width}
-        strokeDasharray={strokeDashArray}
-        fill="none"
-        markerStart={startMarkerId ? `url(#${startMarkerId})` : undefined}
-        markerEnd={endMarkerId ? `url(#${endMarkerId})` : undefined}
-        style={{ pointerEvents: "none" }}
-      />
+      {/* Visible connection line - variable width outline */}
+      {useOutline && (
+        <path
+          d={outlinePath}
+          fill={strokeColor}
+          stroke="none"
+          style={{ pointerEvents: "none" }}
+          data-width-profile={strokeSettings.widthProfile}
+        />
+      )}
+      {/* Visible connection line - regular stroke */}
+      {!useOutline && (
+        <path
+          d={path}
+          stroke={strokeColor}
+          strokeWidth={connection.stroke.width}
+          strokeDasharray={strokeDashArray}
+          strokeLinejoin={connection.stroke.join ?? "miter"}
+          strokeMiterlimit={connection.stroke.miterAngle ?? 4}
+          fill="none"
+          markerStart={startMarkerId ? `url(#${startMarkerId})` : undefined}
+          markerEnd={endMarkerId ? `url(#${endMarkerId})` : undefined}
+          style={{ pointerEvents: "none" }}
+          data-stroke-join={connection.stroke.join ?? "miter"}
+          data-stroke-miterlimit={connection.stroke.miterAngle ?? 4}
+        />
+      )}
+      {/* Arrow markers for outline mode */}
+      {useOutline && (startMarkerId || endMarkerId) && (
+        <path
+          d={path}
+          stroke="transparent"
+          strokeWidth={connection.stroke.width}
+          fill="none"
+          markerStart={startMarkerId ? `url(#${startMarkerId})` : undefined}
+          markerEnd={endMarkerId ? `url(#${endMarkerId})` : undefined}
+          style={{ pointerEvents: "none" }}
+        />
+      )}
       {/* Connection label */}
       {connection.label && (
-        <ConnectionLabel path={path} label={connection.label} />
+        <ConnectionLabel path={basePath} label={connection.label} />
       )}
     </g>
   );

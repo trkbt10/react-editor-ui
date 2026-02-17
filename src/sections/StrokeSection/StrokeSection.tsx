@@ -2,12 +2,12 @@
  * @file StrokeSection component - Comprehensive stroke settings
  */
 
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef, useEffect } from "react";
 import type { CSSProperties } from "react";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import type { JoinType } from "../../components/StrokeJoinControl/StrokeJoinControl";
 import { SPACE_SM } from "../../themes/styles";
-import type { StrokeSectionProps, StrokeTab, BrushDirection } from "./types";
+import type { StrokeSectionProps, StrokeTab, StrokeData, BrushDirection } from "./types";
 import { StrokeBasicTab } from "./StrokeBasicTab";
 import { StrokeDynamicTab } from "./StrokeDynamicTab";
 import { StrokeBrushTab } from "./StrokeBrushTab";
@@ -32,33 +32,39 @@ export const StrokeSection = memo(function StrokeSection({
   onChange,
   className,
 }: StrokeSectionProps) {
+  // Use ref to always have the latest data in handlers (avoids stale closure)
+  const dataRef = useRef<StrokeData>(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
   const handlers = useMemo(
     () => ({
       tab: (v: StrokeTab | StrokeTab[]) => {
         const tab = Array.isArray(v) ? v[0] : v;
-        onChange({ ...data, tab });
+        onChange({ ...dataRef.current, tab });
       },
       // Basic tab
-      style: (v: typeof data.style) => onChange({ ...data, style: v }),
-      widthProfile: (v: typeof data.widthProfile) => onChange({ ...data, widthProfile: v }),
+      style: (v: typeof data.style) => onChange({ ...dataRef.current, style: v }),
+      widthProfile: (v: typeof data.widthProfile) => onChange({ ...dataRef.current, widthProfile: v }),
       join: (v: JoinType | JoinType[]) => {
         const join = Array.isArray(v) ? v[0] : v;
-        onChange({ ...data, join });
+        onChange({ ...dataRef.current, join });
       },
-      miterAngle: (v: string) => onChange({ ...data, miterAngle: v }),
+      miterAngle: (v: string) => onChange({ ...dataRef.current, miterAngle: v }),
       // Dynamic tab
-      frequency: (v: string) => onChange({ ...data, frequency: v }),
-      wiggle: (v: string) => onChange({ ...data, wiggle: v }),
-      smoothen: (v: string) => onChange({ ...data, smoothen: v }),
+      frequency: (v: string) => onChange({ ...dataRef.current, frequency: v }),
+      wiggle: (v: string) => onChange({ ...dataRef.current, wiggle: v }),
+      smoothen: (v: string) => onChange({ ...dataRef.current, smoothen: v }),
       // Brush tab
-      brushType: (v: typeof data.brushType) => onChange({ ...data, brushType: v }),
+      brushType: (v: typeof data.brushType) => onChange({ ...dataRef.current, brushType: v }),
       brushDirection: (v: BrushDirection | BrushDirection[]) => {
         const brushDirection = Array.isArray(v) ? v[0] : v;
-        onChange({ ...data, brushDirection });
+        onChange({ ...dataRef.current, brushDirection });
       },
-      brushWidthProfile: (v: typeof data.brushWidthProfile) => onChange({ ...data, brushWidthProfile: v }),
+      brushWidthProfile: (v: typeof data.brushWidthProfile) => onChange({ ...dataRef.current, brushWidthProfile: v }),
     }),
-    [onChange, data],
+    [onChange],
   );
 
   const renderTabContent = () => {

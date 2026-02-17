@@ -3,11 +3,186 @@
  */
 
 import { memo, useCallback, useMemo, useRef, useEffect, useState, type CSSProperties } from "react";
-import type { DiagramNode, ShapeNode, TextNode, GroupNode, ShapeType } from "../types";
+import type { DiagramNode, ShapeNode, TextNode, GroupNode, ShapeType, WidthProfile, BrushType, BrushDirection } from "../types";
+
+// =============================================================================
+// Stroke Settings Type
+// =============================================================================
+
+type StrokeSettings = {
+  widthProfile: WidthProfile;
+  frequency: number;
+  wiggle: number;
+  smoothen: number;
+  brushType: BrushType;
+  brushDirection: BrushDirection;
+};
 
 // =============================================================================
 // Shape Path Generators
 // =============================================================================
+
+type Point = { x: number; y: number };
+
+/**
+ * Parse path string into points array
+ */
+function parsePathToPoints(pathStr: string): Point[] {
+  const points: Point[] = [];
+  const matches = pathStr.match(/[MLQ]\s*([\d.-]+)\s+([\d.-]+)/g);
+  if (matches) {
+    for (const match of matches) {
+      const coords = match.match(/[MLQ]\s*([\d.-]+)\s+([\d.-]+)/);
+      if (coords) {
+        points.push({ x: parseFloat(coords[1]), y: parseFloat(coords[2]) });
+      }
+    }
+  }
+  return points;
+}
+
+/**
+ * Apply wiggle effect to path
+ */
+function applyWiggleToPath(pathStr: string, frequency: number, wiggle: number): string {
+  if (frequency === 0 || wiggle === 0) return pathStr;
+
+  const points = parsePathToPoints(pathStr);
+  if (points.length < 2) return pathStr;
+
+  const newPoints: Point[] = [points[0]];
+
+  for (let i = 1; i < points.length; i++) {
+    const start = points[i - 1];
+    const end = points[i];
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    if (length === 0) {
+      newPoints.push(end);
+      continue;
+    }
+
+    const numSubdivisions = Math.max(1, Math.round(length * frequency / 100));
+
+    for (let j = 1; j <= numSubdivisions; j++) {
+      const t = j / numSubdivisions;
+      const x = start.x + dx * t;
+      const y = start.y + dy * t;
+
+      const perpX = -dy / length;
+      const perpY = dx / length;
+      const wiggleAmount = Math.sin(j * Math.PI) * wiggle * 0.3;
+
+      newPoints.push({
+        x: x + perpX * wiggleAmount,
+        y: y + perpY * wiggleAmount,
+      });
+    }
+  }
+
+  let result = `M ${newPoints[0].x} ${newPoints[0].y}`;
+  for (let i = 1; i < newPoints.length; i++) {
+    result += ` L ${newPoints[i].x} ${newPoints[i].y}`;
+  }
+  result += " Z";
+  return result;
+}
+
+/**
+ * Get width multiplier for a given position along the path
+ */
+function getWidthMultiplier(profile: WidthProfile, progress: number): number {
+  switch (profile) {
+    case "taper-start":
+      return 0.2 + progress * 0.8;
+    case "taper-end":
+      return 1 - progress * 0.8;
+    case "taper-both":
+      return progress < 0.5
+        ? 0.2 + progress * 1.6
+        : 1 - (progress - 0.5) * 1.6;
+    default:
+      return 1;
+  }
+}
+
+/**
+ * Generate outline path for variable width stroke (closed shapes)
+ */
+function generateShapeOutlinePath(
+  pathStr: string,
+  baseWidth: number,
+  profile: WidthProfile,
+): string {
+  if (profile === "uniform") return "";
+
+  const points = parsePathToPoints(pathStr);
+  if (points.length < 3) return "";
+
+  // Calculate total perimeter length
+  let totalLength = 0;
+  for (let i = 0; i < points.length; i++) {
+    const next = points[(i + 1) % points.length];
+    const dx = next.x - points[i].x;
+    const dy = next.y - points[i].y;
+    totalLength += Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Generate inner and outer edges
+  const outerEdge: Point[] = [];
+  const innerEdge: Point[] = [];
+  let currentLength = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    const progress = totalLength > 0 ? currentLength / totalLength : 0;
+    const widthMultiplier = getWidthMultiplier(profile, progress);
+    const halfWidth = (baseWidth * widthMultiplier) / 2;
+
+    // Calculate normal direction (perpendicular to edge)
+    const prev = points[(i - 1 + points.length) % points.length];
+    const next = points[(i + 1) % points.length];
+    const dx = next.x - prev.x;
+    const dy = next.y - prev.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+
+    let normalX = 0, normalY = 0;
+    if (len > 0) {
+      normalX = -dy / len;
+      normalY = dx / len;
+    }
+
+    outerEdge.push({
+      x: points[i].x + normalX * halfWidth,
+      y: points[i].y + normalY * halfWidth,
+    });
+    innerEdge.push({
+      x: points[i].x - normalX * halfWidth,
+      y: points[i].y - normalY * halfWidth,
+    });
+
+    // Update current length
+    const nextIdx = (i + 1) % points.length;
+    const edgeDx = points[nextIdx].x - points[i].x;
+    const edgeDy = points[nextIdx].y - points[i].y;
+    currentLength += Math.sqrt(edgeDx * edgeDx + edgeDy * edgeDy);
+  }
+
+  // Build closed outline path (outer + inner reversed)
+  let result = `M ${outerEdge[0].x} ${outerEdge[0].y}`;
+  for (let i = 1; i < outerEdge.length; i++) {
+    result += ` L ${outerEdge[i].x} ${outerEdge[i].y}`;
+  }
+  result += ` L ${outerEdge[0].x} ${outerEdge[0].y}`;
+  result += ` M ${innerEdge[0].x} ${innerEdge[0].y}`;
+  for (let i = innerEdge.length - 1; i >= 0; i--) {
+    result += ` L ${innerEdge[i].x} ${innerEdge[i].y}`;
+  }
+  result += " Z";
+
+  return result;
+}
 
 function getShapePath(type: ShapeType, width: number, height: number): string {
   const w = width;
@@ -57,22 +232,16 @@ function getShapePath(type: ShapeType, width: number, height: number): string {
 // Styles
 // =============================================================================
 
-const textContainerStyle: CSSProperties = {
+const textContainerBaseStyle: CSSProperties = {
   position: "absolute",
   inset: 0,
   display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
   pointerEvents: "none",
   padding: 4,
 };
 
 const textDisplayBaseStyle: CSSProperties = {
-  fontSize: 14,
-  color: "var(--rei-color-text)",
-  textAlign: "center",
   wordBreak: "break-word",
-  lineHeight: 1.3,
   userSelect: "none",
 };
 
@@ -110,10 +279,40 @@ type ShapeRendererProps = {
 };
 
 const ShapeRenderer = memo(function ShapeRenderer({ node, selected }: ShapeRendererProps) {
-  const shapePath = useMemo(
+  // Base shape path
+  const basePath = useMemo(
     () => getShapePath(node.shape, node.width, node.height),
     [node.shape, node.width, node.height],
   );
+
+  // Stroke settings
+  const strokeSettings: StrokeSettings = useMemo(() => ({
+    widthProfile: node.stroke.widthProfile ?? "uniform",
+    frequency: node.stroke.frequency ?? 0,
+    wiggle: node.stroke.wiggle ?? 0,
+    smoothen: node.stroke.smoothen ?? 0,
+    brushType: node.stroke.brushType ?? "smooth",
+    brushDirection: node.stroke.brushDirection ?? "left",
+  }), [
+    node.stroke.widthProfile,
+    node.stroke.frequency,
+    node.stroke.wiggle,
+    node.stroke.smoothen,
+    node.stroke.brushType,
+    node.stroke.brushDirection,
+  ]);
+
+  // Apply wiggle effect to path
+  const shapePath = useMemo(() => {
+    if (!basePath) return "";
+    return applyWiggleToPath(basePath, strokeSettings.frequency, strokeSettings.wiggle);
+  }, [basePath, strokeSettings.frequency, strokeSettings.wiggle]);
+
+  // Generate outline path for variable width
+  const outlinePath = useMemo(() => {
+    if (!shapePath || strokeSettings.widthProfile === "uniform") return "";
+    return generateShapeOutlinePath(shapePath, node.stroke.width, strokeSettings.widthProfile);
+  }, [shapePath, node.stroke.width, strokeSettings.widthProfile]);
 
   const containerStyle = useMemo<CSSProperties>(
     () => ({
@@ -154,16 +353,39 @@ const ShapeRenderer = memo(function ShapeRenderer({ node, selected }: ShapeRende
     }
   }, [node.stroke.style]);
 
+  // Use outline path for variable width
+  const useOutline = strokeSettings.widthProfile !== "uniform" && outlinePath;
+
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} data-stroke-settings={JSON.stringify(strokeSettings)}>
       <svg style={svgStyle} viewBox={`0 0 ${node.width} ${node.height}`}>
-        <path
-          d={shapePath}
-          fill={fillColor}
-          stroke={strokeColor}
-          strokeWidth={node.stroke.width}
-          strokeDasharray={strokeDashArray}
-        />
+        {/* Fill shape */}
+        <path d={shapePath} fill={fillColor} stroke="none" />
+
+        {/* Variable width stroke outline */}
+        {useOutline && (
+          <path
+            d={outlinePath}
+            fill={strokeColor}
+            stroke="none"
+            data-width-profile={strokeSettings.widthProfile}
+          />
+        )}
+
+        {/* Regular stroke */}
+        {!useOutline && (
+          <path
+            d={shapePath}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={node.stroke.width}
+            strokeDasharray={strokeDashArray}
+            strokeLinejoin={node.stroke.join ?? "miter"}
+            strokeMiterlimit={node.stroke.miterAngle ?? 4}
+            data-stroke-join={node.stroke.join ?? "miter"}
+            data-stroke-miterlimit={node.stroke.miterAngle ?? 4}
+          />
+        )}
       </svg>
     </div>
   );
@@ -261,8 +483,11 @@ const TextRenderer = memo(function TextRenderer({
     const props = node.textProps;
     return {
       ...textDisplayBaseStyle,
-      fontSize: props.fontSize,
+      fontFamily: props.fontFamily,
       fontWeight: props.fontWeight,
+      fontSize: props.fontSize,
+      lineHeight: props.lineHeight,
+      letterSpacing: props.letterSpacing,
       textAlign: props.textAlign,
       color: props.color.visible
         ? `${props.color.hex}${Math.round((props.color.opacity / 100) * 255).toString(16).padStart(2, "0")}`
@@ -274,8 +499,11 @@ const TextRenderer = memo(function TextRenderer({
     const props = node.textProps;
     return {
       ...textDisplayBaseStyle,
-      fontSize: props.fontSize,
+      fontFamily: props.fontFamily,
       fontWeight: props.fontWeight,
+      fontSize: props.fontSize,
+      lineHeight: props.lineHeight,
+      letterSpacing: props.letterSpacing,
       textAlign: props.textAlign,
       color: props.color.visible
         ? `${props.color.hex}${Math.round((props.color.opacity / 100) * 255).toString(16).padStart(2, "0")}`
@@ -288,10 +516,27 @@ const TextRenderer = memo(function TextRenderer({
     };
   }, [node.textProps]);
 
-  const innerContainerStyle = useMemo<CSSProperties>(() => ({
-    ...textContainerStyle,
-    pointerEvents: editing ? "auto" : "none",
-  }), [editing]);
+  const innerContainerStyle = useMemo<CSSProperties>(() => {
+    const props = node.textProps;
+    // Map verticalAlign to flexbox alignItems
+    const alignItemsMap: Record<string, string> = {
+      top: "flex-start",
+      middle: "center",
+      bottom: "flex-end",
+    };
+    // Map textAlign to flexbox justifyContent
+    const justifyContentMap: Record<string, string> = {
+      left: "flex-start",
+      center: "center",
+      right: "flex-end",
+    };
+    return {
+      ...textContainerBaseStyle,
+      alignItems: alignItemsMap[props.verticalAlign] ?? "center",
+      justifyContent: justifyContentMap[props.textAlign] ?? "center",
+      pointerEvents: editing ? "auto" : "none",
+    };
+  }, [editing, node.textProps]);
 
   return (
     <div style={containerStyle} data-testid={`text-node-${node.id}`}>
