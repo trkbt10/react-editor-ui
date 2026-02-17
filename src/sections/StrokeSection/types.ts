@@ -3,11 +3,11 @@
  */
 
 import type { BaseSectionProps } from "../shared/types";
+import type { StrokeStyle } from "../../components/StrokeStyleSelect/StrokeStyleSelect";
+import type { JoinType } from "../../components/StrokeJoinControl/StrokeJoinControl";
+import type { WidthProfile } from "../../components/StrokeWidthProfileSelect/StrokeWidthProfileSelect";
 
-export type StrokeStyle = "solid" | "dashed" | "dotted";
-export type JoinType = "miter" | "round" | "bevel";
 export type BrushDirection = "left" | "right";
-export type WidthProfile = "uniform" | "taper-end" | "taper-both";
 export type BrushType = "smooth" | "rough" | "spray";
 export type StrokeTab = "basic" | "dynamic" | "brush";
 

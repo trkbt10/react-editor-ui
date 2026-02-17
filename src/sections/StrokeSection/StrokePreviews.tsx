@@ -4,7 +4,8 @@
 
 import { memo } from "react";
 import type { CSSProperties } from "react";
-import type { WidthProfile, BrushType } from "./types";
+import type { WidthProfile } from "../../components/StrokeWidthProfileSelect/StrokeWidthProfileSelect";
+import type { BrushType } from "./types";
 
 const widthProfilePreviewStyle: CSSProperties = {
   width: "100%",

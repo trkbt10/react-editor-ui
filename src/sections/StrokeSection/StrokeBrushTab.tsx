@@ -7,11 +7,12 @@ import type { CSSProperties } from "react";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { IconButton } from "../../components/IconButton/IconButton";
+import type { WidthProfile } from "../../components/StrokeWidthProfileSelect/StrokeWidthProfileSelect";
 import { SPACE_SM } from "../../themes/styles";
 import { FlipHorizontalIcon, ChevronLeftIcon, ChevronRightIcon } from "../../icons";
 import { StrokePropertyRow } from "./StrokePropertyRow";
 import { WidthProfilePreview, BrushPreview } from "./StrokePreviews";
-import type { BrushType, BrushDirection, WidthProfile } from "./types";
+import type { BrushType, BrushDirection } from "./types";
 
 export type StrokeBrushTabProps = {
   brushType: BrushType;

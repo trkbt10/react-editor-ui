@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-17T05:26:53.492Z",
+  "generatedAt": "2026-02-17T06:29:03.528Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -170,6 +170,12 @@
       "category": "component"
     },
     {
+      "name": "LibraryBrowser",
+      "entryType": "named",
+      "relativePath": "src/components/LibraryBrowser/LibraryBrowser.tsx",
+      "category": "component"
+    },
+    {
       "name": "LogEntry",
       "entryType": "named",
       "relativePath": "src/components/LogEntry/LogEntry.tsx",
@@ -278,10 +284,34 @@
       "category": "component"
     },
     {
+      "name": "StrokeJoinControl",
+      "entryType": "named",
+      "relativePath": "src/components/StrokeJoinControl/StrokeJoinControl.tsx",
+      "category": "component"
+    },
+    {
+      "name": "StrokeMiterAngleInput",
+      "entryType": "named",
+      "relativePath": "src/components/StrokeMiterAngleInput/StrokeMiterAngleInput.tsx",
+      "category": "component"
+    },
+    {
       "name": "StrokeSettingsPanel",
       "entryType": "named",
       "relativePath": "src/panels/StrokeSettingsPanel/StrokeSettingsPanel.tsx",
       "category": "panel"
+    },
+    {
+      "name": "StrokeStyleSelect",
+      "entryType": "named",
+      "relativePath": "src/components/StrokeStyleSelect/StrokeStyleSelect.tsx",
+      "category": "component"
+    },
+    {
+      "name": "StrokeWidthProfileSelect",
+      "entryType": "named",
+      "relativePath": "src/components/StrokeWidthProfileSelect/StrokeWidthProfileSelect.tsx",
+      "category": "component"
     },
     {
       "name": "TabBar",

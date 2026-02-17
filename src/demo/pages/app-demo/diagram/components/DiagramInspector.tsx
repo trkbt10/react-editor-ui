@@ -22,8 +22,7 @@ import { RotationSection } from "../../../../../sections/RotationSection/Rotatio
 import type { PositionData } from "../../../../../sections/PositionSection/types";
 import type { SizeData } from "../../../../../sections/SizeSection/types";
 import type { RotationData } from "../../../../../sections/RotationSection/types";
-import { StrokeStyleSelect } from "../../../../../sections/StrokeSection/parts/StrokeStyleSelect";
-import type { StrokeStyle as SectionStrokeStyle } from "../../../../../sections/StrokeSection/types";
+import { StrokeStyleSelect, type StrokeStyle as SectionStrokeStyle } from "../../../../../components/StrokeStyleSelect/StrokeStyleSelect";
 
 import { DocumentContext, SelectionContext, PageContext } from "../contexts";
 import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, FrameNode, FramePreset, ShapeType, Connection } from "../types";
@@ -97,12 +96,6 @@ type InspectorTab = "design" | "theme";
 // Options
 // =============================================================================
 
-const strokeStyleOptions: SelectOption<StrokeStyle>[] = [
-  { value: "solid", label: "Solid" },
-  { value: "dashed", label: "Dashed" },
-  { value: "dotted", label: "Dotted" },
-];
-
 const arrowheadOptions: SelectOption<ArrowheadType>[] = [
   { value: "none", label: "None" },
   { value: "arrow", label: "Arrow" },
@@ -123,7 +116,6 @@ const shapeTypeOptions: SelectOption<ShapeType>[] = [
 ];
 
 const pixelUnits = [{ value: "px", label: "px" }];
-const degreeUnits = [{ value: "°", label: "°" }];
 
 // Frame preset options
 const framePresetOptions: SelectOption<FramePreset>[] = (Object.entries(framePresets) as [FramePreset, FramePresetInfo][]).map(
@@ -648,12 +640,10 @@ export const DiagramInspector = memo(function DiagramInspector() {
               />
             </PropertyRow>
             <PropertyRow label="Style">
-              <Select
-                options={strokeStyleOptions}
-                value={commonStrokeStyle ?? "solid"}
-                onChange={multiNodeHandlers.setStrokeStyle}
+              <StrokeStyleSelect
+                value={(commonStrokeStyle ?? "solid") as SectionStrokeStyle}
+                onChange={multiNodeHandlers.setStrokeStyle as (v: SectionStrokeStyle) => void}
                 size="sm"
-                placeholder={commonStrokeStyle ? undefined : "Mixed"}
               />
             </PropertyRow>
           </PropertySection>

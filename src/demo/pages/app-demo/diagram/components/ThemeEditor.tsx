@@ -12,6 +12,8 @@ import { Select, type SelectOption } from "../../../../../components/Select/Sele
 import { Input } from "../../../../../components/Input/Input";
 import type { ColorValue } from "../../../../../utils/color/types";
 
+import { StrokeStyleSelect, type StrokeStyle as SectionStrokeStyle } from "../../../../../components/StrokeStyleSelect/StrokeStyleSelect";
+
 import { DocumentContext } from "../contexts";
 import type { StrokeStyle, ArrowheadType } from "../types";
 
@@ -27,12 +29,6 @@ const containerStyle: CSSProperties = {
 // =============================================================================
 // Options
 // =============================================================================
-
-const strokeStyleOptions: SelectOption<StrokeStyle>[] = [
-  { value: "solid", label: "Solid" },
-  { value: "dashed", label: "Dashed" },
-  { value: "dotted", label: "Dotted" },
-];
 
 const arrowheadOptions: SelectOption<ArrowheadType>[] = [
   { value: "none", label: "None" },
@@ -176,10 +172,9 @@ export const ThemeEditor = memo(function ThemeEditor() {
           />
         </PropertyRow>
         <PropertyRow label="Stroke Style">
-          <Select
-            options={strokeStyleOptions}
-            value={theme.defaultNodeStroke.style}
-            onChange={handlers.setNodeStrokeStyle}
+          <StrokeStyleSelect
+            value={theme.defaultNodeStroke.style as SectionStrokeStyle}
+            onChange={handlers.setNodeStrokeStyle as (v: SectionStrokeStyle) => void}
             size="sm"
           />
         </PropertyRow>
@@ -203,10 +198,9 @@ export const ThemeEditor = memo(function ThemeEditor() {
           />
         </PropertyRow>
         <PropertyRow label="Stroke Style">
-          <Select
-            options={strokeStyleOptions}
-            value={theme.defaultConnectionStroke.style}
-            onChange={handlers.setConnectionStrokeStyle}
+          <StrokeStyleSelect
+            value={theme.defaultConnectionStroke.style as SectionStrokeStyle}
+            onChange={handlers.setConnectionStrokeStyle as (v: SectionStrokeStyle) => void}
             size="sm"
           />
         </PropertyRow>

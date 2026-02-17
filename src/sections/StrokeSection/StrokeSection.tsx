@@ -5,8 +5,9 @@
 import { memo, useMemo } from "react";
 import type { CSSProperties } from "react";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
+import type { JoinType } from "../../components/StrokeJoinControl/StrokeJoinControl";
 import { SPACE_SM } from "../../themes/styles";
-import type { StrokeSectionProps, StrokeTab, JoinType, BrushDirection } from "./types";
+import type { StrokeSectionProps, StrokeTab, BrushDirection } from "./types";
 import { StrokeBasicTab } from "./StrokeBasicTab";
 import { StrokeDynamicTab } from "./StrokeDynamicTab";
 import { StrokeBrushTab } from "./StrokeBrushTab";

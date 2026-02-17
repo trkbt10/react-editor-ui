@@ -192,6 +192,12 @@
       "import": "./dist/components/LayerItem.js",
       "require": "./dist/components/LayerItem.cjs"
     },
+    "./LibraryBrowser": {
+      "source": "./src/components/LibraryBrowser/LibraryBrowser.tsx",
+      "types": "./dist/components/LibraryBrowser/LibraryBrowser.d.ts",
+      "import": "./dist/components/LibraryBrowser.js",
+      "require": "./dist/components/LibraryBrowser.cjs"
+    },
     "./LogEntry": {
       "source": "./src/components/LogEntry/LogEntry.tsx",
       "types": "./dist/components/LogEntry/LogEntry.d.ts",
@@ -300,11 +306,35 @@
       "import": "./dist/components/StatusBar.js",
       "require": "./dist/components/StatusBar.cjs"
     },
+    "./StrokeJoinControl": {
+      "source": "./src/components/StrokeJoinControl/StrokeJoinControl.tsx",
+      "types": "./dist/components/StrokeJoinControl/StrokeJoinControl.d.ts",
+      "import": "./dist/components/StrokeJoinControl.js",
+      "require": "./dist/components/StrokeJoinControl.cjs"
+    },
+    "./StrokeMiterAngleInput": {
+      "source": "./src/components/StrokeMiterAngleInput/StrokeMiterAngleInput.tsx",
+      "types": "./dist/components/StrokeMiterAngleInput/StrokeMiterAngleInput.d.ts",
+      "import": "./dist/components/StrokeMiterAngleInput.js",
+      "require": "./dist/components/StrokeMiterAngleInput.cjs"
+    },
     "./panels/StrokeSettingsPanel": {
       "source": "./src/panels/StrokeSettingsPanel/StrokeSettingsPanel.tsx",
       "types": "./dist/panels/StrokeSettingsPanel/StrokeSettingsPanel.d.ts",
       "import": "./dist/panels/StrokeSettingsPanel.js",
       "require": "./dist/panels/StrokeSettingsPanel.cjs"
+    },
+    "./StrokeStyleSelect": {
+      "source": "./src/components/StrokeStyleSelect/StrokeStyleSelect.tsx",
+      "types": "./dist/components/StrokeStyleSelect/StrokeStyleSelect.d.ts",
+      "import": "./dist/components/StrokeStyleSelect.js",
+      "require": "./dist/components/StrokeStyleSelect.cjs"
+    },
+    "./StrokeWidthProfileSelect": {
+      "source": "./src/components/StrokeWidthProfileSelect/StrokeWidthProfileSelect.tsx",
+      "types": "./dist/components/StrokeWidthProfileSelect/StrokeWidthProfileSelect.d.ts",
+      "import": "./dist/components/StrokeWidthProfileSelect.js",
+      "require": "./dist/components/StrokeWidthProfileSelect.cjs"
     },
     "./TabBar": {
       "source": "./src/components/TabBar/TabBar.tsx",
@@ -387,6 +417,9 @@
     "e2e:diagram": "vite --config src/demo/pages/app-demo/diagram/e2e/vite.config.ts",
     "e2e:diagram:test": "playwright test --config src/demo/pages/app-demo/diagram/e2e/playwright.config.ts",
     "e2e:diagram:ui": "playwright test --config src/demo/pages/app-demo/diagram/e2e/playwright.config.ts --ui",
+    "e2e:library-browser": "vite --config src/components/LibraryBrowser/e2e/vite.config.ts",
+    "e2e:library-browser:test": "playwright test --config src/components/LibraryBrowser/e2e/playwright.config.ts",
+    "e2e:library-browser:ui": "playwright test --config src/components/LibraryBrowser/e2e/playwright.config.ts --ui",
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:tokens:fix": "bun scripts/check-tokens.ts --fix",
     "check:tokens:strict": "bun scripts/check-tokens.ts --strict",
