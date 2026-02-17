@@ -11,6 +11,11 @@ import type {
   TextNode,
   ConnectionPosition,
   ArrowheadType,
+  SymbolInstance,
+  SymbolDefinition,
+  SymbolPart,
+  ShapePart,
+  TextPart,
 } from "../types";
 
 // =============================================================================
@@ -18,11 +23,15 @@ import type {
 // =============================================================================
 
 function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance";
+  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame";
 }
 
 function isTextNode(node: DiagramNode): node is TextNode {
   return node.type === "text";
+}
+
+function isSymbolInstance(node: DiagramNode): node is SymbolInstance {
+  return node.type === "instance";
 }
 
 // =============================================================================
@@ -232,6 +241,163 @@ export function exportToSVG(document: DiagramDocument): string {
   const nodes = document.canvasPage.nodes;
   const connections = document.canvasPage.connections;
   const bounds = calculateBounds(nodes);
+  const symbolDef = document.symbolsPage.symbol;
+
+  return generateSVG(nodes, connections, bounds, undefined, symbolDef);
+}
+
+/**
+ * Export a specific frame and its children to SVG string
+ */
+export function exportFrameToSVG(
+  frame: DiagramNode,
+  allNodes: DiagramNode[],
+  connections: Connection[],
+  symbolDef?: SymbolDefinition | null,
+): string {
+  // Get the frame node (must be a frame type)
+  if (frame.type !== "frame") {
+    // If not a frame, just export the single node
+    const bounds = {
+      x: frame.x,
+      y: frame.y,
+      width: frame.width,
+      height: frame.height,
+    };
+    return generateSVG([frame], [], bounds, undefined, symbolDef);
+  }
+
+  const frameNode = frame as import("../types").FrameNode;
+
+  // Collect child nodes recursively
+  const childNodeIds = new Set(frameNode.children);
+  const childNodes = allNodes.filter((n) => childNodeIds.has(n.id));
+
+  // Filter connections that are between child nodes
+  const relevantConnections = connections.filter(
+    (c) => childNodeIds.has(c.source.nodeId) && childNodeIds.has(c.target.nodeId),
+  );
+
+  // Use frame bounds (content is relative to frame position)
+  const bounds = {
+    x: frameNode.x,
+    y: frameNode.y,
+    width: frameNode.width,
+    height: frameNode.height,
+  };
+
+  return generateSVG(childNodes, relevantConnections, bounds, frameNode, symbolDef);
+}
+
+// =============================================================================
+// Symbol Instance Rendering
+// =============================================================================
+
+function generateSymbolInstanceSVG(
+  instance: SymbolInstance,
+  symbolDef: SymbolDefinition,
+): string {
+  // Get the variant
+  const variant = symbolDef.variants[instance.variantId];
+  if (!variant) {
+    return "";
+  }
+
+  // Calculate scale factors
+  const scaleX = instance.width / symbolDef.width;
+  const scaleY = instance.height / symbolDef.height;
+
+  // Resolve and render each part
+  const partsSVG = symbolDef.parts
+    .map((basePart) => {
+      // Merge: base → variant → instance overrides
+      const variantOverride = variant.parts[basePart.id] ?? {};
+      const instanceOverride = instance.partOverrides?.[basePart.id] ?? {};
+      const resolved = { ...basePart, ...variantOverride, ...instanceOverride } as SymbolPart;
+
+      if (resolved.type === "shape") {
+        return generateShapePartSVG(resolved as ShapePart, instance, scaleX, scaleY);
+      } else if (resolved.type === "text") {
+        return generateTextPartSVG(resolved as TextPart, instance, scaleX, scaleY);
+      }
+      return "";
+    })
+    .join("");
+
+  const transform = instance.rotation !== 0
+    ? `translate(${instance.x}, ${instance.y}) rotate(${instance.rotation} ${instance.width / 2} ${instance.height / 2})`
+    : `translate(${instance.x}, ${instance.y})`;
+
+  return `
+  <g transform="${transform}" data-instance-id="${instance.id}">
+    ${partsSVG}
+  </g>`;
+}
+
+function generateShapePartSVG(
+  part: ShapePart,
+  instance: SymbolInstance,
+  scaleX: number,
+  scaleY: number,
+): string {
+  const width = instance.width;
+  const height = instance.height;
+  const path = getShapePath(part.shape, width, height);
+  const fill = colorToHex(part.fill);
+  const stroke = colorToHex(part.stroke.color);
+  const strokeDash = getStrokeDashArray(part.stroke.style);
+
+  return `
+    <path d="${path}"
+      fill="${fill}"
+      stroke="${stroke}"
+      stroke-width="${part.stroke.width}"${strokeDash ? ` stroke-dasharray="${strokeDash}"` : ""} />`;
+}
+
+function generateTextPartSVG(
+  part: TextPart,
+  instance: SymbolInstance,
+  scaleX: number,
+  scaleY: number,
+): string {
+  const textX = instance.width / 2;
+  const textY = instance.height / 2;
+  const textColor = colorToHex(part.textProps.color);
+  const fontSize = Math.round(part.textProps.fontSize * Math.min(scaleX, scaleY));
+
+  return `
+    <text x="${textX}" y="${textY}"
+      text-anchor="middle"
+      dominant-baseline="middle"
+      font-family="system-ui, -apple-system, sans-serif"
+      font-size="${fontSize}"
+      font-weight="${part.textProps.fontWeight}"
+      fill="${textColor}">${escapeXML(part.content)}</text>`;
+}
+
+// =============================================================================
+// SVG Generation (shared)
+// =============================================================================
+
+function generateSVG(
+  nodes: DiagramNode[],
+  connections: Connection[],
+  bounds: { x: number; y: number; width: number; height: number },
+  frameNode?: import("../types").FrameNode,
+  symbolDef?: SymbolDefinition | null,
+): string {
+  // Generate frame background if applicable
+  let frameBackgroundSVG = "";
+  if (frameNode && frameNode.showBackground) {
+    const fill = colorToHex(frameNode.fill);
+    const stroke = colorToHex(frameNode.stroke.color);
+    const strokeDash = getStrokeDashArray(frameNode.stroke.style);
+    frameBackgroundSVG = `
+  <rect x="${frameNode.x}" y="${frameNode.y}" width="${frameNode.width}" height="${frameNode.height}"
+    fill="${fill}"
+    stroke="${stroke}"
+    stroke-width="${frameNode.stroke.width}"${strokeDash ? ` stroke-dasharray="${strokeDash}"` : ""} />`;
+  }
 
   // Generate shape node SVG
   const shapesSVG = nodes
@@ -278,7 +444,15 @@ export function exportToSVG(document: DiagramDocument): string {
     })
     .join("");
 
-  const nodesSVG = shapesSVG + textsSVG;
+  // Generate symbol instance SVG
+  const instancesSVG = symbolDef
+    ? nodes
+        .filter(isSymbolInstance)
+        .map((instance: SymbolInstance) => generateSymbolInstanceSVG(instance, symbolDef))
+        .join("")
+    : "";
+
+  const nodesSVG = shapesSVG + textsSVG + instancesSVG;
 
   // Generate connection SVG
   const connectionsSVG = connections
@@ -307,7 +481,7 @@ export function exportToSVG(document: DiagramDocument): string {
   height="${bounds.height}">
   <defs>
     ${generateArrowMarkers()}
-  </defs>
+  </defs>${frameBackgroundSVG}
   <g id="connections">
     ${connectionsSVG}
   </g>

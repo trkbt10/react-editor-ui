@@ -2,7 +2,36 @@
  * @file Diagram E2E tests - Basic interactions
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page, type Locator } from "@playwright/test";
+
+/**
+ * Helper to dispatch pointer events on SVG elements with proper coordinates.
+ * Playwright's dispatchEvent doesn't properly pass clientX/clientY for PointerEvents on SVG.
+ */
+async function dispatchPointerEvent(
+  locator: Locator,
+  type: "pointerdown" | "pointermove" | "pointerup",
+  clientX: number,
+  clientY: number,
+): Promise<void> {
+  await locator.evaluate(
+    (el, { type, clientX, clientY }) => {
+      const event = new PointerEvent(type, {
+        clientX,
+        clientY,
+        pointerId: 1,
+        button: type === "pointerup" ? 0 : 0,
+        buttons: type === "pointerup" ? 0 : 1,
+        isPrimary: true,
+        bubbles: true,
+        cancelable: true,
+        pointerType: "mouse",
+      });
+      el.dispatchEvent(event);
+    },
+    { type, clientX, clientY },
+  );
+}
 
 test.describe("Diagram Editor", () => {
   test.beforeEach(async ({ page }) => {
@@ -97,28 +126,26 @@ test.describe("Diagram Editor", () => {
     const boundingBox = page.locator('[data-testid="bounding-box-move-area"]');
     await expect(boundingBox).toBeVisible();
 
-    // Get the bounding box position (in SVG, we need the screen coordinates)
-    const box = await boundingBox.evaluate((el) => {
-      const rect = el.getBoundingClientRect();
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-    });
-
     // Record initial node position
     const initialNodeBox = await actualNode.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       return { x: rect.x, y: rect.y };
     });
 
-    // Drag the bounding box by 50px in x and y (larger than gridSize=20 to overcome snap)
-    const startX = box.x + box.width / 2;
-    const startY = box.y + box.height / 2;
-    const endX = startX + 50;
-    const endY = startY + 50;
+    // Get the bounding box position (in SVG, we need the screen coordinates)
+    const box = await boundingBox.evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    });
 
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(endX, endY);
-    await page.mouse.up();
+    // Drag the bounding box by 50px in x and y (larger than gridSize=20 to overcome snap)
+    // Use our helper to dispatch pointer events on SVG elements
+    const centerX = box.x + box.width / 2;
+    const centerY = box.y + box.height / 2;
+
+    await dispatchPointerEvent(boundingBox, "pointerdown", centerX, centerY);
+    await dispatchPointerEvent(boundingBox, "pointermove", centerX + 50, centerY + 50);
+    await dispatchPointerEvent(boundingBox, "pointerup", centerX + 50, centerY + 50);
 
     // Wait for state update
     await page.waitForTimeout(100);
@@ -136,18 +163,26 @@ test.describe("Diagram Editor", () => {
   });
 
   test("should resize node by dragging handle", async ({ page }) => {
-    // Select a node by clicking on it
-    const nodeWrapper = page.locator('[data-testid="canvas-content"] > div').first();
-    await expect(nodeWrapper).toBeAttached();
+    // First add a new rectangle node so we have a resizable node
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    await dropdownToggle.click();
+    const rectOption = page.getByRole("option", { name: "Rectangle R", exact: true });
+    await rectOption.click();
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+    await mainButton.click();
 
-    const actualNode = nodeWrapper.locator('div').first();
-    const nodeBox = await actualNode.evaluate((el) => {
+    await page.waitForTimeout(100);
+
+    // The newly added node should be selected
+    const boundingBoxVisible = page.locator('[data-testid="bounding-box"]');
+    await expect(boundingBoxVisible).toBeVisible();
+
+    // Get initial bounding box size (this represents the node size)
+    const boundingBoxBorder = page.locator('[data-testid="bounding-box-border"]');
+    const initialBoxSize = await boundingBoxBorder.evaluate((el) => {
       const rect = el.getBoundingClientRect();
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      return { width: rect.width, height: rect.height };
     });
-
-    // Click to select
-    await page.mouse.click(nodeBox.x + nodeBox.width / 2, nodeBox.y + nodeBox.height / 2);
 
     // Get the bottom-right resize handle
     const handle = page.locator('[data-testid="bounding-box-handle-bottom-right"]');
@@ -159,35 +194,28 @@ test.describe("Diagram Editor", () => {
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     });
 
-    // Record initial node dimensions
-    const initialNodeSize = await actualNode.evaluate((el) => {
-      const rect = el.getBoundingClientRect();
-      return { width: rect.width, height: rect.height };
-    });
+    // Drag the handle using our helper (SVG elements need direct event dispatch)
+    const centerX = handleBox.x + handleBox.width / 2;
+    const centerY = handleBox.y + handleBox.height / 2;
 
-    // Drag the handle - use a larger drag distance to overcome snap threshold
-    const startX = handleBox.x + handleBox.width / 2;
-    const startY = handleBox.y + handleBox.height / 2;
-    const endX = startX + 40;  // Larger than gridSize (20)
-    const endY = startY + 40;
-
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(endX, endY);
-    await page.mouse.up();
+    await dispatchPointerEvent(handle, "pointerdown", centerX, centerY);
+    await page.waitForTimeout(50);
+    await dispatchPointerEvent(handle, "pointermove", centerX + 40, centerY + 40);
+    await page.waitForTimeout(50);
+    await dispatchPointerEvent(handle, "pointerup", centerX + 40, centerY + 40);
 
     // Wait for state update
     await page.waitForTimeout(100);
 
-    // Check that the size has changed
-    const newNodeSize = await actualNode.evaluate((el) => {
+    // Check that the bounding box size has changed
+    const newBoxSize = await boundingBoxBorder.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       return { width: rect.width, height: rect.height };
     });
 
     // The size should have increased
-    expect(newNodeSize.width).toBeGreaterThan(initialNodeSize.width);
-    expect(newNodeSize.height).toBeGreaterThan(initialNodeSize.height);
+    expect(newBoxSize.width).toBeGreaterThan(initialBoxSize.width);
+    expect(newBoxSize.height).toBeGreaterThan(initialBoxSize.height);
   });
 
   test("should select connection line on click", async ({ page }) => {
@@ -201,14 +229,24 @@ test.describe("Diagram Editor", () => {
       return;
     }
 
-    // Get the connection's bounding box
-    const connBox = await connectionGroup.evaluate((el) => {
-      const rect = el.getBoundingClientRect();
-      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    // Get the clickable path (first path inside the connection group - the invisible thick one)
+    const clickablePath = connectionGroup.locator("path").first();
+    await expect(clickablePath).toBeAttached();
+
+    // Dispatch click event directly on the path element using page.evaluate
+    // This is needed because SVG paths inside a parent with pointer-events: none
+    // don't receive normal click events through Playwright's click()
+    await clickablePath.evaluate((el) => {
+      const event = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      });
+      el.dispatchEvent(event);
     });
 
-    // Click on the connection
-    await page.mouse.click(connBox.x + connBox.width / 2, connBox.y + connBox.height / 2);
+    // Wait for selection to update
+    await page.waitForTimeout(100);
 
     // Verify the inspector shows "Connection Properties"
     const connectionHeader = page.locator('text=Connection Properties');
@@ -255,37 +293,67 @@ test.describe("Diagram Editor", () => {
     await expect(nodeDefaultsSection).toBeVisible();
   });
 
-  test("should edit text on double-click", async ({ page }) => {
-    // Find a text node (text nodes have a span with text content)
-    // In the composable architecture, text nodes are rendered after groups and shapes
-    const textSpans = page.locator('[data-testid="canvas-content"] > div span');
-    const spanCount = await textSpans.count();
+  test("Export tab should auto-detect frames", async ({ page }) => {
+    // Find the Export tab
+    const exportTab = page.locator('button:has-text("Export")');
+    await expect(exportTab).toBeVisible();
 
-    // Skip if no text nodes found
-    if (spanCount === 0) {
-      test.skip();
-      return;
-    }
+    // Click on Export tab
+    await exportTab.click();
 
-    // Get the first text span's parent wrapper
-    const firstTextSpan = textSpans.first();
-    const textWrapper = page.locator('[data-testid="canvas-content"] > div').filter({
-      has: firstTextSpan,
-    }).first();
+    // Verify export section is visible (frames are auto-detected)
+    const scaleSelect = page.locator('button:has-text("1x")');
+    await expect(scaleSelect).toBeVisible();
 
-    await expect(textWrapper).toBeAttached();
+    // Verify format select is visible (PNG by default)
+    const formatSelect = page.locator('button:has-text("PNG")');
+    await expect(formatSelect).toBeVisible();
 
-    const textBox = await firstTextSpan.evaluate((el) => {
+    // Verify export button shows "Export Frame" (there's 1 frame in mockData)
+    const exportButton = page.locator('button:has-text("Export Frame")');
+    await expect(exportButton).toBeVisible();
+
+    // Verify Preview section is visible
+    const previewHeader = page.locator('text=Preview');
+    await expect(previewHeader).toBeVisible();
+
+    // Verify preview image is rendered (SVG preview of the first frame)
+    const previewImage = page.locator('img[alt="Export preview"]');
+    await expect(previewImage).toBeVisible();
+
+    // Verify the preview image has valid content
+    const src = await previewImage.getAttribute("src");
+    expect(src).toBeTruthy();
+    expect(src).toContain("data:image/svg+xml");
+
+    // Take screenshot for visual verification
+    await page.screenshot({ path: "test-results/export-frame-preview.png" });
+  });
+
+  test("should edit text on double-click with position maintained", async ({ page }) => {
+    // First add a text node
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    await dropdownToggle.click();
+    const textOption = page.locator('button[role="option"]:has-text("Text")');
+    await expect(textOption).toBeVisible();
+    await textOption.click();
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+    await mainButton.click();
+    await page.waitForTimeout(100);
+
+    // The newly added text node should be selected
+    const boundingBox = page.locator('[data-testid="bounding-box-move-area"]');
+    await expect(boundingBox).toBeVisible();
+
+    // Find the text content display span before editing
+    const textDisplay = page.locator('[data-testid="text-content-display"]');
+    await expect(textDisplay).toBeVisible();
+
+    // Get the text position before editing
+    const textPositionBefore = await textDisplay.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     });
-
-    // Click to select the text node
-    await page.mouse.click(textBox.x + textBox.width / 2, textBox.y + textBox.height / 2);
-
-    // Verify bounding box appears
-    const boundingBox = page.locator('[data-testid="bounding-box-move-area"]');
-    await expect(boundingBox).toBeVisible();
 
     // Double-click on the bounding box to start editing
     const box = await boundingBox.evaluate((el) => {
@@ -295,108 +363,146 @@ test.describe("Diagram Editor", () => {
 
     await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 2);
 
-    // Wait for textarea to appear
+    // Wait for edit mode to activate
     await page.waitForTimeout(100);
 
-    // Check if textarea is visible
-    const textarea = textWrapper.locator("textarea");
-    await expect(textarea).toBeVisible();
+    // Check if contentEditable span is visible
+    const editableSpan = page.locator('[data-testid="text-content-editable"]');
+    await expect(editableSpan).toBeVisible();
 
-    // Type new text
-    await textarea.fill("New Label");
-    await textarea.press("Enter");
+    // Get the editable span position - should match the original text position
+    const editablePosition = await editableSpan.evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    });
+
+    // Verify the text position is maintained (within 2px tolerance)
+    expect(Math.abs(editablePosition.x - textPositionBefore.x)).toBeLessThan(2);
+    expect(Math.abs(editablePosition.y - textPositionBefore.y)).toBeLessThan(2);
+
+    // Select all existing text and type new text
+    await page.keyboard.press("Control+a");
+    await page.keyboard.type("New Label");
+    await page.keyboard.press("Enter");
 
     // Wait for edit to complete
     await page.waitForTimeout(100);
 
-    // Verify the text changed
-    const labelText = textWrapper.locator("span");
-    await expect(labelText).toHaveText("New Label");
+    // Verify the text content was actually changed
+    const updatedTextDisplay = page.locator('[data-testid="text-content-display"]');
+    await expect(updatedTextDisplay).toContainText("New Label");
+
+    // Verify inspector shows "Text Properties" for text nodes
+    const propsHeader = page.locator('text=Text Properties');
+    await expect(propsHeader).toBeVisible();
   });
 
   test("should move multiple selected nodes together", async ({ page }) => {
-    // Select multiple nodes using marquee
+    // First add two shape nodes so we have shapes to multi-select
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+
+    // Add first rectangle
+    await dropdownToggle.click();
+    await page.getByRole("option", { name: "Rectangle R", exact: true }).click();
+    await mainButton.click();
+    await page.waitForTimeout(50);
+
+    // Click somewhere else to deselect
     const canvas = page.locator('[role="application"]');
     const canvasBox = await canvas.boundingBox();
     expect(canvasBox).not.toBeNull();
     if (!canvasBox) return;
+    await page.mouse.click(canvasBox.x + 400, canvasBox.y + 400);
+    await page.waitForTimeout(50);
 
-    // Marquee select to get multiple nodes
-    const startX = canvasBox.x + 50;
-    const startY = canvasBox.y + 50;
-    const endX = startX + 300;
-    const endY = startY + 400;
+    // Add second rectangle
+    await mainButton.click();
+    await page.waitForTimeout(50);
+
+    // Click somewhere else to deselect
+    await page.mouse.click(canvasBox.x + 400, canvasBox.y + 400);
+    await page.waitForTimeout(100);
+
+    // Get initial bounding box positions of shapes (they're at known positions)
+    const boundingBoxBorder = page.locator('[data-testid="bounding-box-border"]');
+
+    // Marquee select both shapes
+    const startX = canvasBox.x + 150;
+    const startY = canvasBox.y + 150;
+    const endX = startX + 200;
+    const endY = startY + 200;
 
     await page.mouse.move(startX, startY);
     await page.mouse.down();
     await page.mouse.move(endX, endY);
     await page.mouse.up();
-
     await page.waitForTimeout(100);
 
     // Check if bounding box appears (indicates selection)
     const boundingBox = page.locator('[data-testid="bounding-box"]');
     await expect(boundingBox).toBeVisible();
 
-    // Get multiple nodes' initial positions
-    const nodeWrappers = page.locator('[data-testid="canvas-content"] > div');
-    const initialPositions: { x: number; y: number }[] = [];
-    const nodeCount = await nodeWrappers.count();
+    // Get initial bounding box position
+    const initialBox = await boundingBoxBorder.evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      return { x: rect.x, y: rect.y };
+    });
 
-    for (let i = 0; i < Math.min(nodeCount, 3); i++) {
-      const node = nodeWrappers.nth(i).locator("div").first();
-      const pos = await node.evaluate((el) => {
-        const rect = el.getBoundingClientRect();
-        return { x: rect.x, y: rect.y };
-      });
-      initialPositions.push(pos);
-    }
-
-    // Get bounding box position
+    // Get bounding box position for dragging
     const moveArea = page.locator('[data-testid="bounding-box-move-area"]');
     const box = await moveArea.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     });
 
-    // Drag all selected nodes
-    const dragStartX = box.x + box.width / 2;
-    const dragStartY = box.y + box.height / 2;
-    const dragEndX = dragStartX + 60;
-    const dragEndY = dragStartY + 60;
+    // Drag all selected nodes using our helper (SVG elements need direct event dispatch)
+    const centerX = box.x + box.width / 2;
+    const centerY = box.y + box.height / 2;
 
-    await page.mouse.move(dragStartX, dragStartY);
-    await page.mouse.down();
-    await page.mouse.move(dragEndX, dragEndY);
-    await page.mouse.up();
+    await dispatchPointerEvent(moveArea, "pointerdown", centerX, centerY);
+    await dispatchPointerEvent(moveArea, "pointermove", centerX + 60, centerY + 60);
+    await dispatchPointerEvent(moveArea, "pointerup", centerX + 60, centerY + 60);
 
     await page.waitForTimeout(100);
 
-    // Verify that all nodes moved
-    for (let i = 0; i < Math.min(nodeCount, 3); i++) {
-      const node = nodeWrappers.nth(i).locator("div").first();
-      const newPos = await node.evaluate((el) => {
-        const rect = el.getBoundingClientRect();
-        return { x: rect.x, y: rect.y };
-      });
+    // Verify that the bounding box moved
+    const finalBox = await boundingBoxBorder.evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      return { x: rect.x, y: rect.y };
+    });
 
-      // All nodes should have moved
-      expect(newPos.x).not.toBe(initialPositions[i].x);
-      expect(newPos.y).not.toBe(initialPositions[i].y);
-    }
+    // The bounding box should have moved
+    expect(Math.round(finalBox.x)).not.toBe(Math.round(initialBox.x));
+    expect(Math.round(finalBox.y)).not.toBe(Math.round(initialBox.y));
   });
 
   test("should show multi-selection inspector", async ({ page }) => {
-    // Marquee select multiple nodes
+    // First add multiple shape nodes so we have shapes to select
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+
+    // Add first rectangle
+    await dropdownToggle.click();
+    await page.getByRole("option", { name: "Rectangle R", exact: true }).click();
+    await mainButton.click();
+    await page.waitForTimeout(50);
+
+    // Add second rectangle (clicking somewhere else first to deselect)
     const canvas = page.locator('[role="application"]');
     const canvasBox = await canvas.boundingBox();
     expect(canvasBox).not.toBeNull();
     if (!canvasBox) return;
+    await page.mouse.click(canvasBox.x + 400, canvasBox.y + 400);
+    await page.waitForTimeout(50);
+    await mainButton.click();
+    await page.waitForTimeout(100);
 
-    const startX = canvasBox.x + 50;
-    const startY = canvasBox.y + 50;
-    const endX = startX + 300;
-    const endY = startY + 400;
+    // Now marquee select multiple shapes
+    const startX = canvasBox.x + 150;
+    const startY = canvasBox.y + 150;
+    const endX = startX + 200;
+    const endY = startY + 200;
 
     await page.mouse.move(startX, startY);
     await page.mouse.down();
@@ -451,12 +557,23 @@ test.describe("Diagram Editor", () => {
   });
 
   test("should add text node from toolbar", async ({ page }) => {
-    // Find the Text button in the toolbar
-    const textButton = page.locator('button[aria-label="Add Text"]');
-    await expect(textButton).toBeVisible();
+    // Find the SplitButton dropdown toggle
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    await expect(dropdownToggle).toBeVisible();
 
-    // Click to add a text node
-    await textButton.click();
+    // Open the dropdown
+    await dropdownToggle.click();
+
+    // Wait for dropdown to open and select Text option
+    const textOption = page.locator('button[role="option"]:has-text("Text")');
+    await expect(textOption).toBeVisible();
+    await textOption.click();
+
+    // Now click the main button to add the shape
+    // After selecting Text, the main button shows the Text icon
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+    await expect(mainButton).toBeVisible();
+    await mainButton.click();
 
     await page.waitForTimeout(100);
 
@@ -469,71 +586,277 @@ test.describe("Diagram Editor", () => {
     await expect(propsHeader).toBeVisible();
   });
 
-  test("should track cursor accurately with snap enabled", async ({ page }) => {
-    // Select a node
-    const nodeWrapper = page.locator('[data-testid="canvas-content"] > div').first();
-    await expect(nodeWrapper).toBeAttached();
+  test("should edit text on direct double-click (without pre-selection)", async ({ page }) => {
+    // First add a text node
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    await dropdownToggle.click();
+    const textOption = page.locator('button[role="option"]:has-text("Text")');
+    await expect(textOption).toBeVisible();
+    await textOption.click();
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+    await mainButton.click();
+    await page.waitForTimeout(100);
 
-    const actualNode = nodeWrapper.locator("div").first();
-    const nodeBox = await actualNode.evaluate((el) => {
+    // Verify text node is selected
+    const boundingBox = page.locator('[data-testid="bounding-box-move-area"]');
+    await expect(boundingBox).toBeVisible();
+
+    // Click on canvas background to deselect (bottom-right corner area)
+    const canvas = page.locator('[data-testid="canvas-content"]');
+    const canvasBox = await canvas.boundingBox();
+    expect(canvasBox).not.toBeNull();
+    if (!canvasBox) return;
+
+    // Click far from the text node (which is centered at ~360, ~370)
+    // Click bottom right corner of canvas
+    await page.mouse.click(canvasBox.x + canvasBox.width - 50, canvasBox.y + canvasBox.height - 50);
+    await page.waitForTimeout(200);
+
+    // Verify bounding box is hidden (node deselected)
+    await expect(boundingBox).not.toBeVisible({ timeout: 2000 });
+
+    // Find the text content span (now unselected)
+    const textDisplay = page.locator('[data-testid="text-content-display"]');
+    await expect(textDisplay).toBeVisible();
+
+    // Get the text element's position
+    const textBox = await textDisplay.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     });
 
-    // Click to select
-    await page.mouse.click(nodeBox.x + nodeBox.width / 2, nodeBox.y + nodeBox.height / 2);
+    // Direct double-click on the unselected text to enter edit mode
+    await page.mouse.dblclick(textBox.x + textBox.width / 2, textBox.y + textBox.height / 2);
+    await page.waitForTimeout(100);
 
-    // Get the bounding box
+    // Verify contentEditable is now visible (edit mode activated)
+    const editableSpan = page.locator('[data-testid="text-content-editable"]');
+    await expect(editableSpan).toBeVisible();
+
+    // Type new content
+    await page.keyboard.type("Edited Text");
+    await page.keyboard.press("Enter");
+
+    // Verify the text was changed
+    await page.waitForTimeout(100);
+    const updatedText = page.locator('[data-testid="text-content-display"]');
+    await expect(updatedText).toContainText("Edited Text");
+  });
+
+  test("should allow text selection and cursor positioning in edit mode", async ({ page }) => {
+    // Add a text node
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    await dropdownToggle.click();
+    const textOption = page.locator('button[role="option"]:has-text("Text")');
+    await expect(textOption).toBeVisible();
+    await textOption.click();
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+    await mainButton.click();
+    await page.waitForTimeout(100);
+
+    // Double-click to enter edit mode
+    const boundingBox = page.locator('[data-testid="bounding-box-move-area"]');
+    await expect(boundingBox).toBeVisible();
+    const box = await boundingBox.evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    });
+    await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(100);
+
+    // Verify edit mode is active
+    const editableSpan = page.locator('[data-testid="text-content-editable"]');
+    await expect(editableSpan).toBeVisible();
+
+    // Verify contentEditable is actually editable
+    const isEditable = await editableSpan.evaluate((el) => (el as HTMLElement).isContentEditable);
+    expect(isEditable).toBe(true);
+
+    // Verify focus is on the editable span
+    const hasFocus = await editableSpan.evaluate((el) => document.activeElement === el);
+    expect(hasFocus).toBe(true);
+
+    // Get the original text content (text should already be selected by useEffect)
+    const originalText = await editableSpan.textContent();
+    expect(originalText).toBe("Text");
+
+    // The useEffect should have already selected all text, so just type to replace
+    await page.keyboard.type("Hello World");
+
+    // Verify text was replaced
+    const textContent = await editableSpan.textContent();
+    expect(textContent).toBe("Hello World");
+
+    // Get edit box position for clicking
+    const editBox = await editableSpan.evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    });
+
+    // Click inside the editable area to position cursor (deselects text)
+    await page.mouse.click(editBox.x + 5, editBox.y + editBox.height / 2);
+    await page.waitForTimeout(50);
+
+    // Verify focus is maintained after click
+    const stillHasFocus = await editableSpan.evaluate((el) => document.activeElement === el);
+    expect(stillHasFocus).toBe(true);
+
+    // Use Control+A keyboard shortcut to select all text
+    await page.keyboard.press("Control+a");
+    await page.waitForTimeout(50);
+
+    // Verify selection was made (type to replace)
+    await page.keyboard.type("Selected All");
+    const afterSelectAll = await editableSpan.textContent();
+    expect(afterSelectAll).toBe("Selected All");
+
+    // Triple-click to select all text (standard text selection behavior)
+    await page.mouse.click(editBox.x + editBox.width / 2, editBox.y + editBox.height / 2, { clickCount: 3 });
+    await page.waitForTimeout(50);
+
+    // Type replacement text (this should replace the selected text)
+    await page.keyboard.type("Replaced");
+
+    // Finish editing
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(100);
+
+    // Verify the text was replaced
+    const finalText = page.locator('[data-testid="text-content-display"]');
+    await expect(finalText).toContainText("Replaced");
+  });
+
+  test("should undo and redo document changes", async ({ page }) => {
+    // Get initial node count
+    const getNodeCount = () =>
+      page.locator('[data-testid="canvas-content"] > div').count();
+
+    const initialCount = await getNodeCount();
+
+    // Add a new shape
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    await dropdownToggle.click();
+    await page.getByRole("option", { name: "Rectangle R", exact: true }).click();
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+    await mainButton.click();
+    await page.waitForTimeout(100);
+
+    // Verify node was added
+    const afterAddCount = await getNodeCount();
+    expect(afterAddCount).toBe(initialCount + 1);
+
+    // Use keyboard shortcut to undo (Cmd+Z or Ctrl+Z)
+    await page.keyboard.press("Meta+z");
+    await page.waitForTimeout(100);
+
+    // Verify node was removed (undo worked)
+    const afterUndoCount = await getNodeCount();
+    expect(afterUndoCount).toBe(initialCount);
+
+    // Use keyboard shortcut to redo (Cmd+Shift+Z)
+    await page.keyboard.press("Meta+Shift+z");
+    await page.waitForTimeout(100);
+
+    // Verify node was restored (redo worked)
+    const afterRedoCount = await getNodeCount();
+    expect(afterRedoCount).toBe(initialCount + 1);
+  });
+
+  test("should undo/redo via toolbar buttons", async ({ page }) => {
+    // Get initial node count
+    const getNodeCount = () =>
+      page.locator('[data-testid="canvas-content"] > div').count();
+
+    const initialCount = await getNodeCount();
+
+    // Add a new shape
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+    await mainButton.click();
+    await page.waitForTimeout(100);
+
+    const afterAddCount = await getNodeCount();
+    expect(afterAddCount).toBe(initialCount + 1);
+
+    // Click undo button
+    const undoButton = page.locator('button[aria-label="Undo"]');
+    await expect(undoButton).toBeEnabled();
+    await undoButton.click();
+    await page.waitForTimeout(100);
+
+    // Verify node was removed
+    const afterUndoCount = await getNodeCount();
+    expect(afterUndoCount).toBe(initialCount);
+
+    // Click redo button
+    const redoButton = page.locator('button[aria-label="Redo"]');
+    await expect(redoButton).toBeEnabled();
+    await redoButton.click();
+    await page.waitForTimeout(100);
+
+    // Verify node was restored
+    const afterRedoCount = await getNodeCount();
+    expect(afterRedoCount).toBe(initialCount + 1);
+  });
+
+  test("should track cursor accurately with snap enabled", async ({ page }) => {
+    // First add a new rectangle node (will be placed at grid-aligned position)
+    const dropdownToggle = page.locator('button[aria-label="Open menu"]').first();
+    await dropdownToggle.click();
+    await page.getByRole("option", { name: "Rectangle R", exact: true }).click();
+    const mainButton = page.locator('button[aria-label="Add shape"]');
+    await mainButton.click();
+    await page.waitForTimeout(100);
+
+    // Get the bounding box (the newly added node is already selected)
     const moveArea = page.locator('[data-testid="bounding-box-move-area"]');
     await expect(moveArea).toBeVisible();
 
-    const box = await moveArea.evaluate((el) => {
+    // Get initial bounding box position
+    const boundingBoxBorder = page.locator('[data-testid="bounding-box-border"]');
+    const initialBox = await boundingBoxBorder.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-    });
-
-    // Record initial position
-    const initialNodePos = await actualNode.evaluate((el) => {
-      const rect = el.getBoundingClientRect();
-      return { x: rect.x, y: rect.y };
     });
 
     // Perform multiple small drags (simulating slow mouse movement)
     // This tests that snap doesn't accumulate drift
-    const startX = box.x + box.width / 2;
-    const startY = box.y + box.height / 2;
+    // Use our helper for SVG elements
+    const startX = initialBox.x + initialBox.width / 2;
+    const startY = initialBox.y + initialBox.height / 2;
 
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
+    await dispatchPointerEvent(moveArea, "pointerdown", startX, startY);
 
     // Move in small increments (5px each, 10 times = 50px total)
     for (let i = 1; i <= 10; i++) {
-      await page.mouse.move(startX + i * 5, startY + i * 5);
+      await dispatchPointerEvent(moveArea, "pointermove", startX + i * 5, startY + i * 5);
       await page.waitForTimeout(16); // ~60fps
     }
 
-    await page.mouse.up();
+    await dispatchPointerEvent(moveArea, "pointerup", startX + 50, startY + 50);
     await page.waitForTimeout(100);
 
-    // Get final position
-    const finalNodePos = await actualNode.evaluate((el) => {
+    // Get final bounding box position
+    const finalBox = await boundingBoxBorder.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       return { x: rect.x, y: rect.y };
     });
 
     // The total movement should be approximately 50px (snapped to grid)
     // With gridSize=20, we expect 40 or 60 pixels of movement (2 or 3 grid units)
-    const deltaX = finalNodePos.x - initialNodePos.x;
-    const deltaY = finalNodePos.y - initialNodePos.y;
+    const deltaX = finalBox.x - initialBox.x;
+    const deltaY = finalBox.y - initialBox.y;
 
-    // Should be snapped to multiples of 20
-    expect(deltaX % 20).toBe(0);
-    expect(deltaY % 20).toBe(0);
+    // Should be snapped to multiples of 20 (with small tolerance for floating point)
+    // Round to nearest integer before checking
+    const roundedDeltaX = Math.round(deltaX);
+    const roundedDeltaY = Math.round(deltaY);
+    expect(roundedDeltaX % 20).toBe(0);
+    expect(roundedDeltaY % 20).toBe(0);
 
     // Should have moved a reasonable amount (not stuck at 0, not way off)
-    expect(Math.abs(deltaX)).toBeGreaterThanOrEqual(20);
-    expect(Math.abs(deltaX)).toBeLessThanOrEqual(80);
-    expect(Math.abs(deltaY)).toBeGreaterThanOrEqual(20);
-    expect(Math.abs(deltaY)).toBeLessThanOrEqual(80);
+    expect(Math.abs(roundedDeltaX)).toBeGreaterThanOrEqual(20);
+    expect(Math.abs(roundedDeltaX)).toBeLessThanOrEqual(80);
+    expect(Math.abs(roundedDeltaY)).toBeGreaterThanOrEqual(20);
+    expect(Math.abs(roundedDeltaY)).toBeLessThanOrEqual(80);
   });
 });

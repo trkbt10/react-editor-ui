@@ -3,7 +3,7 @@
  */
 
 import { memo, useCallback, useContext, useMemo, useState, type CSSProperties } from "react";
-import { LuTrash2, LuZoomIn, LuZoomOut, LuDownload } from "react-icons/lu";
+import { LuTrash2, LuZoomIn, LuZoomOut } from "react-icons/lu";
 
 import { PropertySection } from "../../../../../components/PropertySection/PropertySection";
 import { PropertyRow } from "../../../../../components/PropertyRow/PropertyRow";
@@ -14,7 +14,6 @@ import { Select, type SelectOption } from "../../../../../components/Select/Sele
 import { IconButton } from "../../../../../components/IconButton/IconButton";
 import { TabBar } from "../../../../../components/TabBar/TabBar";
 import { Checkbox } from "../../../../../components/Checkbox/Checkbox";
-import { Button } from "../../../../../components/Button/Button";
 import { Tooltip } from "../../../../../components/Tooltip/Tooltip";
 import { SectionHeader } from "../../../../../components/SectionHeader/SectionHeader";
 import type { ColorValue } from "../../../../../utils/color/types";
@@ -22,6 +21,7 @@ import type { ColorValue } from "../../../../../utils/color/types";
 import { PositionSection } from "../../../../../sections/PositionSection/PositionSection";
 import { SizeSection } from "../../../../../sections/SizeSection/SizeSection";
 import { RotationSection } from "../../../../../sections/RotationSection/RotationSection";
+import { ExportSection, type ExportSectionData } from "../../../../../sections/ExportSection/ExportSection";
 import type { PositionData } from "../../../../../sections/PositionSection/types";
 import type { SizeData } from "../../../../../sections/SizeSection/types";
 import type { RotationData } from "../../../../../sections/RotationSection/types";
@@ -46,11 +46,11 @@ import {
 } from "../../../../../themes/styles";
 
 import { DocumentContext, SelectionContext, PageContext, ViewportContext } from "../contexts";
-import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, FrameNode, FramePreset, ShapeType, Connection, ExportFormat } from "../types";
-import { isFrameNode } from "../types";
+import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, FrameNode, FramePreset, ShapeType, Connection, SymbolInstance, SymbolPart } from "../types";
+import { isFrameNode, isSymbolInstance } from "../types";
 import { framePresets, type FramePresetInfo } from "../mockData";
 import { ThemeEditor } from "./ThemeEditor";
-import { exportToSVG } from "../export/exportToSVG";
+import { exportFrameToSVG } from "../export/exportToSVG";
 import { exportToPNG } from "../export/exportToPNG";
 import { exportToMermaid } from "../export/exportToMermaid";
 import { exportToMarkdown } from "../export/exportToMarkdown";
@@ -127,43 +127,6 @@ const exportContentStyle: CSSProperties = {
   overflow: "auto",
 };
 
-const exportOptionsContainerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACE_XS,
-};
-
-const exportOptionBaseStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: SPACE_MD,
-  padding: `${SPACE_SM} ${SPACE_MD}`,
-  borderRadius: RADIUS_SM,
-  border: `1px solid ${COLOR_BORDER}`,
-  backgroundColor: "transparent",
-  cursor: "pointer",
-  transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
-  width: "100%",
-  textAlign: "left",
-};
-
-const exportOptionTitleStyle: CSSProperties = {
-  fontSize: SIZE_FONT_SM,
-  fontWeight: FONT_WEIGHT_MEDIUM,
-  color: COLOR_TEXT,
-};
-
-const exportOptionDescStyle: CSSProperties = {
-  fontSize: SIZE_FONT_XS,
-  color: COLOR_TEXT_MUTED,
-  marginTop: SPACE_2XS,
-};
-
-const exportButtonWrapperStyle: CSSProperties = {
-  padding: `${SPACE_MD} ${SPACE_LG}`,
-  borderTop: `1px solid ${COLOR_BORDER}`,
-};
-
 type InspectorTab = "design" | "export" | "theme";
 
 // =============================================================================
@@ -199,14 +162,6 @@ const framePresetOptions: SelectOption<FramePreset>[] = (Object.entries(framePre
   }),
 );
 
-// Export format definitions
-const exportFormats: { value: ExportFormat; title: string; description: string }[] = [
-  { value: "svg", title: "SVG", description: "Scalable vector graphics" },
-  { value: "png", title: "PNG", description: "Raster image (high quality)" },
-  { value: "mermaid", title: "Mermaid", description: "Diagram as code" },
-  { value: "markdown", title: "Markdown", description: "Documentation format" },
-];
-
 // =============================================================================
 // Component
 // =============================================================================
@@ -223,7 +178,9 @@ export const DiagramInspector = memo(function DiagramInspector() {
   const pageCtx = useContext(PageContext);
   const viewportCtx = useContext(ViewportContext);
   const [activeTab, setActiveTab] = useState<InspectorTab>("design");
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("svg");
+  const [exportData, setExportData] = useState<ExportSectionData>({
+    settings: [{ id: "export-1", scale: "1x", format: "PNG" }],
+  });
 
   if (!documentCtx || !selectionCtx || !pageCtx || !viewportCtx) {
     return null;
@@ -309,31 +266,52 @@ export const DiagramInspector = memo(function DiagramInspector() {
     setZoom(Math.max(zoom - 25, 25));
   }, [zoom, setZoom]);
 
-  // Export handler
+  // Find all frames in the canvas
+  const allFrames = useMemo(() => {
+    return pageNodes.filter(isFrameNode) as import("../types").FrameNode[];
+  }, [pageNodes]);
+
+  // Generate SVG preview for export section (first frame for preview)
+  const previewSvg = useMemo(() => {
+    if (allFrames.length === 0) {
+      return undefined;
+    }
+    const symbolDef = pageCtx.symbolsPage.symbol;
+    // Show first frame as preview
+    return exportFrameToSVG(allFrames[0], pageNodes, pageConnections, symbolDef);
+  }, [allFrames, pageNodes, pageConnections, pageCtx.symbolsPage.symbol]);
+
+  // Export handler - exports all frames with all settings
   const handleExport = useCallback(async () => {
-    switch (exportFormat) {
-      case "svg": {
-        const svg = exportToSVG(document);
-        downloadFile(svg, "diagram.svg", "image/svg+xml");
-        break;
-      }
-      case "png": {
-        const blob = await exportToPNG(document);
-        downloadBlob(blob, "diagram.png");
-        break;
-      }
-      case "mermaid": {
-        const mermaid = exportToMermaid(document);
-        downloadFile(mermaid, "diagram.mmd", "text/plain");
-        break;
-      }
-      case "markdown": {
-        const markdown = await exportToMarkdown(document);
-        downloadFile(markdown, "diagram.md", "text/markdown");
-        break;
+    const symbolDef = pageCtx.symbolsPage.symbol;
+
+    for (const frame of allFrames) {
+      const frameName = frame.preset;
+
+      for (const setting of exportData.settings) {
+        const format = setting.format.toLowerCase();
+        const fileName = `${frameName}-${setting.scale}`;
+
+        switch (format) {
+          case "svg": {
+            const svg = exportFrameToSVG(frame, pageNodes, pageConnections, symbolDef);
+            downloadFile(svg, `${fileName}.svg`, "image/svg+xml");
+            break;
+          }
+          case "png":
+          case "jpg":
+          case "jpeg":
+          case "pdf":
+          case "webp": {
+            // For now, use PNG export (actual format conversion would need additional logic)
+            const blob = await exportToPNG(document);
+            downloadBlob(blob, `${fileName}.${format === "jpeg" ? "jpg" : format}`);
+            break;
+          }
+        }
       }
     }
-  }, [document, exportFormat]);
+  }, [allFrames, pageNodes, pageConnections, pageCtx.symbolsPage.symbol, exportData.settings, document]);
 
   // Multi-selection property handlers (apply to all selected shape nodes)
   const multiNodeHandlers = useMemo(() => {
@@ -555,6 +533,39 @@ export const DiagramInspector = memo(function DiagramInspector() {
           nodes.map((n) =>
             n.id === nodeId && isFrameNode(n) ? { ...n, showBackground: checked } : n,
           ),
+        );
+      },
+      // For SymbolInstance part overrides
+      setPartOverride: (partId: string, override: Partial<SymbolPart>) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) => {
+            if (n.id === nodeId && isSymbolInstance(n)) {
+              const currentOverrides = n.partOverrides ?? {};
+              const currentPartOverride = currentOverrides[partId] ?? {};
+              return {
+                ...n,
+                partOverrides: {
+                  ...currentOverrides,
+                  [partId]: { ...currentPartOverride, ...override },
+                },
+              };
+            }
+            return n;
+          }),
+        );
+      },
+      clearPartOverride: (partId: string) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) => {
+            if (n.id === nodeId && isSymbolInstance(n) && n.partOverrides) {
+              const { [partId]: _, ...rest } = n.partOverrides;
+              return {
+                ...n,
+                partOverrides: Object.keys(rest).length > 0 ? rest : undefined,
+              };
+            }
+            return n;
+          }),
         );
       },
       delete: () => {
@@ -782,7 +793,9 @@ export const DiagramInspector = memo(function DiagramInspector() {
           ? "Text Properties"
           : isFrameNode(selectedNode)
             ? "Frame Properties"
-            : "Group Properties";
+            : isSymbolInstance(selectedNode)
+              ? "Instance Properties"
+              : "Group Properties";
 
       return (
         <div style={contentStyle}>
@@ -961,6 +974,16 @@ export const DiagramInspector = memo(function DiagramInspector() {
               </PropertySection>
             </>
           )}
+
+          {/* Symbol Instance Overrides */}
+          {isSymbolInstance(selectedNode) && (
+            <InstanceOverridesEditor
+              instance={selectedNode}
+              symbolDef={pageCtx.symbolsPage.symbol}
+              onSetOverride={nodeHandlers.setPartOverride}
+              onClearOverride={nodeHandlers.clearPartOverride}
+            />
+          )}
         </div>
       );
     }
@@ -1047,42 +1070,25 @@ export const DiagramInspector = memo(function DiagramInspector() {
 
   // Render export content
   const renderExportContent = () => {
-    const getOptionStyle = (isSelected: boolean): CSSProperties => ({
-      ...exportOptionBaseStyle,
-      borderColor: isSelected ? "var(--rei-color-primary)" : "var(--rei-color-border)",
-      backgroundColor: isSelected ? "var(--rei-color-primary-soft)" : "transparent",
-    });
+    // Show empty state if no frames exist
+    if (allFrames.length === 0) {
+      return (
+        <div style={emptyStateStyle}>
+          No Frames to export
+        </div>
+      );
+    }
 
     return (
       <div style={exportContentStyle}>
-        <PropertySection title="Format">
-          <div style={exportOptionsContainerStyle}>
-            {exportFormats.map((format) => (
-              <button
-                key={format.value}
-                type="button"
-                style={getOptionStyle(exportFormat === format.value)}
-                onClick={() => setExportFormat(format.value)}
-              >
-                <div>
-                  <div style={exportOptionTitleStyle}>{format.title}</div>
-                  <div style={exportOptionDescStyle}>{format.description}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </PropertySection>
-
-        <div style={exportButtonWrapperStyle}>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={handleExport}
-          >
-            <LuDownload size={16} />
-            Export as {exportFormat.toUpperCase()}
-          </Button>
-        </div>
+        <ExportSection
+          data={exportData}
+          onChange={setExportData}
+          svgContent={previewSvg}
+          selectionCount={allFrames.length}
+          selectionLabel="Frame"
+          onExport={handleExport}
+        />
       </div>
     );
   };
@@ -1124,6 +1130,154 @@ export const DiagramInspector = memo(function DiagramInspector() {
         </Tooltip>
       </div>
     </div>
+  );
+});
+
+// =============================================================================
+// Instance Overrides Editor
+// =============================================================================
+
+type InstanceOverridesEditorProps = {
+  instance: SymbolInstance;
+  symbolDef: import("../types").SymbolDefinition | null;
+  onSetOverride: (partId: string, override: Partial<SymbolPart>) => void;
+  onClearOverride: (partId: string) => void;
+};
+
+const partLabelStyle: CSSProperties = {
+  fontSize: SIZE_FONT_SM,
+  fontWeight: FONT_WEIGHT_MEDIUM,
+  color: COLOR_TEXT,
+  marginBottom: SPACE_2XS,
+};
+
+const overrideIndicatorStyle: CSSProperties = {
+  fontSize: SIZE_FONT_XS,
+  color: COLOR_TEXT_MUTED,
+  marginLeft: SPACE_XS,
+};
+
+const resetButtonStyle: CSSProperties = {
+  fontSize: SIZE_FONT_XS,
+  color: COLOR_TEXT_MUTED,
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  padding: 0,
+  marginLeft: SPACE_XS,
+  textDecoration: "underline",
+};
+
+const InstanceOverridesEditor = memo(function InstanceOverridesEditor({
+  instance,
+  symbolDef,
+  onSetOverride,
+  onClearOverride,
+}: InstanceOverridesEditorProps) {
+  if (!symbolDef) {
+    return (
+      <PropertySection title="Overrides">
+        <div style={{ color: COLOR_TEXT_MUTED, fontSize: SIZE_FONT_SM }}>
+          No symbol definition found
+        </div>
+      </PropertySection>
+    );
+  }
+
+  // Get the variant (if any)
+  const variant = symbolDef.variants[instance.variantId];
+
+  // Resolve part values: Base → Variant → Instance Override
+  const resolvedParts = symbolDef.parts.map((basePart) => {
+    const variantOverride = variant?.parts[basePart.id] ?? {};
+    const instanceOverride = instance.partOverrides?.[basePart.id] ?? {};
+    return {
+      base: basePart,
+      resolved: { ...basePart, ...variantOverride, ...instanceOverride } as SymbolPart,
+      hasOverride: Boolean(instance.partOverrides?.[basePart.id]),
+    };
+  });
+
+  return (
+    <PropertySection title="Part Overrides">
+      {resolvedParts.map(({ base, resolved, hasOverride }) => (
+        <div key={base.id} style={{ marginBottom: SPACE_MD }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span style={partLabelStyle}>{base.name}</span>
+            {hasOverride && (
+              <>
+                <span style={overrideIndicatorStyle}>(modified)</span>
+                <button
+                  type="button"
+                  style={resetButtonStyle}
+                  onClick={() => onClearOverride(base.id)}
+                >
+                  Reset
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Shape part overrides */}
+          {resolved.type === "shape" && (
+            <>
+              <PropertyRow label="Fill">
+                <ColorInput
+                  value={resolved.fill}
+                  onChange={(fill) => onSetOverride(base.id, { fill })}
+                  size="sm"
+                  showVisibilityToggle
+                />
+              </PropertyRow>
+              <PropertyRow label="Stroke">
+                <ColorInput
+                  value={resolved.stroke.color}
+                  onChange={(color) =>
+                    onSetOverride(base.id, {
+                      stroke: { ...resolved.stroke, color },
+                    })
+                  }
+                  size="sm"
+                  showVisibilityToggle
+                />
+              </PropertyRow>
+            </>
+          )}
+
+          {/* Text part overrides */}
+          {resolved.type === "text" && (
+            <>
+              <PropertyRow label="Content">
+                <Input
+                  value={resolved.content}
+                  onChange={(content) => onSetOverride(base.id, { content })}
+                  size="sm"
+                  placeholder="Text content"
+                />
+              </PropertyRow>
+              <PropertyRow label="Color">
+                <ColorInput
+                  value={resolved.textProps.color}
+                  onChange={(color) =>
+                    onSetOverride(base.id, {
+                      textProps: { ...resolved.textProps, color },
+                    })
+                  }
+                  size="sm"
+                  showVisibilityToggle
+                />
+              </PropertyRow>
+            </>
+          )}
+        </div>
+      ))}
+
+      {resolvedParts.length === 0 && (
+        <div style={{ color: COLOR_TEXT_MUTED, fontSize: SIZE_FONT_SM }}>
+          No editable parts
+        </div>
+      )}
+    </PropertySection>
   );
 });
 
