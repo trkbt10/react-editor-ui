@@ -593,7 +593,7 @@ RichTextEditors - Rich text and code editing components
 Unified exports for all rich text editor components including CodeEditor and TextEditor. Both editors use BlockDocument for consistent architecture. Provides syntax highlighting, virtual scrolling, and rich text editing.
 
 ```tsx
-import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/RichTextEditors";
+import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/editors/RichTextEditors";
 
 const [doc, setDoc] = useState(() => createBlockDocument(code));
 
@@ -632,18 +632,6 @@ const [points, setPoints] = useState<[number, number, number, number]>([0.25, 0.
   onChange={setPoints}
   aria-label="Easing curve editor"
 />
-```
-
-#### FillEditor
-
-```tsx
-import { FillEditor } from "react-editor-ui/FillEditor";
-```
-
-#### GradientEditor
-
-```tsx
-import { GradientEditor } from "react-editor-ui/GradientEditor";
 ```
 
 #### Portal

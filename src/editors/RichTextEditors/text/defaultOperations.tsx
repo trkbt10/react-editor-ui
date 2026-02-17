@@ -6,7 +6,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { SelectionToolbarOperation } from "../../SelectionToolbar/types";
+import type { SelectionToolbarOperation } from "../../../components/SelectionToolbar/types";
 
 // =============================================================================
 // Icons (Simple SVG icons)

@@ -89,7 +89,7 @@ describe("sync-exports", () => {
 
       expect(editor).toBeDefined();
       expect(editor.entryType).toBe("index");
-      expect(editor.relativePath).toBe("src/components/RichTextEditors/index.ts");
+      expect(editor.relativePath).toBe("src/editors/RichTextEditors/index.ts");
     });
 
     it("generates correct export path for index entry", () => {
@@ -99,9 +99,9 @@ describe("sync-exports", () => {
       });
 
       const parsed = JSON.parse(result);
-      const editorExport = parsed.exports["./RichTextEditors"];
+      const editorExport = parsed.exports["./editors/RichTextEditors"];
 
-      expect(editorExport.types).toBe("./dist/components/RichTextEditors/index.d.ts");
+      expect(editorExport.types).toBe("./dist/editors/RichTextEditors/index.d.ts");
     });
   });
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * @file Component and panel exports synchronization script
+ * @file Component, panel, canvas, and editor exports synchronization script
  *
- * Scans src/components and src/panels directories and updates:
+ * Scans src/components, src/panels, src/canvas, and src/editors directories and updates:
  * - package.json exports field
  * - vite.config.ts entry points (via generated file)
  *
@@ -23,10 +23,11 @@ const ROOT_DIR = resolve(import.meta.dirname, "..");
 const COMPONENTS_DIR = join(ROOT_DIR, "src/components");
 const PANELS_DIR = join(ROOT_DIR, "src/panels");
 const CANVAS_DIR = join(ROOT_DIR, "src/canvas");
+const EDITORS_DIR = join(ROOT_DIR, "src/editors");
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
 const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
 
-type EntryCategory = "component" | "panel" | "canvas";
+type EntryCategory = "component" | "panel" | "canvas" | "editor";
 
 interface ComponentEntry {
   name: string;
@@ -69,6 +70,8 @@ function getCategoryDir(category: EntryCategory): string {
       return "panels";
     case "canvas":
       return "canvas";
+    case "editor":
+      return "editors";
   }
 }
 
@@ -187,7 +190,8 @@ function buildEntryCatalog(): EntryCatalog {
   const components = scanDirectory(COMPONENTS_DIR, "component");
   const panels = scanDirectory(PANELS_DIR, "panel");
   const canvas = scanDirectory(CANVAS_DIR, "canvas");
-  const allEntries = [...components, ...panels, ...canvas];
+  const editors = scanDirectory(EDITORS_DIR, "editor");
+  const allEntries = [...components, ...panels, ...canvas, ...editors];
 
   allEntries.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -218,13 +222,14 @@ function generateExports(catalog: EntryCatalog): Record<string, ExportEntry | st
 
   for (const entry of catalog.components) {
     const categoryDir = getCategoryDir(entry.category);
-    // Components: ./ComponentName, Panels: ./panels/PanelName, Canvas: ./canvas/CanvasName
+    // Components: ./ComponentName
+    // Panels: ./panels/PanelName, Canvas: ./canvas/CanvasName, Editors: ./editors/EditorName
     const exportKey = entry.category === "component"
       ? `./${entry.name}`
       : `./${categoryDir}/${entry.name}`;
 
     // Type definition path matches source structure
-    // For index.ts entries (RichTextEditors only): dist/components/RichTextEditors/index.d.ts
+    // For index.ts entries (RichTextEditors only): dist/editors/RichTextEditors/index.d.ts
     // For named entries: dist/components/Badge/Badge.d.ts
     const typeFileName = entry.entryType === "index" ? "index" : entry.name;
     const typesPath = `./dist/${categoryDir}/${entry.name}/${typeFileName}.d.ts`;

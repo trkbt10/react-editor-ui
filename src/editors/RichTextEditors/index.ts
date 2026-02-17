@@ -8,7 +8,7 @@
  *
  * @example
  * ```tsx
- * import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/RichTextEditors";
+ * import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/editors/RichTextEditors";
  *
  * const [doc, setDoc] = useState(() => createBlockDocument(code));
  *

@@ -1,6 +1,12 @@
 {
-  "generatedAt": "2026-02-17T04:52:18.992Z",
+  "generatedAt": "2026-02-17T05:26:53.492Z",
   "components": [
+    {
+      "name": "AlignmentGrid",
+      "entryType": "named",
+      "relativePath": "src/components/AlignmentGrid/AlignmentGrid.tsx",
+      "category": "component"
+    },
     {
       "name": "AlignmentSelect",
       "entryType": "named",
@@ -104,15 +110,15 @@
       "category": "component"
     },
     {
-      "name": "RichTextEditors",
-      "entryType": "index",
-      "relativePath": "src/components/RichTextEditors/index.ts",
-      "category": "component"
+      "name": "FillPanel",
+      "entryType": "named",
+      "relativePath": "src/panels/FillPanel/FillPanel.tsx",
+      "category": "panel"
     },
     {
-      "name": "FillEditor",
+      "name": "FillTypeSelector",
       "entryType": "named",
-      "relativePath": "src/components/FillEditor/FillEditor.tsx",
+      "relativePath": "src/components/FillTypeSelector/FillTypeSelector.tsx",
       "category": "component"
     },
     {
@@ -128,15 +134,27 @@
       "category": "component"
     },
     {
-      "name": "GradientEditor",
+      "name": "GradientStopRow",
       "entryType": "named",
-      "relativePath": "src/components/GradientEditor/GradientEditor.tsx",
+      "relativePath": "src/components/GradientStopRow/GradientStopRow.tsx",
+      "category": "component"
+    },
+    {
+      "name": "GradientTypeSelector",
+      "entryType": "named",
+      "relativePath": "src/components/GradientTypeSelector/GradientTypeSelector.tsx",
       "category": "component"
     },
     {
       "name": "IconButton",
       "entryType": "named",
       "relativePath": "src/components/IconButton/IconButton.tsx",
+      "category": "component"
+    },
+    {
+      "name": "ImageAdjustments",
+      "entryType": "named",
+      "relativePath": "src/components/ImageAdjustments/ImageAdjustments.tsx",
       "category": "component"
     },
     {
@@ -204,6 +222,12 @@
       "entryType": "named",
       "relativePath": "src/components/PropertySection/PropertySection.tsx",
       "category": "component"
+    },
+    {
+      "name": "RichTextEditors",
+      "entryType": "index",
+      "relativePath": "src/editors/RichTextEditors/index.ts",
+      "category": "editor"
     },
     {
       "name": "SearchInput",

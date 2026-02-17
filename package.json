@@ -24,6 +24,12 @@
       "import": "./dist/themes/index.js",
       "require": "./dist/themes/index.cjs"
     },
+    "./AlignmentGrid": {
+      "source": "./src/components/AlignmentGrid/AlignmentGrid.tsx",
+      "types": "./dist/components/AlignmentGrid/AlignmentGrid.d.ts",
+      "import": "./dist/components/AlignmentGrid.js",
+      "require": "./dist/components/AlignmentGrid.cjs"
+    },
     "./AlignmentSelect": {
       "source": "./src/components/AlignmentSelect/AlignmentSelect.tsx",
       "types": "./dist/components/AlignmentSelect/AlignmentSelect.d.ts",
@@ -126,17 +132,17 @@
       "import": "./dist/components/ControlRow.js",
       "require": "./dist/components/ControlRow.cjs"
     },
-    "./RichTextEditors": {
-      "source": "./src/components/RichTextEditors/index.ts",
-      "types": "./dist/components/RichTextEditors/index.d.ts",
-      "import": "./dist/components/RichTextEditors.js",
-      "require": "./dist/components/RichTextEditors.cjs"
+    "./panels/FillPanel": {
+      "source": "./src/panels/FillPanel/FillPanel.tsx",
+      "types": "./dist/panels/FillPanel/FillPanel.d.ts",
+      "import": "./dist/panels/FillPanel.js",
+      "require": "./dist/panels/FillPanel.cjs"
     },
-    "./FillEditor": {
-      "source": "./src/components/FillEditor/FillEditor.tsx",
-      "types": "./dist/components/FillEditor/FillEditor.d.ts",
-      "import": "./dist/components/FillEditor.js",
-      "require": "./dist/components/FillEditor.cjs"
+    "./FillTypeSelector": {
+      "source": "./src/components/FillTypeSelector/FillTypeSelector.tsx",
+      "types": "./dist/components/FillTypeSelector/FillTypeSelector.d.ts",
+      "import": "./dist/components/FillTypeSelector.js",
+      "require": "./dist/components/FillTypeSelector.cjs"
     },
     "./panels/FontsPanel": {
       "source": "./src/panels/FontsPanel/FontsPanel.tsx",
@@ -150,17 +156,29 @@
       "import": "./dist/components/GradientBar.js",
       "require": "./dist/components/GradientBar.cjs"
     },
-    "./GradientEditor": {
-      "source": "./src/components/GradientEditor/GradientEditor.tsx",
-      "types": "./dist/components/GradientEditor/GradientEditor.d.ts",
-      "import": "./dist/components/GradientEditor.js",
-      "require": "./dist/components/GradientEditor.cjs"
+    "./GradientStopRow": {
+      "source": "./src/components/GradientStopRow/GradientStopRow.tsx",
+      "types": "./dist/components/GradientStopRow/GradientStopRow.d.ts",
+      "import": "./dist/components/GradientStopRow.js",
+      "require": "./dist/components/GradientStopRow.cjs"
+    },
+    "./GradientTypeSelector": {
+      "source": "./src/components/GradientTypeSelector/GradientTypeSelector.tsx",
+      "types": "./dist/components/GradientTypeSelector/GradientTypeSelector.d.ts",
+      "import": "./dist/components/GradientTypeSelector.js",
+      "require": "./dist/components/GradientTypeSelector.cjs"
     },
     "./IconButton": {
       "source": "./src/components/IconButton/IconButton.tsx",
       "types": "./dist/components/IconButton/IconButton.d.ts",
       "import": "./dist/components/IconButton.js",
       "require": "./dist/components/IconButton.cjs"
+    },
+    "./ImageAdjustments": {
+      "source": "./src/components/ImageAdjustments/ImageAdjustments.tsx",
+      "types": "./dist/components/ImageAdjustments/ImageAdjustments.d.ts",
+      "import": "./dist/components/ImageAdjustments.js",
+      "require": "./dist/components/ImageAdjustments.cjs"
     },
     "./Input": {
       "source": "./src/components/Input/Input.tsx",
@@ -227,6 +245,12 @@
       "types": "./dist/components/PropertySection/PropertySection.d.ts",
       "import": "./dist/components/PropertySection.js",
       "require": "./dist/components/PropertySection.cjs"
+    },
+    "./editors/RichTextEditors": {
+      "source": "./src/editors/RichTextEditors/index.ts",
+      "types": "./dist/editors/RichTextEditors/index.d.ts",
+      "import": "./dist/editors/RichTextEditors.js",
+      "require": "./dist/editors/RichTextEditors.cjs"
     },
     "./SearchInput": {
       "source": "./src/components/SearchInput/SearchInput.tsx",
@@ -351,9 +375,9 @@
     "test": "vitest --run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "e2e:editor": "vite --config src/components/RichTextEditors/e2e/vite.config.ts",
-    "e2e:editor:test": "playwright test --config src/components/RichTextEditors/e2e/playwright.config.ts",
-    "e2e:editor:ui": "playwright test --config src/components/RichTextEditors/e2e/playwright.config.ts --ui",
+    "e2e:editor": "vite --config src/editors/RichTextEditors/e2e/vite.config.ts",
+    "e2e:editor:test": "playwright test --config src/editors/RichTextEditors/e2e/playwright.config.ts",
+    "e2e:editor:ui": "playwright test --config src/editors/RichTextEditors/e2e/playwright.config.ts --ui",
     "e2e:canvas": "vite --config src/canvas/e2e/vite.config.ts",
     "e2e:canvas:test": "playwright test --config src/canvas/e2e/playwright.config.ts",
     "e2e:canvas:ui": "playwright test --config src/canvas/e2e/playwright.config.ts --ui",

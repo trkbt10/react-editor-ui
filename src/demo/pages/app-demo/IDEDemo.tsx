@@ -45,10 +45,10 @@ import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
 import { StatusBar } from "../../../components/StatusBar/StatusBar";
 import { StatusBarItem } from "../../../components/StatusBar/StatusBarItem";
-import { CodeEditor } from "../../../components/RichTextEditors/code/CodeEditor";
-import { createBlockDocument } from "../../../components/RichTextEditors/block/blockDocument";
+import { CodeEditor } from "../../../editors/RichTextEditors/code/CodeEditor";
+import { createBlockDocument } from "../../../editors/RichTextEditors/block/blockDocument";
 import { Breadcrumb } from "../../../components/Breadcrumb/Breadcrumb";
-import type { Token, Tokenizer, BlockDocument } from "../../../components/RichTextEditors";
+import type { Token, Tokenizer, BlockDocument } from "../../../editors/RichTextEditors";
 
 import { ideFiles, swiftSampleCode, ideDevices, type IDEFile } from "./mockData";
 

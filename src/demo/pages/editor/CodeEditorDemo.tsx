@@ -8,10 +8,10 @@ import {
   DemoSection,
   DemoRow,
 } from "../../components";
-import { CodeEditor } from "../../../components/RichTextEditors/code/CodeEditor";
-import { createBlockDocument } from "../../../components/RichTextEditors/block/blockDocument";
+import { CodeEditor } from "../../../editors/RichTextEditors/code/CodeEditor";
+import { createBlockDocument } from "../../../editors/RichTextEditors/block/blockDocument";
 import { Button } from "../../../components/Button/Button";
-import type { Token, Tokenizer, BlockDocument } from "../../../components/RichTextEditors";
+import type { Token, Tokenizer, BlockDocument } from "../../../editors/RichTextEditors";
 
 // Simple JSON tokenizer for demo purposes
 const jsonTokenizer: Tokenizer = {

@@ -35,7 +35,7 @@ import { DEFAULT_PADDING_PX, DEFAULT_LINE_NUMBER_WIDTH_PX } from "../styles/toke
  *
  * @example
  * ```tsx
- * import { createBlockDocument } from "react-editor-ui/RichTextEditors";
+ * import { createBlockDocument } from "react-editor-ui/editors/RichTextEditors";
  *
  * const [doc, setDoc] = useState(() => createBlockDocument(code));
  *
