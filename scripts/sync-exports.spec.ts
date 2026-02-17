@@ -84,12 +84,12 @@ describe("sync-exports", () => {
 
       const parsed = JSON.parse(result);
       const editor = parsed.catalog.components.find(
-        (c: { name: string }) => c.name === "Editor"
+        (c: { name: string }) => c.name === "RichTextEditors"
       );
 
       expect(editor).toBeDefined();
       expect(editor.entryType).toBe("index");
-      expect(editor.relativePath).toBe("src/components/Editor/index.ts");
+      expect(editor.relativePath).toBe("src/components/RichTextEditors/index.ts");
     });
 
     it("generates correct export path for index entry", () => {
@@ -99,9 +99,9 @@ describe("sync-exports", () => {
       });
 
       const parsed = JSON.parse(result);
-      const editorExport = parsed.exports["./Editor"];
+      const editorExport = parsed.exports["./RichTextEditors"];
 
-      expect(editorExport.types).toBe("./dist/components/Editor/index.d.ts");
+      expect(editorExport.types).toBe("./dist/components/RichTextEditors/index.d.ts");
     });
   });
 

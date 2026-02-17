@@ -23,7 +23,7 @@ import {
   removeOverlayLayer,
   toFlatSegments,
   type StyledDocument,
-} from "../text/styledDocument";
+} from "./styledDocument";
 
 // =============================================================================
 // Factory Functions

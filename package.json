@@ -126,11 +126,11 @@
       "import": "./dist/components/ControlRow.js",
       "require": "./dist/components/ControlRow.cjs"
     },
-    "./Editor": {
-      "source": "./src/components/Editor/index.ts",
-      "types": "./dist/components/Editor/index.d.ts",
-      "import": "./dist/components/Editor.js",
-      "require": "./dist/components/Editor.cjs"
+    "./RichTextEditors": {
+      "source": "./src/components/RichTextEditors/index.ts",
+      "types": "./dist/components/RichTextEditors/index.d.ts",
+      "import": "./dist/components/RichTextEditors.js",
+      "require": "./dist/components/RichTextEditors.cjs"
     },
     "./FillEditor": {
       "source": "./src/components/FillEditor/FillEditor.tsx",
@@ -351,9 +351,9 @@
     "test": "vitest --run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "e2e:editor": "vite --config src/components/Editor/e2e/vite.config.ts",
-    "e2e:editor:test": "playwright test --config src/components/Editor/e2e/playwright.config.ts",
-    "e2e:editor:ui": "playwright test --config src/components/Editor/e2e/playwright.config.ts --ui",
+    "e2e:editor": "vite --config src/components/RichTextEditors/e2e/vite.config.ts",
+    "e2e:editor:test": "playwright test --config src/components/RichTextEditors/e2e/playwright.config.ts",
+    "e2e:editor:ui": "playwright test --config src/components/RichTextEditors/e2e/playwright.config.ts --ui",
     "e2e:canvas": "vite --config src/canvas/e2e/vite.config.ts",
     "e2e:canvas:test": "playwright test --config src/canvas/e2e/playwright.config.ts",
     "e2e:canvas:ui": "playwright test --config src/canvas/e2e/playwright.config.ts --ui",

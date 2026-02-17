@@ -9,14 +9,14 @@
  * This ensures consistent exports in package.json and Vite build configuration.
  *
  * Allowlisted exceptions (complex modules with many submodules):
- *   - Editor (has code/, core/, text/, styles/ subdirectories)
+ *   - RichTextEditors (has code/, core/, text/, styles/ subdirectories)
  */
 
 /**
  * Components allowed to use index.ts as entry point.
  * Must be kept in sync with scripts/sync-exports.ts ALLOWED_INDEX_ENTRIES
  */
-const ALLOWED_INDEX_ENTRIES = new Set(["Editor"]);
+const ALLOWED_INDEX_ENTRIES = new Set(["RichTextEditors"]);
 
 /** @type {import('eslint').Rule.RuleModule} */
 export default {

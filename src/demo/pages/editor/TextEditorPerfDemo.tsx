@@ -7,8 +7,8 @@
 
 import { useState, useMemo } from "react";
 import { DemoContainer, DemoSection, DemoMutedText } from "../../components";
-import { TextEditor } from "../../../components/Editor/text/TextEditor";
-import { createBlockDocument } from "../../../components/Editor/block/blockDocument";
+import { TextEditor } from "../../../components/RichTextEditors/text/TextEditor";
+import { createBlockDocument } from "../../../components/RichTextEditors/block/blockDocument";
 
 /**
  * Generate sample text with many lines for performance testing.

@@ -24,13 +24,13 @@ import {
   getDocumentEnd,
   comparePositions,
   positionsEqual,
-} from "../block/blockPosition";
+} from "./blockPosition";
 import {
   createBlockDocument,
   createBlock,
   type BlockId,
   type BlockDocument,
-} from "../block/blockDocument";
+} from "./blockDocument";
 
 // Mock crypto.randomUUID for deterministic tests
 const createUuidCounter = () => {

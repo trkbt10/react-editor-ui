@@ -87,10 +87,10 @@
     },
     {
       "id": "editor",
-      "label": "Editor",
-      "description": "Code and text editing components",
+      "label": "Rich Text Editors",
+      "description": "Rich text and code editing components",
       "components": [
-        "Editor"
+        "RichTextEditors"
       ]
     },
     {

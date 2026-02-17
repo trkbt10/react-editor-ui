@@ -54,9 +54,9 @@ interface ExportEntry {
 
 /**
  * Components that are allowed to use index.ts as entry point.
- * These are complex modules with many submodules (e.g., Editor with code/, core/, text/, etc.)
+ * These are complex modules with many submodules (e.g., RichTextEditors with code/, core/, text/, etc.)
  */
-const ALLOWED_INDEX_ENTRIES = new Set(["Editor"]);
+const ALLOWED_INDEX_ENTRIES = new Set(["RichTextEditors"]);
 
 /**
  * Maps category to directory name
@@ -224,7 +224,7 @@ function generateExports(catalog: EntryCatalog): Record<string, ExportEntry | st
       : `./${categoryDir}/${entry.name}`;
 
     // Type definition path matches source structure
-    // For index.ts entries (Editor only): dist/components/Editor/index.d.ts
+    // For index.ts entries (RichTextEditors only): dist/components/RichTextEditors/index.d.ts
     // For named entries: dist/components/Badge/Badge.d.ts
     const typeFileName = entry.entryType === "index" ? "index" : entry.name;
     const typesPath = `./dist/${categoryDir}/${entry.name}/${typeFileName}.d.ts`;

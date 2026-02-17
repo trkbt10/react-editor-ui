@@ -13,6 +13,7 @@ import type {
   SelectionRange,
 } from "../core/types";
 import type { BlockDocument } from "../block/blockDocument";
+import type { ViewportConfig } from "../renderers/viewport/types";
 
 // =============================================================================
 // Token Types
@@ -104,6 +105,11 @@ export type CodeEditorProps = {
   readonly onSelectionChange?: (selection: SelectionRange | undefined) => void;
   /** Tab size in spaces */
   readonly tabSize?: number;
+  /**
+   * Viewport configuration for fixed viewport mode.
+   * When provided, enables viewport-based rendering.
+   */
+  readonly viewportConfig?: ViewportConfig;
 };
 
 // =============================================================================

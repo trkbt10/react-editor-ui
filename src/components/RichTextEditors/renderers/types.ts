@@ -12,6 +12,11 @@ import type {
   HighlightType,
   MeasureTextFn,
 } from "../core/types";
+import type {
+  ViewportConfig,
+  ViewportState,
+  VisibleLineItem,
+} from "./viewport/types";
 
 // =============================================================================
 // Token Types
@@ -116,6 +121,34 @@ export type RendererProps = {
    * Required for TextEditor with variable font styles.
    */
   readonly lineOffsets?: readonly number[];
+
+  // === Viewport-based rendering (optional) ===
+
+  /**
+   * Viewport configuration.
+   * When provided, enables viewport-based rendering mode.
+   */
+  readonly viewportConfig?: ViewportConfig;
+  /**
+   * Current viewport state.
+   * Required when viewportConfig is provided.
+   */
+  readonly viewport?: ViewportState;
+  /**
+   * Visible lines with pre-computed viewport positions.
+   * Required when viewportConfig is provided.
+   */
+  readonly visibleLines?: readonly VisibleLineItem[];
+  /**
+   * Total document height (for scroll overlay).
+   * Required when viewportConfig.mode is "canvas".
+   */
+  readonly documentHeight?: number;
+  /**
+   * Total document width (for horizontal scroll).
+   * Required when viewportConfig.mode is "canvas".
+   */
+  readonly documentWidth?: number;
 };
 
 /**

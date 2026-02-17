@@ -104,9 +104,9 @@
       "category": "component"
     },
     {
-      "name": "Editor",
+      "name": "RichTextEditors",
       "entryType": "index",
-      "relativePath": "src/components/Editor/index.ts",
+      "relativePath": "src/components/RichTextEditors/index.ts",
       "category": "component"
     },
     {

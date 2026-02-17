@@ -28,7 +28,7 @@ import {
   mergeBlocks,
   type BlockId,
   type BlockDocument,
-} from "../block/blockDocument";
+} from "./blockDocument";
 import { createDocument, setStyleDefinition, wrapWithTag } from "../text/styledDocument";
 
 // Mock crypto.randomUUID for deterministic tests

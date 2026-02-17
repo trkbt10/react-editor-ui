@@ -45,10 +45,10 @@ import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
 import { StatusBar } from "../../../components/StatusBar/StatusBar";
 import { StatusBarItem } from "../../../components/StatusBar/StatusBarItem";
-import { CodeEditor } from "../../../components/Editor/code/CodeEditor";
-import { createBlockDocument } from "../../../components/Editor/block/blockDocument";
+import { CodeEditor } from "../../../components/RichTextEditors/code/CodeEditor";
+import { createBlockDocument } from "../../../components/RichTextEditors/block/blockDocument";
 import { Breadcrumb } from "../../../components/Breadcrumb/Breadcrumb";
-import type { Token, Tokenizer, BlockDocument } from "../../../components/Editor";
+import type { Token, Tokenizer, BlockDocument } from "../../../components/RichTextEditors";
 
 import { ideFiles, swiftSampleCode, ideDevices, type IDEFile } from "./mockData";
 
@@ -626,6 +626,8 @@ function EditorArea({ document, onDocumentChange }: EditorAreaProps) {
           tokenizer={swiftTokenizer}
           tokenStyles={swiftTokenStyles}
           showLineNumbers
+          renderer="canvas"
+          viewportConfig={{ mode: "text", fixedViewport: true }}
           style={{
             flex: 1,
             backgroundColor: "#1e1e1e",

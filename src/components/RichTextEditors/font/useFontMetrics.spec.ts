@@ -5,7 +5,7 @@
  */
 
 import { renderHook, waitFor } from "@testing-library/react";
-import { useFontMetrics } from "../font/useFontMetrics";
+import { useFontMetrics } from "./useFontMetrics";
 
 // =============================================================================
 // Test Setup

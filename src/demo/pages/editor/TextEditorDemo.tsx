@@ -8,10 +8,10 @@ import {
   DemoSection,
   DemoRow,
 } from "../../components";
-import { TextEditor } from "../../../components/Editor/text/TextEditor";
+import { TextEditor } from "../../../components/RichTextEditors/text/TextEditor";
 import { Button } from "../../../components/Button/Button";
-import type { BlockDocument, LocalStyleSegment } from "../../../components/Editor/block/blockDocument";
-import { createBlockDocument, createBlockId, type BlockId } from "../../../components/Editor/block/blockDocument";
+import type { BlockDocument, LocalStyleSegment } from "../../../components/RichTextEditors/block/blockDocument";
+import { createBlockDocument, createBlockId, type BlockId } from "../../../components/RichTextEditors/block/blockDocument";
 
 const sampleText = `The quick brown fox jumps over the lazy dog.
 

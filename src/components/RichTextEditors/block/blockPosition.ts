@@ -25,12 +25,12 @@
  * ```
  */
 
-import type { BlockId, BlockDocument, Block } from "../block/blockDocument";
+import type { BlockId, BlockDocument, Block } from "./blockDocument";
 import {
   getBlockAtGlobalOffset,
   getBlockIndexById,
   getBlockById,
-} from "../block/blockDocument";
+} from "./blockDocument";
 import type { CursorPosition } from "../core/types";
 
 // =============================================================================

@@ -582,18 +582,18 @@ Bottom status bar container
 import { StatusBar } from "react-editor-ui/StatusBar";
 ```
 
-### Editor
+### Rich Text Editors
 
-> Code and text editing components
+> Rich text and code editing components
 
-#### Editor
+#### RichTextEditors
 
-Editor module exports
+RichTextEditors - Rich text and code editing components
 
-Unified exports for all Editor components including CodeEditor and TextEditor. Both editors use BlockDocument for consistent architecture. Provides syntax highlighting, virtual scrolling, and rich text editing.
+Unified exports for all rich text editor components including CodeEditor and TextEditor. Both editors use BlockDocument for consistent architecture. Provides syntax highlighting, virtual scrolling, and rich text editing.
 
 ```tsx
-import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/Editor";
+import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/RichTextEditors";
 
 const [doc, setDoc] = useState(() => createBlockDocument(code));
 
@@ -636,15 +636,11 @@ const [points, setPoints] = useState<[number, number, number, number]>([0.25, 0.
 
 #### FillEditor
 
-Switch between solid, gradient, image, pattern, and video fill modes
-
 ```tsx
 import { FillEditor } from "react-editor-ui/FillEditor";
 ```
 
 #### GradientEditor
-
-Full gradient editing interface
 
 ```tsx
 import { GradientEditor } from "react-editor-ui/GradientEditor";

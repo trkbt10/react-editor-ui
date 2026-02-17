@@ -1,14 +1,14 @@
 /**
- * @file Editor module exports
+ * @file RichTextEditors - Rich text and code editing components
  *
  * @description
- * Unified exports for all Editor components including CodeEditor and TextEditor.
+ * Unified exports for all rich text editor components including CodeEditor and TextEditor.
  * Both editors use BlockDocument for consistent architecture.
  * Provides syntax highlighting, virtual scrolling, and rich text editing.
  *
  * @example
  * ```tsx
- * import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/Editor";
+ * import { CodeEditor, TextEditor, createBlockDocument } from "react-editor-ui/RichTextEditors";
  *
  * const [doc, setDoc] = useState(() => createBlockDocument(code));
  *
