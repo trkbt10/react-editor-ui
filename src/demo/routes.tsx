@@ -64,6 +64,7 @@ import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
 // Editor demos
 import { CodeEditorDemo } from "./pages/editor/CodeEditorDemo";
 import { TextEditorDemo } from "./pages/editor/TextEditorDemo";
+import { TextEditorPerfDemo } from "./pages/editor/TextEditorPerfDemo";
 
 // Navigation demos
 import { BreadcrumbDemo } from "./pages/navigation/BreadcrumbDemo";
@@ -393,6 +394,12 @@ export const demoCategories: DemoCategory[] = [
         label: "TextEditor",
         path: "text-editor",
         element: <TextEditorDemo />,
+      },
+      {
+        id: "text-editor-perf",
+        label: "TextEditor (Perf)",
+        path: "text-editor-perf",
+        element: <TextEditorPerfDemo />,
       },
     ],
   },

@@ -2,7 +2,7 @@
  * @file LayerItem demo page
  */
 
-import { useState } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import {
   DemoContainer,
   DemoSection,
@@ -146,14 +146,21 @@ export function LayerItemDemo() {
   const childrenMap = createChildrenMap(layers);
   const visibleLayers = getVisibleLayersOrdered(childrenMap, expandedIds);
 
-  const getIcon = (type: LayerData["type"]) => {
-    switch (type) {
-      case "frame": return <FrameLayerIcon />;
-      case "text": return <TextLayerIcon />;
-      case "image": return <ImageLayerIcon />;
-      case "component": return <ComponentLayerIcon />;
-    }
-  };
+  // Memoized icon elements to avoid creating new references each render
+  const iconMap = useMemo(() => ({
+    frame: <FrameLayerIcon />,
+    text: <TextLayerIcon />,
+    image: <ImageLayerIcon />,
+    component: <ComponentLayerIcon />,
+  }), []);
+
+  const getIcon = useCallback((type: LayerData["type"]) => iconMap[type], [iconMap]);
+
+  // Memoized component badge
+  const componentBadge = useMemo(() => <Badge size="sm" variant="primary">C</Badge>, []);
+
+  // Stable no-op handler for static examples
+  const noopHandler = useCallback(() => {}, []);
 
   const canHaveChildren = (type: LayerData["type"]) => type === "frame";
 
@@ -422,12 +429,68 @@ export function LayerItemDemo() {
     setDraggedId(null);
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedId(null);
     setDropInfo(null);
+  }, []);
+
+  // Store the latest handlers in refs so cached callbacks can access current versions
+  const handlersRef = useRef({
+    handleToggle,
+    handlePointerDownForSelection,
+    handleVisibilityChange,
+    handleLockChange,
+    handleRename,
+    handleContextMenu,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+  });
+  // Update refs on every render to keep handlers current
+  handlersRef.current = {
+    handleToggle,
+    handlePointerDownForSelection,
+    handleVisibilityChange,
+    handleLockChange,
+    handleRename,
+    handleContextMenu,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
   };
 
-  const contextMenuItems = [
+  // Memoized callback factory for stable references
+  // Callbacks access handlers via ref to always get current versions
+  const callbackCache = useRef(new Map<string, {
+    onToggle: () => void;
+    onPointerDown: (e: React.PointerEvent) => void;
+    onVisibilityChange: (v: boolean) => void;
+    onLockChange: (l: boolean) => void;
+    onRename: (newLabel: string) => void;
+    onContextMenu: (action: string) => void;
+    onDragStart: (e: React.DragEvent) => void;
+    onDragOver: (e: React.DragEvent) => void;
+    onDrop: (e: React.DragEvent) => void;
+  }>());
+
+  const getCallbacks = useCallback((id: string) => {
+    if (!callbackCache.current.has(id)) {
+      callbackCache.current.set(id, {
+        onToggle: () => handlersRef.current.handleToggle(id),
+        onPointerDown: (e: React.PointerEvent) => handlersRef.current.handlePointerDownForSelection(id, e),
+        onVisibilityChange: (v: boolean) => handlersRef.current.handleVisibilityChange(id, v),
+        onLockChange: (l: boolean) => handlersRef.current.handleLockChange(id, l),
+        onRename: (newLabel: string) => handlersRef.current.handleRename(id, newLabel),
+        onContextMenu: (action: string) => handlersRef.current.handleContextMenu(id, action),
+        onDragStart: (e: React.DragEvent) => handlersRef.current.handleDragStart(e, id),
+        onDragOver: (e: React.DragEvent) => handlersRef.current.handleDragOver(e, id),
+        onDrop: (e: React.DragEvent) => handlersRef.current.handleDrop(e, id),
+      });
+    }
+    return callbackCache.current.get(id)!;
+  }, []);
+
+  const contextMenuItems = useMemo(() => [
     { id: "rename", label: "Rename" },
     { id: "duplicate", label: `Duplicate${selectedIds.size > 1 ? ` (${selectedIds.size})` : ""}` },
     { id: "divider1", label: "", divider: true },
@@ -435,7 +498,7 @@ export function LayerItemDemo() {
     { id: "deselectAll", label: "Deselect All", disabled: selectedIds.size === 0 },
     { id: "divider2", label: "", divider: true },
     { id: "delete", label: `Delete${selectedIds.size > 1 ? ` (${selectedIds.size})` : ""}`, danger: true },
-  ];
+  ], [selectedIds.size]);
 
   return (
     <DemoContainer title="LayerItem">
@@ -453,6 +516,7 @@ export function LayerItemDemo() {
               const layerHasChildren = hasChildren(layer.id);
               const currentDropPosition = dropInfo?.targetId === layer.id ? dropInfo.position : null;
               const isSelected = selectedIds.has(layer.id);
+              const callbacks = getCallbacks(layer.id);
 
               return (
                 <LayerItem
@@ -463,26 +527,26 @@ export function LayerItemDemo() {
                   depth={depth}
                   hasChildren={layerHasChildren}
                   expanded={expandedIds.has(layer.id)}
-                  onToggle={() => handleToggle(layer.id)}
+                  onToggle={callbacks.onToggle}
                   selected={isSelected}
-                  onPointerDown={(e) => handlePointerDownForSelection(layer.id, e)}
+                  onPointerDown={callbacks.onPointerDown}
                   visible={layer.visible}
-                  onVisibilityChange={(v) => handleVisibilityChange(layer.id, v)}
+                  onVisibilityChange={callbacks.onVisibilityChange}
                   locked={layer.locked}
-                  onLockChange={(l) => handleLockChange(layer.id, l)}
+                  onLockChange={callbacks.onLockChange}
                   renamable
-                  onRename={(newLabel) => handleRename(layer.id, newLabel)}
+                  onRename={callbacks.onRename}
                   contextMenuItems={contextMenuItems}
-                  onContextMenu={(action) => handleContextMenu(layer.id, action)}
+                  onContextMenu={callbacks.onContextMenu}
                   dimmed={isDimmed}
-                  badge={layer.type === "component" ? <Badge size="sm" variant="primary">C</Badge> : undefined}
+                  badge={layer.type === "component" ? componentBadge : undefined}
                   draggable
                   canHaveChildren={isContainer}
                   dropPosition={currentDropPosition}
-                  onDragStart={(e) => handleDragStart(e, layer.id)}
-                  onDragOver={(e) => handleDragOver(e, layer.id)}
+                  onDragStart={callbacks.onDragStart}
+                  onDragOver={callbacks.onDragOver}
                   onDragEnd={handleDragEnd}
-                  onDrop={(e) => handleDrop(e, layer.id)}
+                  onDrop={callbacks.onDrop}
                 />
               );
             })}
@@ -509,30 +573,30 @@ export function LayerItemDemo() {
             <LayerItem
               id="state-1"
               label="Selected"
-              icon={<FrameLayerIcon />}
+              icon={iconMap.frame}
               selected
               visible
-              onVisibilityChange={() => {}}
+              onVisibilityChange={noopHandler}
             />
             <LayerItem
               id="state-2"
               label="Hidden Layer"
-              icon={<ImageLayerIcon />}
+              icon={iconMap.image}
               visible={false}
-              onVisibilityChange={() => {}}
+              onVisibilityChange={noopHandler}
             />
             <LayerItem
               id="state-3"
               label="Locked Layer"
-              icon={<TextLayerIcon />}
+              icon={iconMap.text}
               visible
               locked
-              onLockChange={() => {}}
+              onLockChange={noopHandler}
             />
             <LayerItem
               id="state-4"
               label="Dimmed Layer"
-              icon={<FrameLayerIcon />}
+              icon={iconMap.frame}
               dimmed
               visible
             />
@@ -546,7 +610,7 @@ export function LayerItemDemo() {
             <LayerItem
               id="minimal-1"
               label="Simple Layer"
-              icon={<FrameLayerIcon />}
+              icon={iconMap.frame}
               showVisibilityToggle={false}
               showLockToggle={false}
             />

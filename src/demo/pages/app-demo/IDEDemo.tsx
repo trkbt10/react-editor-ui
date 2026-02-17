@@ -907,73 +907,65 @@ export function IDEDemo() {
     ],
   }), []);
 
+  // Memoize each layer component individually to prevent unnecessary re-renders
+  const toolbarLayer = useMemo(
+    () => (
+      <IDEToolbar
+        isRunning={isRunning}
+        onRun={handleRun}
+        onStop={handleStop}
+        selectedDevice={selectedDevice}
+        onDeviceChange={setSelectedDevice}
+      />
+    ),
+    [isRunning, handleRun, handleStop, selectedDevice]
+  );
+
+  const navigatorLayer = useMemo(
+    () => (
+      <Navigator
+        files={files}
+        expandedIds={expandedIds}
+        selectedFileId={selectedFileId}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onToggle={handleToggle}
+        onSelect={setSelectedFileId}
+      />
+    ),
+    [files, expandedIds, selectedFileId, searchQuery, handleToggle]
+  );
+
+  const editorLayer = useMemo(
+    () => <EditorArea document={document} onDocumentChange={setDocument} />,
+    [document]
+  );
+
+  const inspectorLayer = useMemo(
+    () => <IDEInspector selectedFile={selectedFile} />,
+    [selectedFile]
+  );
+
+  const statusbarLayer = useMemo(
+    () => (
+      <StatusBar>
+        <StatusBarItem>Ln 1, Col 1</StatusBarItem>
+        <StatusBarItem>UTF-8</StatusBarItem>
+        <StatusBarItem>Swift</StatusBarItem>
+        <span style={{ marginLeft: "auto" }} />
+        <StatusBarItem>{isRunning ? "Building..." : "Ready"}</StatusBarItem>
+      </StatusBar>
+    ),
+    [isRunning]
+  );
+
   const layers = useMemo<LayerDefinition[]>(() => [
-    {
-      id: "toolbar",
-      gridArea: "toolbar",
-      component: (
-        <IDEToolbar
-          isRunning={isRunning}
-          onRun={handleRun}
-          onStop={handleStop}
-          selectedDevice={selectedDevice}
-          onDeviceChange={setSelectedDevice}
-        />
-      ),
-    },
-    {
-      id: "navigator",
-      gridArea: "navigator",
-      component: (
-        <Navigator
-          files={files}
-          expandedIds={expandedIds}
-          selectedFileId={selectedFileId}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onToggle={handleToggle}
-          onSelect={setSelectedFileId}
-        />
-      ),
-    },
-    {
-      id: "editor",
-      gridArea: "editor",
-      component: (
-        <EditorArea document={document} onDocumentChange={setDocument} />
-      ),
-    },
-    {
-      id: "inspector",
-      gridArea: "inspector",
-      component: <IDEInspector selectedFile={selectedFile} />,
-    },
-    {
-      id: "statusbar",
-      gridArea: "statusbar",
-      component: (
-        <StatusBar>
-          <StatusBarItem>Ln 1, Col 1</StatusBarItem>
-          <StatusBarItem>UTF-8</StatusBarItem>
-          <StatusBarItem>Swift</StatusBarItem>
-          <span style={{ marginLeft: "auto" }} />
-          <StatusBarItem>{isRunning ? "Building..." : "Ready"}</StatusBarItem>
-        </StatusBar>
-      ),
-    },
-  ], [
-    document,
-    expandedIds,
-    files,
-    handleRun,
-    handleStop,
-    handleToggle,
-    isRunning,
-    searchQuery,
-    selectedDevice,
-    selectedFile,
-    selectedFileId,
-  ]);
+    { id: "toolbar", gridArea: "toolbar", component: toolbarLayer },
+    { id: "navigator", gridArea: "navigator", component: navigatorLayer },
+    { id: "editor", gridArea: "editor", component: editorLayer },
+    { id: "inspector", gridArea: "inspector", component: inspectorLayer },
+    { id: "statusbar", gridArea: "statusbar", component: statusbarLayer },
+  ], [toolbarLayer, navigatorLayer, editorLayer, inspectorLayer, statusbarLayer]);
 
   return (
     <div style={{ height: "100vh", width: "100%" }}>

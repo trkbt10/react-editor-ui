@@ -2,6 +2,7 @@
  * @file Shared demo layout components and styles
  */
 
+import { memo } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 export const demoContainerStyle: CSSProperties = {
@@ -30,19 +31,29 @@ export const demoLabelStyle: CSSProperties = {
   marginBottom: "4px",
 };
 
+const demoTitleStyle: CSSProperties = {
+  margin: 0,
+  color: "var(--rei-color-text, #e4e6eb)",
+};
+
+const demoNoteStyle: CSSProperties = {
+  color: "var(--rei-color-text-muted)",
+  fontSize: 11,
+};
+
 export type DemoContainerProps = {
   title: string;
   children: ReactNode;
 };
 
-export function DemoContainer({ title, children }: DemoContainerProps) {
+export const DemoContainer = memo(function DemoContainer({ title, children }: DemoContainerProps) {
   return (
     <div style={demoContainerStyle}>
-      <h2 style={{ margin: 0, color: "var(--rei-color-text, #e4e6eb)" }}>{title}</h2>
+      <h2 style={demoTitleStyle}>{title}</h2>
       {children}
     </div>
   );
-}
+});
 
 export type DemoSectionProps = {
   label: string;
@@ -50,24 +61,20 @@ export type DemoSectionProps = {
   note?: string;
 };
 
-export function DemoSection({ label, children, note }: DemoSectionProps) {
+export const DemoSection = memo(function DemoSection({ label, children, note }: DemoSectionProps) {
   return (
     <div style={demoSectionStyle}>
       <div style={demoLabelStyle}>{label}</div>
       {children}
-      {note && (
-        <div style={{ color: "var(--rei-color-text-muted)", fontSize: 11 }}>
-          {note}
-        </div>
-      )}
+      {note && <div style={demoNoteStyle}>{note}</div>}
     </div>
   );
-}
+});
 
 export type DemoRowProps = {
   children: ReactNode;
 };
 
-export function DemoRow({ children }: DemoRowProps) {
+export const DemoRow = memo(function DemoRow({ children }: DemoRowProps) {
   return <div style={demoRowStyle}>{children}</div>;
-}
+});

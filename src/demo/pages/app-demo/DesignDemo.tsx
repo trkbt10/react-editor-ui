@@ -2,7 +2,7 @@
  * @file Design Demo - Figma-like design tool interface
  */
 
-import { useState, useMemo, useCallback, useRef, useEffect, type CSSProperties, type ReactNode } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, memo, type CSSProperties, type ReactNode } from "react";
 import {
   GridLayout,
   type PanelLayoutConfig,
@@ -179,7 +179,7 @@ function applyResize(
 // Top File Tab Bar Component
 // =====================================================================
 
-function FileTabBar() {
+const FileTabBar = memo(function FileTabBar() {
   const tabBarStyle: CSSProperties = {
     display: "flex",
     alignItems: "center",
@@ -208,7 +208,7 @@ function FileTabBar() {
       </div>
     </div>
   );
-}
+});
 
 // =====================================================================
 // Sidebar Component
@@ -892,75 +892,66 @@ export function DesignDemo() {
     ],
   }), []);
 
-  const canvasWithToolbar = (
-    <div style={{ position: "relative", height: "100%" }}>
-      <CanvasArea
-        viewport={viewport}
-        onViewportChange={setViewport}
-        transform={transform}
-        onTransformChange={setTransform}
+  // Memoize each layer component individually to prevent unnecessary re-renders
+  const fileTabBarLayer = useMemo(
+    () => <FileTabBar />,
+    []
+  );
+
+  const sidebarLayer = useMemo(
+    () => (
+      <Sidebar
+        sidebarTab={sidebarTab}
+        onSidebarTabChange={setSidebarTab}
+        layers={layers}
+        expandedIds={expandedIds}
         selectedId={selectedId}
+        onToggle={handleToggle}
+        onSelect={setSelectedId}
+        onVisibilityChange={handleVisibilityChange}
+        onLockChange={handleLockChange}
       />
-      <FloatingToolPalette selectedTool={selectedTool} onToolSelect={setSelectedTool} />
-    </div>
+    ),
+    [sidebarTab, layers, expandedIds, selectedId, handleToggle, handleVisibilityChange, handleLockChange]
+  );
+
+  const canvasLayer = useMemo(
+    () => (
+      <div style={{ position: "relative", height: "100%" }}>
+        <CanvasArea
+          viewport={viewport}
+          onViewportChange={setViewport}
+          transform={transform}
+          onTransformChange={setTransform}
+          selectedId={selectedId}
+        />
+        <FloatingToolPalette selectedTool={selectedTool} onToolSelect={setSelectedTool} />
+      </div>
+    ),
+    [viewport, transform, selectedId, selectedTool]
+  );
+
+  const zoomLevel = Math.round(viewport.scale * 100);
+  const inspectorLayer = useMemo(
+    () => (
+      <Inspector
+        inspectorTab={inspectorTab}
+        onInspectorTabChange={setInspectorTab}
+        selectedLayer={selectedLayer}
+        fillColor={fillColor}
+        onFillColorChange={setFillColor}
+        zoomLevel={zoomLevel}
+      />
+    ),
+    [inspectorTab, selectedLayer, fillColor, zoomLevel]
   );
 
   const layers_ = useMemo<LayerDefinition[]>(() => [
-    {
-      id: "filetabs",
-      gridArea: "filetabs",
-      component: <FileTabBar />,
-    },
-    {
-      id: "sidebar",
-      gridArea: "sidebar",
-      component: (
-        <Sidebar
-          sidebarTab={sidebarTab}
-          onSidebarTabChange={setSidebarTab}
-          layers={layers}
-          expandedIds={expandedIds}
-          selectedId={selectedId}
-          onToggle={handleToggle}
-          onSelect={setSelectedId}
-          onVisibilityChange={handleVisibilityChange}
-          onLockChange={handleLockChange}
-        />
-      ),
-    },
-    {
-      id: "canvas",
-      gridArea: "canvas",
-      component: canvasWithToolbar,
-    },
-    {
-      id: "inspector",
-      gridArea: "inspector",
-      component: (
-        <Inspector
-          inspectorTab={inspectorTab}
-          onInspectorTabChange={setInspectorTab}
-          selectedLayer={selectedLayer}
-          fillColor={fillColor}
-          onFillColorChange={setFillColor}
-          zoomLevel={Math.round(viewport.scale * 100)}
-        />
-      ),
-    },
-  ], [
-    canvasWithToolbar,
-    expandedIds,
-    fillColor,
-    handleLockChange,
-    handleToggle,
-    handleVisibilityChange,
-    inspectorTab,
-    layers,
-    selectedId,
-    selectedLayer,
-    sidebarTab,
-    viewport.scale,
-  ]);
+    { id: "filetabs", gridArea: "filetabs", component: fileTabBarLayer },
+    { id: "sidebar", gridArea: "sidebar", component: sidebarLayer },
+    { id: "canvas", gridArea: "canvas", component: canvasLayer },
+    { id: "inspector", gridArea: "inspector", component: inspectorLayer },
+  ], [fileTabBarLayer, sidebarLayer, canvasLayer, inspectorLayer]);
 
   return (
     <div style={{ height: "100vh", width: "100%" }}>

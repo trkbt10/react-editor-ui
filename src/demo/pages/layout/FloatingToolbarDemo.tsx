@@ -2,7 +2,7 @@
  * @file FloatingToolbar demo page
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { DemoContainer, DemoSection } from "../../components";
 import { DemoStateDisplay } from "../../components/display/DemoStateDisplay";
 import { FloatingToolbar } from "../../../components/FloatingToolbar/FloatingToolbar";
@@ -10,16 +10,16 @@ import type { FloatingToolbarAnchor, FloatingToolbarOperation } from "../../../c
 import { LuBold, LuItalic, LuUnderline, LuStrikethrough, LuLink, LuCode, LuHighlighter } from "react-icons/lu";
 
 // =============================================================================
-// Demo Icons
+// Demo Icons - memoized as constants to prevent re-renders
 // =============================================================================
 
-const BoldIcon = () => <LuBold size={14} />;
-const ItalicIcon = () => <LuItalic size={14} />;
-const UnderlineIcon = () => <LuUnderline size={14} />;
-const StrikethroughIcon = () => <LuStrikethrough size={14} />;
-const LinkIcon = () => <LuLink size={14} />;
-const CodeIcon = () => <LuCode size={14} />;
-const HighlightIcon = () => <LuHighlighter size={14} />;
+const boldIcon = <LuBold size={14} />;
+const italicIcon = <LuItalic size={14} />;
+const underlineIcon = <LuUnderline size={14} />;
+const strikethroughIcon = <LuStrikethrough size={14} />;
+const linkIcon = <LuLink size={14} />;
+const codeIcon = <LuCode size={14} />;
+const highlightIcon = <LuHighlighter size={14} />;
 
 // =============================================================================
 // Styles
@@ -77,21 +77,27 @@ export function FloatingToolbarDemo() {
     return { x: 200, y: 100, width: 300, height: 24 };
   }, []);
 
-  const basicOperations: FloatingToolbarOperation[] = [
-    { id: "bold", label: "Bold", icon: <BoldIcon />, shortcut: "⌘B", active: activeFormats.has("bold") },
-    { id: "italic", label: "Italic", icon: <ItalicIcon />, shortcut: "⌘I", active: activeFormats.has("italic") },
-    { id: "underline", label: "Underline", icon: <UnderlineIcon />, shortcut: "⌘U", active: activeFormats.has("underline") },
-    { id: "strikethrough", label: "Strikethrough", icon: <StrikethroughIcon />, active: activeFormats.has("strikethrough") },
-  ];
+  const basicOperations = useMemo<FloatingToolbarOperation[]>(
+    () => [
+      { id: "bold", label: "Bold", icon: boldIcon, shortcut: "⌘B", active: activeFormats.has("bold") },
+      { id: "italic", label: "Italic", icon: italicIcon, shortcut: "⌘I", active: activeFormats.has("italic") },
+      { id: "underline", label: "Underline", icon: underlineIcon, shortcut: "⌘U", active: activeFormats.has("underline") },
+      { id: "strikethrough", label: "Strikethrough", icon: strikethroughIcon, active: activeFormats.has("strikethrough") },
+    ],
+    [activeFormats],
+  );
 
-  const extendedOperations: FloatingToolbarOperation[] = [
-    { id: "bold", label: "Bold", icon: <BoldIcon />, shortcut: "⌘B", active: activeFormats.has("bold") },
-    { id: "italic", label: "Italic", icon: <ItalicIcon />, shortcut: "⌘I", active: activeFormats.has("italic") },
-    { id: "underline", label: "Underline", icon: <UnderlineIcon />, shortcut: "⌘U", active: activeFormats.has("underline") },
-    { id: "code", label: "Code", icon: <CodeIcon />, active: activeFormats.has("code") },
-    { id: "link", label: "Add Link", icon: <LinkIcon />, shortcut: "⌘K" },
-    { id: "highlight", label: "Highlight", icon: <HighlightIcon />, disabled: true },
-  ];
+  const extendedOperations = useMemo<FloatingToolbarOperation[]>(
+    () => [
+      { id: "bold", label: "Bold", icon: boldIcon, shortcut: "⌘B", active: activeFormats.has("bold") },
+      { id: "italic", label: "Italic", icon: italicIcon, shortcut: "⌘I", active: activeFormats.has("italic") },
+      { id: "underline", label: "Underline", icon: underlineIcon, shortcut: "⌘U", active: activeFormats.has("underline") },
+      { id: "code", label: "Code", icon: codeIcon, active: activeFormats.has("code") },
+      { id: "link", label: "Add Link", icon: linkIcon, shortcut: "⌘K" },
+      { id: "highlight", label: "Highlight", icon: highlightIcon, disabled: true },
+    ],
+    [activeFormats],
+  );
 
   return (
     <DemoContainer title="FloatingToolbar">
@@ -181,9 +187,9 @@ export function FloatingToolbarDemo() {
           <FloatingToolbar
             anchor={{ x: 150, y: 60, width: 120, height: 20 }}
             operations={[
-              { id: "bold", label: "Bold", icon: <BoldIcon />, disabled: true },
-              { id: "italic", label: "Italic", icon: <ItalicIcon />, disabled: true },
-              { id: "link", label: "Add Link", icon: <LinkIcon /> },
+              { id: "bold", label: "Bold", icon: boldIcon, disabled: true },
+              { id: "italic", label: "Italic", icon: italicIcon, disabled: true },
+              { id: "link", label: "Add Link", icon: linkIcon },
             ]}
             onOperationSelect={handleOperationSelect}
           />
