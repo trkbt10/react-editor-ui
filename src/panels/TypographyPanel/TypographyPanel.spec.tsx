@@ -112,27 +112,6 @@ describe("TypographyPanel", () => {
     });
   });
 
-  it("collapses content when header is clicked", () => {
-    render(<TypographyPanel settings={defaultSettings} onChange={() => {}} />);
-
-    const header = screen.getByRole("button", { name: /typography/i });
-    expect(screen.getByLabelText("Font family")).toBeInTheDocument();
-
-    fireEvent.click(header);
-
-    expect(screen.queryByLabelText("Font family")).not.toBeInTheDocument();
-  });
-
-  it("expands content when collapsed header is clicked", () => {
-    render(<TypographyPanel settings={defaultSettings} onChange={() => {}} />);
-
-    const header = screen.getByRole("button", { name: /typography/i });
-    fireEvent.click(header); // collapse
-    fireEvent.click(header); // expand
-
-    expect(screen.getByLabelText("Font family")).toBeInTheDocument();
-  });
-
   it("calls onOpenFontsPanel when font icon is clicked", () => {
     const ref = { value: false };
     const handleOpenFontsPanel = () => {

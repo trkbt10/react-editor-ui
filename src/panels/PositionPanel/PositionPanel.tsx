@@ -3,61 +3,18 @@
  */
 
 import { memo, useCallback, useMemo } from "react";
-import type { CSSProperties } from "react";
 import { Panel } from "../../panels/Panel/Panel";
-import { Input } from "../../components/Input/Input";
-import { Select } from "../../components/Select/Select";
 import { IconButton } from "../../components/IconButton/IconButton";
-import { TransformButtons } from "../../components/TransformButtons/TransformButtons";
-import { ControlRow } from "../../components/ControlRow/ControlRow";
-import { ControlGroup } from "../../components/ControlRow/ControlGroup";
-import {
-  ObjectHorizontalAlignSelect,
-  ObjectVerticalAlignSelect,
-} from "../../components/AlignmentSelect/AlignmentSelect";
-import { SPACE_MD } from "../../constants/styles";
-import { ConstraintVisualization } from "./ConstraintVisualization";
-import {
-  RotationIcon,
-  ConstraintToggleIcon,
-  ResetIcon,
-  FlipHorizontalIcon,
-  FlipVerticalIcon,
-} from "../../icons";
-import type { PositionPanelProps, HorizontalAlign, VerticalAlign, HorizontalConstraint, VerticalConstraint } from "./positionTypes";
-
-// Option arrays (moved outside component to prevent recreation)
-const horizontalConstraintOptions = [
-  { value: "left" as const, label: "Left" },
-  { value: "right" as const, label: "Right" },
-  { value: "left-right" as const, label: "Left and Right" },
-  { value: "center" as const, label: "Center" },
-  { value: "scale" as const, label: "Scale" },
-];
-
-const verticalConstraintOptions = [
-  { value: "top" as const, label: "Top" },
-  { value: "bottom" as const, label: "Bottom" },
-  { value: "top-bottom" as const, label: "Top and Bottom" },
-  { value: "center" as const, label: "Center" },
-  { value: "scale" as const, label: "Scale" },
-];
-
-const transformGroups = [
-  {
-    id: "reset",
-    actions: [
-      { id: "reset", icon: <ResetIcon />, label: "Reset rotation" },
-    ],
-  },
-  {
-    id: "flip",
-    actions: [
-      { id: "flip-horizontal", icon: <FlipHorizontalIcon />, label: "Flip horizontal" },
-      { id: "flip-vertical", icon: <FlipVerticalIcon />, label: "Flip vertical" },
-    ],
-  },
-];
+import { AlignmentSection } from "../../sections/AlignmentSection/AlignmentSection";
+import { PositionSection } from "../../sections/PositionSection/PositionSection";
+import { ConstraintsSection } from "../../sections/ConstraintsSection/ConstraintsSection";
+import { RotationSection } from "../../sections/RotationSection/RotationSection";
+import { ConstraintToggleIcon } from "../../icons";
+import type { AlignmentData } from "../../sections/AlignmentSection/types";
+import type { PositionData } from "../../sections/PositionSection/types";
+import type { ConstraintsData } from "../../sections/ConstraintsSection/types";
+import type { RotationData } from "../../sections/RotationSection/types";
+import type { PositionPanelProps } from "./positionTypes";
 
 // Re-export types and utilities for external use
 export type {
@@ -70,9 +27,10 @@ export type {
 } from "./positionTypes";
 
 export { createDefaultPositionSettings } from "./positionTypes";
-export { ConstraintVisualization } from "./ConstraintVisualization";
-export type { ConstraintVisualizationProps } from "./ConstraintVisualization";
 
+/**
+ * Position panel with alignment, position, constraints, and rotation controls.
+ */
 export const PositionPanel = memo(function PositionPanel({
   settings,
   onChange,
@@ -82,157 +40,114 @@ export const PositionPanel = memo(function PositionPanel({
   width = 320,
   className,
 }: PositionPanelProps) {
-  // Memoized change handlers
-  const handleHorizontalAlignChange = useCallback(
-    (v: HorizontalAlign) => onChange({ ...settings, horizontalAlign: v }),
+  // Alignment data and handler
+  const alignmentData = useMemo<AlignmentData>(
+    () => ({
+      horizontal: settings.horizontalAlign,
+      vertical: settings.verticalAlign === "middle" ? "middle" : settings.verticalAlign === "bottom" ? "bottom" : "top",
+    }),
+    [settings.horizontalAlign, settings.verticalAlign],
+  );
+
+  const handleAlignmentChange = useCallback(
+    (data: AlignmentData) => {
+      onChange({
+        ...settings,
+        horizontalAlign: data.horizontal,
+        verticalAlign: data.vertical,
+      });
+    },
     [onChange, settings],
   );
 
-  const handleVerticalAlignChange = useCallback(
-    (v: VerticalAlign) => onChange({ ...settings, verticalAlign: v }),
+  // Position data and handler
+  const positionData = useMemo<PositionData>(
+    () => ({
+      x: settings.x,
+      y: settings.y,
+    }),
+    [settings.x, settings.y],
+  );
+
+  const handlePositionChange = useCallback(
+    (data: PositionData) => {
+      onChange({
+        ...settings,
+        x: data.x,
+        y: data.y,
+      });
+    },
     [onChange, settings],
   );
 
-  const handleXChange = useCallback(
-    (v: string) => onChange({ ...settings, x: v }),
+  // Constraints data and handler
+  const constraintsData = useMemo<ConstraintsData>(
+    () => ({
+      horizontal: settings.horizontalConstraint,
+      vertical: settings.verticalConstraint,
+    }),
+    [settings.horizontalConstraint, settings.verticalConstraint],
+  );
+
+  const handleConstraintsChange = useCallback(
+    (data: ConstraintsData) => {
+      onChange({
+        ...settings,
+        horizontalConstraint: data.horizontal,
+        verticalConstraint: data.vertical,
+      });
+    },
     [onChange, settings],
   );
 
-  const handleYChange = useCallback(
-    (v: string) => onChange({ ...settings, y: v }),
-    [onChange, settings],
-  );
-
-  const handleHorizontalConstraintChange = useCallback(
-    (v: HorizontalConstraint) => onChange({ ...settings, horizontalConstraint: v }),
-    [onChange, settings],
-  );
-
-  const handleVerticalConstraintChange = useCallback(
-    (v: VerticalConstraint) => onChange({ ...settings, verticalConstraint: v }),
-    [onChange, settings],
+  // Rotation data and handler
+  const rotationData = useMemo<RotationData>(
+    () => ({
+      rotation: settings.rotation,
+    }),
+    [settings.rotation],
   );
 
   const handleRotationChange = useCallback(
-    (v: string) => onChange({ ...settings, rotation: v }),
+    (data: RotationData) => {
+      onChange({
+        ...settings,
+        rotation: data.rotation,
+      });
+    },
     [onChange, settings],
   );
 
-  const handleTransformAction = useCallback(
-    (actionId: string) => {
-      onTransformAction?.(actionId);
-    },
-    [onTransformAction],
-  );
-
-  const constraintsRowStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      gap: SPACE_MD,
-      alignItems: "flex-start",
-    }),
-    [],
-  );
-
-  const selectsColumnStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      flexDirection: "column",
-      gap: SPACE_MD,
-      flex: 1,
-      minWidth: 0,
-    }),
-    [],
+  const positionAction = useMemo(
+    () => (
+      <IconButton
+        icon={<ConstraintToggleIcon />}
+        aria-label="Toggle constraints"
+        onClick={onToggleConstraints}
+        active={false}
+        size="sm"
+      />
+    ),
+    [onToggleConstraints],
   );
 
   return (
     <Panel title="Position" onClose={onClose} width={width} className={className}>
-      <ControlGroup label="Alignment">
-        <ControlRow spacer>
-          <ObjectHorizontalAlignSelect
-            value={settings.horizontalAlign}
-            onChange={handleHorizontalAlignChange}
-            fullWidth
-          />
-          <ObjectVerticalAlignSelect
-            value={settings.verticalAlign}
-            onChange={handleVerticalAlignChange}
-            fullWidth
-          />
-        </ControlRow>
-      </ControlGroup>
+      <AlignmentSection data={alignmentData} onChange={handleAlignmentChange} />
 
-      <ControlGroup label="Position">
-        <ControlRow
-          action={
-            <IconButton
-              icon={<ConstraintToggleIcon />}
-              aria-label="Toggle constraints"
-              onClick={onToggleConstraints}
-              active={false}
-              size="sm"
-            />
-          }
-        >
-          <Input
-            value={settings.x}
-            onChange={handleXChange}
-            prefix="X"
-            aria-label="X position"
-          />
-          <Input
-            value={settings.y}
-            onChange={handleYChange}
-            prefix="Y"
-            aria-label="Y position"
-          />
-        </ControlRow>
-      </ControlGroup>
+      <PositionSection
+        data={positionData}
+        onChange={handlePositionChange}
+        action={positionAction}
+      />
 
-      <ControlGroup label="Constraints">
-        <div style={constraintsRowStyle}>
-          <div style={selectsColumnStyle}>
-            <Select
-              options={horizontalConstraintOptions}
-              value={settings.horizontalConstraint}
-              onChange={handleHorizontalConstraintChange}
-              aria-label="Horizontal constraint"
-            />
-            <Select
-              options={verticalConstraintOptions}
-              value={settings.verticalConstraint}
-              onChange={handleVerticalConstraintChange}
-              aria-label="Vertical constraint"
-            />
-          </div>
-          <ConstraintVisualization
-            horizontal={settings.horizontalConstraint}
-            vertical={settings.verticalConstraint}
-            onHorizontalChange={handleHorizontalConstraintChange}
-            onVerticalChange={handleVerticalConstraintChange}
-          />
-        </div>
-      </ControlGroup>
+      <ConstraintsSection data={constraintsData} onChange={handleConstraintsChange} />
 
-      <ControlGroup label="Rotation">
-        <ControlRow
-          action={
-            <TransformButtons
-              groups={transformGroups}
-              onAction={handleTransformAction}
-              size="sm"
-            />
-          }
-        >
-          <Input
-            value={settings.rotation}
-            onChange={handleRotationChange}
-            prefix={<RotationIcon />}
-            suffix="°"
-            aria-label="Rotation"
-          />
-        </ControlRow>
-      </ControlGroup>
+      <RotationSection
+        data={rotationData}
+        onChange={handleRotationChange}
+        onTransformAction={onTransformAction}
+      />
     </Panel>
   );
 });

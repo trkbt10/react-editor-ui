@@ -13,7 +13,7 @@ import {
 import { TypographyPanel } from "../../../panels/TypographyPanel/TypographyPanel";
 import { FontsPanel } from "../../../panels/FontsPanel/FontsPanel";
 import type { TypographySettings } from "../../../panels/TypographyPanel/TypographyPanel";
-import type { FontItem } from "../../../panels/FontsPanel/FontsPanel";
+import type { FontItem } from "../../../sections/FontsSection/types";
 
 const sampleFonts: FontItem[] = [
   { name: "SF Pro", family: "'SF Pro', -apple-system, sans-serif", category: "sans-serif" },

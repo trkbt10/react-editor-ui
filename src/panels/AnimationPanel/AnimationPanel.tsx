@@ -20,24 +20,11 @@
  * ```
  */
 
-import { memo, useCallback, useMemo, useRef } from "react";
-import type { CSSProperties } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { Panel } from "../Panel/Panel";
-import { UnitInput } from "../../components/UnitInput/UnitInput";
-import { ControlRow } from "../../components/ControlRow/ControlRow";
-import { ControlGroup } from "../../components/ControlRow/ControlGroup";
-import { BezierCurveEditor } from "../../components/BezierCurveEditor/BezierCurveEditor";
-import type { BezierControlPoints, AnimationSettings, EasingPreset } from "../../components/BezierCurveEditor/bezierTypes";
-import { EASING_PRESETS, matchPreset } from "../../components/BezierCurveEditor/bezierPresets";
-import { EasingPresetSelect } from "./EasingPresetSelect";
-import { ClockIcon, HourglassIcon } from "../../icons";
-import { SPACE_MD } from "../../constants/styles";
-
-/** Ref object to hold mutable state for stable callbacks */
-type CallbackState = {
-  settings: AnimationSettings;
-  onChange: (settings: AnimationSettings) => void;
-};
+import { AnimationSection } from "../../sections/AnimationSection/AnimationSection";
+import type { AnimationData } from "../../sections/AnimationSection/types";
+import type { AnimationSettings } from "../../components/BezierCurveEditor/bezierTypes";
 
 export type AnimationPanelProps = {
   settings: AnimationSettings;
@@ -47,11 +34,9 @@ export type AnimationPanelProps = {
   className?: string;
 };
 
-const timeUnits = [
-  { value: "s", label: "s" },
-  { value: "ms", label: "ms" },
-];
-
+/**
+ * Animation panel with easing curve editor and timing controls.
+ */
 export const AnimationPanel = memo(function AnimationPanel({
   settings,
   onChange,
@@ -59,129 +44,26 @@ export const AnimationPanel = memo(function AnimationPanel({
   width = 320,
   className,
 }: AnimationPanelProps) {
-  // Use ref object to hold mutable state for stable callbacks
-  // This prevents callback recreation when settings change
-  const stateRef = useRef<CallbackState>({ settings, onChange });
-  stateRef.current = { settings, onChange };
-
-  const handleDurationChange = useCallback(
-    (v: string) => stateRef.current.onChange({ ...stateRef.current.settings, duration: v }),
-    []
-  );
-
-  const handleDelayChange = useCallback(
-    (v: string) => stateRef.current.onChange({ ...stateRef.current.settings, delay: v }),
-    []
-  );
-
-  const handlePresetChange = useCallback(
-    (preset: EasingPreset) => {
-      if (preset !== "custom") {
-        stateRef.current.onChange({
-          ...stateRef.current.settings,
-          easing: preset,
-          bezierControlPoints: EASING_PRESETS[preset],
-        });
-      }
-    },
-    []
-  );
-
-  const handleBezierChange = useCallback(
-    (points: BezierControlPoints) => {
-      const preset = matchPreset(points);
-      stateRef.current.onChange({
-        ...stateRef.current.settings,
-        bezierControlPoints: points,
-        easing: preset,
-      });
-    },
-    []
-  );
-
-  // Main horizontal layout: bezier on left, controls on right
-  const mainLayoutStyle = useMemo<CSSProperties>(
+  const data = useMemo<AnimationData>(
     () => ({
-      display: "flex",
-      gap: SPACE_MD,
-      alignItems: "flex-start",
+      duration: settings.duration,
+      delay: settings.delay,
+      easing: settings.easing,
+      bezierControlPoints: settings.bezierControlPoints,
     }),
-    []
+    [settings],
   );
 
-  // Right column for Duration/Delay
-  const rightColumnStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      flexDirection: "column",
-      gap: SPACE_MD,
-      flex: 1,
-      minWidth: 0,
-    }),
-    []
+  const handleChange = useCallback(
+    (newData: AnimationData) => {
+      onChange(newData);
+    },
+    [onChange],
   );
-
-  // Bezier editor size
-  const bezierWidth = 150;
-  const bezierHeight = 120;
 
   return (
-    <Panel
-      title="Animation"
-      onClose={onClose}
-      width={width}
-      className={className}
-    >
-      {/* Easing preset selector */}
-      <ControlRow label="Easing" labelWidth={50}>
-        <EasingPresetSelect
-          value={settings.easing}
-          onChange={handlePresetChange}
-          size="sm"
-          aria-label="Easing preset"
-        />
-      </ControlRow>
-
-      {/* Main content: bezier on left, Duration/Delay on right */}
-      <div style={mainLayoutStyle}>
-        {/* Left: Bezier curve editor */}
-        <BezierCurveEditor
-          value={settings.bezierControlPoints}
-          onChange={handleBezierChange}
-          width={bezierWidth}
-          height={bezierHeight}
-          aria-label="Easing curve editor"
-        />
-
-        {/* Right: Duration and Delay */}
-        <div style={rightColumnStyle}>
-          <ControlGroup label="Duration">
-            <UnitInput
-              value={settings.duration}
-              onChange={handleDurationChange}
-              units={timeUnits}
-              iconStart={<ClockIcon />}
-              min={0}
-              step={0.1}
-              size="sm"
-              aria-label="Duration"
-            />
-          </ControlGroup>
-
-          <ControlGroup label="Delay">
-            <UnitInput
-              value={settings.delay}
-              onChange={handleDelayChange}
-              units={timeUnits}
-              iconStart={<HourglassIcon />}
-              min={0}
-              step={0.1}
-              size="sm"
-              aria-label="Delay"
-            />
-          </ControlGroup>
-        </div>
-      </div>
+    <Panel title="Animation" onClose={onClose} width={width} className={className}>
+      <AnimationSection data={data} onChange={handleChange} />
     </Panel>
   );
 });

@@ -59,6 +59,7 @@ export default [
         "custom/no-barrel-import": "error",
         "custom/no-component-index": "error",
         "custom/no-panels-in-components": "error",
+        "custom/no-panels-in-sections": "error",
         "custom/no-canvas-import": "error",
         // Forbid disabling critical architectural rules via eslint-disable comments
         "eslint-comments/no-restricted-disable": [

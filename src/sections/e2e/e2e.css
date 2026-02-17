@@ -1,0 +1,27 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
+
+h1, h2 {
+  margin: 0 0 16px;
+}
+
+.section-mount {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #252526;
+  border-radius: 8px;
+}

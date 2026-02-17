@@ -44,6 +44,9 @@ function EasingCurvePreview({ points }: { points: [number, number, number, numbe
   );
 }
 
+/**
+ * Select component for choosing easing presets with curve preview.
+ */
 export const EasingPresetSelect = memo(function EasingPresetSelect({
   value,
   onChange,

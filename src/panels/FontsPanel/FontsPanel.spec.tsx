@@ -3,7 +3,8 @@
  */
 
 import { render, screen, fireEvent } from "@testing-library/react";
-import { FontsPanel, type FontItem } from "./FontsPanel";
+import { FontsPanel } from "./FontsPanel";
+import type { FontItem } from "../../sections/FontsSection/types";
 
 describe("FontsPanel", () => {
   const sampleFonts: FontItem[] = [
@@ -143,38 +144,11 @@ describe("FontsPanel", () => {
     expect(ref.called).toBe(true);
   });
 
-  it("calls onSettings when settings button is clicked", () => {
-    const ref = { called: false };
-    const handleSettings = () => {
-      ref.called = true;
-    };
-    render(
-      <FontsPanel
-        fonts={sampleFonts}
-        selectedFont="SF Pro"
-        onSelectFont={() => {}}
-        onSettings={handleSettings}
-      />
-    );
-
-    const settingsButton = screen.getByLabelText("Font settings");
-    fireEvent.click(settingsButton);
-
-    expect(ref.called).toBe(true);
-  });
-
   it("does not render close button when onClose is not provided", () => {
     render(
       <FontsPanel fonts={sampleFonts} selectedFont="SF Pro" onSelectFont={() => {}} />
     );
     expect(screen.queryByLabelText("Close")).not.toBeInTheDocument();
-  });
-
-  it("does not render settings button when onSettings is not provided", () => {
-    render(
-      <FontsPanel fonts={sampleFonts} selectedFont="SF Pro" onSelectFont={() => {}} />
-    );
-    expect(screen.queryByLabelText("Font settings")).not.toBeInTheDocument();
   });
 
   it("combines search and category filters", () => {
@@ -236,19 +210,6 @@ describe("FontsPanel", () => {
     expect(panel.style.width).toBe("50%");
   });
 
-  it("applies custom maxHeight", () => {
-    const { container } = render(
-      <FontsPanel
-        fonts={sampleFonts}
-        selectedFont="SF Pro"
-        onSelectFont={() => {}}
-        maxHeight={500}
-      />
-    );
-    const panel = container.firstChild as HTMLElement;
-    expect(panel.style.maxHeight).toBe("500px");
-  });
-
   it("displays fonts in their own font family", () => {
     render(
       <FontsPanel fonts={sampleFonts} selectedFont="SF Pro" onSelectFont={() => {}} />
@@ -267,7 +228,7 @@ describe("FontsPanel", () => {
     fireEvent.change(searchInput, { target: { value: "SF" } });
 
     // The clearable input should show a clear button
-    const clearButton = screen.getByLabelText("Clear");
+    const clearButton = screen.getByLabelText("Clear search");
     fireEvent.click(clearButton);
 
     // All fonts should be visible again

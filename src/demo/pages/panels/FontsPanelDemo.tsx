@@ -11,7 +11,7 @@ import {
 } from "../../components";
 import { FontsPanel } from "../../../panels/FontsPanel/FontsPanel";
 import { LocalFontList } from "../../../panels/FontsPanel/LocalFontList";
-import type { FontItem } from "../../../panels/FontsPanel/FontsPanel";
+import type { FontItem } from "../../../sections/FontsSection/types";
 
 const sampleFonts: FontItem[] = [
   { name: "SF Pro", family: "'SF Pro', -apple-system, sans-serif", category: "sans-serif" },

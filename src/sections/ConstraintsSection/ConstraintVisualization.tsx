@@ -5,7 +5,7 @@
 import { memo, useCallback } from "react";
 import type { CSSProperties } from "react";
 import { COLOR_PRIMARY, COLOR_BORDER, COLOR_HOVER } from "../../constants/styles";
-import type { HorizontalConstraint, VerticalConstraint } from "./positionTypes";
+import type { HorizontalConstraint, VerticalConstraint } from "./types";
 
 export type ConstraintVisualizationProps = {
   horizontal: HorizontalConstraint;
@@ -57,6 +57,9 @@ function ConstraintLine({ isActive, style, onClick, ariaLabel }: ConstraintLineP
   return <div style={lineStyle} />;
 }
 
+/**
+ * Interactive visual representation of constraint settings.
+ */
 export const ConstraintVisualization = memo(function ConstraintVisualization({
   horizontal,
   vertical,
