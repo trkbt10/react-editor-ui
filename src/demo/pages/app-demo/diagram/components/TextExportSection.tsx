@@ -38,12 +38,13 @@ import type { DiagramNode, FrameNode, Connection, SymbolDefinition } from "../ty
 import { exportFrameToMermaid } from "../export/exportToMermaid";
 import { exportFrameToMarkdown } from "../export/exportToMarkdown";
 import { exportFrameToASCII } from "../export/exportToASCII";
+import { exportFrameTablesToCSV } from "../export/exportToCSV";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type TextExportFormat = "mermaid" | "markdown" | "ascii";
+export type TextExportFormat = "mermaid" | "markdown" | "ascii" | "csv";
 
 export type TextExportSectionProps = {
   /** All frames in the document */
@@ -122,10 +123,35 @@ const buttonContainerStyle: CSSProperties = {
   padding: `0 ${SPACE_MD}`,
 };
 
-const errorStyle: CSSProperties = {
+const errorContainerStyle: CSSProperties = {
   padding: SPACE_MD,
+  display: "flex",
+  flexDirection: "column",
+  gap: SPACE_SM,
+};
+
+const errorMessageStyle: CSSProperties = {
   color: "#ef4444",
   fontSize: SIZE_FONT_SM,
+  fontWeight: 500,
+};
+
+const errorHintStyle: CSSProperties = {
+  color: COLOR_TEXT_MUTED,
+  fontSize: SIZE_FONT_XS,
+};
+
+const errorCodeStyle: CSSProperties = {
+  fontFamily: "monospace",
+  fontSize: SIZE_FONT_XS,
+  color: COLOR_TEXT_MUTED,
+  backgroundColor: COLOR_SURFACE_RAISED,
+  padding: SPACE_SM,
+  borderRadius: RADIUS_SM,
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
+  maxHeight: 100,
+  overflowY: "auto",
 };
 
 const emptyStateStyle: CSSProperties = {
@@ -139,6 +165,7 @@ const tabOptions: Array<{ value: TextExportFormat; label: string }> = [
   { value: "mermaid", label: "Mermaid" },
   { value: "markdown", label: "Markdown" },
   { value: "ascii", label: "ASCII" },
+  { value: "csv", label: "CSV" },
 ];
 
 // =============================================================================
@@ -190,7 +217,15 @@ const MermaidPreview = memo(function MermaidPreview({
   }, [content]);
 
   if (error) {
-    return <div style={errorStyle}>Error: {error}</div>;
+    return (
+      <div style={errorContainerStyle}>
+        <div style={errorMessageStyle}>Failed to render diagram</div>
+        <div style={errorHintStyle}>
+          Check the source code below for syntax issues. Open "Source" section to copy the code.
+        </div>
+        <div style={errorCodeStyle}>{content}</div>
+      </div>
+    );
   }
 
   return (
@@ -300,6 +335,31 @@ const ASCIIPreview = memo(function ASCIIPreview({
 });
 
 // =============================================================================
+// CSV Preview Component
+// =============================================================================
+
+const csvPreviewStyle: CSSProperties = {
+  padding: SPACE_MD,
+  fontFamily: "monospace",
+  fontSize: SIZE_FONT_XS,
+  color: COLOR_TEXT,
+  whiteSpace: "pre",
+  overflowX: "auto",
+};
+
+const CSVPreview = memo(function CSVPreview({
+  content,
+}: {
+  content: string;
+}) {
+  return (
+    <div style={csvPreviewStyle}>
+      {content}
+    </div>
+  );
+});
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -358,6 +418,9 @@ export const TextExportSection = memo(function TextExportSection({
           case "ascii":
             setExportContent(exportFrameToASCII(selectedFrame, allNodes, allConnections, symbolDef));
             break;
+          case "csv":
+            setExportContent(exportFrameTablesToCSV(selectedFrame, allNodes));
+            break;
         }
       } catch {
         setExportContent("Error generating export content");
@@ -394,8 +457,14 @@ export const TextExportSection = memo(function TextExportSection({
 
   const handleDownload = useCallback(() => {
     const frameName = selectedFrame?.preset ?? "diagram";
-    const extension = format === "markdown" ? "md" : format === "mermaid" ? "mmd" : "txt";
-    const mimeType = "text/plain";
+    const extensionMap: Record<TextExportFormat, string> = {
+      markdown: "md",
+      mermaid: "mmd",
+      ascii: "txt",
+      csv: "csv",
+    };
+    const extension = extensionMap[format];
+    const mimeType = format === "csv" ? "text/csv" : "text/plain";
     const blob = new Blob([exportContent], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = window.document.createElement("a");
@@ -423,6 +492,8 @@ export const TextExportSection = memo(function TextExportSection({
         return <MarkdownPreview content={exportContent} />;
       case "ascii":
         return <ASCIIPreview content={exportContent} />;
+      case "csv":
+        return <CSVPreview content={exportContent} />;
     }
   }, [format, exportContent, isLoading, selectedFrame]);
 
