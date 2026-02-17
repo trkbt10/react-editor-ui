@@ -1,11 +1,17 @@
 {
-  "generatedAt": "2026-02-17T09:24:27.001Z",
+  "generatedAt": "2026-02-17T13:37:26.362Z",
   "components": [
     {
       "name": "AlignmentGrid",
       "entryType": "named",
       "relativePath": "src/components/AlignmentGrid/AlignmentGrid.tsx",
       "category": "component"
+    },
+    {
+      "name": "AlignmentSection",
+      "entryType": "named",
+      "relativePath": "src/sections/AlignmentSection/AlignmentSection.tsx",
+      "category": "section"
     },
     {
       "name": "AlignmentSelect",
@@ -18,6 +24,12 @@
       "entryType": "named",
       "relativePath": "src/panels/AnimationPanel/AnimationPanel.tsx",
       "category": "panel"
+    },
+    {
+      "name": "AnimationSection",
+      "entryType": "named",
+      "relativePath": "src/sections/AnimationSection/AnimationSection.tsx",
+      "category": "section"
     },
     {
       "name": "ArrowheadSelect",
@@ -104,6 +116,12 @@
       "category": "component"
     },
     {
+      "name": "ConstraintsSection",
+      "entryType": "named",
+      "relativePath": "src/sections/ConstraintsSection/ConstraintsSection.tsx",
+      "category": "section"
+    },
+    {
       "name": "ContextMenu",
       "entryType": "named",
       "relativePath": "src/components/ContextMenu/ContextMenu.tsx",
@@ -114,6 +132,12 @@
       "entryType": "named",
       "relativePath": "src/components/ControlRow/ControlRow.tsx",
       "category": "component"
+    },
+    {
+      "name": "ExportSection",
+      "entryType": "named",
+      "relativePath": "src/sections/ExportSection/ExportSection.tsx",
+      "category": "section"
     },
     {
       "name": "FillPanel",
@@ -134,10 +158,22 @@
       "category": "panel"
     },
     {
+      "name": "FontsSection",
+      "entryType": "named",
+      "relativePath": "src/sections/FontsSection/FontsSection.tsx",
+      "category": "section"
+    },
+    {
       "name": "GradientBar",
       "entryType": "named",
       "relativePath": "src/components/GradientBar/GradientBar.tsx",
       "category": "component"
+    },
+    {
+      "name": "GradientSection",
+      "entryType": "named",
+      "relativePath": "src/sections/GradientSection/GradientSection.tsx",
+      "category": "section"
     },
     {
       "name": "GradientStopRow",
@@ -162,6 +198,12 @@
       "entryType": "named",
       "relativePath": "src/components/ImageAdjustments/ImageAdjustments.tsx",
       "category": "component"
+    },
+    {
+      "name": "ImageFillSection",
+      "entryType": "named",
+      "relativePath": "src/sections/ImageFillSection/ImageFillSection.tsx",
+      "category": "section"
     },
     {
       "name": "Input",
@@ -200,6 +242,12 @@
       "category": "panel"
     },
     {
+      "name": "PatternFillSection",
+      "entryType": "named",
+      "relativePath": "src/sections/PatternFillSection/PatternFillSection.tsx",
+      "category": "section"
+    },
+    {
       "name": "Portal",
       "entryType": "named",
       "relativePath": "src/components/Portal/Portal.tsx",
@@ -210,6 +258,12 @@
       "entryType": "named",
       "relativePath": "src/panels/PositionPanel/PositionPanel.tsx",
       "category": "panel"
+    },
+    {
+      "name": "PositionSection",
+      "entryType": "named",
+      "relativePath": "src/sections/PositionSection/PositionSection.tsx",
+      "category": "section"
     },
     {
       "name": "ProjectMenu",
@@ -242,6 +296,12 @@
       "category": "editor"
     },
     {
+      "name": "RotationSection",
+      "entryType": "named",
+      "relativePath": "src/sections/RotationSection/RotationSection.tsx",
+      "category": "section"
+    },
+    {
       "name": "SearchInput",
       "entryType": "named",
       "relativePath": "src/components/SearchInput/SearchInput.tsx",
@@ -272,6 +332,12 @@
       "category": "component"
     },
     {
+      "name": "SizeSection",
+      "entryType": "named",
+      "relativePath": "src/sections/SizeSection/SizeSection.tsx",
+      "category": "section"
+    },
+    {
       "name": "Slider",
       "entryType": "named",
       "relativePath": "src/components/Slider/Slider.tsx",
@@ -300,6 +366,12 @@
       "entryType": "named",
       "relativePath": "src/components/StrokeMiterAngleInput/StrokeMiterAngleInput.tsx",
       "category": "component"
+    },
+    {
+      "name": "StrokeSection",
+      "entryType": "named",
+      "relativePath": "src/sections/StrokeSection/StrokeSection.tsx",
+      "category": "section"
     },
     {
       "name": "StrokeSettingsPanel",
@@ -362,10 +434,22 @@
       "category": "panel"
     },
     {
+      "name": "TypographySection",
+      "entryType": "named",
+      "relativePath": "src/sections/TypographySection/TypographySection.tsx",
+      "category": "section"
+    },
+    {
       "name": "UnitInput",
       "entryType": "named",
       "relativePath": "src/components/UnitInput/UnitInput.tsx",
       "category": "component"
+    },
+    {
+      "name": "VideoFillSection",
+      "entryType": "named",
+      "relativePath": "src/sections/VideoFillSection/VideoFillSection.tsx",
+      "category": "section"
     }
   ]
 }

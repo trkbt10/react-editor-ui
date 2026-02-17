@@ -24,11 +24,23 @@
       "import": "./dist/themes/index.js",
       "require": "./dist/themes/index.cjs"
     },
+    "./hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/hooks/index.d.ts",
+      "import": "./dist/hooks/index.js",
+      "require": "./dist/hooks/index.cjs"
+    },
     "./AlignmentGrid": {
       "source": "./src/components/AlignmentGrid/AlignmentGrid.tsx",
       "types": "./dist/components/AlignmentGrid/AlignmentGrid.d.ts",
       "import": "./dist/components/AlignmentGrid.js",
       "require": "./dist/components/AlignmentGrid.cjs"
+    },
+    "./sections/AlignmentSection": {
+      "source": "./src/sections/AlignmentSection/AlignmentSection.tsx",
+      "types": "./dist/sections/AlignmentSection/AlignmentSection.d.ts",
+      "import": "./dist/sections/AlignmentSection.js",
+      "require": "./dist/sections/AlignmentSection.cjs"
     },
     "./AlignmentSelect": {
       "source": "./src/components/AlignmentSelect/AlignmentSelect.tsx",
@@ -41,6 +53,12 @@
       "types": "./dist/panels/AnimationPanel/AnimationPanel.d.ts",
       "import": "./dist/panels/AnimationPanel.js",
       "require": "./dist/panels/AnimationPanel.cjs"
+    },
+    "./sections/AnimationSection": {
+      "source": "./src/sections/AnimationSection/AnimationSection.tsx",
+      "types": "./dist/sections/AnimationSection/AnimationSection.d.ts",
+      "import": "./dist/sections/AnimationSection.js",
+      "require": "./dist/sections/AnimationSection.cjs"
     },
     "./ArrowheadSelect": {
       "source": "./src/components/ArrowheadSelect/ArrowheadSelect.tsx",
@@ -126,6 +144,12 @@
       "import": "./dist/components/ColorPicker.js",
       "require": "./dist/components/ColorPicker.cjs"
     },
+    "./sections/ConstraintsSection": {
+      "source": "./src/sections/ConstraintsSection/ConstraintsSection.tsx",
+      "types": "./dist/sections/ConstraintsSection/ConstraintsSection.d.ts",
+      "import": "./dist/sections/ConstraintsSection.js",
+      "require": "./dist/sections/ConstraintsSection.cjs"
+    },
     "./ContextMenu": {
       "source": "./src/components/ContextMenu/ContextMenu.tsx",
       "types": "./dist/components/ContextMenu/ContextMenu.d.ts",
@@ -137,6 +161,12 @@
       "types": "./dist/components/ControlRow/ControlRow.d.ts",
       "import": "./dist/components/ControlRow.js",
       "require": "./dist/components/ControlRow.cjs"
+    },
+    "./sections/ExportSection": {
+      "source": "./src/sections/ExportSection/ExportSection.tsx",
+      "types": "./dist/sections/ExportSection/ExportSection.d.ts",
+      "import": "./dist/sections/ExportSection.js",
+      "require": "./dist/sections/ExportSection.cjs"
     },
     "./panels/FillPanel": {
       "source": "./src/panels/FillPanel/FillPanel.tsx",
@@ -156,11 +186,23 @@
       "import": "./dist/panels/FontsPanel.js",
       "require": "./dist/panels/FontsPanel.cjs"
     },
+    "./sections/FontsSection": {
+      "source": "./src/sections/FontsSection/FontsSection.tsx",
+      "types": "./dist/sections/FontsSection/FontsSection.d.ts",
+      "import": "./dist/sections/FontsSection.js",
+      "require": "./dist/sections/FontsSection.cjs"
+    },
     "./GradientBar": {
       "source": "./src/components/GradientBar/GradientBar.tsx",
       "types": "./dist/components/GradientBar/GradientBar.d.ts",
       "import": "./dist/components/GradientBar.js",
       "require": "./dist/components/GradientBar.cjs"
+    },
+    "./sections/GradientSection": {
+      "source": "./src/sections/GradientSection/GradientSection.tsx",
+      "types": "./dist/sections/GradientSection/GradientSection.d.ts",
+      "import": "./dist/sections/GradientSection.js",
+      "require": "./dist/sections/GradientSection.cjs"
     },
     "./GradientStopRow": {
       "source": "./src/components/GradientStopRow/GradientStopRow.tsx",
@@ -185,6 +227,12 @@
       "types": "./dist/components/ImageAdjustments/ImageAdjustments.d.ts",
       "import": "./dist/components/ImageAdjustments.js",
       "require": "./dist/components/ImageAdjustments.cjs"
+    },
+    "./sections/ImageFillSection": {
+      "source": "./src/sections/ImageFillSection/ImageFillSection.tsx",
+      "types": "./dist/sections/ImageFillSection/ImageFillSection.d.ts",
+      "import": "./dist/sections/ImageFillSection.js",
+      "require": "./dist/sections/ImageFillSection.cjs"
     },
     "./Input": {
       "source": "./src/components/Input/Input.tsx",
@@ -222,6 +270,12 @@
       "import": "./dist/panels/Panel.js",
       "require": "./dist/panels/Panel.cjs"
     },
+    "./sections/PatternFillSection": {
+      "source": "./src/sections/PatternFillSection/PatternFillSection.tsx",
+      "types": "./dist/sections/PatternFillSection/PatternFillSection.d.ts",
+      "import": "./dist/sections/PatternFillSection.js",
+      "require": "./dist/sections/PatternFillSection.cjs"
+    },
     "./Portal": {
       "source": "./src/components/Portal/Portal.tsx",
       "types": "./dist/components/Portal/Portal.d.ts",
@@ -233,6 +287,12 @@
       "types": "./dist/panels/PositionPanel/PositionPanel.d.ts",
       "import": "./dist/panels/PositionPanel.js",
       "require": "./dist/panels/PositionPanel.cjs"
+    },
+    "./sections/PositionSection": {
+      "source": "./src/sections/PositionSection/PositionSection.tsx",
+      "types": "./dist/sections/PositionSection/PositionSection.d.ts",
+      "import": "./dist/sections/PositionSection.js",
+      "require": "./dist/sections/PositionSection.cjs"
     },
     "./ProjectMenu": {
       "source": "./src/components/ProjectMenu/ProjectMenu.tsx",
@@ -264,6 +324,12 @@
       "import": "./dist/editors/RichTextEditors.js",
       "require": "./dist/editors/RichTextEditors.cjs"
     },
+    "./sections/RotationSection": {
+      "source": "./src/sections/RotationSection/RotationSection.tsx",
+      "types": "./dist/sections/RotationSection/RotationSection.d.ts",
+      "import": "./dist/sections/RotationSection.js",
+      "require": "./dist/sections/RotationSection.cjs"
+    },
     "./SearchInput": {
       "source": "./src/components/SearchInput/SearchInput.tsx",
       "types": "./dist/components/SearchInput/SearchInput.d.ts",
@@ -294,6 +360,12 @@
       "import": "./dist/components/SelectionToolbar.js",
       "require": "./dist/components/SelectionToolbar.cjs"
     },
+    "./sections/SizeSection": {
+      "source": "./src/sections/SizeSection/SizeSection.tsx",
+      "types": "./dist/sections/SizeSection/SizeSection.d.ts",
+      "import": "./dist/sections/SizeSection.js",
+      "require": "./dist/sections/SizeSection.cjs"
+    },
     "./Slider": {
       "source": "./src/components/Slider/Slider.tsx",
       "types": "./dist/components/Slider/Slider.d.ts",
@@ -323,6 +395,12 @@
       "types": "./dist/components/StrokeMiterAngleInput/StrokeMiterAngleInput.d.ts",
       "import": "./dist/components/StrokeMiterAngleInput.js",
       "require": "./dist/components/StrokeMiterAngleInput.cjs"
+    },
+    "./sections/StrokeSection": {
+      "source": "./src/sections/StrokeSection/StrokeSection.tsx",
+      "types": "./dist/sections/StrokeSection/StrokeSection.d.ts",
+      "import": "./dist/sections/StrokeSection.js",
+      "require": "./dist/sections/StrokeSection.cjs"
     },
     "./panels/StrokeSettingsPanel": {
       "source": "./src/panels/StrokeSettingsPanel/StrokeSettingsPanel.tsx",
@@ -384,11 +462,23 @@
       "import": "./dist/panels/TypographyPanel.js",
       "require": "./dist/panels/TypographyPanel.cjs"
     },
+    "./sections/TypographySection": {
+      "source": "./src/sections/TypographySection/TypographySection.tsx",
+      "types": "./dist/sections/TypographySection/TypographySection.d.ts",
+      "import": "./dist/sections/TypographySection.js",
+      "require": "./dist/sections/TypographySection.cjs"
+    },
     "./UnitInput": {
       "source": "./src/components/UnitInput/UnitInput.tsx",
       "types": "./dist/components/UnitInput/UnitInput.d.ts",
       "import": "./dist/components/UnitInput.js",
       "require": "./dist/components/UnitInput.cjs"
+    },
+    "./sections/VideoFillSection": {
+      "source": "./src/sections/VideoFillSection/VideoFillSection.tsx",
+      "types": "./dist/sections/VideoFillSection/VideoFillSection.d.ts",
+      "import": "./dist/sections/VideoFillSection.js",
+      "require": "./dist/sections/VideoFillSection.cjs"
     },
     "./package.json": "./package.json"
   },

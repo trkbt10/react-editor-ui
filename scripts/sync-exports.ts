@@ -24,10 +24,11 @@ const COMPONENTS_DIR = join(ROOT_DIR, "src/components");
 const PANELS_DIR = join(ROOT_DIR, "src/panels");
 const CANVAS_DIR = join(ROOT_DIR, "src/canvas");
 const EDITORS_DIR = join(ROOT_DIR, "src/editors");
+const SECTIONS_DIR = join(ROOT_DIR, "src/sections");
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
 const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
 
-type EntryCategory = "component" | "panel" | "canvas" | "editor";
+type EntryCategory = "component" | "panel" | "canvas" | "editor" | "section";
 
 interface ComponentEntry {
   name: string;
@@ -72,6 +73,8 @@ function getCategoryDir(category: EntryCategory): string {
       return "canvas";
     case "editor":
       return "editors";
+    case "section":
+      return "sections";
   }
 }
 
@@ -144,7 +147,7 @@ function detectEntryPoint(
  * Directories to skip when scanning for components.
  * These are internal shared modules, not public components.
  */
-const SKIP_DIRECTORIES = new Set(["core"]);
+const SKIP_DIRECTORIES = new Set(["core", "hooks", "e2e", "shared"]);
 
 /**
  * Scans a directory and collects entries
@@ -191,7 +194,8 @@ function buildEntryCatalog(): EntryCatalog {
   const panels = scanDirectory(PANELS_DIR, "panel");
   const canvas = scanDirectory(CANVAS_DIR, "canvas");
   const editors = scanDirectory(EDITORS_DIR, "editor");
-  const allEntries = [...components, ...panels, ...canvas, ...editors];
+  const sections = scanDirectory(SECTIONS_DIR, "section");
+  const allEntries = [...components, ...panels, ...canvas, ...editors, ...sections];
 
   allEntries.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -217,6 +221,12 @@ function generateExports(catalog: EntryCatalog): Record<string, ExportEntry | st
       types: "./dist/themes/index.d.ts",
       import: "./dist/themes/index.js",
       require: "./dist/themes/index.cjs",
+    },
+    "./hooks": {
+      source: "./src/hooks/index.ts",
+      types: "./dist/hooks/index.d.ts",
+      import: "./dist/hooks/index.js",
+      require: "./dist/hooks/index.cjs",
     },
   };
 
@@ -254,6 +264,7 @@ function generateViteEntries(catalog: EntryCatalog): Record<string, string> {
   const entries: Record<string, string> = {
     index: "src/index.tsx",
     "themes/index": "src/themes/index.ts",
+    "hooks/index": "src/hooks/index.ts",
   };
 
   for (const entry of catalog.components) {
@@ -319,8 +330,9 @@ function main(): void {
   const components = catalog.components.filter(c => c.category === "component");
   const panels = catalog.components.filter(c => c.category === "panel");
   const canvasEntries = catalog.components.filter(c => c.category === "canvas");
+  const sectionEntries = catalog.components.filter(c => c.category === "section");
 
-  console.log(`📦 Found ${catalog.components.length} entries (${components.length} components, ${panels.length} panels, ${canvasEntries.length} canvas)\n`);
+  console.log(`📦 Found ${catalog.components.length} entries (${components.length} components, ${panels.length} panels, ${canvasEntries.length} canvas, ${sectionEntries.length} sections)\n`);
 
   // Show component breakdown
   const indexEntries = catalog.components.filter(c => c.entryType === "index");
