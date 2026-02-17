@@ -249,7 +249,7 @@ const SelectDropdownInner = <T extends string>(
   }, []);
 
   const dropdownStyle = useMemo<CSSProperties>(() => ({
-    position: "absolute",
+    position: "fixed",
     top: dropdownPosition.top,
     left: dropdownPosition.left,
     width: dropdownPosition.width,

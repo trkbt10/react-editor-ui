@@ -234,6 +234,7 @@ function SplitButtonInner<T extends string = string>({
         floatingHeight: 200, // Estimated dropdown height
         placement: "bottom",
         offset: 4,
+        includeScrollOffset: false, // Using position: fixed
       });
       setDropdownPosition({
         top: y,
@@ -400,7 +401,7 @@ function SplitButtonInner<T extends string = string>({
 
   const dropdownStyle = useMemo<CSSProperties>(
     () => ({
-      position: "absolute",
+      position: "fixed",
       top: dropdownPosition.top,
       left: dropdownPosition.left,
       minWidth: dropdownPosition.width,

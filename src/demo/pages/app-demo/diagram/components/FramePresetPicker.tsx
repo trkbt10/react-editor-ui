@@ -26,7 +26,7 @@ import { framePresets, framePresetCategories } from "../mockData";
 // =============================================================================
 
 const dropdownStyle: CSSProperties = {
-  position: "absolute",
+  position: "fixed",
   backgroundColor: "var(--rei-color-surface-raised)",
   border: "1px solid var(--rei-color-border)",
   borderRadius: "var(--rei-radius-lg)",
@@ -133,6 +133,7 @@ export const FramePresetPicker = memo(function FramePresetPicker({
         floatingHeight: DROPDOWN_ESTIMATED_HEIGHT,
         placement: "bottom",
         offset: 4,
+        includeScrollOffset: false, // Using position: fixed
       });
       setPosition({ top: y, left: x });
     }

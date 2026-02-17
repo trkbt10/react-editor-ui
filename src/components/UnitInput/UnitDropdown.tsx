@@ -57,6 +57,7 @@ function calculatePosition(anchorRef: RefObject<HTMLElement | null>): DropdownPo
     floatingHeight: DROPDOWN_MAX_HEIGHT,
     placement: "bottom",
     offset: 4,
+    includeScrollOffset: false, // Using position: fixed
   });
   return {
     top: y,
