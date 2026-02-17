@@ -2,7 +2,7 @@
  * @file Design Demo - Figma-like design tool interface
  */
 
-import { useState, useMemo, useCallback, useRef, useEffect, memo, type CSSProperties, type ReactNode } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, memo, createContext, useContext, type CSSProperties, type ReactNode } from "react";
 import {
   GridLayout,
   type PanelLayoutConfig,
@@ -67,6 +67,46 @@ import {
   RectangleLayerIcon,
   GroupLayerIcon,
 } from "../../components/DemoIcons";
+
+// =====================================================================
+// Contexts - Split for granular updates
+// =====================================================================
+
+type SidebarTabContextValue = {
+  sidebarTab: string;
+  setSidebarTab: (tab: string) => void;
+};
+const SidebarTabContext = createContext<SidebarTabContextValue | null>(null);
+
+type LayersContextValue = {
+  layers: DesignLayer[];
+  expandedIds: Set<string>;
+  onToggle: (id: string) => void;
+  onVisibilityChange: (id: string, visible: boolean) => void;
+  onLockChange: (id: string, locked: boolean) => void;
+};
+const LayersContext = createContext<LayersContextValue | null>(null);
+
+type SelectionContextValue = {
+  selectedId: string | null;
+  setSelectedId: (id: string | null) => void;
+  selectedLayer: DesignLayer | null;
+};
+const SelectionContext = createContext<SelectionContextValue | null>(null);
+
+type InspectorContextValue = {
+  inspectorTab: string;
+  setInspectorTab: (tab: string) => void;
+  fillColor: ColorValue;
+  setFillColor: (color: ColorValue) => void;
+};
+const InspectorContext = createContext<InspectorContextValue | null>(null);
+
+type ToolbarContextValue = {
+  selectedTool: string;
+  setSelectedTool: (tool: string) => void;
+};
+const ToolbarContext = createContext<ToolbarContextValue | null>(null);
 
 // =====================================================================
 // Types
@@ -896,11 +936,86 @@ const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, on
 });
 
 // =====================================================================
+// Panel Components - Subscribe to specific contexts
+// =====================================================================
+
+const SidebarPanel = memo(function SidebarPanel() {
+  const sidebarTabCtx = useContext(SidebarTabContext);
+  const layersCtx = useContext(LayersContext);
+  const selectionCtx = useContext(SelectionContext);
+
+  if (!sidebarTabCtx || !layersCtx || !selectionCtx) {
+    return null;
+  }
+
+  return (
+    <Sidebar
+      sidebarTab={sidebarTabCtx.sidebarTab}
+      onSidebarTabChange={sidebarTabCtx.setSidebarTab}
+      layers={layersCtx.layers}
+      expandedIds={layersCtx.expandedIds}
+      selectedId={selectionCtx.selectedId}
+      onToggle={layersCtx.onToggle}
+      onSelect={selectionCtx.setSelectedId}
+      onVisibilityChange={layersCtx.onVisibilityChange}
+      onLockChange={layersCtx.onLockChange}
+    />
+  );
+});
+
+const CanvasPanel = memo(function CanvasPanel() {
+  const selectionCtx = useContext(SelectionContext);
+  const toolbarCtx = useContext(ToolbarContext);
+
+  if (!selectionCtx || !toolbarCtx) {
+    return null;
+  }
+
+  return (
+    <div style={{ position: "relative", height: "100%" }}>
+      <CanvasArea selectedId={selectionCtx.selectedId} />
+      <FloatingToolPalette
+        selectedTool={toolbarCtx.selectedTool}
+        onToolSelect={toolbarCtx.setSelectedTool}
+      />
+    </div>
+  );
+});
+
+const InspectorPanel = memo(function InspectorPanel() {
+  const inspectorCtx = useContext(InspectorContext);
+  const selectionCtx = useContext(SelectionContext);
+
+  if (!inspectorCtx || !selectionCtx) {
+    return null;
+  }
+
+  return (
+    <Inspector
+      inspectorTab={inspectorCtx.inspectorTab}
+      onInspectorTabChange={inspectorCtx.setInspectorTab}
+      selectedLayer={selectionCtx.selectedLayer}
+      fillColor={inspectorCtx.fillColor}
+      onFillColorChange={inspectorCtx.setFillColor}
+      zoomLevel={25}
+    />
+  );
+});
+
+// =====================================================================
 // Design size constants
 // =====================================================================
 
 const DESIGN_WIDTH = 1440;
 const DESIGN_HEIGHT = 900;
+
+// Static layers definition - never changes reference
+const STATIC_LAYERS: LayerDefinition[] = [
+  { id: "filetabs", gridArea: "filetabs", component: <FileTabBar /> },
+  { id: "sidebar", gridArea: "sidebar", component: <SidebarPanel /> },
+  { id: "canvas", gridArea: "canvas", component: <CanvasPanel /> },
+  { id: "inspector", gridArea: "inspector", component: <InspectorPanel /> },
+];
 
 // =====================================================================
 // Main Component
@@ -995,62 +1110,39 @@ export function DesignDemo() {
     ],
   }), []);
 
-  // Memoize each layer component individually to prevent unnecessary re-renders
-  const fileTabBarLayer = useMemo(
-    () => <FileTabBar />,
-    []
+  // Context values - memoized to prevent unnecessary re-renders
+  const sidebarTabValue = useMemo<SidebarTabContextValue>(
+    () => ({ sidebarTab, setSidebarTab }),
+    [sidebarTab]
   );
 
-  const sidebarLayer = useMemo(
-    () => (
-      <Sidebar
-        sidebarTab={sidebarTab}
-        onSidebarTabChange={setSidebarTab}
-        layers={layers}
-        expandedIds={expandedIds}
-        selectedId={selectedId}
-        onToggle={handleToggle}
-        onSelect={setSelectedId}
-        onVisibilityChange={handleVisibilityChange}
-        onLockChange={handleLockChange}
-      />
-    ),
-    [sidebarTab, layers, expandedIds, selectedId, handleToggle, handleVisibilityChange, handleLockChange]
+  const layersValue = useMemo<LayersContextValue>(
+    () => ({
+      layers,
+      expandedIds,
+      onToggle: handleToggle,
+      onVisibilityChange: handleVisibilityChange,
+      onLockChange: handleLockChange,
+    }),
+    [layers, expandedIds, handleToggle, handleVisibilityChange, handleLockChange]
   );
 
-  const canvasLayer = useMemo(
-    () => (
-      <div style={{ position: "relative", height: "100%" }}>
-        <CanvasArea selectedId={selectedId} />
-        <FloatingToolPalette selectedTool={selectedTool} onToolSelect={setSelectedTool} />
-      </div>
-    ),
-    [selectedId, selectedTool]
+  const selectionValue = useMemo<SelectionContextValue>(
+    () => ({ selectedId, setSelectedId, selectedLayer }),
+    [selectedId, selectedLayer]
   );
 
-  // Note: zoomLevel is now managed inside CanvasArea; using initial value for display
-  const inspectorLayer = useMemo(
-    () => (
-      <Inspector
-        inspectorTab={inspectorTab}
-        onInspectorTabChange={setInspectorTab}
-        selectedLayer={selectedLayer}
-        fillColor={fillColor}
-        onFillColorChange={setFillColor}
-        zoomLevel={25}
-      />
-    ),
-    [inspectorTab, selectedLayer, fillColor]
+  const inspectorValue = useMemo<InspectorContextValue>(
+    () => ({ inspectorTab, setInspectorTab, fillColor, setFillColor }),
+    [inspectorTab, fillColor]
   );
 
-  const layers_ = useMemo<LayerDefinition[]>(() => [
-    { id: "filetabs", gridArea: "filetabs", component: fileTabBarLayer },
-    { id: "sidebar", gridArea: "sidebar", component: sidebarLayer },
-    { id: "canvas", gridArea: "canvas", component: canvasLayer },
-    { id: "inspector", gridArea: "inspector", component: inspectorLayer },
-  ], [fileTabBarLayer, sidebarLayer, canvasLayer, inspectorLayer]);
+  const toolbarValue = useMemo<ToolbarContextValue>(
+    () => ({ selectedTool, setSelectedTool }),
+    [selectedTool]
+  );
 
-  const containerStyle: CSSProperties = {
+  const containerStyle: CSSProperties = useMemo(() => ({
     height: "100vh",
     width: "100%",
     display: "flex",
@@ -1058,9 +1150,9 @@ export function DesignDemo() {
     justifyContent: "center",
     backgroundColor: "var(--rei-color-surface-sunken)",
     overflow: "hidden",
-  };
+  }), []);
 
-  const contentStyle: CSSProperties = {
+  const contentStyle: CSSProperties = useMemo(() => ({
     width: DESIGN_WIDTH,
     height: DESIGN_HEIGHT,
     transform: `scale(${scale})`,
@@ -1069,13 +1161,23 @@ export function DesignDemo() {
     boxShadow: "0 4px 24px rgba(0, 0, 0, 0.15)",
     borderRadius: 8,
     overflow: "hidden",
-  };
+  }), [scale]);
 
   return (
-    <div ref={containerRef} style={containerStyle}>
-      <div style={contentStyle}>
-        <GridLayout config={config} layers={layers_} />
-      </div>
-    </div>
+    <SidebarTabContext.Provider value={sidebarTabValue}>
+      <LayersContext.Provider value={layersValue}>
+        <SelectionContext.Provider value={selectionValue}>
+          <InspectorContext.Provider value={inspectorValue}>
+            <ToolbarContext.Provider value={toolbarValue}>
+              <div ref={containerRef} style={containerStyle}>
+                <div style={contentStyle}>
+                  <GridLayout config={config} layers={STATIC_LAYERS} />
+                </div>
+              </div>
+            </ToolbarContext.Provider>
+          </InspectorContext.Provider>
+        </SelectionContext.Provider>
+      </LayersContext.Provider>
+    </SidebarTabContext.Provider>
   );
 }
