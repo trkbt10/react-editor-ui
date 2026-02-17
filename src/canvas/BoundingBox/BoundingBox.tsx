@@ -7,21 +7,52 @@
  * Rotation is triggered by hovering outside the corner handles.
  * Handles pointer capture internally for smooth drag operations on all devices.
  *
+ * ## Important: Cumulative Delta Pattern
+ *
+ * The `onMove` and `onResize` callbacks provide **cumulative deltas from the drag start position**,
+ * NOT incremental deltas between frames. This means:
+ *
+ * - You MUST store the original position when `onMoveStart`/`onResizeStart` is called
+ * - Apply the cumulative delta to the ORIGINAL position, not the current position
+ *
+ * ### Correct Pattern:
+ * ```tsx
+ * const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+ *
+ * const handleMoveStart = () => {
+ *   dragStartRef.current = { x: position.x, y: position.y };
+ * };
+ *
+ * const handleMove = (deltaX: number, deltaY: number) => {
+ *   const start = dragStartRef.current;
+ *   if (!start) return;
+ *   setPosition({ x: start.x + deltaX, y: start.y + deltaY }); // Apply to ORIGINAL
+ * };
+ * ```
+ *
+ * ### Wrong Pattern (causes acceleration):
+ * ```tsx
+ * // DON'T DO THIS - treats cumulative delta as incremental
+ * const handleMove = (deltaX: number, deltaY: number) => {
+ *   setPosition(prev => ({ x: prev.x + deltaX, y: prev.y + deltaY }));
+ * };
+ * ```
+ *
  * @example
  * ```tsx
- * <Canvas viewport={viewport} onViewportChange={setViewport} width={800} height={600}
- *   svgLayers={
- *     <BoundingBox
- *       x={100}
- *       y={100}
- *       width={200}
- *       height={150}
- *       rotation={0}
- *       onMove={(dx, dy) => updatePosition(dx, dy)}
- *       onResize={(handle, dx, dy) => updateSize(handle, dx, dy)}
- *       onRotate={(angle) => updateRotation(angle)}
- *     />
- *   }
+ * const dragStartRef = useRef<Position | null>(null);
+ *
+ * <BoundingBox
+ *   x={position.x}
+ *   y={position.y}
+ *   width={200}
+ *   height={150}
+ *   onMoveStart={() => { dragStartRef.current = position; }}
+ *   onMove={(dx, dy) => {
+ *     const start = dragStartRef.current;
+ *     if (start) setPosition({ x: start.x + dx, y: start.y + dy });
+ *   }}
+ *   onMoveEnd={() => { dragStartRef.current = null; }}
  * />
  * ```
  */
@@ -83,18 +114,26 @@ export type BoundingBoxProps = {
   rotationZoneSize?: number;
   /** Show edge handles (not just corners) */
   showEdgeHandles?: boolean;
-  /** Called when move starts */
+  /** Called when move starts - use this to capture original position */
   onMoveStart?: () => void;
-  /** Called during move drag (delta in canvas coordinates) */
+  /**
+   * Called during move drag with CUMULATIVE delta from start position.
+   * Apply delta to original position captured in onMoveStart, NOT to current position.
+   */
   onMove?: (deltaX: number, deltaY: number) => void;
   /** Called when move ends */
   onMoveEnd?: () => void;
-  /** Called when resize starts */
+  /** Called when resize starts - use this to capture original bounds */
   onResizeStart?: (handle: HandlePosition) => void;
-  /** Called during resize drag (delta in canvas coordinates) */
+  /**
+   * Called during resize drag with CUMULATIVE delta from start position.
+   * Apply delta to original bounds captured in onResizeStart, NOT to current bounds.
+   */
   onResize?: (handle: HandlePosition, deltaX: number, deltaY: number) => void;
   /** Called when resize ends */
   onResizeEnd?: (handle: HandlePosition) => void;
+  /** Called on double-click (for text editing) */
+  onDoubleClick?: () => void;
   /** Called when rotation starts */
   onRotateStart?: () => void;
   /** Called during rotation (angle in degrees from center) */
@@ -195,6 +234,7 @@ export const BoundingBox = memo(function BoundingBox({
   onRotateStart,
   onRotate,
   onRotateEnd,
+  onDoubleClick,
   interactive = true,
 }: BoundingBoxProps): ReactNode {
   const { viewport, screenToCanvas } = useCanvasContext();
@@ -264,6 +304,7 @@ export const BoundingBox = memo(function BoundingBox({
     onRotateStart,
     onRotate,
     onRotateEnd,
+    onDoubleClick,
   });
   callbacksRef.current = {
     onMoveStart,
@@ -275,6 +316,7 @@ export const BoundingBox = memo(function BoundingBox({
     onRotateStart,
     onRotate,
     onRotateEnd,
+    onDoubleClick,
   };
 
   // Store mutable values in refs for stable callbacks
@@ -336,11 +378,10 @@ export const BoundingBox = memo(function BoundingBox({
       }
 
       const canvasPos = screenToCanvas(event.clientX, event.clientY);
-      const deltaX = canvasPos.x - state.lastX;
-      const deltaY = canvasPos.y - state.lastY;
-
-      state.lastX = canvasPos.x;
-      state.lastY = canvasPos.y;
+      // Calculate cumulative delta from START position (not last position)
+      // This prevents snap drift issues
+      const deltaX = canvasPos.x - state.startX;
+      const deltaY = canvasPos.y - state.startY;
 
       const { centerX: cx, centerY: cy } = propsRef.current;
       const callbacks = callbacksRef.current;
@@ -389,6 +430,10 @@ export const BoundingBox = memo(function BoundingBox({
     [],
   );
 
+  const handleDoubleClick = useCallback((): void => {
+    callbacksRef.current.onDoubleClick?.();
+  }, []);
+
   // Transform string for rotation
   const transform = rotation !== 0 ? `rotate(${rotation} ${centerX} ${centerY})` : undefined;
 
@@ -427,6 +472,7 @@ export const BoundingBox = memo(function BoundingBox({
         onPointerDown={(e) => handlePointerDown("move", e)}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onDoubleClick={handleDoubleClick}
         data-testid="bounding-box-move-area"
       />
 

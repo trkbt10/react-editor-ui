@@ -3,7 +3,7 @@
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect, memo, createContext, useContext, type CSSProperties, type ReactNode } from "react";
-import { Portal } from "../../../components/Portal/Portal";
+import { Portal } from "../../../../components/Portal/Portal";
 import {
   GridLayout,
   type PanelLayoutConfig,
@@ -31,44 +31,44 @@ import {
   LuCircleHelp,
 } from "react-icons/lu";
 
-import { Canvas } from "../../../canvas/Canvas/Canvas";
-import { CanvasGridLayer } from "../../../canvas/CanvasGridLayer/CanvasGridLayer";
+import { Canvas } from "../../../../canvas/Canvas/Canvas";
+import { CanvasGridLayer } from "../../../../canvas/CanvasGridLayer/CanvasGridLayer";
 import {
   CanvasHorizontalRuler,
   CanvasVerticalRuler,
   CanvasRulerCorner,
-} from "../../../canvas/CanvasRuler/CanvasRuler";
-import { BoundingBox, type HandlePosition } from "../../../canvas/BoundingBox/BoundingBox";
+} from "../../../../canvas/CanvasRuler/CanvasRuler";
+import { BoundingBox, type HandlePosition } from "../../../../canvas/BoundingBox/BoundingBox";
 
-import { TabBar } from "../../../components/TabBar/TabBar";
-import { PropertySection } from "../../../components/PropertySection/PropertySection";
-import { PropertyRow } from "../../../components/PropertyRow/PropertyRow";
-import { LayerItem } from "../../../components/LayerItem/LayerItem";
-import { Toolbar } from "../../../components/Toolbar/Toolbar";
-import { ToolbarGroup } from "../../../components/Toolbar/ToolbarGroup";
-import { ToolbarDivider } from "../../../components/Toolbar/ToolbarDivider";
-import { IconButton } from "../../../components/IconButton/IconButton";
-import { Button } from "../../../components/Button/Button";
-import { ColorInput } from "../../../components/ColorInput/ColorInput";
-import type { ColorValue } from "../../../utils/color/types";
-import { Input } from "../../../components/Input/Input";
-import { Tooltip } from "../../../components/Tooltip/Tooltip";
-import { SectionHeader } from "../../../components/SectionHeader/SectionHeader";
-import { ProjectMenu } from "../../../components/ProjectMenu/ProjectMenu";
+import { TabBar } from "../../../../components/TabBar/TabBar";
+import { PropertySection } from "../../../../components/PropertySection/PropertySection";
+import { PropertyRow } from "../../../../components/PropertyRow/PropertyRow";
+import { LayerItem } from "../../../../components/LayerItem/LayerItem";
+import { Toolbar } from "../../../../components/Toolbar/Toolbar";
+import { ToolbarGroup } from "../../../../components/Toolbar/ToolbarGroup";
+import { ToolbarDivider } from "../../../../components/Toolbar/ToolbarDivider";
+import { IconButton } from "../../../../components/IconButton/IconButton";
+import { Button } from "../../../../components/Button/Button";
+import { ColorInput } from "../../../../components/ColorInput/ColorInput";
+import type { ColorValue } from "../../../../utils/color/types";
+import { Input } from "../../../../components/Input/Input";
+import { Tooltip } from "../../../../components/Tooltip/Tooltip";
+import { SectionHeader } from "../../../../components/SectionHeader/SectionHeader";
+import { ProjectMenu } from "../../../../components/ProjectMenu/ProjectMenu";
 
-import type { ViewportState } from "../../../canvas/core/types";
+import type { ViewportState } from "../../../../canvas/core/types";
 import {
   designLayers,
   designTools,
   type DesignLayer,
-} from "./mockData";
+} from "../mockData";
 import {
   FrameLayerIcon,
   TextLayerIcon,
   EllipseLayerIcon,
   RectangleLayerIcon,
   GroupLayerIcon,
-} from "../../components/DemoIcons";
+} from "../../../components/DemoIcons";
 
 // =====================================================================
 // Contexts - Split for granular updates
@@ -636,6 +636,9 @@ const CanvasArea = memo(function CanvasArea({
   const [viewport, setViewport] = useState(INITIAL_VIEWPORT);
   const [transform, setTransform] = useState(INITIAL_TRANSFORM);
 
+  // Store original transform when drag starts (BoundingBox provides cumulative deltas)
+  const dragStartRef = useRef<TransformState | null>(null);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
@@ -656,17 +659,38 @@ const CanvasArea = memo(function CanvasArea({
     return () => observer.disconnect();
   }, []);
 
-  // Stable handlers using functional updates
+  // Move handlers - BoundingBox provides cumulative deltas from start position
+  const handleMoveStart = useCallback(() => {
+    dragStartRef.current = transform;
+  }, [transform]);
+
   const handleMove = useCallback((deltaX: number, deltaY: number) => {
-    setTransform((prev) => ({
-      ...prev,
-      x: prev.x + deltaX,
-      y: prev.y + deltaY,
-    }));
+    const start = dragStartRef.current;
+    if (!start) return;
+    setTransform({
+      ...start,
+      x: start.x + deltaX,
+      y: start.y + deltaY,
+    });
   }, []);
 
+  const handleMoveEnd = useCallback(() => {
+    dragStartRef.current = null;
+  }, []);
+
+  // Resize handlers - BoundingBox provides cumulative deltas from start position
+  const handleResizeStart = useCallback(() => {
+    dragStartRef.current = transform;
+  }, [transform]);
+
   const handleResize = useCallback((handle: HandlePosition, deltaX: number, deltaY: number) => {
-    setTransform((prev) => applyResize(prev, handle, deltaX, deltaY));
+    const start = dragStartRef.current;
+    if (!start) return;
+    setTransform(applyResize(start, handle, deltaX, deltaY));
+  }, []);
+
+  const handleResizeEnd = useCallback(() => {
+    dragStartRef.current = null;
   }, []);
 
   const handleRotate = useCallback((angle: number) => {
@@ -713,13 +737,17 @@ const CanvasArea = memo(function CanvasArea({
           width={transform.width}
           height={transform.height}
           rotation={transform.rotation}
+          onMoveStart={handleMoveStart}
           onMove={handleMove}
+          onMoveEnd={handleMoveEnd}
+          onResizeStart={handleResizeStart}
           onResize={handleResize}
+          onResizeEnd={handleResizeEnd}
           onRotate={handleRotate}
         />
       ) : null}
     </>
-  ), [selectedId, transform.x, transform.y, transform.width, transform.height, transform.rotation, handleMove, handleResize, handleRotate]);
+  ), [selectedId, transform.x, transform.y, transform.width, transform.height, transform.rotation, handleMoveStart, handleMove, handleMoveEnd, handleResizeStart, handleResize, handleResizeEnd, handleRotate]);
 
   return (
     <div ref={containerRef} style={canvasContainerStyle}>

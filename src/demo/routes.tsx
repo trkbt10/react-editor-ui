@@ -68,6 +68,7 @@ import { TreeItemDemo } from "./pages/data-display/TreeItemDemo";
 import { LayerItemDemo } from "./pages/data-display/LayerItemDemo";
 import { SelectDemo } from "./pages/data-display/SelectDemo";
 import { ContextMenuDemo } from "./pages/data-display/ContextMenuDemo";
+import { LibraryBrowserDemo } from "./pages/data-display/LibraryBrowserDemo";
 
 // Feedback demos
 import { StatusBarDemo } from "./pages/feedback/StatusBarDemo";
@@ -92,7 +93,7 @@ import { CanvasGuideDemo } from "./pages/canvas/CanvasGuideDemo";
 import { CanvasCheckerboardDemo } from "./pages/canvas/CanvasCheckerboardDemo";
 
 // App demos
-import { DesignDemo } from "./pages/app-demo/DesignDemo";
+import { DesignDemo } from "./pages/app-demo/design/DesignDemo";
 import { IDEDemo } from "./pages/app-demo/IDEDemo";
 import { DiagramDemo } from "./pages/app-demo/diagram/DiagramDemo";
 
@@ -412,6 +413,12 @@ export const demoCategories: DemoCategory[] = [
         label: "ContextMenu",
         path: "context-menu",
         element: <ContextMenuDemo />,
+      },
+      {
+        id: "library-browser",
+        label: "LibraryBrowser",
+        path: "library-browser",
+        element: <LibraryBrowserDemo />,
       },
     ],
   },
