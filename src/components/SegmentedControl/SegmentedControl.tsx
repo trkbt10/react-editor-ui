@@ -44,6 +44,8 @@ export type SegmentedControlProps<T extends string = string> = {
   value: T | T[];
   onChange: (value: T | T[]) => void;
   size?: "sm" | "md" | "lg";
+  /** Use "icon" variant for icon-only buttons (square shape) */
+  variant?: "default" | "icon";
   disabled?: boolean;
   multiple?: boolean;
   fullWidth?: boolean;
@@ -55,26 +57,35 @@ const sizeMap = {
   sm: {
     height: SIZE_HEIGHT_SM,
     innerHeight: "calc(var(--rei-size-height-sm, 22px) - 4px)",
+    iconInnerHeight: "calc(var(--rei-size-height-sm, 22px) - 4px)",
     fontSize: SIZE_FONT_SM,
     iconSize: SIZE_ICON_SM,
     paddingX: SPACE_SM,
-    containerPadding: "2px",
+    iconPaddingX: SPACE_XS,
+    containerPadding: SPACE_XS,
+    iconContainerPadding: SPACE_XS,
   },
   md: {
     height: SIZE_HEIGHT_MD,
     innerHeight: "calc(var(--rei-size-height-md, 28px) - 4px)",
+    iconInnerHeight: "calc(var(--rei-size-height-md, 28px) - 4px)",
     fontSize: SIZE_FONT_MD,
     iconSize: SIZE_ICON_MD,
     paddingX: SPACE_MD,
-    containerPadding: "2px",
+    iconPaddingX: SPACE_SM,
+    containerPadding: SPACE_XS,
+    iconContainerPadding: SPACE_XS,
   },
   lg: {
     height: SIZE_HEIGHT_LG,
     innerHeight: "calc(var(--rei-size-height-lg, 32px) - 6px)",
+    iconInnerHeight: "calc(var(--rei-size-height-lg, 32px) - 4px)",
     fontSize: SIZE_FONT_MD,
     iconSize: SIZE_ICON_LG,
     paddingX: SPACE_MD,
-    containerPadding: "3px",
+    iconPaddingX: SPACE_SM,
+    containerPadding: SPACE_SM,
+    iconContainerPadding: SPACE_XS,
   },
 };
 
@@ -97,6 +108,7 @@ type SegmentButtonProps<T extends string> = {
   selected: boolean;
   disabled: boolean;
   multiple: boolean;
+  variant: "default" | "icon";
   sizeConfig: (typeof sizeMap)["md"];
   onClick: (value: T, disabled: boolean) => void;
 };
@@ -129,6 +141,9 @@ function areSegmentButtonPropsEqual<T extends string>(
   if (prevProps.multiple !== nextProps.multiple) {
     return false;
   }
+  if (prevProps.variant !== nextProps.variant) {
+    return false;
+  }
   if (prevProps.sizeConfig !== nextProps.sizeConfig) {
     return false;
   }
@@ -141,6 +156,7 @@ const SegmentButtonInner = function SegmentButton<T extends string>({
   selected,
   disabled: groupDisabled,
   multiple,
+  variant,
   sizeConfig,
   onClick,
 }: SegmentButtonProps<T>) {
@@ -178,15 +194,20 @@ const SegmentButtonInner = function SegmentButton<T extends string>({
       return "none";
     };
 
+    const isIconVariant = variant === "icon";
+    const paddingX = isIconVariant ? sizeConfig.iconPaddingX : sizeConfig.paddingX;
+    const innerHeight = isIconVariant ? sizeConfig.iconInnerHeight : sizeConfig.innerHeight;
+
     return {
-      flex: 1,
-      minWidth: 0,
+      flex: isIconVariant ? "none" : 1,
+      minWidth: isIconVariant ? innerHeight : 0,
+      aspectRatio: isIconVariant ? "1" : undefined,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       gap: SPACE_XS,
-      height: sizeConfig.innerHeight,
-      padding: `0 ${sizeConfig.paddingX}`,
+      height: innerHeight,
+      padding: `0 ${paddingX}`,
       border: "none",
       borderRadius: `calc(${RADIUS_MD} - 1px)`,
       backgroundColor: getBackgroundColor(),
@@ -198,8 +219,10 @@ const SegmentButtonInner = function SegmentButton<T extends string>({
       opacity: isDisabled ? 0.5 : 1,
       transition: `all ${DURATION_FAST} ${EASING_DEFAULT}`,
       outline: "none",
+      // Visual correction: scale up icon variant buttons slightly to match other toolbar buttons
+      transform: isIconVariant ? "scale(1.05)" : undefined,
     };
-  }, [selected, isDisabled, isPressed, isHovered, isFocused, sizeConfig]);
+  }, [selected, isDisabled, isPressed, isHovered, isFocused, variant, sizeConfig]);
 
   const iconStyle = useMemo<CSSProperties>(
     () => ({
@@ -275,6 +298,7 @@ export const SegmentedControl = memo(function SegmentedControl<T extends string 
   value,
   onChange,
   size = "md",
+  variant = "default",
   disabled = false,
   multiple = false,
   fullWidth = false,
@@ -283,20 +307,21 @@ export const SegmentedControl = memo(function SegmentedControl<T extends string 
 }: SegmentedControlProps<T>) {
   const sizeConfig = sizeMap[size];
 
-  const containerStyle = useMemo<CSSProperties>(
-    () => ({
+  const containerStyle = useMemo<CSSProperties>(() => {
+    const isIconVariant = variant === "icon";
+    const containerPadding = isIconVariant ? sizeConfig.iconContainerPadding : sizeConfig.containerPadding;
+    return {
       display: "flex",
       alignItems: "center",
       width: fullWidth ? "100%" : "auto",
       height: sizeConfig.height,
-      padding: sizeConfig.containerPadding,
+      padding: containerPadding,
       backgroundColor: "var(--rei-color-surface-overlay, #f3f4f6)",
       borderRadius: RADIUS_MD,
       gap: SPACE_2XS,
       boxSizing: "border-box",
-    }),
-    [fullWidth, sizeConfig],
-  );
+    };
+  }, [fullWidth, variant, sizeConfig]);
 
   const handleClick = useCallback(
     (optionValue: T, optionDisabled: boolean) => {
@@ -324,6 +349,7 @@ export const SegmentedControl = memo(function SegmentedControl<T extends string 
           selected={isSelected(value, option.value)}
           disabled={disabled}
           multiple={multiple}
+          variant={variant}
           sizeConfig={sizeConfig}
           onClick={handleClick}
         />

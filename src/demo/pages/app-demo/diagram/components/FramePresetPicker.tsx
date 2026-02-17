@@ -175,13 +175,13 @@ export const FramePresetPicker = memo(function FramePresetPicker({
   return (
     <>
       <div ref={buttonRef}>
-        <Tooltip content="Add Frame (F)" placement="bottom">
+        <Tooltip content="Add Frame (F)" placement="top">
           <IconButton
-            icon={<LuFrame size={16} />}
+            icon={<LuFrame size={18} />}
             aria-label="Add Frame"
             aria-expanded={isOpen}
             aria-haspopup="menu"
-            size="sm"
+            size="lg"
             onClick={handleToggle}
           />
         </Tooltip>
