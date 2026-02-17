@@ -1,10 +1,22 @@
 {
-  "generatedAt": "2026-02-16T07:39:58.435Z",
+  "generatedAt": "2026-02-16T09:43:22.777Z",
   "components": [
     {
       "name": "Badge",
       "entryType": "named",
       "relativePath": "src/components/Badge/Badge.tsx",
+      "category": "component"
+    },
+    {
+      "name": "BoundingBox",
+      "entryType": "named",
+      "relativePath": "src/canvas/BoundingBox/BoundingBox.tsx",
+      "category": "canvas"
+    },
+    {
+      "name": "Breadcrumb",
+      "entryType": "named",
+      "relativePath": "src/components/Breadcrumb/Breadcrumb.tsx",
       "category": "component"
     },
     {
@@ -65,6 +77,12 @@
       "name": "ContextMenu",
       "entryType": "named",
       "relativePath": "src/components/ContextMenu/ContextMenu.tsx",
+      "category": "component"
+    },
+    {
+      "name": "ControlRow",
+      "entryType": "named",
+      "relativePath": "src/components/ControlRow/ControlRow.tsx",
       "category": "component"
     },
     {
@@ -146,6 +164,12 @@
       "category": "panel"
     },
     {
+      "name": "ProjectMenu",
+      "entryType": "named",
+      "relativePath": "src/components/ProjectMenu/ProjectMenu.tsx",
+      "category": "component"
+    },
+    {
       "name": "PropertyGrid",
       "entryType": "named",
       "relativePath": "src/components/PropertyGrid/PropertyGrid.tsx",
@@ -161,6 +185,12 @@
       "name": "PropertySection",
       "entryType": "named",
       "relativePath": "src/components/PropertySection/PropertySection.tsx",
+      "category": "component"
+    },
+    {
+      "name": "SearchInput",
+      "entryType": "named",
+      "relativePath": "src/components/SearchInput/SearchInput.tsx",
       "category": "component"
     },
     {
@@ -206,6 +236,12 @@
       "category": "panel"
     },
     {
+      "name": "TabBar",
+      "entryType": "named",
+      "relativePath": "src/components/TabBar/TabBar.tsx",
+      "category": "component"
+    },
+    {
       "name": "Toolbar",
       "entryType": "named",
       "relativePath": "src/components/Toolbar/Toolbar.tsx",
@@ -215,6 +251,12 @@
       "name": "Tooltip",
       "entryType": "named",
       "relativePath": "src/components/Tooltip/Tooltip.tsx",
+      "category": "component"
+    },
+    {
+      "name": "TooltipIconButton",
+      "entryType": "named",
+      "relativePath": "src/components/TooltipIconButton/TooltipIconButton.tsx",
       "category": "component"
     },
     {
