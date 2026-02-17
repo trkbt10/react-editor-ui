@@ -33,6 +33,8 @@ const dropdownStyle: CSSProperties = {
   boxShadow: "var(--rei-shadow-md)",
   padding: "8px",
   minWidth: "200px",
+  maxHeight: "300px",
+  overflowY: "auto",
   zIndex: 1000,
 };
 
