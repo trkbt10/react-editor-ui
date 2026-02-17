@@ -35,7 +35,7 @@ import { TabBarDemo } from "./pages/primitives/TabBarDemo";
 
 // Layout demos
 import { ToolbarDemo } from "./pages/layout/ToolbarDemo";
-import { FloatingToolbarDemo } from "./pages/layout/FloatingToolbarDemo";
+import { SelectionToolbarDemo } from "./pages/layout/SelectionToolbarDemo";
 import { PropertyGridDemo } from "./pages/layout/PropertyGridDemo";
 import { PropertySectionDemo } from "./pages/layout/PropertySectionDemo";
 
@@ -46,6 +46,17 @@ import { FontsPanelDemo } from "./pages/panels/FontsPanelDemo";
 import { PositionPanelDemo } from "./pages/panels/PositionPanelDemo";
 import { StrokeSettingsPanelDemo } from "./pages/panels/StrokeSettingsPanelDemo";
 import { TypographyPanelDemo } from "./pages/panels/TypographyPanelDemo";
+
+// Sections demos
+import { AlignmentSectionDemo } from "./pages/sections/AlignmentSectionDemo";
+import { PositionSectionDemo } from "./pages/sections/PositionSectionDemo";
+import { SizeSectionDemo } from "./pages/sections/SizeSectionDemo";
+import { RotationSectionDemo } from "./pages/sections/RotationSectionDemo";
+import { ConstraintsSectionDemo } from "./pages/sections/ConstraintsSectionDemo";
+import { TypographySectionDemo } from "./pages/sections/TypographySectionDemo";
+import { AnimationSectionDemo } from "./pages/sections/AnimationSectionDemo";
+import { StrokeSectionDemo } from "./pages/sections/StrokeSectionDemo";
+import { FontsSectionDemo } from "./pages/sections/FontsSectionDemo";
 
 // Composite demos
 import { TransformButtonsDemo } from "./pages/composite/TransformButtonsDemo";
@@ -83,6 +94,7 @@ import { CanvasCheckerboardDemo } from "./pages/canvas/CanvasCheckerboardDemo";
 // App demos
 import { DesignDemo } from "./pages/app-demo/DesignDemo";
 import { IDEDemo } from "./pages/app-demo/IDEDemo";
+import { DiagramDemo } from "./pages/app-demo/diagram/DiagramDemo";
 
 // Dev/Test demos
 import { IconGallery } from "./pages/IconGallery";
@@ -220,10 +232,10 @@ export const demoCategories: DemoCategory[] = [
         element: <ToolbarDemo />,
       },
       {
-        id: "floating-toolbar",
-        label: "FloatingToolbar",
-        path: "floating-toolbar",
-        element: <FloatingToolbarDemo />,
+        id: "selection-toolbar",
+        label: "SelectionToolbar",
+        path: "selection-toolbar",
+        element: <SelectionToolbarDemo />,
       },
       {
         id: "property-grid",
@@ -280,6 +292,68 @@ export const demoCategories: DemoCategory[] = [
         label: "TypographyPanel",
         path: "typography-panel",
         element: <TypographyPanelDemo />,
+      },
+    ],
+  },
+  {
+    id: "sections",
+    label: "Sections",
+    icon: <LuLayers size={18} />,
+    base: "/components/sections",
+    pages: [
+      {
+        id: "alignment-section",
+        label: "AlignmentSection",
+        path: "alignment",
+        element: <AlignmentSectionDemo />,
+      },
+      {
+        id: "position-section",
+        label: "PositionSection",
+        path: "position",
+        element: <PositionSectionDemo />,
+      },
+      {
+        id: "size-section",
+        label: "SizeSection",
+        path: "size",
+        element: <SizeSectionDemo />,
+      },
+      {
+        id: "rotation-section",
+        label: "RotationSection",
+        path: "rotation",
+        element: <RotationSectionDemo />,
+      },
+      {
+        id: "constraints-section",
+        label: "ConstraintsSection",
+        path: "constraints",
+        element: <ConstraintsSectionDemo />,
+      },
+      {
+        id: "typography-section",
+        label: "TypographySection",
+        path: "typography",
+        element: <TypographySectionDemo />,
+      },
+      {
+        id: "animation-section",
+        label: "AnimationSection",
+        path: "animation",
+        element: <AnimationSectionDemo />,
+      },
+      {
+        id: "stroke-section",
+        label: "StrokeSection",
+        path: "stroke",
+        element: <StrokeSectionDemo />,
+      },
+      {
+        id: "fonts-section",
+        label: "FontsSection",
+        path: "fonts",
+        element: <FontsSectionDemo />,
       },
     ],
   },
@@ -474,6 +548,12 @@ export const demoCategories: DemoCategory[] = [
         label: "IDE",
         path: "ide",
         element: <IDEDemo />,
+      },
+      {
+        id: "diagram",
+        label: "Diagram Editor",
+        path: "diagram",
+        element: <DiagramDemo />,
       },
     ],
   },

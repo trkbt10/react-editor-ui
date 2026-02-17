@@ -153,7 +153,7 @@ export {
   getCommand,
   executeCommand,
   getActiveTagsAtRange,
-  // Default operations for FloatingToolbar
+  // Default operations for SelectionToolbar
   createInlineOperations,
   defaultInlineOperations,
 } from "./text";

@@ -1,7 +1,7 @@
 /**
- * @file FloatingToolbar types
+ * @file SelectionToolbar types
  *
- * Type definitions for the generic FloatingToolbar component.
+ * Type definitions for the SelectionToolbar component.
  * This component is Editor-agnostic and can be used with any selection-based UI.
  */
 
@@ -12,10 +12,10 @@ import type { ReactNode } from "react";
 // =============================================================================
 
 /**
- * Anchor rectangle for positioning the FloatingToolbar.
+ * Anchor rectangle for positioning the SelectionToolbar.
  * Represents the bounding box of the selected content.
  */
-export type FloatingToolbarAnchor = {
+export type SelectionToolbarAnchor = {
   /** X coordinate of the anchor (viewport-relative) */
   readonly x: number;
   /** Y coordinate of the anchor (viewport-relative) */
@@ -31,10 +31,10 @@ export type FloatingToolbarAnchor = {
 // =============================================================================
 
 /**
- * A single operation that can be performed from the FloatingToolbar.
+ * A single operation that can be performed from the SelectionToolbar.
  * Operations are UI-only definitions; the actual logic is handled by the consumer.
  */
-export type FloatingToolbarOperation = {
+export type SelectionToolbarOperation = {
   /** Unique identifier for the operation */
   readonly id: string;
   /** Display label for the operation */
@@ -54,22 +54,22 @@ export type FloatingToolbarOperation = {
 // =============================================================================
 
 /**
- * Placement of the FloatingToolbar relative to the anchor.
+ * Placement of the SelectionToolbar relative to the anchor.
  */
-export type FloatingToolbarPlacement = "top" | "bottom";
+export type SelectionToolbarPlacement = "top" | "bottom";
 
 /**
- * Props for the FloatingToolbar component.
+ * Props for the SelectionToolbar component.
  */
-export type FloatingToolbarProps = {
+export type SelectionToolbarProps = {
   /** Anchor rectangle defining where to position the toolbar */
-  readonly anchor: FloatingToolbarAnchor;
+  readonly anchor: SelectionToolbarAnchor;
   /** Operations to display in the toolbar */
-  readonly operations: readonly FloatingToolbarOperation[];
+  readonly operations: readonly SelectionToolbarOperation[];
   /** Callback when an operation is selected */
   readonly onOperationSelect: (operationId: string) => void;
   /** Preferred placement relative to anchor (default: "top") */
-  readonly placement?: FloatingToolbarPlacement;
+  readonly placement?: SelectionToolbarPlacement;
   /** Additional CSS class name */
   readonly className?: string;
 };

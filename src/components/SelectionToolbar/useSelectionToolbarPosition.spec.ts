@@ -1,13 +1,13 @@
 /**
- * @file useFloatingToolbarPosition tests
+ * @file useSelectionToolbarPosition tests
  */
 
 import { renderHook } from "@testing-library/react";
 import {
-  calculateFloatingToolbarPosition,
-  useFloatingToolbarPosition,
-} from "./useFloatingToolbarPosition";
-import type { FloatingToolbarAnchor } from "./types";
+  calculateSelectionToolbarPosition,
+  useSelectionToolbarPosition,
+} from "./useSelectionToolbarPosition";
+import type { SelectionToolbarAnchor } from "./types";
 
 // =============================================================================
 // Test Setup
@@ -18,7 +18,7 @@ const TOOLBAR_HEIGHT = 36;
 const VIEWPORT_WIDTH = 1024;
 const VIEWPORT_HEIGHT = 768;
 
-const createAnchor = (x: number, y: number, width = 100, height = 20): FloatingToolbarAnchor => ({
+const createAnchor = (x: number, y: number, width = 100, height = 20): SelectionToolbarAnchor => ({
   x,
   y,
   width,
@@ -42,14 +42,14 @@ afterEach(() => {
 });
 
 // =============================================================================
-// calculateFloatingToolbarPosition Tests
+// calculateSelectionToolbarPosition Tests
 // =============================================================================
 
-describe("calculateFloatingToolbarPosition", () => {
+describe("calculateSelectionToolbarPosition", () => {
   describe("basic positioning", () => {
     it("should position toolbar above anchor when placement is top", () => {
       const anchor = createAnchor(400, 200);
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "top",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -63,7 +63,7 @@ describe("calculateFloatingToolbarPosition", () => {
 
     it("should position toolbar below anchor when placement is bottom", () => {
       const anchor = createAnchor(400, 200);
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "bottom",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -77,7 +77,7 @@ describe("calculateFloatingToolbarPosition", () => {
 
     it("should center toolbar horizontally relative to anchor", () => {
       const anchor = createAnchor(400, 200, 100);
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "top",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -95,7 +95,7 @@ describe("calculateFloatingToolbarPosition", () => {
     it("should clamp toolbar to left viewport edge", () => {
       // Anchor near left edge
       const anchor = createAnchor(10, 200, 20);
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "top",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -109,7 +109,7 @@ describe("calculateFloatingToolbarPosition", () => {
     it("should clamp toolbar to right viewport edge", () => {
       // Anchor near right edge
       const anchor = createAnchor(VIEWPORT_WIDTH - 30, 200, 20);
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "top",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -125,7 +125,7 @@ describe("calculateFloatingToolbarPosition", () => {
     it("should flip to bottom when top placement would overflow", () => {
       // Anchor near top edge
       const anchor = createAnchor(400, 30, 100);
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "top",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -140,7 +140,7 @@ describe("calculateFloatingToolbarPosition", () => {
     it("should flip to top when bottom placement would overflow", () => {
       // Anchor near bottom edge
       const anchor = createAnchor(400, VIEWPORT_HEIGHT - 50, 100);
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "bottom",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -157,7 +157,7 @@ describe("calculateFloatingToolbarPosition", () => {
       Object.defineProperty(globalThis, "innerHeight", { value: 80, writable: true });
       const anchor = createAnchor(400, 40, 100, 10);
 
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "top",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -173,7 +173,7 @@ describe("calculateFloatingToolbarPosition", () => {
   describe("offset", () => {
     it("should include offset between toolbar and anchor", () => {
       const anchor = createAnchor(400, 200);
-      const result = calculateFloatingToolbarPosition({
+      const result = calculateSelectionToolbarPosition({
         anchor,
         placement: "top",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -188,15 +188,15 @@ describe("calculateFloatingToolbarPosition", () => {
 });
 
 // =============================================================================
-// useFloatingToolbarPosition Hook Tests
+// useSelectionToolbarPosition Hook Tests
 // =============================================================================
 
-describe("useFloatingToolbarPosition", () => {
+describe("useSelectionToolbarPosition", () => {
   it("should return position using the hook", () => {
     const anchor = createAnchor(400, 200);
 
     const { result } = renderHook(() =>
-      useFloatingToolbarPosition({
+      useSelectionToolbarPosition({
         anchor,
         placement: "top",
         toolbarWidth: TOOLBAR_WIDTH,
@@ -213,7 +213,7 @@ describe("useFloatingToolbarPosition", () => {
     const anchor = createAnchor(400, 200);
 
     const { result, rerender } = renderHook(
-      (props) => useFloatingToolbarPosition(props),
+      (props) => useSelectionToolbarPosition(props),
       {
         initialProps: {
           anchor,
@@ -240,7 +240,7 @@ describe("useFloatingToolbarPosition", () => {
 
   it("should recalculate when anchor changes", () => {
     const { result, rerender } = renderHook(
-      (props) => useFloatingToolbarPosition(props),
+      (props) => useSelectionToolbarPosition(props),
       {
         initialProps: {
           anchor: createAnchor(400, 200),

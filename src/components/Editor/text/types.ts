@@ -13,6 +13,7 @@ import type {
   TextStyle,
 } from "../core/types";
 import type { BlockDocument } from "../block/blockDocument";
+import type { ViewportConfig } from "../renderers/viewport/types";
 
 // =============================================================================
 // Text Editor Props
@@ -46,11 +47,16 @@ export type TextEditorProps = {
   readonly onSelectionChange?: (selection: SelectionRange | undefined) => void;
   /**
    * Called when text selection changes with enhanced metadata.
-   * Includes anchor rect for FloatingToolbar positioning.
+   * Includes anchor rect for SelectionToolbar positioning.
    */
   readonly onTextSelectionChange?: (event: TextSelectionEvent | null) => void;
   /** Tab size in spaces */
   readonly tabSize?: number;
+  /**
+   * Viewport configuration for fixed viewport mode.
+   * When provided, enables viewport-based rendering.
+   */
+  readonly viewportConfig?: ViewportConfig;
 };
 
 // =============================================================================
@@ -77,7 +83,7 @@ export type StyleToken = {
 // =============================================================================
 
 /**
- * Anchor rectangle for FloatingToolbar positioning.
+ * Anchor rectangle for SelectionToolbar positioning.
  * Represents the bounding box of the selection in viewport coordinates.
  */
 export type SelectionAnchorRect = {
@@ -92,7 +98,7 @@ export type SelectionAnchorRect = {
 };
 
 /**
- * Text selection event with additional metadata for FloatingToolbar.
+ * Text selection event with additional metadata for SelectionToolbar.
  * Emitted when text is selected in the TextEditor.
  */
 export type TextSelectionEvent = {
@@ -102,7 +108,7 @@ export type TextSelectionEvent = {
   readonly startOffset: number;
   /** End offset in the document (0-based character index) */
   readonly endOffset: number;
-  /** Anchor rectangle for FloatingToolbar positioning */
+  /** Anchor rectangle for SelectionToolbar positioning */
   readonly anchorRect: SelectionAnchorRect;
   /** Text content that is selected */
   readonly selectedText: string;

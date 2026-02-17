@@ -1,12 +1,12 @@
 /**
- * @file useFloatingToolbarPosition hook
+ * @file useSelectionToolbarPosition hook
  *
- * Calculates the position of the FloatingToolbar relative to an anchor rectangle.
+ * Calculates the position of the SelectionToolbar relative to an anchor rectangle.
  * Handles viewport clamping to ensure the toolbar stays visible.
  */
 
 import { useMemo } from "react";
-import type { FloatingToolbarAnchor, FloatingToolbarPlacement } from "./types";
+import type { SelectionToolbarAnchor, SelectionToolbarPlacement } from "./types";
 
 // =============================================================================
 // Constants
@@ -23,25 +23,25 @@ const VIEWPORT_PADDING = 8;
 // =============================================================================
 
 /**
- * Computed position for the FloatingToolbar.
+ * Computed position for the SelectionToolbar.
  */
-export type FloatingToolbarPosition = {
+export type SelectionToolbarPosition = {
   /** X coordinate (left) */
   readonly x: number;
   /** Y coordinate (top) */
   readonly y: number;
   /** Actual placement after viewport adjustment */
-  readonly actualPlacement: FloatingToolbarPlacement;
+  readonly actualPlacement: SelectionToolbarPlacement;
 };
 
 /**
  * Options for position calculation.
  */
-export type UseFloatingToolbarPositionOptions = {
+export type UseSelectionToolbarPositionOptions = {
   /** Anchor rectangle */
-  readonly anchor: FloatingToolbarAnchor;
+  readonly anchor: SelectionToolbarAnchor;
   /** Preferred placement */
-  readonly placement: FloatingToolbarPlacement;
+  readonly placement: SelectionToolbarPlacement;
   /** Toolbar width (estimated or measured) */
   readonly toolbarWidth: number;
   /** Toolbar height (estimated or measured) */
@@ -56,8 +56,8 @@ export type UseFloatingToolbarPositionOptions = {
  * Calculate Y position based on placement.
  */
 function calculateYPosition(
-  anchor: FloatingToolbarAnchor,
-  placement: FloatingToolbarPlacement,
+  anchor: SelectionToolbarAnchor,
+  placement: SelectionToolbarPlacement,
   toolbarHeight: number,
 ): number {
   if (placement === "top") {
@@ -70,8 +70,8 @@ function calculateYPosition(
  * Calculate raw position without viewport adjustment.
  */
 function calculateRawPosition(
-  anchor: FloatingToolbarAnchor,
-  placement: FloatingToolbarPlacement,
+  anchor: SelectionToolbarAnchor,
+  placement: SelectionToolbarPlacement,
   toolbarWidth: number,
   toolbarHeight: number,
 ): { x: number; y: number } {
@@ -86,7 +86,7 @@ function calculateRawPosition(
 function wouldOverflowViewport(
   y: number,
   toolbarHeight: number,
-  placement: FloatingToolbarPlacement,
+  placement: SelectionToolbarPlacement,
 ): boolean {
   if (placement === "top") {
     return y < VIEWPORT_PADDING;
@@ -106,7 +106,7 @@ function clampX(x: number, toolbarWidth: number): number {
 /**
  * Get opposite placement.
  */
-function getOppositePlacement(placement: FloatingToolbarPlacement): FloatingToolbarPlacement {
+function getOppositePlacement(placement: SelectionToolbarPlacement): SelectionToolbarPlacement {
   return placement === "top" ? "bottom" : "top";
 }
 
@@ -114,11 +114,11 @@ function getOppositePlacement(placement: FloatingToolbarPlacement): FloatingTool
  * Calculate position with potential placement flip.
  */
 function calculatePositionWithFlip(
-  anchor: FloatingToolbarAnchor,
-  placement: FloatingToolbarPlacement,
+  anchor: SelectionToolbarAnchor,
+  placement: SelectionToolbarPlacement,
   toolbarWidth: number,
   toolbarHeight: number,
-): { y: number; actualPlacement: FloatingToolbarPlacement } {
+): { y: number; actualPlacement: SelectionToolbarPlacement } {
   const initialPos = calculateRawPosition(anchor, placement, toolbarWidth, toolbarHeight);
 
   // Check if we need to flip
@@ -139,11 +139,11 @@ function calculatePositionWithFlip(
 }
 
 /**
- * Calculate position for the FloatingToolbar.
+ * Calculate position for the SelectionToolbar.
  */
-export function calculateFloatingToolbarPosition(
-  options: UseFloatingToolbarPositionOptions,
-): FloatingToolbarPosition {
+export function calculateSelectionToolbarPosition(
+  options: UseSelectionToolbarPositionOptions,
+): SelectionToolbarPosition {
   const { anchor, placement, toolbarWidth, toolbarHeight } = options;
 
   const initialPos = calculateRawPosition(anchor, placement, toolbarWidth, toolbarHeight);
@@ -158,18 +158,18 @@ export function calculateFloatingToolbarPosition(
 // =============================================================================
 
 /**
- * Hook for calculating FloatingToolbar position.
+ * Hook for calculating SelectionToolbar position.
  *
  * @param options - Position calculation options
  * @returns Computed position with actual placement
  */
-export function useFloatingToolbarPosition(
-  options: UseFloatingToolbarPositionOptions,
-): FloatingToolbarPosition {
+export function useSelectionToolbarPosition(
+  options: UseSelectionToolbarPositionOptions,
+): SelectionToolbarPosition {
   const { anchor, placement, toolbarWidth, toolbarHeight } = options;
 
   return useMemo(
-    () => calculateFloatingToolbarPosition({
+    () => calculateSelectionToolbarPosition({
       anchor,
       placement,
       toolbarWidth,

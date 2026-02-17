@@ -3,7 +3,7 @@
  *
  * Tests re-renders during user interactions for:
  * - Toolbar: button clicks should not re-render entire toolbar
- * - FloatingToolbar: operation clicks should not re-render sibling buttons
+ * - SelectionToolbar: operation clicks should not re-render sibling buttons
  * - PropertySection: expand/collapse should not re-render other sections
  * - Panel: close button interaction
  * - PropertyGrid: input changes should not re-render sibling items
@@ -94,16 +94,16 @@ test.describe("Toolbar Interactions", () => {
   });
 });
 
-test.describe("FloatingToolbar Interactions", () => {
+test.describe("SelectionToolbar Interactions", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("http://localhost:5620/#/components/layout/floating-toolbar");
+    await page.goto("http://localhost:5620/#/components/layout/selection-toolbar");
     await page.waitForTimeout(2000);
   });
 
   test("measure re-renders during operation clicks", async ({ page }) => {
     const allLogs = setupLogCapture(page);
 
-    // Wait for floating toolbar
+    // Wait for selection toolbar
     await page.waitForSelector('[role="toolbar"][aria-label="Selection toolbar"]');
 
     const logsBefore = allLogs.length;
@@ -118,12 +118,12 @@ test.describe("FloatingToolbar Interactions", () => {
     await page.waitForTimeout(300);
 
     const logsAfter = allLogs.slice(logsBefore);
-    const floatingToolbarRenders = countRenders(logsAfter, "FloatingToolbar");
+    const selectionToolbarRenders = countRenders(logsAfter, "SelectionToolbar");
     const operationButtonRenders = countRenders(logsAfter, "OperationButton");
     const toolbarRenders = countRenders(logsAfter, "Toolbar");
 
-    console.log("=== FloatingToolbar Operation Clicks ===");
-    console.log(`FloatingToolbar re-renders: ${floatingToolbarRenders}`);
+    console.log("=== SelectionToolbar Operation Clicks ===");
+    console.log(`SelectionToolbar re-renders: ${selectionToolbarRenders}`);
     console.log(`OperationButton re-renders: ${operationButtonRenders}`);
     console.log(`Toolbar re-renders: ${toolbarRenders}`);
     console.log(`Total logs: ${logsAfter.length}`);
@@ -152,8 +152,8 @@ test.describe("FloatingToolbar Interactions", () => {
     const logsAfter = allLogs.slice(logsBefore);
     const operationButtonRenders = countRenders(logsAfter, "OperationButton");
 
-    console.log("=== FloatingToolbar Placement Change ===");
-    console.log(`FloatingToolbar re-renders: ${countRenders(logsAfter, "FloatingToolbar")}`);
+    console.log("=== SelectionToolbar Placement Change ===");
+    console.log(`SelectionToolbar re-renders: ${countRenders(logsAfter, "SelectionToolbar")}`);
     console.log(`OperationButton re-renders: ${operationButtonRenders}`);
     console.log(`Total logs: ${logsAfter.length}`);
 

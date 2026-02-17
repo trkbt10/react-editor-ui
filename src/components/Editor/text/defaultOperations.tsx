@@ -1,12 +1,12 @@
 /**
- * @file Default operations for TextEditor FloatingToolbar
+ * @file Default operations for TextEditor SelectionToolbar
  *
  * Provides default inline formatting operations with icons and labels.
- * These can be used directly with FloatingToolbar.
+ * These can be used directly with SelectionToolbar.
  */
 
 import type { ReactNode } from "react";
-import type { FloatingToolbarOperation } from "../../FloatingToolbar/types";
+import type { SelectionToolbarOperation } from "../../SelectionToolbar/types";
 
 // =============================================================================
 // Icons (Simple SVG icons)
@@ -100,7 +100,7 @@ const operationDefinitions: readonly OperationDefinition[] = [
  */
 export function createInlineOperations(
   activeTags: readonly string[] = [],
-): readonly FloatingToolbarOperation[] {
+): readonly SelectionToolbarOperation[] {
   const mod = getModifierKey();
 
   return operationDefinitions.map((def) => ({
@@ -116,5 +116,5 @@ export function createInlineOperations(
  * Default inline operations without active states.
  * Use createInlineOperations() for dynamic active states.
  */
-export const defaultInlineOperations: readonly FloatingToolbarOperation[] =
+export const defaultInlineOperations: readonly SelectionToolbarOperation[] =
   createInlineOperations([]);

@@ -24,11 +24,29 @@
       "import": "./dist/themes/index.js",
       "require": "./dist/themes/index.cjs"
     },
+    "./AlignmentSelect": {
+      "source": "./src/components/AlignmentSelect/AlignmentSelect.tsx",
+      "types": "./dist/components/AlignmentSelect/AlignmentSelect.d.ts",
+      "import": "./dist/components/AlignmentSelect.js",
+      "require": "./dist/components/AlignmentSelect.cjs"
+    },
+    "./panels/AnimationPanel": {
+      "source": "./src/panels/AnimationPanel/AnimationPanel.tsx",
+      "types": "./dist/panels/AnimationPanel/AnimationPanel.d.ts",
+      "import": "./dist/panels/AnimationPanel.js",
+      "require": "./dist/panels/AnimationPanel.cjs"
+    },
     "./Badge": {
       "source": "./src/components/Badge/Badge.tsx",
       "types": "./dist/components/Badge/Badge.d.ts",
       "import": "./dist/components/Badge.js",
       "require": "./dist/components/Badge.cjs"
+    },
+    "./BezierCurveEditor": {
+      "source": "./src/components/BezierCurveEditor/BezierCurveEditor.tsx",
+      "types": "./dist/components/BezierCurveEditor/BezierCurveEditor.d.ts",
+      "import": "./dist/components/BezierCurveEditor.js",
+      "require": "./dist/components/BezierCurveEditor.cjs"
     },
     "./canvas/BoundingBox": {
       "source": "./src/canvas/BoundingBox/BoundingBox.tsx",
@@ -120,17 +138,17 @@
       "import": "./dist/components/FillEditor.js",
       "require": "./dist/components/FillEditor.cjs"
     },
-    "./FloatingToolbar": {
-      "source": "./src/components/FloatingToolbar/FloatingToolbar.tsx",
-      "types": "./dist/components/FloatingToolbar/FloatingToolbar.d.ts",
-      "import": "./dist/components/FloatingToolbar.js",
-      "require": "./dist/components/FloatingToolbar.cjs"
-    },
     "./panels/FontsPanel": {
       "source": "./src/panels/FontsPanel/FontsPanel.tsx",
       "types": "./dist/panels/FontsPanel/FontsPanel.d.ts",
       "import": "./dist/panels/FontsPanel.js",
       "require": "./dist/panels/FontsPanel.cjs"
+    },
+    "./GradientBar": {
+      "source": "./src/components/GradientBar/GradientBar.tsx",
+      "types": "./dist/components/GradientBar/GradientBar.d.ts",
+      "import": "./dist/components/GradientBar.js",
+      "require": "./dist/components/GradientBar.cjs"
     },
     "./GradientEditor": {
       "source": "./src/components/GradientEditor/GradientEditor.tsx",
@@ -234,6 +252,12 @@
       "import": "./dist/components/Select.js",
       "require": "./dist/components/Select.cjs"
     },
+    "./SelectionToolbar": {
+      "source": "./src/components/SelectionToolbar/SelectionToolbar.tsx",
+      "types": "./dist/components/SelectionToolbar/SelectionToolbar.d.ts",
+      "import": "./dist/components/SelectionToolbar.js",
+      "require": "./dist/components/SelectionToolbar.cjs"
+    },
     "./Slider": {
       "source": "./src/components/Slider/Slider.tsx",
       "types": "./dist/components/Slider/Slider.d.ts",
@@ -306,12 +330,6 @@
       "import": "./dist/components/UnitInput.js",
       "require": "./dist/components/UnitInput.cjs"
     },
-    "./utils/color": {
-      "source": "./src/utils/color/index.ts",
-      "types": "./dist/utils/color/index.d.ts",
-      "import": "./dist/utils/color/index.js",
-      "require": "./dist/utils/color/index.cjs"
-    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -336,6 +354,15 @@
     "e2e:editor": "vite --config src/components/Editor/e2e/vite.config.ts",
     "e2e:editor:test": "playwright test --config src/components/Editor/e2e/playwright.config.ts",
     "e2e:editor:ui": "playwright test --config src/components/Editor/e2e/playwright.config.ts --ui",
+    "e2e:canvas": "vite --config src/canvas/e2e/vite.config.ts",
+    "e2e:canvas:test": "playwright test --config src/canvas/e2e/playwright.config.ts",
+    "e2e:canvas:ui": "playwright test --config src/canvas/e2e/playwright.config.ts --ui",
+    "e2e:sections": "vite --config src/sections/e2e/vite.config.ts",
+    "e2e:sections:test": "playwright test --config src/sections/e2e/playwright.config.ts",
+    "e2e:sections:ui": "playwright test --config src/sections/e2e/playwright.config.ts --ui",
+    "e2e:diagram": "vite --config src/demo/pages/app-demo/diagram/e2e/vite.config.ts",
+    "e2e:diagram:test": "playwright test --config src/demo/pages/app-demo/diagram/e2e/playwright.config.ts",
+    "e2e:diagram:ui": "playwright test --config src/demo/pages/app-demo/diagram/e2e/playwright.config.ts --ui",
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:tokens:fix": "bun scripts/check-tokens.ts --fix",
     "check:tokens:strict": "bun scripts/check-tokens.ts --strict",

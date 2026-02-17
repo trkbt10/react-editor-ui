@@ -1,16 +1,16 @@
 /**
- * @file FloatingToolbar tests
+ * @file SelectionToolbar tests
  */
 
 import { render, screen, fireEvent } from "@testing-library/react";
-import { FloatingToolbar } from "./FloatingToolbar";
-import type { FloatingToolbarOperation, FloatingToolbarAnchor } from "./types";
+import { SelectionToolbar } from "./SelectionToolbar";
+import type { SelectionToolbarOperation, SelectionToolbarAnchor } from "./types";
 
 // =============================================================================
 // Test Fixtures
 // =============================================================================
 
-const createTestOperations = (count: number = 3): FloatingToolbarOperation[] => {
+const createTestOperations = (count: number = 3): SelectionToolbarOperation[] => {
   return Array.from({ length: count }, (_, i) => ({
     id: `op-${i}`,
     label: `Operation ${i}`,
@@ -18,7 +18,7 @@ const createTestOperations = (count: number = 3): FloatingToolbarOperation[] => 
   }));
 };
 
-const defaultAnchor: FloatingToolbarAnchor = {
+const defaultAnchor: SelectionToolbarAnchor = {
   x: 100,
   y: 100,
   width: 200,
@@ -29,12 +29,12 @@ const defaultAnchor: FloatingToolbarAnchor = {
 // Tests
 // =============================================================================
 
-describe("FloatingToolbar", () => {
+describe("SelectionToolbar", () => {
   describe("rendering", () => {
     it("should render nothing when operations is empty", () => {
       const state = { selectedId: "" };
       const { container } = render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={[]}
           onOperationSelect={(id) => { state.selectedId = id; }}
@@ -50,7 +50,7 @@ describe("FloatingToolbar", () => {
       const state = { selectedId: "" };
 
       render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={operations}
           onOperationSelect={(id) => { state.selectedId = id; }}
@@ -71,7 +71,7 @@ describe("FloatingToolbar", () => {
       const state = { selectedId: "" };
 
       render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={operations}
           onOperationSelect={(id) => { state.selectedId = id; }}
@@ -89,7 +89,7 @@ describe("FloatingToolbar", () => {
       const state = { selectedId: "", callCount: 0 };
 
       render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={operations}
           onOperationSelect={(id) => {
@@ -106,13 +106,13 @@ describe("FloatingToolbar", () => {
     });
 
     it("should not call onOperationSelect when disabled operation is clicked", () => {
-      const operations: FloatingToolbarOperation[] = [
+      const operations: SelectionToolbarOperation[] = [
         { id: "op-0", label: "Disabled Op", icon: <span>X</span>, disabled: true },
       ];
       const state = { callCount: 0 };
 
       render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={operations}
           onOperationSelect={() => { state.callCount += 1; }}
@@ -131,7 +131,7 @@ describe("FloatingToolbar", () => {
       const state = { selectedId: "" };
 
       render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={operations}
           onOperationSelect={(id) => { state.selectedId = id; }}
@@ -150,14 +150,14 @@ describe("FloatingToolbar", () => {
 
   describe("active state", () => {
     it("should render active operation with selected variant", () => {
-      const operations: FloatingToolbarOperation[] = [
+      const operations: SelectionToolbarOperation[] = [
         { id: "bold", label: "Bold", icon: <span>B</span>, active: true },
         { id: "italic", label: "Italic", icon: <span>I</span>, active: false },
       ];
       const state = { selectedId: "" };
 
       render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={operations}
           onOperationSelect={(id) => { state.selectedId = id; }}
@@ -176,7 +176,7 @@ describe("FloatingToolbar", () => {
       const state = { selectedId: "" };
 
       render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={operations}
           onOperationSelect={(id) => { state.selectedId = id; }}
@@ -193,7 +193,7 @@ describe("FloatingToolbar", () => {
       const state = { selectedId: "" };
 
       render(
-        <FloatingToolbar
+        <SelectionToolbar
           anchor={defaultAnchor}
           operations={operations}
           onOperationSelect={(id) => { state.selectedId = id; }}

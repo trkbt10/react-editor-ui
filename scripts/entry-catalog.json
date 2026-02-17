@@ -1,10 +1,28 @@
 {
-  "generatedAt": "2026-02-16T09:43:22.777Z",
+  "generatedAt": "2026-02-17T04:52:18.992Z",
   "components": [
+    {
+      "name": "AlignmentSelect",
+      "entryType": "named",
+      "relativePath": "src/components/AlignmentSelect/AlignmentSelect.tsx",
+      "category": "component"
+    },
+    {
+      "name": "AnimationPanel",
+      "entryType": "named",
+      "relativePath": "src/panels/AnimationPanel/AnimationPanel.tsx",
+      "category": "panel"
+    },
     {
       "name": "Badge",
       "entryType": "named",
       "relativePath": "src/components/Badge/Badge.tsx",
+      "category": "component"
+    },
+    {
+      "name": "BezierCurveEditor",
+      "entryType": "named",
+      "relativePath": "src/components/BezierCurveEditor/BezierCurveEditor.tsx",
       "category": "component"
     },
     {
@@ -98,16 +116,16 @@
       "category": "component"
     },
     {
-      "name": "FloatingToolbar",
-      "entryType": "named",
-      "relativePath": "src/components/FloatingToolbar/FloatingToolbar.tsx",
-      "category": "component"
-    },
-    {
       "name": "FontsPanel",
       "entryType": "named",
       "relativePath": "src/panels/FontsPanel/FontsPanel.tsx",
       "category": "panel"
+    },
+    {
+      "name": "GradientBar",
+      "entryType": "named",
+      "relativePath": "src/components/GradientBar/GradientBar.tsx",
+      "category": "component"
     },
     {
       "name": "GradientEditor",
@@ -209,6 +227,12 @@
       "name": "Select",
       "entryType": "named",
       "relativePath": "src/components/Select/Select.tsx",
+      "category": "component"
+    },
+    {
+      "name": "SelectionToolbar",
+      "entryType": "named",
+      "relativePath": "src/components/SelectionToolbar/SelectionToolbar.tsx",
       "category": "component"
     },
     {

@@ -329,16 +329,16 @@ import { UnitInput } from "react-editor-ui/UnitInput";
 
 > Components for organizing and structuring UI
 
-#### FloatingToolbar
+#### SelectionToolbar
 
-Generic selection-based toolbar
+Selection-based toolbar for inline operations
 
-A floating toolbar that appears near selected content. Editor-agnostic: can be used with TextEditor, Canvas, or any selection-based UI.
+A toolbar that appears near selected content (text, shapes, etc.). Editor-agnostic: can be used with TextEditor, Canvas, or any selection-based UI.
 
 ```tsx
-import { FloatingToolbar } from "react-editor-ui/FloatingToolbar";
+import { SelectionToolbar } from "react-editor-ui/SelectionToolbar";
 
-<FloatingToolbar
+<SelectionToolbar
   anchor={{ x: 100, y: 50, width: 200, height: 20 }}
   operations={[
     { id: "bold", label: "Bold", icon: <BoldIcon /> },
@@ -389,6 +389,25 @@ import { IconButton } from "react-editor-ui/IconButton";
 ### Panels
 
 > Panel components for property editing and configuration
+
+#### AnimationPanel
+
+Animation settings panel with easing curve editor
+
+Panel for configuring CSS animations with interactive bezier curve editor, duration and delay inputs. Supports preset easing functions and custom curves.
+
+```tsx
+import { AnimationPanel, createDefaultAnimationSettings } from "react-editor-ui/AnimationPanel";
+import { useState } from "react";
+
+const [settings, setSettings] = useState(createDefaultAnimationSettings());
+
+<AnimationPanel
+  settings={settings}
+  onChange={setSettings}
+  onClose={() => console.log("closed")}
+/>
+```
 
 #### FontsPanel
 
@@ -595,6 +614,25 @@ const [doc, setDoc] = useState(() => createBlockDocument(code));
 ### Utilities
 
 > Utility components for specialized tasks
+
+#### BezierCurveEditor
+
+Interactive cubic bezier curve editor
+
+SVG-based editor for cubic bezier easing curves with draggable control points. P0 (0,0) and P3 (1,1) are fixed; P1 and P2 are adjustable.
+
+```tsx
+import { BezierCurveEditor } from "react-editor-ui/BezierCurveEditor";
+import { useState } from "react";
+
+const [points, setPoints] = useState<[number, number, number, number]>([0.25, 0.1, 0.25, 1]);
+
+<BezierCurveEditor
+  value={points}
+  onChange={setPoints}
+  aria-label="Easing curve editor"
+/>
+```
 
 #### FillEditor
 

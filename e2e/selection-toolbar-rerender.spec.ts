@@ -1,7 +1,7 @@
 /**
- * @file E2E tests for FloatingToolbar re-render performance
+ * @file E2E tests for SelectionToolbar re-render performance
  *
- * Tests that FloatingToolbar operations don't cause unnecessary re-renders:
+ * Tests that SelectionToolbar operations don't cause unnecessary re-renders:
  * - Clicking one operation shouldn't re-render all other operations
  * - Position updates shouldn't cause operation buttons to re-render
  */
@@ -10,6 +10,7 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 
 const BASE_URL = "http://localhost:5620/#/components/layout";
+const SELECTION_TOOLBAR_PATH = `${BASE_URL}/selection-toolbar`;
 
 /**
  * Helper to capture and count re-renders from react-scan logs
@@ -31,7 +32,7 @@ function createRerenderCounter() {
         log.includes("×") || // react-scan format
         log.includes("re-render") ||
         log.includes("rendered") ||
-        log.includes("FloatingToolbar") ||
+        log.includes("SelectionToolbar") ||
         log.includes("OperationButton") ||
         log.includes("IconButton") ||
         log.includes("Tooltip")
@@ -43,12 +44,12 @@ function createRerenderCounter() {
   };
 }
 
-test.describe("FloatingToolbar Re-render Performance", () => {
+test.describe("SelectionToolbar Re-render Performance", () => {
   test("clicking an operation should not re-render all other operations", async ({ page }) => {
     const counter = createRerenderCounter();
     counter.setupListener(page);
 
-    await page.goto(`${BASE_URL}/floating-toolbar`);
+    await page.goto(`${SELECTION_TOOLBAR_PATH}`);
     await page.waitForTimeout(1500);
 
     // Wait for toolbar to render
@@ -67,7 +68,7 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     await page.waitForTimeout(300);
 
     const rerenderLogs = counter.getRerenderLogs(logsBefore);
-    console.log("=== FloatingToolbar Operation Click ===");
+    console.log("=== SelectionToolbar Operation Click ===");
     console.log(`Total logs: ${counter.getLogsSince(logsBefore).length}`);
     console.log(`Re-render related logs: ${rerenderLogs.length}`);
     console.log("Sample logs:", rerenderLogs.slice(0, 10));
@@ -79,7 +80,7 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     console.log(`IconButton re-renders: ${iconButtonRenders}`);
 
     await page.screenshot({
-      path: "e2e/screenshots/floating-toolbar-click.png",
+      path: "e2e/screenshots/selection-toolbar-click.png",
       fullPage: true,
     });
 
@@ -93,7 +94,7 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     const counter = createRerenderCounter();
     counter.setupListener(page);
 
-    await page.goto(`${BASE_URL}/floating-toolbar`);
+    await page.goto(`${SELECTION_TOOLBAR_PATH}`);
     await page.waitForTimeout(1500);
 
     await page.waitForSelector('[aria-label="Selection toolbar"]');
@@ -112,12 +113,12 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     await page.waitForTimeout(300);
 
     const rerenderLogs = counter.getRerenderLogs(logsBefore);
-    console.log("=== FloatingToolbar Show/Hide Toggle ===");
+    console.log("=== SelectionToolbar Show/Hide Toggle ===");
     console.log(`Total logs: ${counter.getLogsSince(logsBefore).length}`);
     console.log(`Re-render related logs: ${rerenderLogs.length}`);
 
     await page.screenshot({
-      path: "e2e/screenshots/floating-toolbar-toggle.png",
+      path: "e2e/screenshots/selection-toolbar-toggle.png",
       fullPage: true,
     });
   });
@@ -126,7 +127,7 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     const counter = createRerenderCounter();
     counter.setupListener(page);
 
-    await page.goto(`${BASE_URL}/floating-toolbar`);
+    await page.goto(`${SELECTION_TOOLBAR_PATH}`);
     await page.waitForTimeout(1500);
 
     await page.waitForSelector('[aria-label="Selection toolbar"]');
@@ -143,7 +144,7 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     await page.waitForTimeout(300);
 
     const rerenderLogs = counter.getRerenderLogs(logsBefore);
-    console.log("=== FloatingToolbar Placement Change ===");
+    console.log("=== SelectionToolbar Placement Change ===");
     console.log(`Total logs: ${counter.getLogsSince(logsBefore).length}`);
     console.log(`Re-render related logs: ${rerenderLogs.length}`);
 
@@ -152,7 +153,7 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     console.log(`OperationButton re-renders: ${operationButtonRenders}`);
 
     await page.screenshot({
-      path: "e2e/screenshots/floating-toolbar-placement.png",
+      path: "e2e/screenshots/selection-toolbar-placement.png",
       fullPage: true,
     });
 
@@ -165,7 +166,7 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     const counter = createRerenderCounter();
     counter.setupListener(page);
 
-    await page.goto(`${BASE_URL}/floating-toolbar`);
+    await page.goto(`${SELECTION_TOOLBAR_PATH}`);
     await page.waitForTimeout(1500);
 
     await page.waitForSelector('[aria-label="Selection toolbar"]');
@@ -195,7 +196,7 @@ test.describe("FloatingToolbar Re-render Performance", () => {
     console.log(`Re-render logs: ${counter.getRerenderLogs().length}`);
 
     await page.screenshot({
-      path: "e2e/screenshots/floating-toolbar-rapid-clicks.png",
+      path: "e2e/screenshots/selection-toolbar-rapid-clicks.png",
       fullPage: true,
     });
 

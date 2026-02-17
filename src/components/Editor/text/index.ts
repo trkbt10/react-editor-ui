@@ -65,7 +65,7 @@ export {
 } from "./commands";
 export type { TextEditorCommand } from "./commands";
 
-// Default Operations for FloatingToolbar
+// Default Operations for SelectionToolbar
 export {
   createInlineOperations,
   defaultInlineOperations,

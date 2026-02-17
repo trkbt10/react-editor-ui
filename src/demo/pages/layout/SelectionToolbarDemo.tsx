@@ -1,12 +1,12 @@
 /**
- * @file FloatingToolbar demo page
+ * @file SelectionToolbar demo page
  */
 
 import { useState, useCallback, useRef, useMemo } from "react";
 import { DemoContainer, DemoSection } from "../../components";
 import { DemoStateDisplay } from "../../components/display/DemoStateDisplay";
-import { FloatingToolbar } from "../../../components/FloatingToolbar/FloatingToolbar";
-import type { FloatingToolbarAnchor, FloatingToolbarOperation } from "../../../components/FloatingToolbar/FloatingToolbar";
+import { SelectionToolbar } from "../../../components/SelectionToolbar/SelectionToolbar";
+import type { SelectionToolbarAnchor, SelectionToolbarOperation } from "../../../components/SelectionToolbar/SelectionToolbar";
 import { LuBold, LuItalic, LuUnderline, LuStrikethrough, LuLink, LuCode, LuHighlighter } from "react-icons/lu";
 
 // =============================================================================
@@ -44,7 +44,7 @@ const selectionStyle = {
 // Demo Component
 // =============================================================================
 
-export function FloatingToolbarDemo() {
+export function SelectionToolbarDemo() {
   const [lastOperation, setLastOperation] = useState<string | null>(null);
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set(["bold"]));
   const [showToolbar, setShowToolbar] = useState(true);
@@ -64,7 +64,7 @@ export function FloatingToolbarDemo() {
     });
   }, []);
 
-  const getAnchor = useCallback((): FloatingToolbarAnchor => {
+  const getAnchor = useCallback((): SelectionToolbarAnchor => {
     if (anchorRef.current) {
       const rect = anchorRef.current.getBoundingClientRect();
       return {
@@ -77,7 +77,7 @@ export function FloatingToolbarDemo() {
     return { x: 200, y: 100, width: 300, height: 24 };
   }, []);
 
-  const basicOperations = useMemo<FloatingToolbarOperation[]>(
+  const basicOperations = useMemo<SelectionToolbarOperation[]>(
     () => [
       { id: "bold", label: "Bold", icon: boldIcon, shortcut: "⌘B", active: activeFormats.has("bold") },
       { id: "italic", label: "Italic", icon: italicIcon, shortcut: "⌘I", active: activeFormats.has("italic") },
@@ -87,7 +87,7 @@ export function FloatingToolbarDemo() {
     [activeFormats],
   );
 
-  const extendedOperations = useMemo<FloatingToolbarOperation[]>(
+  const extendedOperations = useMemo<SelectionToolbarOperation[]>(
     () => [
       { id: "bold", label: "Bold", icon: boldIcon, shortcut: "⌘B", active: activeFormats.has("bold") },
       { id: "italic", label: "Italic", icon: italicIcon, shortcut: "⌘I", active: activeFormats.has("italic") },
@@ -100,7 +100,7 @@ export function FloatingToolbarDemo() {
   );
 
   return (
-    <DemoContainer title="FloatingToolbar">
+    <DemoContainer title="SelectionToolbar">
       <DemoSection label="Interactive Demo">
         <div style={{ ...surfaceStyle, height: 200 }}>
           <div style={{ padding: 16 }}>
@@ -112,7 +112,7 @@ export function FloatingToolbarDemo() {
             </div>
           </div>
           {showToolbar && (
-            <FloatingToolbar
+            <SelectionToolbar
               anchor={getAnchor()}
               operations={extendedOperations}
               onOperationSelect={handleOperationSelect}
@@ -163,7 +163,7 @@ export function FloatingToolbarDemo() {
           >
             Selected text
           </div>
-          <FloatingToolbar
+          <SelectionToolbar
             anchor={{ x: 150, y: 60, width: 100, height: 20 }}
             operations={basicOperations}
             onOperationSelect={handleOperationSelect}
@@ -184,7 +184,7 @@ export function FloatingToolbarDemo() {
           >
             Read-only content
           </div>
-          <FloatingToolbar
+          <SelectionToolbar
             anchor={{ x: 150, y: 60, width: 120, height: 20 }}
             operations={[
               { id: "bold", label: "Bold", icon: boldIcon, disabled: true },
@@ -209,7 +209,7 @@ export function FloatingToolbarDemo() {
           >
             Selection near top
           </div>
-          <FloatingToolbar
+          <SelectionToolbar
             anchor={{ x: 150, y: 24, width: 130, height: 20 }}
             operations={basicOperations}
             onOperationSelect={handleOperationSelect}

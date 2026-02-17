@@ -1,15 +1,15 @@
 /**
- * @file FloatingToolbar component - Generic selection-based toolbar
+ * @file SelectionToolbar component - Selection-based toolbar for inline operations
  *
  * @description
- * A floating toolbar that appears near selected content.
+ * A toolbar that appears near selected content (text, shapes, etc.).
  * Editor-agnostic: can be used with TextEditor, Canvas, or any selection-based UI.
  *
  * @example
  * ```tsx
- * import { FloatingToolbar } from "react-editor-ui/FloatingToolbar";
+ * import { SelectionToolbar } from "react-editor-ui/SelectionToolbar";
  *
- * <FloatingToolbar
+ * <SelectionToolbar
  *   anchor={{ x: 100, y: 50, width: 200, height: 20 }}
  *   operations={[
  *     { id: "bold", label: "Bold", icon: <BoldIcon /> },
@@ -22,8 +22,8 @@
 
 import { memo, useState, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import type { CSSProperties, MouseEvent } from "react";
-import type { FloatingToolbarProps } from "./types";
-import { useFloatingToolbarPosition } from "./useFloatingToolbarPosition";
+import type { SelectionToolbarProps } from "./types";
+import { useSelectionToolbarPosition } from "./useSelectionToolbarPosition";
 import { Portal } from "../Portal/Portal";
 import { Toolbar } from "../Toolbar/Toolbar";
 import { Tooltip } from "../Tooltip/Tooltip";
@@ -112,13 +112,13 @@ const OperationButton = memo(function OperationButton({
  * - Supports top/bottom placement with auto-flip
  * - Keyboard accessible
  */
-export const FloatingToolbar = memo(function FloatingToolbar({
+export const SelectionToolbar = memo(function SelectionToolbar({
   anchor,
   operations,
   onOperationSelect,
   placement = "top",
   className,
-}: FloatingToolbarProps) {
+}: SelectionToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({
     width: DEFAULT_TOOLBAR_WIDTH,
@@ -140,7 +140,7 @@ export const FloatingToolbar = memo(function FloatingToolbar({
   }, [operations.length]);
 
   // Calculate position
-  const position = useFloatingToolbarPosition({
+  const position = useSelectionToolbarPosition({
     anchor,
     placement,
     toolbarWidth: dimensions.width,
@@ -195,15 +195,15 @@ export const FloatingToolbar = memo(function FloatingToolbar({
 // =============================================================================
 
 export type {
-  FloatingToolbarProps,
-  FloatingToolbarAnchor,
-  FloatingToolbarOperation,
-  FloatingToolbarPlacement,
+  SelectionToolbarProps,
+  SelectionToolbarAnchor,
+  SelectionToolbarOperation,
+  SelectionToolbarPlacement,
 } from "./types";
 
 export {
-  useFloatingToolbarPosition,
-  calculateFloatingToolbarPosition,
-  type FloatingToolbarPosition,
-  type UseFloatingToolbarPositionOptions,
-} from "./useFloatingToolbarPosition";
+  useSelectionToolbarPosition,
+  calculateSelectionToolbarPosition,
+  type SelectionToolbarPosition,
+  type UseSelectionToolbarPositionOptions,
+} from "./useSelectionToolbarPosition";
