@@ -171,7 +171,9 @@ export function useBoundingBoxHandlers<T extends BoundingBoxTransform>(
   const onMove = useCallback(
     (deltaX: number, deltaY: number) => {
       const start = dragStartRef.current;
-      if (!start) return;
+      if (!start) {
+        return;
+      }
       setTransform({
         ...start,
         x: start.x + deltaX,
@@ -198,7 +200,9 @@ export function useBoundingBoxHandlers<T extends BoundingBoxTransform>(
   const onResize = useCallback(
     (handle: HandlePosition, deltaX: number, deltaY: number) => {
       const start = dragStartRef.current;
-      if (!start) return;
+      if (!start) {
+        return;
+      }
       setTransform(applyResize(start, handle, deltaX, deltaY));
     },
     [setTransform, applyResize],

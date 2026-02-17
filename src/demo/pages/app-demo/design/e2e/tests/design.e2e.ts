@@ -227,8 +227,9 @@ test.describe("Design Editor - Movement Tests", () => {
 
       // Get bounding rect vs offset dimensions
       const rect = el.getBoundingClientRect();
-      const offsetW = el.offsetWidth;
-      const offsetH = el.offsetHeight;
+      const htmlEl = el as HTMLElement;
+      const offsetW = htmlEl.offsetWidth;
+      const offsetH = htmlEl.offsetHeight;
 
       // Calculate effective scale
       const scaleX = rect.width / offsetW;

@@ -190,21 +190,30 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [viewport, setViewportState] = useState(INITIAL_VIEWPORT);
 
+  // Track if viewport update originated internally (to prevent feedback loop)
+  const isInternalZoomUpdateRef = useRef(false);
+
   // Sync viewport scale with ViewportContext zoom
   const setViewport = useCallback((updater: ViewportState | ((prev: ViewportState) => ViewportState)) => {
     setViewportState((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
       // Sync scale to ViewportContext zoom (convert to percentage)
       if (viewportCtx && next.scale !== prev.scale) {
+        isInternalZoomUpdateRef.current = true;
         viewportCtx.setZoom(Math.round(next.scale * 100));
       }
       return next;
     });
   }, [viewportCtx]);
 
-  // Sync ViewportContext zoom to viewport scale
+  // Sync ViewportContext zoom to viewport scale (only for external updates)
   useEffect(() => {
     if (!viewportCtx) return;
+    // Skip if this update originated from internal zoom (wheel/pinch)
+    if (isInternalZoomUpdateRef.current) {
+      isInternalZoomUpdateRef.current = false;
+      return;
+    }
     const newScale = viewportCtx.zoom / 100;
     setViewportState((prev) => {
       if (Math.abs(prev.scale - newScale) < 0.001) return prev;
@@ -1080,6 +1089,11 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                 <div
                   key={instance.id}
                   style={{
+                    position: "absolute",
+                    left: instance.x,
+                    top: instance.y,
+                    width: instance.width,
+                    height: instance.height,
                     pointerEvents: "auto",
                     cursor: "pointer",
                   }}
@@ -1111,8 +1125,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                   <div
                     style={{
                       position: "absolute",
-                      left: instance.x,
-                      top: instance.y + instance.height + 8,
+                      left: 0,
+                      top: instance.height + 8,
                       fontSize: 12,
                       color: "var(--rei-color-text-muted)",
                       whiteSpace: "nowrap",
