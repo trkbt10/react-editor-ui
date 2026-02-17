@@ -3,6 +3,7 @@
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect, memo, createContext, useContext, type CSSProperties, type ReactNode } from "react";
+import { Portal } from "../../../components/Portal/Portal";
 import {
   GridLayout,
   type PanelLayoutConfig,
@@ -807,8 +808,8 @@ const ToolButton = memo(function ToolButton({ icon, label, shortcut, selected, h
         <IconButton
           icon={icon}
           aria-label={label}
-          size="sm"
-          variant={selected ? "selected" : "default"}
+          size="lg"
+          variant={selected ? "selected" : "minimal"}
           onClick={onClick}
         />
         {hasDropdown ? (
@@ -825,7 +826,7 @@ type FloatingToolPaletteProps = {
 };
 
 const floatingToolbarStyle: CSSProperties = {
-  position: "absolute",
+  position: "fixed",
   bottom: 20,
   left: "50%",
   transform: "translateX(-50%)",
@@ -833,9 +834,10 @@ const floatingToolbarStyle: CSSProperties = {
 };
 
 const helpButtonWrapperStyle: CSSProperties = {
-  position: "absolute",
+  position: "fixed",
   bottom: 20,
   right: 20,
+  zIndex: 100,
 };
 
 // No-op handler for static buttons
@@ -852,12 +854,12 @@ const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, on
   }), [onToolSelect]);
 
   return (
-    <>
+    <Portal>
       <div style={floatingToolbarStyle}>
         <Toolbar variant="floating" orientation="horizontal" fitContent>
           <ToolbarGroup>
             <ToolButton
-              icon={<LuMousePointer2 size={16} />}
+              icon={<LuMousePointer2 size={18} />}
               label="Move"
               shortcut="V"
               selected={selectedTool === "move"}
@@ -865,7 +867,7 @@ const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, on
               onClick={handlers.move}
             />
             <ToolButton
-              icon={<LuFrame size={16} />}
+              icon={<LuFrame size={18} />}
               label="Frame"
               shortcut="F"
               selected={selectedTool === "frame"}
@@ -876,7 +878,7 @@ const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, on
           <ToolbarDivider />
           <ToolbarGroup>
             <ToolButton
-              icon={<LuSquare size={16} />}
+              icon={<LuSquare size={18} />}
               label="Rectangle"
               shortcut="R"
               selected={selectedTool === "rectangle"}
@@ -884,7 +886,7 @@ const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, on
               onClick={handlers.rectangle}
             />
             <ToolButton
-              icon={<LuPenTool size={16} />}
+              icon={<LuPenTool size={18} />}
               label="Pen"
               shortcut="P"
               selected={selectedTool === "pen"}
@@ -892,21 +894,21 @@ const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, on
               onClick={handlers.pen}
             />
             <ToolButton
-              icon={<LuType size={16} />}
+              icon={<LuType size={18} />}
               label="Text"
               shortcut="T"
               selected={selectedTool === "text"}
               onClick={handlers.text}
             />
             <ToolButton
-              icon={<LuCircle size={16} />}
+              icon={<LuCircle size={18} />}
               label="Ellipse"
               shortcut="O"
               selected={selectedTool === "ellipse"}
               onClick={handlers.ellipse}
             />
             <ToolButton
-              icon={<LuComponent size={16} />}
+              icon={<LuComponent size={18} />}
               label="Resources"
               selected={false}
               onClick={noop}
@@ -915,13 +917,13 @@ const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, on
           <ToolbarDivider />
           <ToolbarGroup>
             <ToolButton
-              icon={<LuPencil size={16} />}
+              icon={<LuPencil size={18} />}
               label="Draw"
               selected={false}
               onClick={noop}
             />
             <ToolButton
-              icon={<LuCode size={16} />}
+              icon={<LuCode size={18} />}
               label="Dev Mode"
               selected={false}
               onClick={noop}
@@ -930,9 +932,9 @@ const FloatingToolPalette = memo(function FloatingToolPalette({ selectedTool, on
         </Toolbar>
       </div>
       <div style={helpButtonWrapperStyle}>
-        <IconButton icon={<LuCircleHelp size={16} />} aria-label="Help" size="md" variant="default" />
+        <IconButton icon={<LuCircleHelp size={20} />} aria-label="Help" size="lg" variant="minimal" />
       </div>
-    </>
+    </Portal>
   );
 });
 
