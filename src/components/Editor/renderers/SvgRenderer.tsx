@@ -11,7 +11,7 @@
  * Renders as SVG for high-quality export and print scenarios.
  */
 
-import { useMemo, memo, type ReactNode, type CSSProperties } from "react";
+import { useMemo, useRef, memo, type ReactNode, type CSSProperties } from "react";
 import type {
   RendererProps,
   Token,
@@ -20,7 +20,6 @@ import type {
 } from "./types";
 import { DEFAULT_LINE_NUMBER_WIDTH, DEFAULT_FONT_FAMILY, DEFAULT_FONT_SIZE } from "./types";
 import { getLineHighlights, HIGHLIGHT_COLORS } from "./utils";
-import { assertMeasureText } from "../core/invariant";
 import {
   EDITOR_LINE_NUMBER_BG,
   EDITOR_LINE_NUMBER_COLOR,
@@ -209,17 +208,42 @@ function SvgToken({
 }
 
 /**
+ * Parse fontSize string to number (e.g., "16px" -> 16, "1.5em" -> baseSize * 1.5)
+ * Mirrors the Canvas renderer's parseFontSize function.
+ */
+function parseFontSize(size: string | number | undefined, baseSize: number): number {
+  if (size === undefined) {
+    return baseSize;
+  }
+  if (typeof size === "number") {
+    return size;
+  }
+  if (size.endsWith("px")) {
+    return parseFloat(size);
+  }
+  if (size.endsWith("em")) {
+    return parseFloat(size) * baseSize;
+  }
+  if (size.endsWith("%")) {
+    return (parseFloat(size) / 100) * baseSize;
+  }
+  // Try parsing as number
+  const num = parseFloat(size);
+  return Number.isNaN(num) ? baseSize : num;
+}
+
+/**
  * Calculate token X positions considering individual token styles.
+ * Uses Canvas 2D API for accurate measurement with different font styles.
  * Returns array of X positions for each token.
- *
- * @throws Error if measureText is not provided (no silent fallback)
  */
 function calculateTokenPositions(
+  ctx: CanvasRenderingContext2D,
   tokens: readonly Token[],
   tokenStyles: TokenStyleMap | undefined,
   baseXOffset: number,
   baseFontSize: number,
-  measureText: (text: string) => number
+  baseFontFamily: string
 ): readonly number[] {
   const positions: number[] = [];
   const acc = { x: baseXOffset };
@@ -227,41 +251,23 @@ function calculateTokenPositions(
   for (const token of tokens) {
     positions.push(acc.x);
 
-    // Calculate token width using actual text measurement
+    // Get style for this token type
     const style = tokenStyles?.[token.type];
-    const tokenFontSize = style?.fontSize;
+    const tokenFontWeight = (style?.fontWeight as string) ?? "normal";
+    const tokenFontStyle = (style?.fontStyle as string) ?? "normal";
+    const tokenFontSize = parseFontSize(style?.fontSize as string | number | undefined, baseFontSize);
+    const tokenFontFamily = (style?.fontFamily as string) ?? baseFontFamily;
 
-    // If token has custom font size, apply font size ratio
-    const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, baseFontSize) : 1;
-
-    // Measure actual text width (handles CJK correctly)
-    const baseWidth = measureText(token.text);
-    const tokenWidth = baseWidth * fontSizeRatio;
+    // Set font for accurate measurement (handles fontFamily correctly)
+    ctx.font = `${tokenFontStyle} ${tokenFontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+    const tokenWidth = ctx.measureText(token.text).width;
     acc.x += tokenWidth;
   }
 
-  return positions;
-}
+  // Reset font to default
+  ctx.font = `normal normal ${baseFontSize}px ${baseFontFamily}`;
 
-/**
- * Parse font size to ratio relative to base size.
- * Handles both string ("16px", "1.2em", "120%") and number (16) values.
- */
-function parseFontSizeRatio(size: string | number, baseSize: number): number {
-  if (typeof size === "number") {
-    return size / baseSize;
-  }
-  if (size.endsWith("px")) {
-    return parseFloat(size) / baseSize;
-  }
-  if (size.endsWith("em")) {
-    return parseFloat(size);
-  }
-  if (size.endsWith("%")) {
-    return parseFloat(size) / 100;
-  }
-  const num = parseFloat(size);
-  return Number.isNaN(num) ? 1 : num / baseSize;
+  return positions;
 }
 
 type SvgLineProps = {
@@ -276,8 +282,8 @@ type SvgLineProps = {
   readonly showLineNumbers: boolean;
   readonly lineNumberWidth: number;
   readonly cursor?: { column: number; blinking: boolean };
-  /** Required: Text measurement function for accurate CJK positioning */
-  readonly measureText: (text: string) => number;
+  /** Canvas 2D context for style-aware text measurement */
+  readonly measureCtx: CanvasRenderingContext2D;
   readonly tokenStyles?: TokenStyleMap;
   readonly fontFamily: string;
   readonly fontSize: number;
@@ -294,7 +300,7 @@ const SvgLine = memo(function SvgLine({
   showLineNumbers,
   lineNumberWidth,
   cursor,
-  measureText,
+  measureCtx,
   tokenStyles,
   fontFamily,
   fontSize,
@@ -302,10 +308,10 @@ const SvgLine = memo(function SvgLine({
   const codeXOffset = showLineNumbers ? xOffset + lineNumberWidth : xOffset;
   const textY = y + lineHeight * 0.75;
 
-  // Calculate token positions using actual text measurement
+  // Calculate token positions using Canvas measurement (considers font styles)
   const tokenPositions = useMemo(
-    () => calculateTokenPositions(tokens, tokenStyles, codeXOffset, fontSize, measureText),
-    [tokens, tokenStyles, codeXOffset, fontSize, measureText]
+    () => calculateTokenPositions(measureCtx, tokens, tokenStyles, codeXOffset, fontSize, fontFamily),
+    [measureCtx, tokens, tokenStyles, codeXOffset, fontSize, fontFamily]
   );
 
   // Get X position for any column using style-aware calculation
@@ -317,33 +323,41 @@ const SvgLine = memo(function SvgLine({
         return tokenPositions[i];
       }
       if (col <= token.end + 1) {
-        // Position is within this token - measure actual text width
+        // Position is within this token - measure with token's font style
         const charOffset = col - token.start - 1;
         const textWithinToken = token.text.slice(0, charOffset);
 
-        // Measure actual text width (handles CJK characters correctly)
-        const widthWithinToken = measureText(textWithinToken);
-
-        // Apply font size ratio if token has custom font size
+        // Get token style for font configuration
         const style = tokenStyles?.[token.type];
-        const tokenFontSize = style?.fontSize;
-        const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, fontSize) : 1;
+        const tokenFontWeight = (style?.fontWeight as string) ?? "normal";
+        const tokenFontStyle = (style?.fontStyle as string) ?? "normal";
+        const tokenFontSize = parseFontSize(style?.fontSize as string | number | undefined, fontSize);
+        const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
 
-        return tokenPositions[i] + widthWithinToken * fontSizeRatio;
+        // Set font for accurate measurement
+        measureCtx.font = `${tokenFontStyle} ${tokenFontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+        const widthWithinToken = measureCtx.measureText(textWithinToken).width;
+
+        return tokenPositions[i] + widthWithinToken;
       }
     }
     // Position is at or past end of line
-    if (tokens.length > 0) {
+    if (tokens.length > 0 && tokenPositions.length > 0) {
       const lastIdx = tokens.length - 1;
       const lastToken = tokens[lastIdx];
       const style = tokenStyles?.[lastToken.type];
-      const tokenFontSize = style?.fontSize;
-      const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, fontSize) : 1;
-      const baseWidth = measureText(lastToken.text);
-      return tokenPositions[lastIdx] + baseWidth * fontSizeRatio;
+      const tokenFontWeight = (style?.fontWeight as string) ?? "normal";
+      const tokenFontStyle = (style?.fontStyle as string) ?? "normal";
+      const tokenFontSize = parseFontSize(style?.fontSize as string | number | undefined, fontSize);
+      const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+
+      measureCtx.font = `${tokenFontStyle} ${tokenFontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+      const lastTokenWidth = measureCtx.measureText(lastToken.text).width;
+      return tokenPositions[lastIdx] + lastTokenWidth;
     }
-    // Empty line - use measureText for cursor position
-    return codeXOffset + measureText(lineText.slice(0, col - 1));
+    // Empty line - measure text before cursor
+    measureCtx.font = `normal normal ${fontSize}px ${fontFamily}`;
+    return codeXOffset + measureCtx.measureText(lineText.slice(0, col - 1)).width;
   };
 
   const renderTokens = (): ReactNode => {
@@ -435,6 +449,11 @@ const codeDisplayStyle: CSSProperties = {
   minHeight: "100%",
 };
 
+const viewportSvgStyle: CSSProperties = {
+  display: "block",
+  overflow: "hidden",
+};
+
 /**
  * SVG-based unified code renderer.
  *
@@ -445,6 +464,7 @@ const codeDisplayStyle: CSSProperties = {
  * - Cursor rendering
  * - Vector-based for crisp text at any scale
  * - Virtual scrolling support
+ * - Viewport-based rendering (fixed size canvas with transform)
  */
 export const SvgRenderer = memo(function SvgRenderer({
   lines,
@@ -455,7 +475,9 @@ export const SvgRenderer = memo(function SvgRenderer({
   lineHeight,
   padding,
   width,
-  measureText: measureTextProp,
+  height,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- SVG uses Canvas ctx.measureText for style-aware measurement
+  measureText: _measureText,
   showLineNumbers = false,
   lineNumberWidth = DEFAULT_LINE_NUMBER_WIDTH,
   highlights = [],
@@ -463,14 +485,42 @@ export const SvgRenderer = memo(function SvgRenderer({
   tokenStyles,
   fontFamily = DEFAULT_FONT_FAMILY,
   fontSize = DEFAULT_FONT_SIZE,
+  // Viewport mode props
+  viewportConfig,
+  viewport,
+  visibleLines,
 }: RendererProps): ReactNode {
-  // Require measureText - no silent fallback to fixed width
-  const measureText = assertMeasureText(measureTextProp, "SvgRenderer");
+  // Create Canvas 2D context for style-aware text measurement
+  // This matches CanvasRenderer's approach for consistent measurement
+  const measureCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const measureCtx = useMemo(() => {
+    if (measureCtxRef.current) {
+      return measureCtxRef.current;
+    }
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.font = `normal normal ${fontSize}px ${fontFamily}`;
+      measureCtxRef.current = ctx;
+    }
+    return ctx;
+  }, [fontSize, fontFamily]);
+
+  // Check if viewport mode is enabled
+  const isViewportMode = viewportConfig?.fixedViewport && viewport && visibleLines;
+
+  // Get effective visible range
+  const effectiveStartIndex = isViewportMode
+    ? (visibleLines.length > 0 ? visibleLines[0].index : 0)
+    : visibleRange.start;
+  const effectiveEndIndex = isViewportMode
+    ? (visibleLines.length > 0 ? visibleLines[visibleLines.length - 1].index + 1 : 0)
+    : visibleRange.end;
 
   // Pre-compute line highlights for visible range
   const lineHighlightsMap = useMemo(() => {
     const map = new Map<number, readonly LineHighlight[]>();
-    for (let i = visibleRange.start; i < visibleRange.end; i++) {
+    for (let i = effectiveStartIndex; i < effectiveEndIndex; i++) {
       const lineNumber = i + 1;
       const lineText = lines[i] ?? "";
       const lineHighlights = getLineHighlights(lineNumber, lineText.length, highlights);
@@ -479,20 +529,79 @@ export const SvgRenderer = memo(function SvgRenderer({
       }
     }
     return map;
-  }, [visibleRange.start, visibleRange.end, lines, highlights]);
+  }, [effectiveStartIndex, effectiveEndIndex, lines, highlights]);
 
   // Check if cursor is on a visible line
   const cursorOnLine = useMemo(() => {
     if (!cursor?.visible) {
       return undefined;
     }
-    if (cursor.line < visibleRange.start + 1 || cursor.line > visibleRange.end) {
+    if (cursor.line < effectiveStartIndex + 1 || cursor.line > effectiveEndIndex) {
       return undefined;
     }
     return cursor.line;
-  }, [cursor, visibleRange]);
+  }, [cursor, effectiveStartIndex, effectiveEndIndex]);
 
+  // Viewport mode rendering
+  if (isViewportMode) {
+    const { size, offset } = viewport;
+    const svgWidth = width ?? size.width;
+    const svgHeight = height ?? size.height;
+
+    // measureCtx is required for rendering
+    if (!measureCtx) {
+      return null;
+    }
+
+    return (
+      <svg
+        width={svgWidth}
+        height={svgHeight}
+        style={viewportSvgStyle}
+      >
+        {/* Transform group: shifts document coordinates to viewport */}
+        <g transform={`translate(${-offset.x}, ${-offset.y})`}>
+          {visibleLines.map((item) => {
+            const lineIndex = item.index;
+            const lineNumber = lineIndex + 1;
+            const lineText = lines[lineIndex] ?? "";
+            const tokens = tokenCache.getTokens(lineText, lineIndex);
+            const lineHighlights = lineHighlightsMap.get(lineNumber) ?? EMPTY_HIGHLIGHTS;
+            const lineCursor = getLineCursor(cursorOnLine, lineNumber, cursor);
+
+            return (
+              <SvgLine
+                key={lineIndex}
+                lineIndex={lineIndex}
+                lineNumber={lineNumber}
+                tokens={tokens}
+                highlights={lineHighlights}
+                y={item.documentY}
+                xOffset={padding}
+                lineText={lineText}
+                lineHeight={item.height}
+                showLineNumbers={showLineNumbers}
+                lineNumberWidth={lineNumberWidth}
+                cursor={lineCursor}
+                measureCtx={measureCtx}
+                tokenStyles={tokenStyles}
+                fontFamily={fontFamily}
+                fontSize={fontSize}
+              />
+            );
+          })}
+        </g>
+      </svg>
+    );
+  }
+
+  // Legacy mode rendering (spacer-based virtual scroll)
   const svgHeight = (visibleRange.end - visibleRange.start) * lineHeight;
+
+  // measureCtx is required for rendering
+  if (!measureCtx) {
+    return null;
+  }
 
   return (
     <div style={codeDisplayStyle}>
@@ -525,7 +634,7 @@ export const SvgRenderer = memo(function SvgRenderer({
               showLineNumbers={showLineNumbers}
               lineNumberWidth={lineNumberWidth}
               cursor={lineCursor}
-              measureText={measureText}
+              measureCtx={measureCtx}
               tokenStyles={tokenStyles}
               fontFamily={fontFamily}
               fontSize={fontSize}
