@@ -3,14 +3,14 @@
  */
 
 import { memo, useContext, useMemo, useCallback, type CSSProperties, type ReactNode } from "react";
-import { LuSquare, LuCircle, LuType, LuLayers, LuComponent, LuPalette, LuFrame } from "react-icons/lu";
+import { LuSquare, LuCircle, LuType, LuLayers, LuComponent, LuPalette, LuFrame, LuTable } from "react-icons/lu";
 
 import { LayerItem } from "../../../../../components/LayerItem/LayerItem";
 import { SectionHeader } from "../../../../../components/SectionHeader/SectionHeader";
 
 import { PageContext, SelectionContext } from "../contexts";
-import type { DiagramNode, ShapeType, GroupNode, FrameNode, SymbolPart } from "../types";
-import { isSymbolInstance, isFrameNode } from "../types";
+import type { DiagramNode, ShapeType, GroupNode, FrameNode, SymbolPart, ShapeNode } from "../types";
+import { isSymbolInstance, isFrameNode, isTableNode, isShapeNode } from "../types";
 import { framePresets } from "../mockData";
 
 // =============================================================================
@@ -76,7 +76,13 @@ function getNodeIcon(node: DiagramNode): ReactNode {
   if (isSymbolInstance(node)) {
     return <LuComponent size={14} />;
   }
-  return getShapeIcon(node.type);
+  if (isTableNode(node)) {
+    return <LuTable size={14} />;
+  }
+  if (isShapeNode(node)) {
+    return getShapeIcon(node.shape);
+  }
+  return <LuSquare size={14} />;
 }
 
 function getNodeLabel(node: DiagramNode): string {
@@ -93,7 +99,13 @@ function getNodeLabel(node: DiagramNode): string {
   if (isGroupNode(node)) {
     return `Group (${node.id})`;
   }
-  return node.type.charAt(0).toUpperCase() + node.type.slice(1).replace("-", " ");
+  if (isTableNode(node)) {
+    return `Table (${node.cells.length}x${node.cells[0]?.length ?? 0})`;
+  }
+  if (isShapeNode(node)) {
+    return node.shape.charAt(0).toUpperCase() + node.shape.slice(1).replace("-", " ");
+  }
+  return "Unknown";
 }
 
 function getPartIcon(part: SymbolPart): ReactNode {

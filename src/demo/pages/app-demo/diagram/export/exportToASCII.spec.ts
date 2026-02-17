@@ -24,10 +24,11 @@ import type {
 const defaultColor = { hex: "#ffffff", opacity: 100, visible: true };
 const defaultStrokeColor = { hex: "#000000", opacity: 100, visible: true };
 
-function createShapeNode(id: string, type: ShapeNode["type"], x = 0, y = 0): ShapeNode {
+function createShapeNode(id: string, shape: ShapeNode["shape"], x = 0, y = 0): ShapeNode {
   return {
     id,
-    type,
+    type: "shape",
+    shape,
     x,
     y,
     width: 100,

@@ -17,6 +17,7 @@ import {
   LuMagnet,
   LuLayoutDashboard,
   LuComponent,
+  LuTable,
 } from "react-icons/lu";
 
 import { Toolbar } from "../../../../../components/Toolbar/Toolbar";
@@ -28,9 +29,22 @@ import { SplitButton, type SplitButtonOption } from "../../../../../components/S
 import { SegmentedControl, type SegmentedControlOption } from "../../../../../components/SegmentedControl/SegmentedControl";
 
 import { DocumentContext, SelectionContext, PageContext, ToolContext, GridContext } from "../contexts";
-import { createNode, createFrameNode } from "../mockData";
-import type { NodeType, DiagramNode, PageId, FramePreset } from "../types";
+import { createFrameNode } from "../mockData";
+import type { NodeType, DiagramNode, PageId, FramePreset, ShapeType } from "../types";
 import { FramePresetPicker } from "./FramePresetPicker";
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+const shapeTypes = new Set<NodeType>([
+  "rectangle", "rounded-rect", "ellipse", "diamond",
+  "triangle", "hexagon", "cylinder", "parallelogram",
+]);
+
+function isShapeDrawingTool(tool: string): tool is ShapeType {
+  return shapeTypes.has(tool as NodeType);
+}
 
 // =============================================================================
 // Styles
@@ -48,7 +62,7 @@ const containerStyle: CSSProperties = {
 // Shape Definitions
 // =============================================================================
 
-type ShapeOption = SplitButtonOption<NodeType> & {
+type ShapeOption = SplitButtonOption<ShapeType> & {
   width: number;
   height: number;
 };
@@ -61,7 +75,6 @@ const shapeOptions: ShapeOption[] = [
   { value: "triangle", label: "Triangle", icon: <LuTriangle size={16} />, width: 100, height: 80 },
   { value: "hexagon", label: "Hexagon", icon: <LuHexagon size={16} />, width: 100, height: 80 },
   { value: "cylinder", label: "Database", icon: <LuDatabase size={16} />, width: 80, height: 100 },
-  { value: "text", label: "Text", icon: <LuType size={16} />, shortcut: "T", width: 120, height: 40 },
 ];
 
 // =============================================================================
@@ -84,7 +97,7 @@ export const DiagramBottomToolbar = memo(function DiagramBottomToolbar() {
   const toolCtx = useContext(ToolContext);
   const gridCtx = useContext(GridContext);
 
-  const [selectedShape, setSelectedShape] = useState<NodeType>("rectangle");
+  const [selectedShape, setSelectedShape] = useState<ShapeType>("rectangle");
 
   // Helper to update canvas page's nodes
   const updateCanvasNodes = useCallback(
@@ -101,22 +114,11 @@ export const DiagramBottomToolbar = memo(function DiagramBottomToolbar() {
     [documentCtx],
   );
 
-  // Add shape handler
+  // Add shape handler - enters drawing mode instead of immediate insertion
   const handleAddShape = useCallback(() => {
-    if (!documentCtx || !selectionCtx || !pageCtx) return;
-
-    const { activePageId } = pageCtx;
-    if (activePageId !== "canvas") return;
-
-    const shapeConfig = shapeOptions.find((s) => s.value === selectedShape);
-    if (!shapeConfig) return;
-
-    const newNode = createNode(selectedShape, 200, 200, shapeConfig.width, shapeConfig.height);
-    updateCanvasNodes((nodes) => [...nodes, newNode]);
-
-    selectionCtx.setSelectedNodeIds(new Set([newNode.id]));
-    selectionCtx.setSelectedConnectionIds(new Set());
-  }, [documentCtx, selectionCtx, pageCtx, selectedShape, updateCanvasNodes]);
+    if (!toolCtx) return;
+    toolCtx.setActiveTool(selectedShape);
+  }, [toolCtx, selectedShape]);
 
   // Page change handler
   const handlePageChange = useCallback((value: PageId | PageId[]) => {
@@ -133,10 +135,18 @@ export const DiagramBottomToolbar = memo(function DiagramBottomToolbar() {
     return {
       select: () => toolCtx.setActiveTool("select"),
       connection: () => toolCtx.setActiveTool("connection"),
+      text: () => toolCtx.setActiveTool("text"),
+      table: () => toolCtx.setActiveTool("table"),
     };
   }, [toolCtx]);
 
-  // Frame handler
+  // Frame drawing mode handler - enters drawing mode
+  const handleFrameDrawMode = useCallback(() => {
+    if (!toolCtx) return;
+    toolCtx.setActiveTool("frame");
+  }, [toolCtx]);
+
+  // Frame preset handler - immediate insertion
   const handleAddFrame = useCallback((preset: FramePreset) => {
     if (!documentCtx || !selectionCtx || !pageCtx) return;
 
@@ -186,19 +196,42 @@ export const DiagramBottomToolbar = memo(function DiagramBottomToolbar() {
 
         <ToolbarDivider />
 
-        {/* Shape SplitButton + Frame */}
+        {/* Text, Table, Shape SplitButton, Frame */}
         <ToolbarGroup>
-          <Tooltip content="Add Shape" placement="top">
+          <Tooltip content="Text (T)" placement="top">
+            <IconButton
+              icon={<LuType size={18} />}
+              aria-label="Text tool"
+              size="lg"
+              variant={activeTool === "text" ? "selected" : "minimal"}
+              onClick={toolHandlers.text}
+            />
+          </Tooltip>
+          <Tooltip content="Table" placement="top">
+            <IconButton
+              icon={<LuTable size={18} />}
+              aria-label="Table tool"
+              size="lg"
+              variant={activeTool === "table" ? "selected" : "minimal"}
+              onClick={toolHandlers.table}
+            />
+          </Tooltip>
+          <Tooltip content="Shape" placement="top">
             <SplitButton
               options={shapeOptions}
               value={selectedShape}
               onChange={setSelectedShape}
               onAction={handleAddShape}
               size="lg"
+              variant={isShapeDrawingTool(activeTool) ? "selected" : "default"}
               aria-label="Add shape"
             />
           </Tooltip>
-          <FramePresetPicker onSelect={handleAddFrame} />
+          <FramePresetPicker
+            onSelect={handleAddFrame}
+            onDrawMode={handleFrameDrawMode}
+            isDrawMode={activeTool === "frame"}
+          />
         </ToolbarGroup>
 
         <ToolbarDivider />

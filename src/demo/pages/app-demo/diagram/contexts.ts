@@ -84,3 +84,16 @@ export type PageContextValue = {
 };
 
 export const PageContext = createContext<PageContextValue | null>(null);
+
+// =============================================================================
+// History Context
+// =============================================================================
+
+export type HistoryContextValue = {
+  canUndo: boolean;
+  canRedo: boolean;
+  undo: () => void;
+  redo: () => void;
+};
+
+export const HistoryContext = createContext<HistoryContextValue | null>(null);

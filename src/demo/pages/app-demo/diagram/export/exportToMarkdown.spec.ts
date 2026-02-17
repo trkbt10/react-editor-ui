@@ -45,10 +45,11 @@ async function validateEmbeddedMermaid(markdown: string): Promise<{ valid: boole
 const defaultColor = { hex: "#ffffff", opacity: 100, visible: true };
 const defaultStrokeColor = { hex: "#000000", opacity: 100, visible: true };
 
-function createShapeNode(id: string, type: ShapeNode["type"]): ShapeNode {
+function createShapeNode(id: string, shape: ShapeNode["shape"]): ShapeNode {
   return {
     id,
-    type,
+    type: "shape",
+    shape,
     x: 0,
     y: 0,
     width: 100,

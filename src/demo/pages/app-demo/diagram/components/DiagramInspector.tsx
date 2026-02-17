@@ -3,7 +3,7 @@
  */
 
 import { memo, useCallback, useContext, useMemo, useState, type CSSProperties } from "react";
-import { LuTrash2, LuZoomIn, LuZoomOut } from "react-icons/lu";
+import { LuTrash2, LuZoomIn, LuZoomOut, LuPlus, LuMinus } from "react-icons/lu";
 
 import { PropertySection } from "../../../../../components/PropertySection/PropertySection";
 import { PropertyRow } from "../../../../../components/PropertyRow/PropertyRow";
@@ -51,25 +51,14 @@ import {
 } from "../../../../../themes/styles";
 
 import { DocumentContext, SelectionContext, PageContext, ViewportContext } from "../contexts";
-import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, FrameNode, FramePreset, ShapeType, Connection, SymbolInstance, SymbolPart } from "../types";
-import { isFrameNode, isSymbolInstance } from "../types";
+import type { StrokeStyle, ArrowheadType, DiagramNode, ShapeNode, TextNode, FrameNode, FramePreset, ShapeType, Connection, SymbolInstance, SymbolPart, TableNode } from "../types";
+import { isFrameNode, isSymbolInstance, isTableNode, isShapeNode, isTextNode } from "../types";
 import { framePresets, type FramePresetInfo } from "../mockData";
 import { ThemeEditor } from "./ThemeEditor";
 import { TextExportSection } from "./TextExportSection";
 import { exportFrameToSVG } from "../export/exportToSVG";
 import { exportToPNG } from "../export/exportToPNG";
 
-// =============================================================================
-// Type Guards
-// =============================================================================
-
-function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame";
-}
-
-function isTextNode(node: DiagramNode): node is TextNode {
-  return node.type === "text";
-}
 
 // =============================================================================
 // Styles
@@ -591,6 +580,95 @@ export const DiagramInspector = memo(function DiagramInspector() {
           }),
         );
       },
+      // Table-specific handlers
+      addTableRow: () => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) => {
+            if (n.id === nodeId && isTableNode(n)) {
+              const newRow = Array.from({ length: n.cells[0]?.length ?? 3 }, () => ({ content: "" }));
+              const newRowHeights = [...n.rowHeights, 32];
+              const newHeight = newRowHeights.reduce((sum, h) => sum + h, 0);
+              return {
+                ...n,
+                cells: [...n.cells, newRow],
+                rowHeights: newRowHeights,
+                height: newHeight,
+              };
+            }
+            return n;
+          }),
+        );
+      },
+      removeTableRow: () => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) => {
+            if (n.id === nodeId && isTableNode(n) && n.cells.length > 1) {
+              const newCells = n.cells.slice(0, -1);
+              const newRowHeights = n.rowHeights.slice(0, -1);
+              const newHeight = newRowHeights.reduce((sum, h) => sum + h, 0);
+              return {
+                ...n,
+                cells: newCells,
+                rowHeights: newRowHeights,
+                height: newHeight,
+              };
+            }
+            return n;
+          }),
+        );
+      },
+      addTableColumn: () => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) => {
+            if (n.id === nodeId && isTableNode(n)) {
+              const newCells = n.cells.map((row) => [...row, { content: "" }]);
+              const newColumnWidths = [...n.columnWidths, 100];
+              const newWidth = newColumnWidths.reduce((sum, w) => sum + w, 0);
+              return {
+                ...n,
+                cells: newCells,
+                columnWidths: newColumnWidths,
+                width: newWidth,
+              };
+            }
+            return n;
+          }),
+        );
+      },
+      removeTableColumn: () => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) => {
+            if (n.id === nodeId && isTableNode(n) && (n.cells[0]?.length ?? 0) > 1) {
+              const newCells = n.cells.map((row) => row.slice(0, -1));
+              const newColumnWidths = n.columnWidths.slice(0, -1);
+              const newWidth = newColumnWidths.reduce((sum, w) => sum + w, 0);
+              return {
+                ...n,
+                cells: newCells,
+                columnWidths: newColumnWidths,
+                width: newWidth,
+              };
+            }
+            return n;
+          }),
+        );
+      },
+      setTableHeaderRow: (hasHeaderRow: boolean) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isTableNode(n) ? { ...n, hasHeaderRow } : n,
+          ),
+        );
+      },
+      setTableStrokeColor: (color: ColorValue) => {
+        updatePageNodes((nodes) =>
+          nodes.map((n) =>
+            n.id === nodeId && isTableNode(n)
+              ? { ...n, stroke: { ...n.stroke, color } }
+              : n,
+          ),
+        );
+      },
       delete: () => {
         updatePageNodesAndConnections(
           (nodes) => nodes.filter((n) => n.id !== nodeId),
@@ -765,7 +843,7 @@ export const DiagramInspector = memo(function DiagramInspector() {
   const renderDesignContent = () => {
     // Multi-selection inspector (only for shape nodes)
     if (isMultiSelection && multiNodeHandlers && selectedShapeNodes.length > 0) {
-      const commonType = getCommonShapeValue((n) => n.type);
+      const commonType = getCommonShapeValue((n) => n.shape);
       const commonStrokeWidth = getCommonShapeValue((n) => n.stroke.width);
       const commonStrokeStyle = getCommonShapeValue((n) => n.stroke.style);
       const firstShape = selectedShapeNodes[0];
@@ -842,7 +920,9 @@ export const DiagramInspector = memo(function DiagramInspector() {
             ? "Frame Properties"
             : isSymbolInstance(selectedNode)
               ? "Instance Properties"
-              : "Group Properties";
+              : isTableNode(selectedNode)
+                ? "Table Properties"
+                : "Group Properties";
 
       return (
         <div style={contentStyle}>
@@ -864,7 +944,7 @@ export const DiagramInspector = memo(function DiagramInspector() {
             <PropertySection title="Type">
               <Select
                 options={shapeTypeOptions}
-                value={selectedNode.type}
+                value={selectedNode.shape}
                 onChange={nodeHandlers.setType}
                 size="sm"
               />
@@ -1045,6 +1125,77 @@ export const DiagramInspector = memo(function DiagramInspector() {
               onSetOverride={nodeHandlers.setPartOverride}
               onClearOverride={nodeHandlers.clearPartOverride}
             />
+          )}
+
+          {/* Table Properties */}
+          {isTableNode(selectedNode) && (
+            <>
+              <PropertySection title="Structure">
+                <PropertyRow label="Rows">
+                  <div style={{ display: "flex", alignItems: "center", gap: SPACE_XS }}>
+                    <span style={{ fontSize: SIZE_FONT_SM, minWidth: 20, textAlign: "center" }}>
+                      {selectedNode.cells.length}
+                    </span>
+                    <IconButton
+                      icon={<LuMinus size={14} />}
+                      aria-label="Remove row"
+                      size="sm"
+                      variant="ghost"
+                      onClick={nodeHandlers.removeTableRow}
+                      disabled={selectedNode.cells.length <= 1}
+                    />
+                    <IconButton
+                      icon={<LuPlus size={14} />}
+                      aria-label="Add row"
+                      size="sm"
+                      variant="ghost"
+                      onClick={nodeHandlers.addTableRow}
+                    />
+                  </div>
+                </PropertyRow>
+                <PropertyRow label="Columns">
+                  <div style={{ display: "flex", alignItems: "center", gap: SPACE_XS }}>
+                    <span style={{ fontSize: SIZE_FONT_SM, minWidth: 20, textAlign: "center" }}>
+                      {selectedNode.cells[0]?.length ?? 0}
+                    </span>
+                    <IconButton
+                      icon={<LuMinus size={14} />}
+                      aria-label="Remove column"
+                      size="sm"
+                      variant="ghost"
+                      onClick={nodeHandlers.removeTableColumn}
+                      disabled={(selectedNode.cells[0]?.length ?? 0) <= 1}
+                    />
+                    <IconButton
+                      icon={<LuPlus size={14} />}
+                      aria-label="Add column"
+                      size="sm"
+                      variant="ghost"
+                      onClick={nodeHandlers.addTableColumn}
+                    />
+                  </div>
+                </PropertyRow>
+              </PropertySection>
+
+              <PropertySection title="Options">
+                <PropertyRow label="Header Row">
+                  <Checkbox
+                    checked={selectedNode.hasHeaderRow}
+                    onChange={nodeHandlers.setTableHeaderRow}
+                    size="sm"
+                  />
+                </PropertyRow>
+              </PropertySection>
+
+              <PropertySection title="Border">
+                <ColorInput
+                  value={selectedNode.stroke.color}
+                  onChange={nodeHandlers.setTableStrokeColor}
+                  size="sm"
+                  showVisibilityToggle
+                />
+              </PropertySection>
+            </>
           )}
         </div>
       );

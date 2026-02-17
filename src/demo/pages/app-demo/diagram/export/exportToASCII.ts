@@ -348,7 +348,7 @@ function getGroupShapeType(group: GroupNode, nodes: DiagramNode[]): ShapeType | 
   for (const childId of group.children) {
     const child = nodes.find((n) => n.id === childId);
     if (child && isShapeNode(child)) {
-      return child.type;
+      return child.shape;
     }
   }
   return "group";
@@ -470,7 +470,7 @@ function generateASCII(
     return {
       id: node.id,
       label: node.id,
-      shapeType: (node as ShapeNode).type,
+      shapeType: (node as ShapeNode).shape,
       x: node.x,
       y: node.y,
       width: node.width,

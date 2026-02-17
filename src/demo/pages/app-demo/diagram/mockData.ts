@@ -15,6 +15,7 @@ import type {
   DiagramTheme,
   TextProperties,
   ShapeType,
+  NodeType,
   SymbolInstance,
   SymbolDefinition,
   SymbolPart,
@@ -22,6 +23,8 @@ import type {
   TextPart,
   CanvasPage,
   SymbolsPage,
+  TableNode,
+  TableCell,
 } from "./types";
 
 // =============================================================================
@@ -43,6 +46,9 @@ export const shapeLibrary: ShapeDefinition[] = [
 
   // Text
   { type: "text", label: "Text", category: "basic", defaultWidth: 100, defaultHeight: 30 },
+
+  // Table
+  { type: "table", label: "Table", category: "misc", defaultWidth: 300, defaultHeight: 128 },
 ];
 
 // =============================================================================
@@ -147,7 +153,7 @@ export function generatePartId(): string {
  * Create a shape node
  */
 export function createShapeNode(
-  type: ShapeType,
+  shape: ShapeType,
   x: number,
   y: number,
   width: number = 120,
@@ -155,7 +161,8 @@ export function createShapeNode(
 ): ShapeNode {
   return {
     id: generateNodeId(),
-    type,
+    type: "shape",
+    shape,
     x,
     y,
     width,
@@ -242,6 +249,84 @@ export function createFrameNode(
 }
 
 /**
+ * Create a frame node with custom size (for drawing mode)
+ */
+export function createFrameNodeCustom(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): FrameNode {
+  return {
+    id: generateNodeId(),
+    type: "frame",
+    preset: "custom",
+    x,
+    y,
+    width,
+    height,
+    rotation: 0,
+    fill: { hex: "#ffffff", opacity: 100, visible: true },
+    stroke: { color: { hex: "#e0e0e0", opacity: 100, visible: true }, width: 1, style: "solid" },
+    children: [],
+    clipContent: true,
+    showBackground: true,
+  };
+}
+
+/**
+ * Create a table node
+ */
+export function createTableNode(
+  x: number,
+  y: number,
+  rows: number = 3,
+  columns: number = 3,
+  width?: number,
+  height?: number,
+): TableNode {
+  const defaultColumnWidth = 100;
+  const defaultRowHeight = 32;
+
+  // Create empty cells
+  const cells: TableCell[][] = Array.from({ length: rows }, () =>
+    Array.from({ length: columns }, () => ({
+      content: "",
+    })),
+  );
+
+  // Column widths
+  const columnWidths = Array.from({ length: columns }, () => defaultColumnWidth);
+
+  // Row heights
+  const rowHeights = Array.from({ length: rows }, () => defaultRowHeight);
+
+  // Calculate dimensions if not provided
+  const tableWidth = width ?? columnWidths.reduce((sum, w) => sum + w, 0);
+  const tableHeight = height ?? rowHeights.reduce((sum, h) => sum + h, 0);
+
+  return {
+    id: generateNodeId(),
+    type: "table",
+    x,
+    y,
+    width: tableWidth,
+    height: tableHeight,
+    rotation: 0,
+    cells,
+    columnWidths,
+    rowHeights,
+    stroke: {
+      color: { ...defaultStroke.color },
+      width: 1,
+      style: "solid",
+    },
+    hasHeaderRow: true,
+    defaultTextProps: { ...defaultTextProps },
+  };
+}
+
+/**
  * Create a shape part for symbol definition
  */
 export function createShapePart(
@@ -281,11 +366,23 @@ export function createTextPart(
   };
 }
 
+/** Set of valid shape types for type checking */
+const shapeTypes = new Set<string>([
+  "rectangle",
+  "ellipse",
+  "diamond",
+  "parallelogram",
+  "rounded-rect",
+  "cylinder",
+  "hexagon",
+  "triangle",
+]);
+
 /**
- * Legacy createNode for backward compatibility
+ * Create a node from a NodeType (ShapeType | "text" | "group" | ...)
  */
 export function createNode(
-  type: DiagramNode["type"],
+  type: NodeType,
   x: number,
   y: number,
   width: number = 120,
@@ -301,7 +398,17 @@ export function createNode(
     // Cannot create instance without symbolId
     return createGroupNode(x, y, width, height, []);
   }
-  return createShapeNode(type as ShapeType, x, y, width, height);
+  if (type === "table") {
+    // Calculate rows/columns from size
+    const cols = Math.max(2, Math.round(width / 100));
+    const rows = Math.max(2, Math.round(height / 32));
+    return createTableNode(x, y, rows, cols, width, height);
+  }
+  if (shapeTypes.has(type)) {
+    return createShapeNode(type as ShapeType, x, y, width, height);
+  }
+  // Fallback to rectangle
+  return createShapeNode("rectangle", x, y, width, height);
 }
 
 export function createConnection(

@@ -403,7 +403,7 @@ function generateSVG(
   const shapesSVG = nodes
     .filter(isShapeNode)
     .map((node: ShapeNode) => {
-      const path = getShapePath(node.type, node.width, node.height);
+      const path = getShapePath(node.shape, node.width, node.height);
       const fill = colorToHex(node.fill);
       const stroke = colorToHex(node.stroke.color);
       const strokeDash = getStrokeDashArray(node.stroke.style);

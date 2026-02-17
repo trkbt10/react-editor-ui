@@ -2,13 +2,14 @@
  * @file DiagramDemo - Draw.io style diagram editor
  */
 
-import { useState, useMemo, useCallback, type CSSProperties } from "react";
+import { useState, useMemo, useCallback, useEffect, type CSSProperties } from "react";
 import {
   GridLayout,
   type PanelLayoutConfig,
   type LayerDefinition,
 } from "react-panel-layout";
 
+import { useHistory } from "../../../../hooks/useHistory";
 import {
   DocumentContext,
   SelectionContext,
@@ -16,12 +17,14 @@ import {
   GridContext,
   ViewportContext,
   PageContext,
+  HistoryContext,
   type DocumentContextValue,
   type SelectionContextValue,
   type ToolContextValue,
   type GridContextValue,
   type ViewportContextValue,
   type PageContextValue,
+  type HistoryContextValue,
 } from "./contexts";
 import type { DiagramDocument, ToolType, PageId } from "./types";
 import { initialDocument } from "./mockData";
@@ -62,12 +65,34 @@ const containerStyle: CSSProperties = {
 };
 
 // =============================================================================
+// History Metadata
+// =============================================================================
+
+type HistoryMetadata = {
+  selectedNodeIds: string[];
+  selectedConnectionIds: string[];
+};
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
 export function DiagramDemo() {
-  // Document state
-  const [document, setDocument] = useState<DiagramDocument>(initialDocument);
+  // Document state with history
+  const history = useHistory<DiagramDocument, HistoryMetadata>(initialDocument, {
+    debounceMs: 500,
+    maxHistory: 50,
+  });
+  const document = history.state;
+
+  // Wrap setDocument to push to history
+  const setDocument = useCallback(
+    (updater: React.SetStateAction<DiagramDocument>) => {
+      const newDoc = typeof updater === "function" ? updater(history.state) : updater;
+      history.push(newDoc);
+    },
+    [history],
+  );
 
   // Selection state
   const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
@@ -107,10 +132,51 @@ export function DiagramDemo() {
     setSnapEnabled((prev) => !prev);
   }, []);
 
+  // History handlers
+  const handleUndo = useCallback(() => {
+    const entry = history.undo();
+    if (entry?.metadata) {
+      setSelectedNodeIds(new Set(entry.metadata.selectedNodeIds));
+      setSelectedConnectionIds(new Set(entry.metadata.selectedConnectionIds));
+    }
+  }, [history]);
+
+  const handleRedo = useCallback(() => {
+    const entry = history.redo();
+    if (entry?.metadata) {
+      setSelectedNodeIds(new Set(entry.metadata.selectedNodeIds));
+      setSelectedConnectionIds(new Set(entry.metadata.selectedConnectionIds));
+    }
+  }, [history]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+Z or Ctrl+Z for undo
+      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Cmd+Shift+Z or Ctrl+Shift+Z for redo
+      if ((e.metaKey || e.ctrlKey) && e.key === "z" && e.shiftKey) {
+        e.preventDefault();
+        handleRedo();
+      }
+      // Cmd+Y or Ctrl+Y for redo (alternative)
+      if ((e.metaKey || e.ctrlKey) && e.key === "y") {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleUndo, handleRedo]);
+
   // Context values (memoized)
   const documentValue = useMemo<DocumentContextValue>(
     () => ({ document, setDocument }),
-    [document],
+    [document, setDocument],
   );
 
   const selectionValue = useMemo<SelectionContextValue>(
@@ -156,6 +222,16 @@ export function DiagramDemo() {
     [activePageId, activePage, document.canvasPage, document.symbolsPage],
   );
 
+  const historyValue = useMemo<HistoryContextValue>(
+    () => ({
+      canUndo: history.canUndo,
+      canRedo: history.canRedo,
+      undo: handleUndo,
+      redo: handleRedo,
+    }),
+    [history.canUndo, history.canRedo, handleUndo, handleRedo],
+  );
+
   // Layers
   const layers = useMemo<LayerDefinition[]>(
     () => [
@@ -174,9 +250,11 @@ export function DiagramDemo() {
           <ToolContext.Provider value={toolValue}>
             <GridContext.Provider value={gridValue}>
               <ViewportContext.Provider value={viewportValue}>
-                <div style={containerStyle}>
-                  <GridLayout config={layoutConfig} layers={layers} />
-                </div>
+                <HistoryContext.Provider value={historyValue}>
+                  <div style={containerStyle}>
+                    <GridLayout config={layoutConfig} layers={layers} />
+                  </div>
+                </HistoryContext.Provider>
               </ViewportContext.Provider>
             </GridContext.Provider>
           </ToolContext.Provider>

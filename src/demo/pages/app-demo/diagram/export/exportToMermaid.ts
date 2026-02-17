@@ -149,7 +149,7 @@ function getGroupShapeType(group: GroupNode, nodes: DiagramNode[]): ShapeType | 
   for (const childId of group.children) {
     const child = nodes.find((n) => n.id === childId);
     if (child && isShapeNode(child)) {
-      return child.type;
+      return child.shape;
     }
   }
   return "group";
@@ -258,7 +258,7 @@ function generateMermaid(
       const label = getInstanceLabel(node, symbolDef);
       lines.push(`  ${id}${shape.start}"${sanitizeLabel(label)}"${shape.end}`);
     } else if (isShapeNode(node)) {
-      const shape = getMermaidShape(node.type);
+      const shape = getMermaidShape(node.shape);
       lines.push(`  ${id}${shape.start}"${id}"${shape.end}`);
     }
   }

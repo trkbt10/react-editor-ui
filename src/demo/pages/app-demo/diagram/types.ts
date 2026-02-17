@@ -173,7 +173,8 @@ export type TableNode = BaseNodeProps & {
 };
 
 export type ShapeNode = BaseNodeProps & {
-  type: ShapeType;
+  type: "shape";
+  shape: ShapeType;
   fill: ColorValue;
   stroke: NodeStroke;
 };
@@ -282,7 +283,7 @@ export function isSymbolInstance(node: DiagramNode): node is SymbolInstance {
  * Type guard for shape nodes
  */
 export function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame" && node.type !== "table";
+  return node.type === "shape";
 }
 
 /**

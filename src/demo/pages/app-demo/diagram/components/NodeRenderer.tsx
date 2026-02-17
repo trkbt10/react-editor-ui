@@ -111,8 +111,8 @@ type ShapeRendererProps = {
 
 const ShapeRenderer = memo(function ShapeRenderer({ node, selected }: ShapeRendererProps) {
   const shapePath = useMemo(
-    () => getShapePath(node.type, node.width, node.height),
-    [node.type, node.width, node.height],
+    () => getShapePath(node.shape, node.width, node.height),
+    [node.shape, node.width, node.height],
   );
 
   const containerStyle = useMemo<CSSProperties>(

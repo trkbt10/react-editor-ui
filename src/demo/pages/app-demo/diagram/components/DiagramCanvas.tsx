@@ -25,10 +25,26 @@ import { BoundingBox, type HandlePosition } from "../../../../../canvas/Bounding
 import type { ViewportState, GestureConfig } from "../../../../../canvas/core/types";
 
 import { DocumentContext, SelectionContext, GridContext, ToolContext, PageContext, ViewportContext } from "../contexts";
-import { createNode, createConnection } from "../mockData";
+import { createNode, createConnection, createFrameNodeCustom, createTableNode } from "../mockData";
 import { snapToGrid } from "../hooks/useGridSnap";
-import type { DiagramNode, NodeType, ConnectionPosition, GroupNode, FrameNode, SymbolInstance, SymbolDefinition, SymbolsPage } from "../types";
-import { isSymbolInstance, isFrameNode } from "../types";
+import type { DiagramNode, NodeType, ConnectionPosition, GroupNode, FrameNode, SymbolInstance, SymbolDefinition, SymbolsPage, ToolType, ShapeType, TableNode } from "../types";
+import { isSymbolInstance, isFrameNode, isTableNode } from "../types";
+
+// =============================================================================
+// Drawing Mode Types
+// =============================================================================
+
+type DrawingState = {
+  startX: number;
+  startY: number;
+  currentX: number;
+  currentY: number;
+} | null;
+
+// Check if a tool is a drawing tool (shape or frame)
+function isDrawingTool(tool: ToolType): tool is ShapeType | "text" | "frame" | "table" {
+  return tool !== "select" && tool !== "pan" && tool !== "connection" && tool !== "group" && tool !== "instance";
+}
 
 // Type guard for group nodes
 function isGroupNode(node: DiagramNode): node is GroupNode {
@@ -54,8 +70,10 @@ import { NodeRenderer } from "./NodeRenderer";
 import { ConnectionRenderer, ArrowMarkerDefs } from "./ConnectionRenderer";
 import { DiagramBottomToolbar } from "./DiagramBottomToolbar";
 import { MarqueeSelection, intersectsMarquee, type MarqueeState } from "./MarqueeSelection";
+import { DrawingPreview } from "./DrawingPreview";
 import { SymbolInstanceRenderer, findFirstTextPartId } from "./SymbolInstanceRenderer";
 import { FrameRenderer } from "./FrameRenderer";
+import { TableRenderer, type TableEditingState } from "./TableRenderer";
 
 // Symbol editing state type
 type SymbolEditingState = {
@@ -91,6 +109,10 @@ type NodeWrapperProps = {
   editingPartId?: string | null;
   /** For Symbol instances: callback when part content changes */
   onPartContentChange?: (instanceId: string, partId: string, content: string) => void;
+  /** For Table nodes: which cell is being edited */
+  editingTableCell?: { rowIndex: number; colIndex: number } | null;
+  /** For Table nodes: callback when cell content changes */
+  onTableCellContentChange?: (nodeId: string, rowIndex: number, colIndex: number, content: string) => void;
 };
 
 const NodeWrapper = memo(function NodeWrapper({
@@ -102,6 +124,8 @@ const NodeWrapper = memo(function NodeWrapper({
   symbolDef,
   editingPartId,
   onPartContentChange,
+  editingTableCell,
+  onTableCellContentChange,
 }: NodeWrapperProps) {
   // Render symbol instances using SymbolInstanceRenderer
   if (isSymbolInstance(node)) {
@@ -123,6 +147,19 @@ const NodeWrapper = memo(function NodeWrapper({
       <FrameRenderer
         node={node}
         selected={selected}
+      />
+    );
+  }
+
+  // Render table nodes using TableRenderer
+  if (isTableNode(node)) {
+    return (
+      <TableRenderer
+        node={node}
+        selected={selected}
+        editingCell={editingTableCell}
+        onCellContentChange={onTableCellContentChange}
+        onEditEnd={onEditEnd}
       />
     );
   }
@@ -231,6 +268,10 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
   const [marquee, setMarquee] = useState<MarqueeState | null>(null);
   const isMarqueeDragging = useRef(false);
 
+  // Drawing mode state
+  const [drawingState, setDrawingState] = useState<DrawingState>(null);
+  const isDrawing = useRef(false);
+
   // Drag state - tracks original positions for proper snap behavior
   const dragStartRef = useRef<{
     nodes: Map<string, { x: number; y: number; width: number; height: number }>;
@@ -252,6 +293,9 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
 
   // Symbol instance editing state (tracks which instance and which part)
   const [editingSymbolState, setEditingSymbolState] = useState<SymbolEditingState>(null);
+
+  // Table editing state (tracks which table and which cell)
+  const [editingTableState, setEditingTableState] = useState<TableEditingState>(null);
 
   // Track if we're in direct drag mode (to keep pointer events active on node)
   const [directDragNodeId, setDirectDragNodeId] = useState<string | null>(null);
@@ -277,6 +321,27 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  // Escape key to cancel drawing mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        const currentTool = toolCtx?.activeTool;
+        if (isDrawing.current || drawingState) {
+          // Cancel drawing
+          isDrawing.current = false;
+          setDrawingState(null);
+          toolCtx?.setActiveTool("select");
+        } else if (currentTool && isDrawingTool(currentTool)) {
+          // Exit drawing mode without drawing
+          toolCtx?.setActiveTool("select");
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawingState, toolCtx]);
 
   if (!documentCtx || !selectionCtx || !gridCtx || !toolCtx || !pageCtx || !viewportCtx) {
     return null;
@@ -325,6 +390,11 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
     backgroundColor: document.theme.canvasBackground.hex,
   }), [document.theme.canvasBackground.hex]);
 
+  // Canvas style with cursor for drawing mode
+  const canvasStyle = useMemo((): CSSProperties => ({
+    cursor: isDrawingTool(activeTool) ? "crosshair" : undefined,
+  }), [activeTool]);
+
   // Gesture config to prevent pan when interacting with BoundingBox
   const gestureConfig = useMemo((): Partial<GestureConfig> => ({
     shouldAllowPan: (e: PointerEvent) => {
@@ -362,6 +432,28 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                 },
               },
             };
+          }
+          return n;
+        }),
+      );
+    },
+    [updatePageNodes],
+  );
+
+  // Handle Table cell content change
+  const handleTableCellContentChange = useCallback(
+    (nodeId: string, rowIndex: number, colIndex: number, content: string) => {
+      updatePageNodes((nodes) =>
+        nodes.map((n) => {
+          if (n.id === nodeId && isTableNode(n)) {
+            const newCells = n.cells.map((row, ri) =>
+              ri === rowIndex
+                ? row.map((cell, ci) =>
+                    ci === colIndex ? { ...cell, content } : cell,
+                  )
+                : row,
+            );
+            return { ...n, cells: newCells };
           }
           return n;
         }),
@@ -519,7 +611,7 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
     [updatePageNodes, selectedNodeIds],
   );
 
-  // Handle double-click to edit text (for text nodes and symbol instances)
+  // Handle double-click to edit text (for text nodes, symbol instances, and tables)
   const handleBoundingBoxDoubleClick = useCallback(() => {
     if (selectedNodeIds.size === 1) {
       const nodeId = Array.from(selectedNodeIds)[0];
@@ -537,6 +629,12 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
         if (textPartId) {
           setEditingSymbolState({ instanceId: node.id, partId: textPartId });
         }
+        return;
+      }
+
+      // Table nodes: edit first cell
+      if (node && isTableNode(node)) {
+        setEditingTableState({ nodeId: node.id, rowIndex: 0, colIndex: 0 });
       }
     }
   }, [selectedNodeIds, pageNodes, symbolDef]);
@@ -545,6 +643,7 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
   const handleEditEnd = useCallback(() => {
     setEditingNodeId(null);
     setEditingSymbolState(null);
+    setEditingTableState(null);
   }, []);
 
   // Convert screen coordinates to canvas coordinates
@@ -696,9 +795,25 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
     [setSelectedConnectionIds, setSelectedNodeIds],
   );
 
-  // Handle canvas background click (start marquee or deselect)
+  // Handle canvas background click (start marquee, drawing, or deselect)
   const handleBackgroundPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
+      // Drawing mode: start drawing shape/frame
+      if (isDrawingTool(activeTool)) {
+        const canvasPos = screenToCanvas(e.clientX, e.clientY);
+        setDrawingState({
+          startX: canvasPos.x,
+          startY: canvasPos.y,
+          currentX: canvasPos.x,
+          currentY: canvasPos.y,
+        });
+        isDrawing.current = true;
+        // Clear selection when starting to draw
+        setSelectedNodeIds(new Set());
+        setSelectedConnectionIds(new Set());
+        return;
+      }
+
       if (activeTool === "select") {
         // Start marquee selection
         const canvasPos = screenToCanvas(e.clientX, e.clientY);
@@ -725,9 +840,18 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
     [activeTool, screenToCanvas, setSelectedNodeIds, setSelectedConnectionIds],
   );
 
-  // Handle pointer move (marquee + direct drag)
+  // Handle pointer move (drawing + marquee + direct drag)
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
+      // Handle drawing mode
+      if (isDrawing.current && drawingState) {
+        const canvasPos = screenToCanvas(e.clientX, e.clientY);
+        setDrawingState((prev) =>
+          prev ? { ...prev, currentX: canvasPos.x, currentY: canvasPos.y } : null,
+        );
+        return;
+      }
+
       // Handle direct drag
       if (directDragRef.current) {
         handleDirectDragMove(e);
@@ -742,12 +866,72 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
         prev ? { ...prev, currentX: canvasPos.x, currentY: canvasPos.y } : null,
       );
     },
-    [marquee, screenToCanvas, handleDirectDragMove],
+    [marquee, drawingState, screenToCanvas, handleDirectDragMove],
   );
 
-  // Handle pointer up (marquee + direct drag)
+  // Minimum size for drawn shapes (in canvas units)
+  const MIN_DRAW_SIZE = 20;
+
+  // Handle pointer up (drawing + marquee + direct drag)
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
+      // Handle drawing end
+      if (isDrawing.current && drawingState) {
+        isDrawing.current = false;
+
+        // Calculate drawn rectangle
+        const x = Math.min(drawingState.startX, drawingState.currentX);
+        const y = Math.min(drawingState.startY, drawingState.currentY);
+        const width = Math.abs(drawingState.currentX - drawingState.startX);
+        const height = Math.abs(drawingState.currentY - drawingState.startY);
+
+        // Check minimum size
+        if (width >= MIN_DRAW_SIZE && height >= MIN_DRAW_SIZE) {
+          // Apply grid snap if enabled
+          const snappedX = snapEnabled ? snapToGrid(x, gridSize, true) : x;
+          const snappedY = snapEnabled ? snapToGrid(y, gridSize, true) : y;
+          const snappedWidth = snapEnabled ? snapToGrid(width, gridSize, true) : width;
+          const snappedHeight = snapEnabled ? snapToGrid(height, gridSize, true) : height;
+
+          // Create node based on tool type
+          let newNode: DiagramNode;
+          if (activeTool === "frame") {
+            newNode = createFrameNodeCustom(snappedX, snappedY, snappedWidth, snappedHeight);
+          } else if (activeTool === "table") {
+            // Calculate rows/columns from drawn size
+            const cols = Math.max(2, Math.round(snappedWidth / 100));
+            const rows = Math.max(2, Math.round(snappedHeight / 32));
+            newNode = createTableNode(snappedX, snappedY, rows, cols, snappedWidth, snappedHeight);
+          } else {
+            newNode = createNode(activeTool as NodeType, snappedX, snappedY, snappedWidth, snappedHeight);
+          }
+
+          // Apply theme defaults for shape nodes
+          if (newNode.type !== "text" && newNode.type !== "group" && newNode.type !== "frame" && newNode.type !== "instance" && newNode.type !== "table") {
+            newNode = {
+              ...newNode,
+              fill: { ...document.theme.defaultNodeFill },
+              stroke: {
+                color: { ...document.theme.defaultNodeStroke.color },
+                width: document.theme.defaultNodeStroke.width,
+                style: document.theme.defaultNodeStroke.style,
+              },
+            };
+          }
+
+          updatePageNodes((nodes) => [...nodes, newNode]);
+
+          // Select the new node
+          setSelectedNodeIds(new Set([newNode.id]));
+          setSelectedConnectionIds(new Set());
+        }
+
+        // Reset drawing state and return to select tool
+        setDrawingState(null);
+        toolCtx?.setActiveTool("select");
+        return;
+      }
+
       // Handle direct drag end
       if (directDragRef.current) {
         handleDirectDragEnd();
@@ -784,7 +968,7 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
 
       setMarquee(null);
     },
-    [marquee, pageNodes, setSelectedNodeIds, setSelectedConnectionIds, handleDirectDragEnd],
+    [marquee, drawingState, activeTool, pageNodes, snapEnabled, gridSize, document.theme, toolCtx, updatePageNodes, setSelectedNodeIds, setSelectedConnectionIds, handleDirectDragEnd],
   );
 
   // Handle DnD drop
@@ -808,9 +992,9 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
 
         const newNode = createNode(shapeData.type, x, y, shapeData.width, shapeData.height);
 
-        // Apply theme defaults (only for shape nodes - text nodes don't have fill/stroke)
+        // Apply theme defaults (only for shape nodes - text, group, table nodes have their own defaults)
         const nodeWithDefaults =
-          newNode.type !== "text" && newNode.type !== "group"
+          newNode.type !== "text" && newNode.type !== "group" && newNode.type !== "table"
             ? {
                 ...newNode,
                 fill: { ...document.theme.defaultNodeFill },
@@ -876,7 +1060,7 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
           />
         ))}
         {/* Bounding box for selected nodes (hidden when editing text) */}
-        {selectionBounds && !editingNodeId && !editingSymbolState && (
+        {selectionBounds && !editingNodeId && !editingSymbolState && !editingTableState && (
           <BoundingBox
             x={selectionBounds.x}
             y={selectionBounds.y}
@@ -896,6 +1080,14 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
         )}
         {/* Marquee selection */}
         {marquee && <MarqueeSelection marquee={marquee} scale={viewport.scale} />}
+        {/* Drawing preview */}
+        {drawingState && isDrawingTool(activeTool) && (
+          <DrawingPreview
+            drawing={drawingState}
+            toolType={activeTool}
+            scale={viewport.scale}
+          />
+        )}
       </>
     ),
     [
@@ -909,6 +1101,9 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
       selectedNodeIds.size,
       editingNodeId,
       editingSymbolState,
+      editingTableState,
+      drawingState,
+      activeTool,
       handleConnectionSelect,
       handleMoveStart,
       handleNodeMove,
@@ -947,6 +1142,7 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
             height={dimensions.height}
             svgLayers={svgLayers}
             gestureConfig={gestureConfig}
+            style={canvasStyle}
             onBackgroundPointerDown={handleBackgroundPointerDown}
           >
             {/* 1. Frames with children inside (relative coordinates) */}
@@ -969,7 +1165,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                     const isChildSelected = selectedNodeIds.has(child.id);
                     const isChildEditing = editingNodeId === child.id;
                     const isChildSymbolEditing = editingSymbolState?.instanceId === child.id;
-                    const isChildAnyEditing = isChildEditing || isChildSymbolEditing;
+                    const isChildTableEditing = editingTableState?.nodeId === child.id;
+                    const isChildAnyEditing = isChildEditing || isChildSymbolEditing || isChildTableEditing;
 
                     // Adjust coordinates relative to frame
                     const adjustedChild = {
@@ -1009,6 +1206,11 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                             if (textPartId) {
                               setEditingSymbolState({ instanceId: child.id, partId: textPartId });
                             }
+                            return;
+                          }
+                          // Table nodes: edit first cell
+                          if (isTableNode(child)) {
+                            setEditingTableState({ nodeId: child.id, rowIndex: 0, colIndex: 0 });
                           }
                         }}
                       >
@@ -1021,6 +1223,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                           symbolDef={symbolDef}
                           editingPartId={isChildSymbolEditing ? editingSymbolState.partId : null}
                           onPartContentChange={handleSymbolPartContentChange}
+                          editingTableCell={isChildTableEditing ? { rowIndex: editingTableState.rowIndex, colIndex: editingTableState.colIndex } : null}
+                          onTableCellContentChange={handleTableCellContentChange}
                         />
                       </div>
                     );
@@ -1033,7 +1237,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
               const isSelected = selectedNodeIds.has(node.id);
               const isEditing = editingNodeId === node.id;
               const isSymbolEditing = editingSymbolState?.instanceId === node.id;
-              const isAnyEditing = isEditing || isSymbolEditing;
+              const isTableEditing = editingTableState?.nodeId === node.id;
+              const isAnyEditing = isEditing || isSymbolEditing || isTableEditing;
               const isDirectDragging = directDragNodeId === node.id;
               return (
                 <div
@@ -1065,6 +1270,11 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                       if (textPartId) {
                         setEditingSymbolState({ instanceId: node.id, partId: textPartId });
                       }
+                      return;
+                    }
+                    // Table nodes: edit first cell
+                    if (isTableNode(node)) {
+                      setEditingTableState({ nodeId: node.id, rowIndex: 0, colIndex: 0 });
                     }
                   }}
                 >
@@ -1077,6 +1287,8 @@ export const DiagramCanvas = memo(function DiagramCanvas() {
                     symbolDef={symbolDef}
                     editingPartId={isSymbolEditing ? editingSymbolState.partId : null}
                     onPartContentChange={handleSymbolPartContentChange}
+                    editingTableCell={isTableEditing ? { rowIndex: editingTableState.rowIndex, colIndex: editingTableState.colIndex } : null}
+                    onTableCellContentChange={handleTableCellContentChange}
                   />
                 </div>
               );

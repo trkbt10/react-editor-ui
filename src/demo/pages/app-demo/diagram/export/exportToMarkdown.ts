@@ -13,6 +13,7 @@ import type {
   SymbolInstance,
   SymbolDefinition,
   TextPart,
+  TableNode,
 } from "../types";
 import { exportToMermaid, exportFrameToMermaid } from "./exportToMermaid";
 
@@ -21,7 +22,7 @@ import { exportToMermaid, exportFrameToMermaid } from "./exportToMermaid";
 // =============================================================================
 
 function isShapeNode(node: DiagramNode): node is ShapeNode {
-  return node.type !== "text" && node.type !== "group" && node.type !== "instance" && node.type !== "frame";
+  return node.type === "shape";
 }
 
 function isTextNode(node: DiagramNode): node is TextNode {
@@ -34,6 +35,31 @@ function isGroupNode(node: DiagramNode): node is GroupNode {
 
 function isSymbolInstance(node: DiagramNode): node is SymbolInstance {
   return node.type === "instance";
+}
+
+function isTableNode(node: DiagramNode): node is TableNode {
+  return node.type === "table";
+}
+
+/**
+ * Convert a table node to markdown table format
+ */
+function tableNodeToMarkdown(table: TableNode): string {
+  const lines: string[] = [];
+
+  for (let rowIndex = 0; rowIndex < table.cells.length; rowIndex += 1) {
+    const row = table.cells[rowIndex];
+    const cells = row.map((cell) => cell.content || " ");
+    lines.push(`| ${cells.join(" | ")} |`);
+
+    // Add header separator after first row if hasHeaderRow
+    if (rowIndex === 0 && table.hasHeaderRow) {
+      const separators = row.map(() => "---");
+      lines.push(`| ${separators.join(" | ")} |`);
+    }
+  }
+
+  return lines.join("\n");
 }
 
 /**
@@ -56,7 +82,7 @@ function getGroupShapeType(group: GroupNode, nodes: DiagramNode[]): string {
   for (const childId of group.children) {
     const child = nodes.find((n) => n.id === childId);
     if (child && isShapeNode(child)) {
-      return child.type;
+      return child.shape;
     }
   }
   return "group";
@@ -156,16 +182,18 @@ function generateMarkdown(
   // Get groups for node list (groups are the top-level elements)
   const groups = nodes.filter(isGroupNode);
   const instances = nodes.filter(isSymbolInstance);
+  const tables = nodes.filter(isTableNode);
   const groupChildIds = new Set(groups.flatMap((g: GroupNode) => g.children));
   const standaloneShapes = nodes.filter(
     (n: DiagramNode) => isShapeNode(n) && !groupChildIds.has(n.id),
   );
-  const exportableNodes = [...groups, ...instances, ...standaloneShapes];
+  const exportableNodes = [...groups, ...instances, ...standaloneShapes, ...tables];
 
   // Statistics
   lines.push("## Statistics");
   lines.push("");
   lines.push(`- **Nodes**: ${exportableNodes.length}`);
+  lines.push(`- **Tables**: ${tables.length}`);
   lines.push(`- **Connections**: ${connections.length}`);
   lines.push("");
 
@@ -185,7 +213,7 @@ function generateMarkdown(
         const label = getInstanceLabel(node, symbolDef);
         lines.push(`| ${node.id} | ${shapeType} | ${label} |`);
       } else if (isShapeNode(node)) {
-        lines.push(`| ${node.id} | ${node.type} | (no label) |`);
+        lines.push(`| ${node.id} | ${node.shape} | (no label) |`);
       }
     }
     lines.push("");
@@ -220,6 +248,18 @@ function generateMarkdown(
       lines.push(`| ${sourceName} | ${targetName} | ${label} |`);
     }
     lines.push("");
+  }
+
+  // Table contents
+  if (tables.length > 0) {
+    lines.push("## Tables");
+    lines.push("");
+    for (const table of tables) {
+      lines.push(`### Table: ${table.id}`);
+      lines.push("");
+      lines.push(tableNodeToMarkdown(table));
+      lines.push("");
+    }
   }
 
   return lines.join("\n");
