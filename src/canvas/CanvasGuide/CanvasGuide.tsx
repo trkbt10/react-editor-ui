@@ -1,8 +1,18 @@
 /**
- * @file CanvasGuide - Fixed guide lines for Canvas
+ * @file CanvasGuide component - Fixed guide lines for Canvas
  *
- * Renders horizontal or vertical guide lines at fixed positions.
- * Guides are drawn from ruler and stay fixed (do not follow mouse).
+ * @description
+ * Renders horizontal or vertical guide lines at fixed canvas positions.
+ * Guides stay fixed in canvas coordinates regardless of pan/zoom.
+ * Add to Canvas via svgLayers prop.
+ *
+ * @example
+ * ```tsx
+ * import { Canvas } from "react-editor-ui/canvas/Canvas";
+ * import { CanvasGuide } from "react-editor-ui/canvas/CanvasGuide";
+ *
+ * <Canvas svgLayers={<CanvasGuide orientation="horizontal" position={100} />} />
+ * ```
  */
 
 import { memo, type ReactNode } from "react";

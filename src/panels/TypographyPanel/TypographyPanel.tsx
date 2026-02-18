@@ -1,5 +1,27 @@
 /**
  * @file TypographyPanel component - Typography settings panel for text properties
+ *
+ * @description
+ * A panel for text styling with font family, weight, size, line height, letter spacing,
+ * and alignment controls. Supports custom font options and integration with a
+ * separate fonts panel for font selection.
+ *
+ * @example
+ * ```tsx
+ * import { TypographyPanel } from "react-editor-ui/panels/TypographyPanel";
+ *
+ * const [settings, setSettings] = useState({
+ *   fontFamily: "Inter",
+ *   fontWeight: "400",
+ *   fontSize: "16px",
+ *   lineHeight: "1.5",
+ *   letterSpacing: "0",
+ *   textAlign: "left",
+ *   verticalAlign: "top",
+ * });
+ *
+ * <TypographyPanel settings={settings} onChange={setSettings} />
+ * ```
  */
 
 import { memo, useCallback, useMemo } from "react";

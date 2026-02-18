@@ -1,5 +1,32 @@
 /**
  * @file ContextMenu component - Reusable context menu for right-click actions
+ *
+ * @description
+ * A context menu with icons, keyboard shortcuts, danger styling, and nested submenus.
+ * Automatically positions within viewport bounds and supports keyboard navigation.
+ * Use with right-click events to show contextual actions.
+ *
+ * @example
+ * ```tsx
+ * import { ContextMenu } from "react-editor-ui/ContextMenu";
+ *
+ * const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+ *
+ * <div onContextMenu={(e) => { e.preventDefault(); setMenuPos({ x: e.clientX, y: e.clientY }); }}>
+ *   Right-click here
+ * </div>
+ * {menuPos && (
+ *   <ContextMenu
+ *     items={[
+ *       { id: "copy", label: "Copy", shortcut: "⌘C" },
+ *       { id: "delete", label: "Delete", danger: true },
+ *     ]}
+ *     position={menuPos}
+ *     onSelect={(id) => console.log(id)}
+ *     onClose={() => setMenuPos(null)}
+ *   />
+ * )}
+ * ```
  */
 
 import { memo, useState, useMemo, useCallback, useEffect, useRef, useLayoutEffect } from "react";

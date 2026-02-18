@@ -1,5 +1,19 @@
 /**
  * @file Panel component - Floating settings panel with header and close button
+ *
+ * @description
+ * A fixed-width floating panel with a title header and optional close button.
+ * Use as a container for property editors, settings, and floating toolboxes.
+ * Content area has consistent padding and spacing.
+ *
+ * @example
+ * ```tsx
+ * import { Panel } from "react-editor-ui/panels/Panel";
+ *
+ * <Panel title="Settings" onClose={() => setOpen(false)} width={280}>
+ *   <Input label="Name" value={name} onChange={setName} />
+ * </Panel>
+ * ```
  */
 
 import { memo, useMemo } from "react";

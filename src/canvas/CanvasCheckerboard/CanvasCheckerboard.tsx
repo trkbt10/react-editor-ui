@@ -1,8 +1,17 @@
 /**
- * @file CanvasCheckerboard - Checkerboard background pattern for Canvas
+ * @file CanvasCheckerboard component - Checkerboard background pattern for Canvas
  *
+ * @description
  * Renders a checkerboard pattern typically used to indicate transparency.
- * Use as an SVG layer in Canvas.
+ * Uses SVG pattern for efficient rendering. Add to Canvas via svgLayers prop.
+ *
+ * @example
+ * ```tsx
+ * import { Canvas } from "react-editor-ui/canvas/Canvas";
+ * import { CanvasCheckerboard } from "react-editor-ui/canvas/CanvasCheckerboard";
+ *
+ * <Canvas svgLayers={<CanvasCheckerboard size={10} />} />
+ * ```
  */
 
 import { memo, useId, type ReactNode } from "react";

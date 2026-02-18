@@ -1,5 +1,23 @@
 /**
  * @file LogEntry component - Log message display
+ *
+ * @description
+ * A single log entry row with level indicator, timestamp, source, and message.
+ * Supports info, warning, error, debug, and success levels with color coding.
+ * Use inside LogViewer for virtualized log display.
+ *
+ * @example
+ * ```tsx
+ * import { LogEntry } from "react-editor-ui/LogEntry";
+ *
+ * <LogEntry
+ *   level="error"
+ *   message="Failed to connect"
+ *   timestamp={new Date()}
+ *   source="Network"
+ *   details="Connection timeout after 30s"
+ * />
+ * ```
  */
 
 import { memo, useMemo, useCallback } from "react";

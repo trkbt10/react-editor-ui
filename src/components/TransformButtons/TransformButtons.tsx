@@ -1,6 +1,28 @@
 /**
  * @file TransformButtons component - Flexible transform operation buttons
- * Provides rotate, flip, align, distribute and custom operations via actions array
+ *
+ * @description
+ * A grouped toolbar for transform operations like rotate, flip, align, and distribute.
+ * Actions are organized into groups separated by dividers. Each button has a tooltip.
+ * Fully customizable via the actions array for any transform workflow.
+ *
+ * @example
+ * ```tsx
+ * import { TransformButtons } from "react-editor-ui/TransformButtons";
+ *
+ * <TransformButtons
+ *   groups={[
+ *     {
+ *       id: "rotate",
+ *       actions: [
+ *         { id: "rotate-cw", icon: <RotateCwIcon />, label: "Rotate 90° right" },
+ *         { id: "rotate-ccw", icon: <RotateCcwIcon />, label: "Rotate 90° left" },
+ *       ],
+ *     },
+ *   ]}
+ *   onAction={(id) => console.log(id)}
+ * />
+ * ```
  */
 
 import { memo, useMemo, useCallback } from "react";

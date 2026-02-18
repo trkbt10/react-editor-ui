@@ -1,5 +1,29 @@
 /**
  * @file StrokeSettingsPanel component - Comprehensive stroke settings panel
+ *
+ * @description
+ * A tabbed panel for stroke configuration with basic settings (style, width, join),
+ * dynamic stroke options (frequency, wiggle), and brush presets.
+ * Includes reusable sub-components for caps, joins, dashes, and arrowheads.
+ *
+ * @example
+ * ```tsx
+ * import { StrokeSettingsPanel } from "react-editor-ui/panels/StrokeSettingsPanel";
+ *
+ * const [settings, setSettings] = useState({
+ *   tab: "basic",
+ *   style: "solid",
+ *   widthProfile: "uniform",
+ *   join: "miter",
+ *   // ... other settings
+ * });
+ *
+ * <StrokeSettingsPanel
+ *   settings={settings}
+ *   onChange={setSettings}
+ *   onClose={() => setOpen(false)}
+ * />
+ * ```
  */
 
 import { memo, useCallback, useMemo } from "react";

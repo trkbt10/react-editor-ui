@@ -1,5 +1,23 @@
 /**
  * @file PositionPanel component - Position, alignment, constraints, and rotation settings
+ *
+ * @description
+ * A comprehensive panel for object positioning with alignment controls, X/Y inputs,
+ * constraint settings, and rotation. Combines multiple property sections into
+ * a unified panel for design tool inspectors.
+ *
+ * @example
+ * ```tsx
+ * import { PositionPanel, createDefaultPositionSettings } from "react-editor-ui/panels/PositionPanel";
+ *
+ * const [settings, setSettings] = useState(createDefaultPositionSettings());
+ *
+ * <PositionPanel
+ *   settings={settings}
+ *   onChange={setSettings}
+ *   onClose={() => setOpen(false)}
+ * />
+ * ```
  */
 
 import { memo, useCallback, useMemo } from "react";

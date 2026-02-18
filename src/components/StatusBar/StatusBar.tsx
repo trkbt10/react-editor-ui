@@ -1,5 +1,21 @@
 /**
  * @file StatusBar component - Bottom status bar container
+ *
+ * @description
+ * A horizontal container for the application status bar at the bottom of the editor.
+ * Provides consistent styling and layout for status items like cursor position,
+ * zoom level, and notifications.
+ *
+ * @example
+ * ```tsx
+ * import { StatusBar } from "react-editor-ui/StatusBar";
+ *
+ * <StatusBar>
+ *   <span>Line 42, Col 8</span>
+ *   <span>UTF-8</span>
+ *   <span>100%</span>
+ * </StatusBar>
+ * ```
  */
 
 import { memo, useMemo } from "react";

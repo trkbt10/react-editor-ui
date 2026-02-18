@@ -1,5 +1,22 @@
 /**
  * @file FillPanel component - Panel for switching between fill types
+ *
+ * @description
+ * A fill editor panel supporting solid, gradient, image, pattern, and video fills.
+ * Includes a type selector and corresponding editor section for each fill type.
+ * Use for shape fill properties in design tools.
+ *
+ * @example
+ * ```tsx
+ * import { FillPanel } from "react-editor-ui/panels/FillPanel";
+ *
+ * const [fill, setFill] = useState({
+ *   type: "solid",
+ *   color: { hex: "#3b82f6", opacity: 100, visible: true },
+ * });
+ *
+ * <FillPanel value={fill} onChange={setFill} />
+ * ```
  */
 
 import { memo, useCallback, type CSSProperties } from "react";

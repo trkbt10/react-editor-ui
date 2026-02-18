@@ -1,5 +1,25 @@
 /**
  * @file FontsPanel component - Floating font picker panel with search and category filter
+ *
+ * @description
+ * A scrollable font selection panel with search input and category tabs.
+ * Displays fonts in a virtualized list with live preview using the font family.
+ * Integrates with Panel for consistent floating panel styling.
+ *
+ * @example
+ * ```tsx
+ * import { FontsPanel } from "react-editor-ui/panels/FontsPanel";
+ *
+ * <FontsPanel
+ *   fonts={[
+ *     { name: "Inter", family: "Inter", category: "sans-serif" },
+ *     { name: "Roboto", family: "Roboto", category: "sans-serif" },
+ *   ]}
+ *   selectedFont="Inter"
+ *   onSelectFont={(font) => console.log(font)}
+ *   onClose={() => setOpen(false)}
+ * />
+ * ```
  */
 
 import { useState, memo, useCallback, useMemo } from "react";

@@ -1,13 +1,27 @@
 /**
  * @file Canvas component - SVG-based canvas with pan/zoom control
  *
- * Features:
- * - SVG background layer for grid/rulers
- * - HTML content layer with CSS transform for pan/zoom
- * - Pointer events for pan gesture (middle mouse, alt+left, space+left)
- * - Wheel zoom (including pinch-to-zoom via ctrl+wheel)
- * - Touch pinch-to-zoom
- * - Context for children to access viewport state
+ * @description
+ * An infinite canvas with pan/zoom support via mouse, wheel, and touch gestures.
+ * Combines SVG background layer for grid/guides with HTML content layer for nodes.
+ * Provides context for children to convert between screen and canvas coordinates.
+ *
+ * @example
+ * ```tsx
+ * import { Canvas } from "react-editor-ui/canvas/Canvas";
+ *
+ * const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
+ *
+ * <Canvas
+ *   viewport={viewport}
+ *   onViewportChange={setViewport}
+ *   width={800}
+ *   height={600}
+ *   showGrid
+ * >
+ *   <div style={{ position: "absolute", left: 100, top: 100 }}>Node</div>
+ * </Canvas>
+ * ```
  */
 
 import { useRef, useMemo, useCallback, type ReactNode, type CSSProperties, type PointerEvent } from "react";

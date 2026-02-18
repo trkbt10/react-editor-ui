@@ -1,5 +1,17 @@
 /**
  * @file Badge component - Small status indicator
+ *
+ * @description
+ * Displays a compact label for status, counts, or categories.
+ * Supports semantic color variants (primary, success, warning, error) and two sizes.
+ *
+ * @example
+ * ```tsx
+ * import { Badge } from "react-editor-ui/Badge";
+ *
+ * <Badge variant="success">Active</Badge>
+ * <Badge variant="error" size="md">3 errors</Badge>
+ * ```
  */
 
 import { memo, useMemo } from "react";

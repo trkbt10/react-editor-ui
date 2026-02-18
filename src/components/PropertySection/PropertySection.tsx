@@ -1,5 +1,20 @@
 /**
  * @file PropertySection component - Section wrapper with collapsible header
+ *
+ * @description
+ * A collapsible section container with a header and optional action button.
+ * Supports both controlled and uncontrolled expand/collapse states.
+ * Use to organize property panels into logical groups.
+ *
+ * @example
+ * ```tsx
+ * import { PropertySection } from "react-editor-ui/PropertySection";
+ *
+ * <PropertySection title="Transform" collapsible defaultExpanded>
+ *   <Input label="X" value={x} onChange={setX} />
+ *   <Input label="Y" value={y} onChange={setY} />
+ * </PropertySection>
+ * ```
  */
 
 import { memo, useState, useMemo, useCallback } from "react";

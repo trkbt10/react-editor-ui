@@ -1,8 +1,22 @@
 /**
- * @file CanvasRuler - Horizontal and Vertical rulers for Canvas
+ * @file CanvasRuler component - Horizontal and Vertical rulers for Canvas
  *
- * These are standalone components positioned outside the Canvas element.
- * They receive viewport state directly via props.
+ * @description
+ * Renders measurement rulers positioned outside the Canvas element.
+ * Shows tick marks, labels, and mouse position indicator.
+ * Receives viewport state via props for synchronization.
+ *
+ * @example
+ * ```tsx
+ * import { CanvasRuler } from "react-editor-ui/canvas/CanvasRuler";
+ *
+ * <CanvasRuler
+ *   orientation="horizontal"
+ *   viewport={viewport}
+ *   length={800}
+ *   mousePosition={100}
+ * />
+ * ```
  */
 
 import { memo, useMemo, type ReactNode, type CSSProperties } from "react";

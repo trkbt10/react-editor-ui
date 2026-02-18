@@ -1,5 +1,26 @@
 /**
  * @file GradientSection component - Full gradient editing interface
+ *
+ * @description
+ * A gradient editor with type selector (linear, radial, angular, diamond),
+ * visual gradient bar with draggable stops, and stop list for precise color control.
+ * Supports adding/removing stops and adjusting stop positions.
+ *
+ * @example
+ * ```tsx
+ * import { GradientSection } from "react-editor-ui/sections/GradientSection";
+ *
+ * const [gradient, setGradient] = useState({
+ *   type: "linear",
+ *   angle: 90,
+ *   stops: [
+ *     { id: "1", position: 0, color: { hex: "#3b82f6", opacity: 100, visible: true } },
+ *     { id: "2", position: 100, color: { hex: "#8b5cf6", opacity: 100, visible: true } },
+ *   ],
+ * });
+ *
+ * <GradientSection value={gradient} onChange={setGradient} />
+ * ```
  */
 
 import { memo, useState, useRef, useCallback, useMemo } from "react";

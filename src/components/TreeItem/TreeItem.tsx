@@ -1,5 +1,25 @@
 /**
  * @file TreeItem component - Tree node for hierarchical data
+ *
+ * @description
+ * A tree view row with expand/collapse chevron, icon, label, and badge.
+ * Supports hierarchical indentation and selection highlighting.
+ * Use for file trees, component hierarchies, and outline views.
+ *
+ * @example
+ * ```tsx
+ * import { TreeItem } from "react-editor-ui/TreeItem";
+ *
+ * <TreeItem
+ *   label="components"
+ *   icon={<FolderIcon />}
+ *   depth={0}
+ *   hasChildren
+ *   expanded={expanded}
+ *   onToggle={() => setExpanded(!expanded)}
+ *   onClick={() => selectItem("components")}
+ * />
+ * ```
  */
 
 import { memo, useState, useCallback, useMemo } from "react";

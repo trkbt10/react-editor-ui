@@ -1,13 +1,26 @@
 /**
  * @file UnitInput component - Numeric input with unit support
  *
- * Features:
- * - Displays only the number, with unit as a separate clickable suffix
- * - Mouse wheel to adjust value (when focused)
- * - Arrow keys to adjust value (Shift for larger steps)
- * - Click unit to cycle through available units
- * - Type with unit (e.g., "10%") to change both value and unit
- * - Supports "Auto" value
+ * @description
+ * A numeric input with a clickable unit suffix. Supports mouse wheel and arrow keys
+ * for value adjustment, Shift for larger steps. Click the unit to cycle through
+ * options, or type with unit (e.g., "10%") to change both. Supports "Auto" value.
+ *
+ * @example
+ * ```tsx
+ * import { UnitInput } from "react-editor-ui/UnitInput";
+ *
+ * const [width, setWidth] = useState("100px");
+ *
+ * <UnitInput
+ *   value={width}
+ *   onChange={setWidth}
+ *   units={[
+ *     { value: "px", label: "px" },
+ *     { value: "%", label: "%" },
+ *   ]}
+ * />
+ * ```
  */
 
 import { memo, useState, useRef, useCallback, useMemo, type CSSProperties, type KeyboardEvent } from "react";

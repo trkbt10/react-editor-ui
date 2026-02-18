@@ -1,9 +1,18 @@
 /**
- * @file CanvasGridLayer - Grid/guideline layer for Canvas
+ * @file CanvasGridLayer component - Grid/guideline layer for Canvas
  *
- * Renders minor grid, major grid, and origin lines as SVG.
- * Uses SVG pattern for efficient rendering (minimal DOM elements).
- * Use with Canvas svgLayers prop.
+ * @description
+ * Renders minor grid, major grid, and origin lines as SVG patterns.
+ * Uses efficient SVG pattern rendering with minimal DOM elements.
+ * Add to Canvas via svgLayers prop or enable with showGrid.
+ *
+ * @example
+ * ```tsx
+ * import { Canvas } from "react-editor-ui/canvas/Canvas";
+ * import { CanvasGridLayer } from "react-editor-ui/canvas/CanvasGridLayer";
+ *
+ * <Canvas svgLayers={<CanvasGridLayer minorSize={10} majorSize={100} />} />
+ * ```
  */
 
 import { memo, useId, type ReactNode } from "react";

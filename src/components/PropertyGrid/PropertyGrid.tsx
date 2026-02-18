@@ -1,5 +1,20 @@
 /**
  * @file PropertyGrid component - Grid layout for property panels
+ *
+ * @description
+ * A CSS grid container for arranging property controls in columns.
+ * Supports 1-4 columns with configurable gap sizes.
+ * Use inside PropertySection for consistent property panel layouts.
+ *
+ * @example
+ * ```tsx
+ * import { PropertyGrid } from "react-editor-ui/PropertyGrid";
+ *
+ * <PropertyGrid columns={2} gap="sm">
+ *   <Input label="Width" value={width} onChange={setWidth} />
+ *   <Input label="Height" value={height} onChange={setHeight} />
+ * </PropertyGrid>
+ * ```
  */
 
 import { memo, useMemo } from "react";

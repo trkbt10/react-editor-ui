@@ -96,8 +96,13 @@ injectTheme("dark");
 
 Small status indicator
 
+Displays a compact label for status, counts, or categories. Supports semantic color variants (primary, success, warning, error) and two sizes.
+
 ```tsx
 import { Badge } from "react-editor-ui/Badge";
+
+<Badge variant="success">Active</Badge>
+<Badge variant="error" size="md">3 errors</Badge>
 ```
 
 #### Button
@@ -137,16 +142,32 @@ const [checked, setChecked] = useState(false);
 
 Compact color input with swatch
 
+A compact color editor with a clickable swatch, hex input, and opacity control. Clicking the swatch opens a color picker popup. Supports visibility toggle and remove button for fill/stroke editors.
+
 ```tsx
 import { ColorInput } from "react-editor-ui/ColorInput";
+
+const [color, setColor] = useState({ hex: "#3b82f6", opacity: 100, visible: true });
+
+<ColorInput
+  value={color}
+  onChange={setColor}
+  showVisibilityToggle
+/>
 ```
 
 #### ColorPicker
 
 Color selection with HSV area and hue slider
 
+A full-featured color picker with saturation/brightness area, hue slider, optional opacity slider, hex input, and preset color swatches. Uses HSV color model for intuitive selection.
+
 ```tsx
 import { ColorPicker } from "react-editor-ui/ColorPicker";
+
+const [color, setColor] = useState("#3b82f6");
+
+<ColorPicker value={color} onChange={setColor} />
 ```
 
 #### IconButton
@@ -228,8 +249,22 @@ const options = [
 
 Button group for selecting options
 
+A toggle button group for single or multi-select choices. Supports text labels, icons, or both. Use the "icon" variant for square icon-only buttons. Ideal for alignment controls, view modes, and filter toggles.
+
 ```tsx
 import { SegmentedControl } from "react-editor-ui/SegmentedControl";
+
+const [alignment, setAlignment] = useState("left");
+
+<SegmentedControl
+  options={[
+    { value: "left", label: "Left" },
+    { value: "center", label: "Center" },
+    { value: "right", label: "Right" },
+  ]}
+  value={alignment}
+  onChange={setAlignment}
+/>
 ```
 
 #### Slider
@@ -256,8 +291,22 @@ const [value, setValue] = useState(0.5);
 
 A button with dropdown menu for multiple actions
 
+A two-part button: the main button executes the current action, while the dropdown arrow reveals additional options. Supports categories with headers, keyboard shortcuts, and icons. Ideal for tool selectors with multiple variants.
+
 ```tsx
 import { SplitButton } from "react-editor-ui/SplitButton";
+
+const [tool, setTool] = useState("pen");
+
+<SplitButton
+  value={tool}
+  onChange={setTool}
+  onAction={() => console.log("Activate", tool)}
+  options={[
+    { value: "pen", label: "Pen", icon: <PenIcon /> },
+    { value: "brush", label: "Brush", icon: <BrushIcon /> },
+  ]}
+/>
 ```
 
 #### TabBar
@@ -321,8 +370,21 @@ import { Tooltip } from "react-editor-ui/Tooltip";
 
 Numeric input with unit support
 
+A numeric input with a clickable unit suffix. Supports mouse wheel and arrow keys for value adjustment, Shift for larger steps. Click the unit to cycle through options, or type with unit (e.g., "10%") to change both. Supports "Auto" value.
+
 ```tsx
 import { UnitInput } from "react-editor-ui/UnitInput";
+
+const [width, setWidth] = useState("100px");
+
+<UnitInput
+  value={width}
+  onChange={setWidth}
+  units={[
+    { value: "px", label: "px" },
+    { value: "%", label: "%" },
+  ]}
+/>
 ```
 
 ### Layout
@@ -352,16 +414,30 @@ import { SelectionToolbar } from "react-editor-ui/SelectionToolbar";
 
 Grid layout for property panels
 
+A CSS grid container for arranging property controls in columns. Supports 1-4 columns with configurable gap sizes. Use inside PropertySection for consistent property panel layouts.
+
 ```tsx
 import { PropertyGrid } from "react-editor-ui/PropertyGrid";
+
+<PropertyGrid columns={2} gap="sm">
+  <Input label="Width" value={width} onChange={setWidth} />
+  <Input label="Height" value={height} onChange={setHeight} />
+</PropertyGrid>
 ```
 
 #### PropertySection
 
 Section wrapper with collapsible header
 
+A collapsible section container with a header and optional action button. Supports both controlled and uncontrolled expand/collapse states. Use to organize property panels into logical groups.
+
 ```tsx
 import { PropertySection } from "react-editor-ui/PropertySection";
+
+<PropertySection title="Transform" collapsible defaultExpanded>
+  <Input label="X" value={x} onChange={setX} />
+  <Input label="Y" value={y} onChange={setY} />
+</PropertySection>
 ```
 
 #### Toolbar
@@ -409,44 +485,144 @@ const [settings, setSettings] = useState(createDefaultAnimationSettings());
 />
 ```
 
+#### FillPanel
+
+Panel for switching between fill types
+
+A fill editor panel supporting solid, gradient, image, pattern, and video fills. Includes a type selector and corresponding editor section for each fill type. Use for shape fill properties in design tools.
+
+```tsx
+import { FillPanel } from "react-editor-ui/panels/FillPanel";
+
+const [fill, setFill] = useState({
+  type: "solid",
+  color: { hex: "#3b82f6", opacity: 100, visible: true },
+});
+
+<FillPanel value={fill} onChange={setFill} />
+```
+
 #### FontsPanel
 
 Floating font picker panel with search and category filter
 
+A scrollable font selection panel with search input and category tabs. Displays fonts in a virtualized list with live preview using the font family. Integrates with Panel for consistent floating panel styling.
+
 ```tsx
 import { FontsPanel } from "react-editor-ui/panels/FontsPanel";
+
+<FontsPanel
+  fonts={[
+    { name: "Inter", family: "Inter", category: "sans-serif" },
+    { name: "Roboto", family: "Roboto", category: "sans-serif" },
+  ]}
+  selectedFont="Inter"
+  onSelectFont={(font) => console.log(font)}
+  onClose={() => setOpen(false)}
+/>
 ```
 
 #### Panel
 
 Floating settings panel with header and close button
 
+A fixed-width floating panel with a title header and optional close button. Use as a container for property editors, settings, and floating toolboxes. Content area has consistent padding and spacing.
+
 ```tsx
 import { Panel } from "react-editor-ui/panels/Panel";
+
+<Panel title="Settings" onClose={() => setOpen(false)} width={280}>
+  <Input label="Name" value={name} onChange={setName} />
+</Panel>
 ```
 
 #### PositionPanel
 
 Position, alignment, constraints, and rotation settings
 
+A comprehensive panel for object positioning with alignment controls, X/Y inputs, constraint settings, and rotation. Combines multiple property sections into a unified panel for design tool inspectors.
+
 ```tsx
-import { PositionPanel } from "react-editor-ui/panels/PositionPanel";
+import { PositionPanel, createDefaultPositionSettings } from "react-editor-ui/panels/PositionPanel";
+
+const [settings, setSettings] = useState(createDefaultPositionSettings());
+
+<PositionPanel
+  settings={settings}
+  onChange={setSettings}
+  onClose={() => setOpen(false)}
+/>
 ```
 
 #### StrokeSettingsPanel
 
 Comprehensive stroke settings panel
 
+A tabbed panel for stroke configuration with basic settings (style, width, join), dynamic stroke options (frequency, wiggle), and brush presets. Includes reusable sub-components for caps, joins, dashes, and arrowheads.
+
 ```tsx
 import { StrokeSettingsPanel } from "react-editor-ui/panels/StrokeSettingsPanel";
+
+const [settings, setSettings] = useState({
+  tab: "basic",
+  style: "solid",
+  widthProfile: "uniform",
+  join: "miter",
+  // ... other settings
+});
+
+<StrokeSettingsPanel
+  settings={settings}
+  onChange={setSettings}
+  onClose={() => setOpen(false)}
+/>
 ```
 
 #### TypographyPanel
 
 Typography settings panel for text properties
 
+A panel for text styling with font family, weight, size, line height, letter spacing, and alignment controls. Supports custom font options and integration with a separate fonts panel for font selection.
+
 ```tsx
 import { TypographyPanel } from "react-editor-ui/panels/TypographyPanel";
+
+const [settings, setSettings] = useState({
+  fontFamily: "Inter",
+  fontWeight: "400",
+  fontSize: "16px",
+  lineHeight: "1.5",
+  letterSpacing: "0",
+  textAlign: "left",
+  verticalAlign: "top",
+});
+
+<TypographyPanel settings={settings} onChange={setSettings} />
+```
+
+### Sections
+
+> Reusable property editing sections
+
+#### GradientSection
+
+Full gradient editing interface
+
+A gradient editor with type selector (linear, radial, angular, diamond), visual gradient bar with draggable stops, and stop list for precise color control. Supports adding/removing stops and adjusting stop positions.
+
+```tsx
+import { GradientSection } from "react-editor-ui/sections/GradientSection";
+
+const [gradient, setGradient] = useState({
+  type: "linear",
+  angle: 90,
+  stops: [
+    { id: "1", position: 0, color: { hex: "#3b82f6", opacity: 100, visible: true } },
+    { id: "2", position: 100, color: { hex: "#8b5cf6", opacity: 100, visible: true } },
+  ],
+});
+
+<GradientSection value={gradient} onChange={setGradient} />
 ```
 
 ### Composite
@@ -457,8 +633,23 @@ import { TypographyPanel } from "react-editor-ui/panels/TypographyPanel";
 
 Flexible transform operation buttons
 
+A grouped toolbar for transform operations like rotate, flip, align, and distribute. Actions are organized into groups separated by dividers. Each button has a tooltip. Fully customizable via the actions array for any transform workflow.
+
 ```tsx
 import { TransformButtons } from "react-editor-ui/TransformButtons";
+
+<TransformButtons
+  groups={[
+    {
+      id: "rotate",
+      actions: [
+        { id: "rotate-cw", icon: <RotateCwIcon />, label: "Rotate 90° right" },
+        { id: "rotate-ccw", icon: <RotateCcwIcon />, label: "Rotate 90° left" },
+      ],
+    },
+  ]}
+  onAction={(id) => console.log(id)}
+/>
 ```
 
 ### Navigation
@@ -511,16 +702,48 @@ import { ProjectMenu } from "react-editor-ui/ProjectMenu";
 
 Reusable context menu for right-click actions
 
+A context menu with icons, keyboard shortcuts, danger styling, and nested submenus. Automatically positions within viewport bounds and supports keyboard navigation. Use with right-click events to show contextual actions.
+
 ```tsx
 import { ContextMenu } from "react-editor-ui/ContextMenu";
+
+const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+
+<div onContextMenu={(e) => { e.preventDefault(); setMenuPos({ x: e.clientX, y: e.clientY }); }}>
+  Right-click here
+</div>
+{menuPos && (
+  <ContextMenu
+    items={[
+      { id: "copy", label: "Copy", shortcut: "⌘C" },
+      { id: "delete", label: "Delete", danger: true },
+    ]}
+    position={menuPos}
+    onSelect={(id) => console.log(id)}
+    onClose={() => setMenuPos(null)}
+  />
+)}
 ```
 
 #### LayerItem
 
 Layer panel item for hierarchical display
 
+A layer tree row with visibility toggle, lock toggle, inline rename, drag reorder, and context menu. Supports hierarchical indentation and drop position indicators. Use for layer panels in design tools.
+
 ```tsx
 import { LayerItem } from "react-editor-ui/LayerItem";
+
+<LayerItem
+  id="layer-1"
+  label="Rectangle"
+  icon={<RectangleIcon />}
+  depth={1}
+  selected
+  visible
+  onPointerDown={() => selectLayer("layer-1")}
+  onVisibilityChange={(v) => setVisible(v)}
+/>
 ```
 
 #### PropertyRow
@@ -542,16 +765,40 @@ import { Input } from "react-editor-ui/Input";
 
 Collapsible section header
 
+A section header with optional expand/collapse toggle and action slot. Supports both controlled and uncontrolled modes for expansion state. Use with PropertySection or standalone to organize panel content.
+
 ```tsx
 import { SectionHeader } from "react-editor-ui/SectionHeader";
+
+const [expanded, setExpanded] = useState(true);
+
+<SectionHeader
+  title="Transform"
+  collapsible
+  expanded={expanded}
+  onToggle={setExpanded}
+  action={<IconButton icon={<SettingsIcon />} />}
+/>
 ```
 
 #### TreeItem
 
 Tree node for hierarchical data
 
+A tree view row with expand/collapse chevron, icon, label, and badge. Supports hierarchical indentation and selection highlighting. Use for file trees, component hierarchies, and outline views.
+
 ```tsx
 import { TreeItem } from "react-editor-ui/TreeItem";
+
+<TreeItem
+  label="components"
+  icon={<FolderIcon />}
+  depth={0}
+  hasChildren
+  expanded={expanded}
+  onToggle={() => setExpanded(!expanded)}
+  onClick={() => selectItem("components")}
+/>
 ```
 
 ### Feedback
@@ -562,24 +809,55 @@ import { TreeItem } from "react-editor-ui/TreeItem";
 
 Log message display
 
+A single log entry row with level indicator, timestamp, source, and message. Supports info, warning, error, debug, and success levels with color coding. Use inside LogViewer for virtualized log display.
+
 ```tsx
 import { LogEntry } from "react-editor-ui/LogEntry";
+
+<LogEntry
+  level="error"
+  message="Failed to connect"
+  timestamp={new Date()}
+  source="Network"
+  details="Connection timeout after 30s"
+/>
 ```
 
 #### LogViewer
 
-LogViewer - High-performance log display with virtual scrolling
+High-performance log display with virtual scrolling
+
+A virtualized log viewer for efficiently displaying large amounts of log data. Supports filtering, search highlighting, pagination, and imperative scroll control. Only renders visible items for optimal performance with thousands of entries.
 
 ```tsx
 import { LogViewer } from "react-editor-ui/LogViewer";
+
+const logs = [
+  { level: "info", message: "Application started", timestamp: new Date() },
+  { level: "error", message: "Failed to load config", timestamp: new Date() },
+];
+
+<LogViewer
+  items={logs}
+  height={400}
+  filter={(item) => item.level !== "debug"}
+/>
 ```
 
 #### StatusBar
 
 Bottom status bar container
 
+A horizontal container for the application status bar at the bottom of the editor. Provides consistent styling and layout for status items like cursor position, zoom level, and notifications.
+
 ```tsx
 import { StatusBar } from "react-editor-ui/StatusBar";
+
+<StatusBar>
+  <span>Line 42, Col 8</span>
+  <span>UTF-8</span>
+  <span>100%</span>
+</StatusBar>
 ```
 
 ### Rich Text Editors
@@ -638,8 +916,14 @@ const [points, setPoints] = useState<[number, number, number, number]>([0.25, 0.
 
 Renders children into a DOM node outside the parent hierarchy
 
+Renders children into a DOM node outside the React component tree. Uses createPortal to mount content at a specified container or document.body. Essential for modals, tooltips, and dropdowns that need to escape overflow/z-index constraints.
+
 ```tsx
 import { Portal } from "react-editor-ui/Portal";
+
+<Portal>
+  <div className="modal">Modal content</div>
+</Portal>
 ```
 
 ### Canvas
@@ -650,40 +934,78 @@ import { Portal } from "react-editor-ui/Portal";
 
 SVG-based canvas with pan/zoom control
 
+An infinite canvas with pan/zoom support via mouse, wheel, and touch gestures. Combines SVG background layer for grid/guides with HTML content layer for nodes. Provides context for children to convert between screen and canvas coordinates.
+
 ```tsx
 import { Canvas } from "react-editor-ui/canvas/Canvas";
+
+const [viewport, setViewport] = useState({ x: 0, y: 0, scale: 1 });
+
+<Canvas
+  viewport={viewport}
+  onViewportChange={setViewport}
+  width={800}
+  height={600}
+  showGrid
+>
+  <div style={{ position: "absolute", left: 100, top: 100 }}>Node</div>
+</Canvas>
 ```
 
 #### CanvasCheckerboard
 
-CanvasCheckerboard - Checkerboard background pattern for Canvas
+Checkerboard background pattern for Canvas
+
+Renders a checkerboard pattern typically used to indicate transparency. Uses SVG pattern for efficient rendering. Add to Canvas via svgLayers prop.
 
 ```tsx
+import { Canvas } from "react-editor-ui/canvas/Canvas";
 import { CanvasCheckerboard } from "react-editor-ui/canvas/CanvasCheckerboard";
+
+<Canvas svgLayers={<CanvasCheckerboard size={10} />} />
 ```
 
 #### CanvasGridLayer
 
-CanvasGridLayer - Grid/guideline layer for Canvas
+Grid/guideline layer for Canvas
+
+Renders minor grid, major grid, and origin lines as SVG patterns. Uses efficient SVG pattern rendering with minimal DOM elements. Add to Canvas via svgLayers prop or enable with showGrid.
 
 ```tsx
+import { Canvas } from "react-editor-ui/canvas/Canvas";
 import { CanvasGridLayer } from "react-editor-ui/canvas/CanvasGridLayer";
+
+<Canvas svgLayers={<CanvasGridLayer minorSize={10} majorSize={100} />} />
 ```
 
 #### CanvasGuide
 
-CanvasGuide - Fixed guide lines for Canvas
+Fixed guide lines for Canvas
+
+Renders horizontal or vertical guide lines at fixed canvas positions. Guides stay fixed in canvas coordinates regardless of pan/zoom. Add to Canvas via svgLayers prop.
 
 ```tsx
+import { Canvas } from "react-editor-ui/canvas/Canvas";
 import { CanvasGuide } from "react-editor-ui/canvas/CanvasGuide";
+
+<Canvas svgLayers={<CanvasGuide orientation="horizontal" position={100} />} />
 ```
 
 #### CanvasRuler
 
-CanvasRuler - Horizontal and Vertical rulers for Canvas
+Horizontal and Vertical rulers for Canvas
+
+Renders measurement rulers positioned outside the Canvas element. Shows tick marks, labels, and mouse position indicator. Receives viewport state via props for synchronization.
 
 ```tsx
 import { CanvasRuler } from "react-editor-ui/canvas/CanvasRuler";
+
+<CanvasRuler
+  orientation="horizontal"
+  viewport={viewport}
+  length={800}
+  mousePosition={100}
+/>
 ```
 <!-- /AUTO:COMPONENTS -->
 

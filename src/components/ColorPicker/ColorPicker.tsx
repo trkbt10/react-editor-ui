@@ -1,5 +1,19 @@
 /**
  * @file ColorPicker component - Color selection with HSV area and hue slider
+ *
+ * @description
+ * A full-featured color picker with saturation/brightness area, hue slider,
+ * optional opacity slider, hex input, and preset color swatches.
+ * Uses HSV color model for intuitive selection.
+ *
+ * @example
+ * ```tsx
+ * import { ColorPicker } from "react-editor-ui/ColorPicker";
+ *
+ * const [color, setColor] = useState("#3b82f6");
+ *
+ * <ColorPicker value={color} onChange={setColor} />
+ * ```
  */
 
 import { memo, useState, useRef, useCallback, useMemo } from "react";

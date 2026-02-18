@@ -1,5 +1,27 @@
 /**
  * @file SplitButton component - A button with dropdown menu for multiple actions
+ *
+ * @description
+ * A two-part button: the main button executes the current action, while the
+ * dropdown arrow reveals additional options. Supports categories with headers,
+ * keyboard shortcuts, and icons. Ideal for tool selectors with multiple variants.
+ *
+ * @example
+ * ```tsx
+ * import { SplitButton } from "react-editor-ui/SplitButton";
+ *
+ * const [tool, setTool] = useState("pen");
+ *
+ * <SplitButton
+ *   value={tool}
+ *   onChange={setTool}
+ *   onAction={() => console.log("Activate", tool)}
+ *   options={[
+ *     { value: "pen", label: "Pen", icon: <PenIcon /> },
+ *     { value: "brush", label: "Brush", icon: <BrushIcon /> },
+ *   ]}
+ * />
+ * ```
  */
 
 import {

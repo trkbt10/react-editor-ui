@@ -39,11 +39,20 @@
       "description": "Panel components for property editing and configuration",
       "components": [
         "AnimationPanel",
+        "FillPanel",
         "FontsPanel",
         "Panel",
         "PositionPanel",
         "StrokeSettingsPanel",
         "TypographyPanel"
+      ]
+    },
+    {
+      "id": "sections",
+      "label": "Sections",
+      "description": "Reusable property editing sections",
+      "components": [
+        "GradientSection"
       ]
     },
     {
@@ -99,8 +108,6 @@
       "description": "Utility components for specialized tasks",
       "components": [
         "BezierCurveEditor",
-        "FillEditor",
-        "GradientEditor",
         "Portal"
       ]
     },

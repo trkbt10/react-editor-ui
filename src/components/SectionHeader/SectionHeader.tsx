@@ -1,5 +1,25 @@
 /**
  * @file SectionHeader component - Collapsible section header
+ *
+ * @description
+ * A section header with optional expand/collapse toggle and action slot.
+ * Supports both controlled and uncontrolled modes for expansion state.
+ * Use with PropertySection or standalone to organize panel content.
+ *
+ * @example
+ * ```tsx
+ * import { SectionHeader } from "react-editor-ui/SectionHeader";
+ *
+ * const [expanded, setExpanded] = useState(true);
+ *
+ * <SectionHeader
+ *   title="Transform"
+ *   collapsible
+ *   expanded={expanded}
+ *   onToggle={setExpanded}
+ *   action={<IconButton icon={<SettingsIcon />} />}
+ * />
+ * ```
  */
 
 import { memo, useState, useMemo, useCallback } from "react";

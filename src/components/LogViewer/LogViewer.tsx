@@ -1,8 +1,26 @@
 /**
- * @file LogViewer - High-performance log display with virtual scrolling
+ * @file LogViewer component - High-performance log display with virtual scrolling
  *
- * Designed for efficiently displaying large amounts of log data.
- * Uses virtual scrolling to render only visible items.
+ * @description
+ * A virtualized log viewer for efficiently displaying large amounts of log data.
+ * Supports filtering, search highlighting, pagination, and imperative scroll control.
+ * Only renders visible items for optimal performance with thousands of entries.
+ *
+ * @example
+ * ```tsx
+ * import { LogViewer } from "react-editor-ui/LogViewer";
+ *
+ * const logs = [
+ *   { level: "info", message: "Application started", timestamp: new Date() },
+ *   { level: "error", message: "Failed to load config", timestamp: new Date() },
+ * ];
+ *
+ * <LogViewer
+ *   items={logs}
+ *   height={400}
+ *   filter={(item) => item.level !== "debug"}
+ * />
+ * ```
  */
 
 import type { CSSProperties, ReactNode, RefObject, PointerEvent } from "react";

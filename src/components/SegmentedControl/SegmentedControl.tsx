@@ -1,5 +1,27 @@
 /**
  * @file SegmentedControl component - Button group for selecting options
+ *
+ * @description
+ * A toggle button group for single or multi-select choices. Supports text labels,
+ * icons, or both. Use the "icon" variant for square icon-only buttons.
+ * Ideal for alignment controls, view modes, and filter toggles.
+ *
+ * @example
+ * ```tsx
+ * import { SegmentedControl } from "react-editor-ui/SegmentedControl";
+ *
+ * const [alignment, setAlignment] = useState("left");
+ *
+ * <SegmentedControl
+ *   options={[
+ *     { value: "left", label: "Left" },
+ *     { value: "center", label: "Center" },
+ *     { value: "right", label: "Right" },
+ *   ]}
+ *   value={alignment}
+ *   onChange={setAlignment}
+ * />
+ * ```
  */
 
 import { memo, useState, useMemo, useCallback } from "react";

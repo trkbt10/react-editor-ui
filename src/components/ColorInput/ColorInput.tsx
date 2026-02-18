@@ -1,5 +1,23 @@
 /**
  * @file ColorInput component - Compact color input with swatch
+ *
+ * @description
+ * A compact color editor with a clickable swatch, hex input, and opacity control.
+ * Clicking the swatch opens a color picker popup. Supports visibility toggle
+ * and remove button for fill/stroke editors.
+ *
+ * @example
+ * ```tsx
+ * import { ColorInput } from "react-editor-ui/ColorInput";
+ *
+ * const [color, setColor] = useState({ hex: "#3b82f6", opacity: 100, visible: true });
+ *
+ * <ColorInput
+ *   value={color}
+ *   onChange={setColor}
+ *   showVisibilityToggle
+ * />
+ * ```
  */
 
 import { useState, useRef, useEffect, useEffectEvent, useMemo, useCallback, memo } from "react";

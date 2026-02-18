@@ -1,6 +1,26 @@
 /**
  * @file LayerItem component - Layer panel item for hierarchical display
- * Features: visibility toggle, lock toggle, rename, delete, reorder, context menu
+ *
+ * @description
+ * A layer tree row with visibility toggle, lock toggle, inline rename, drag reorder,
+ * and context menu. Supports hierarchical indentation and drop position indicators.
+ * Use for layer panels in design tools.
+ *
+ * @example
+ * ```tsx
+ * import { LayerItem } from "react-editor-ui/LayerItem";
+ *
+ * <LayerItem
+ *   id="layer-1"
+ *   label="Rectangle"
+ *   icon={<RectangleIcon />}
+ *   depth={1}
+ *   selected
+ *   visible
+ *   onPointerDown={() => selectLayer("layer-1")}
+ *   onVisibilityChange={(v) => setVisible(v)}
+ * />
+ * ```
  */
 
 import type {
