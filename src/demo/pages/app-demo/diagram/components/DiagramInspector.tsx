@@ -1377,7 +1377,7 @@ export const DiagramInspector = memo(function DiagramInspector() {
           tabs={inspectorTabs}
           activeTab={activeTab}
           onChange={(id) => setActiveTab(id as InspectorTab)}
-          size="sm"
+          size="md"
         />
       </div>
       {activeTab === "design" && renderDesignContent()}

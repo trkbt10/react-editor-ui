@@ -83,7 +83,6 @@ export type SizeConfig = {
   paddingX: string;
   containerPadding: string;
   gap: string;
-  iconSize: number;
 };
 
 export type TabBarProps = {
@@ -104,30 +103,27 @@ export type TabBarProps = {
 const sizeMap: Record<"sm" | "md" | "lg", SizeConfig> = {
   sm: {
     height: SIZE_HEIGHT_MD,
-    innerHeight: `calc(${SIZE_HEIGHT_SM} - 2px)`,
+    innerHeight: `calc(${SIZE_HEIGHT_MD} - ${SPACE_SM} * 2)`,
     fontSize: SIZE_FONT_SM,
     paddingX: SPACE_MD,
-    containerPadding: SPACE_XS,
+    containerPadding: SPACE_SM,
     gap: SPACE_XS,
-    iconSize: 14,
   },
   md: {
     height: SIZE_HEIGHT_LG,
-    innerHeight: `calc(${SIZE_HEIGHT_MD} - 2px)`,
+    innerHeight: `calc(${SIZE_HEIGHT_LG} - ${SPACE_SM} * 2)`,
     fontSize: SIZE_FONT_SM,
-    paddingX: SPACE_MD,
-    containerPadding: SPACE_XS,
-    gap: SPACE_SM,
-    iconSize: 16,
-  },
-  lg: {
-    height: SIZE_HEIGHT_XL,
-    innerHeight: `calc(${SIZE_HEIGHT_LG} - 2px)`,
-    fontSize: SIZE_FONT_MD,
     paddingX: SPACE_MD,
     containerPadding: SPACE_SM,
     gap: SPACE_SM,
-    iconSize: 18,
+  },
+  lg: {
+    height: SIZE_HEIGHT_XL,
+    innerHeight: `calc(${SIZE_HEIGHT_XL} - ${SPACE_MD} * 2)`,
+    fontSize: SIZE_FONT_MD,
+    paddingX: SPACE_MD,
+    containerPadding: SPACE_MD,
+    gap: SPACE_SM,
   },
 };
 
@@ -143,7 +139,7 @@ function buildPillsContainerStyle(sizeConfig: SizeConfig, fullWidth: boolean): C
     height: sizeConfig.height,
     padding: sizeConfig.containerPadding,
     backgroundColor: COLOR_SURFACE_RAISED,
-    borderRadius: `calc(${RADIUS_LG} + 2px)`,
+    borderRadius: `calc(${RADIUS_LG} + ${sizeConfig.containerPadding})`,
     gap: sizeConfig.gap,
     boxSizing: "border-box",
   };
