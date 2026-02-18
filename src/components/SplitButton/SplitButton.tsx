@@ -132,6 +132,7 @@ type DropdownPosition = {
   left: number;
   width: number;
   maxHeight: number;
+  actualPlacement: "top" | "bottom" | "left" | "right";
 };
 
 const checkIconWrapperStyle: CSSProperties = {
@@ -352,6 +353,7 @@ function SplitButtonInner<T extends string = string>({
     left: 0,
     width: 0,
     maxHeight: 300,
+    actualPlacement: "bottom",
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -378,22 +380,39 @@ function SplitButtonInner<T extends string = string>({
       const anchor = rectToAnchor(rect);
       const viewportPadding = 8;
       const maxAllowedHeight = 300;
-      const { x, y } = calculateFloatingPosition({
+      const offset = 4;
+
+      // Get actual dropdown height if already rendered
+      const actualDropdownHeight = dropdownRef.current?.offsetHeight ?? maxAllowedHeight;
+      const floatingHeight = Math.min(actualDropdownHeight, maxAllowedHeight);
+
+      const { x, y, actualPlacement } = calculateFloatingPosition({
         anchor,
         floatingWidth: dropdownWidth,
-        floatingHeight: maxAllowedHeight,
+        floatingHeight,
         placement: "bottom",
-        offset: 4,
+        offset,
         includeScrollOffset: false, // Using position: fixed
       });
-      // Calculate maxHeight to fit within viewport
-      const availableHeight = window.innerHeight - y - viewportPadding;
-      const maxHeight = Math.min(maxAllowedHeight, availableHeight);
+
+      // Calculate maxHeight based on placement
+      let maxHeight: number;
+      if (actualPlacement === "top") {
+        // When flipped to top, available height is from viewport top to anchor top
+        const availableHeight = rect.top - viewportPadding - offset;
+        maxHeight = Math.min(maxAllowedHeight, availableHeight);
+      } else {
+        // When placed at bottom, available height is from dropdown top to viewport bottom
+        const availableHeight = window.innerHeight - y - viewportPadding;
+        maxHeight = Math.min(maxAllowedHeight, availableHeight);
+      }
+
       setDropdownPosition({
         top: y,
         left: x,
         width: dropdownWidth,
         maxHeight,
+        actualPlacement,
       });
     }
   });
@@ -404,7 +423,13 @@ function SplitButtonInner<T extends string = string>({
 
   useLayoutEffect(() => {
     if (isOpen) {
+      // First pass: calculate initial position
       updateDropdownPosition();
+      // Second pass: recalculate with actual dropdown height (for top placement)
+      // This is needed because the initial calculation uses estimated height
+      requestAnimationFrame(() => {
+        updateDropdownPosition();
+      });
     }
   }, [isOpen]);
 
