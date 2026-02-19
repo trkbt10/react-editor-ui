@@ -2,14 +2,13 @@
  * @file StrokeBrushTab - Brush stroke settings tab content
  */
 
-import { memo } from "react";
-import type { CSSProperties } from "react";
+import { memo, type CSSProperties } from "react";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { IconButton } from "../../components/IconButton/IconButton";
 import type { WidthProfile } from "../../components/StrokeWidthProfileSelect/StrokeWidthProfileSelect";
-import { SPACE_SM } from "../../themes/styles";
 import { FlipHorizontalIcon, ChevronLeftIcon, ChevronRightIcon } from "../../icons";
+import { FlexColumn } from "../shared/SectionLayouts";
 import { StrokePropertyRow } from "./StrokePropertyRow";
 import { WidthProfilePreview, BrushPreview } from "./StrokePreviews";
 import type { BrushType, BrushDirection } from "./types";
@@ -42,12 +41,6 @@ const directionOptions = [
 
 const flexOneStyle: CSSProperties = { flex: 1 };
 
-const containerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACE_SM,
-};
-
 /**
  * Brush stroke settings tab with brush type, direction, and width profile.
  */
@@ -60,7 +53,7 @@ export const StrokeBrushTab = memo(function StrokeBrushTab({
   onBrushWidthProfileChange,
 }: StrokeBrushTabProps) {
   return (
-    <div style={containerStyle}>
+    <FlexColumn>
       <div>
         <Select
           options={brushOptions}
@@ -92,6 +85,6 @@ export const StrokeBrushTab = memo(function StrokeBrushTab({
         </div>
         <IconButton icon={<FlipHorizontalIcon size={16} />} aria-label="Flip brush width profile" size="md" />
       </StrokePropertyRow>
-    </div>
+    </FlexColumn>
   );
 });

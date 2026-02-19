@@ -2,11 +2,10 @@
  * @file StrokeDynamicTab - Dynamic stroke settings tab content
  */
 
-import { memo } from "react";
-import type { CSSProperties } from "react";
+import { memo, type CSSProperties } from "react";
 import { UnitInput } from "../../components/UnitInput/UnitInput";
-import { SPACE_SM } from "../../themes/styles";
 import { FrequencyIcon, WiggleIcon, SmoothIcon } from "../../icons";
+import { FlexColumn } from "../shared/SectionLayouts";
 import { StrokePropertyRow } from "./StrokePropertyRow";
 
 export type StrokeDynamicTabProps = {
@@ -22,12 +21,6 @@ const percentUnits = [{ value: "%", label: "%" }];
 
 const flexOneStyle: CSSProperties = { flex: 1 };
 
-const containerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACE_SM,
-};
-
 /**
  * Dynamic stroke settings tab with frequency, wiggle, and smoothen.
  */
@@ -40,7 +33,7 @@ export const StrokeDynamicTab = memo(function StrokeDynamicTab({
   onSmoothenChange,
 }: StrokeDynamicTabProps) {
   return (
-    <div style={containerStyle}>
+    <FlexColumn>
       <StrokePropertyRow label="Frequency">
         <div style={flexOneStyle}>
           <UnitInput
@@ -85,6 +78,6 @@ export const StrokeDynamicTab = memo(function StrokeDynamicTab({
           />
         </div>
       </StrokePropertyRow>
-    </div>
+    </FlexColumn>
   );
 });

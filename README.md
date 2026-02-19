@@ -604,6 +604,14 @@ const [settings, setSettings] = useState({
 
 > Reusable property editing sections
 
+#### BoxModelSection
+
+Section wrapper for BoxModelEditor
+
+```tsx
+import { BoxModelSection } from "react-editor-ui/BoxModelSection";
+```
+
 #### GradientSection
 
 Full gradient editing interface
@@ -910,6 +918,26 @@ const [points, setPoints] = useState<[number, number, number, number]>([0.25, 0.
   onChange={setPoints}
   aria-label="Easing curve editor"
 />
+```
+
+#### BoxModelEditor
+
+Visual box model editor for margin, padding, and border-radius
+
+Interactive visual editor for CSS box model properties. Displays nested boxes for margin (outer), border (middle), and padding (inner), with corner radius controls and editable spacing values.
+
+```tsx
+import { BoxModelEditor } from "react-editor-ui/BoxModelEditor";
+import { useState } from "react";
+
+const [data, setData] = useState({
+  margin: { top: 16, right: 16, bottom: 16, left: 16 },
+  padding: { top: 16, right: 8, bottom: 16, left: 8 },
+  borderRadius: { topLeft: 16, topRight: 16, bottomRight: 16, bottomLeft: 16 },
+  contentSize: { width: 344, height: 100 },
+});
+
+<BoxModelEditor value={data} onChange={setData} />
 ```
 
 #### Portal

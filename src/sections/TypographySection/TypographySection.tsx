@@ -3,6 +3,7 @@
  */
 
 import { memo, useCallback, useMemo, type CSSProperties } from "react";
+import { FlexRow, LabeledField } from "../shared/SectionLayouts";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { UnitInput } from "../../components/UnitInput/UnitInput";
 import { TooltipIconButton } from "../../components/TooltipIconButton/TooltipIconButton";
@@ -15,9 +16,7 @@ import {
 import {
   COLOR_TEXT_MUTED,
   COLOR_WARNING,
-  SPACE_SM,
   SPACE_MD,
-  SIZE_FONT_SM,
 } from "../../themes/styles";
 import { SettingsIcon } from "../../icons";
 import type {
@@ -27,13 +26,13 @@ import type {
   VerticalAlign,
 } from "./types";
 
-// Default font options
+// Default font options (generic font families)
 const defaultFontOptions: FontOption[] = [
-  { value: "SF Pro", label: "SF Pro" },
-  { value: "Inter", label: "Inter" },
-  { value: "Roboto", label: "Roboto" },
-  { value: "Arial", label: "Arial" },
-  { value: "Helvetica", label: "Helvetica" },
+  { value: "sans-serif", label: "Sans-serif" },
+  { value: "serif", label: "Serif" },
+  { value: "monospace", label: "Monospace" },
+  { value: "cursive", label: "Cursive" },
+  { value: "fantasy", label: "Fantasy" },
 ];
 
 // Default weight options
@@ -49,7 +48,7 @@ const defaultWeightOptions = [
   { value: "900", label: "Black" },
 ];
 
-// Static styles
+// Static styles (section uses SPACE_MD gap for more spacing)
 const containerStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
@@ -79,43 +78,7 @@ const fontIconNormalStyle: CSSProperties = {
   color: "#fff",
 };
 
-const fontFamilyRowContainerStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: SPACE_SM,
-};
-
 const flexOneStyle: CSSProperties = { flex: 1 };
-
-const labeledUnitInputContainerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACE_SM,
-  minWidth: 0,
-  boxSizing: "border-box",
-};
-
-const labeledUnitInputLabelStyle: CSSProperties = {
-  color: COLOR_TEXT_MUTED,
-  fontSize: SIZE_FONT_SM,
-};
-
-const alignmentContainerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACE_SM,
-};
-
-const alignmentLabelStyle: CSSProperties = {
-  color: COLOR_TEXT_MUTED,
-  fontSize: SIZE_FONT_SM,
-};
-
-const alignmentRowStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: SPACE_SM,
-};
 
 // Unit options
 const fontSizeUnits = [
@@ -179,7 +142,7 @@ const FontFamilyRow = memo(function FontFamilyRow({
   );
 
   return (
-    <div style={fontFamilyRowContainerStyle}>
+    <FlexRow>
       {shouldShowIcon && (
         <span onClick={onOpenFontsPanel} style={iconClickStyle}>
           <FontIcon isMissing={isMissing} />
@@ -193,7 +156,7 @@ const FontFamilyRow = memo(function FontFamilyRow({
           aria-label="Font family"
         />
       </div>
-    </div>
+    </FlexRow>
   );
 });
 
@@ -217,8 +180,7 @@ const LabeledUnitInput = memo(function LabeledUnitInput({
   shiftStep = 10,
 }: LabeledUnitInputProps) {
   return (
-    <div style={labeledUnitInputContainerStyle}>
-      <span style={labeledUnitInputLabelStyle}>{label}</span>
+    <LabeledField label={label}>
       <UnitInput
         value={value}
         onChange={onChange}
@@ -228,7 +190,7 @@ const LabeledUnitInput = memo(function LabeledUnitInput({
         shiftStep={shiftStep}
         aria-label={label}
       />
-    </div>
+    </LabeledField>
   );
 });
 
@@ -342,18 +304,16 @@ export const TypographySection = memo(function TypographySection({
       </PropertyGrid>
       <PropertyGrid columns={2}>
         <PropertyGridItem>
-          <div style={alignmentContainerStyle}>
-            <span style={alignmentLabelStyle}>Horizontal</span>
+          <LabeledField label="Horizontal">
             <TextHorizontalAlignSelect
               value={data.textAlign as "left" | "center" | "right"}
               onChange={handleTextAlignChange}
             />
-          </div>
+          </LabeledField>
         </PropertyGridItem>
         <PropertyGridItem>
-          <div style={alignmentContainerStyle}>
-            <span style={alignmentLabelStyle}>Vertical</span>
-            <div style={alignmentRowStyle}>
+          <LabeledField label="Vertical">
+            <FlexRow>
               <TextVerticalAlignSelect
                 value={data.verticalAlign}
                 onChange={handleVerticalAlignChange}
@@ -364,8 +324,8 @@ export const TypographySection = memo(function TypographySection({
                 size="sm"
                 onClick={onOpenSettings}
               />
-            </div>
-          </div>
+            </FlexRow>
+          </LabeledField>
         </PropertyGridItem>
       </PropertyGrid>
     </div>

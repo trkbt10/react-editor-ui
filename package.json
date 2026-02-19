@@ -48,6 +48,12 @@
       "import": "./dist/components/AlignmentSelect.js",
       "require": "./dist/components/AlignmentSelect.cjs"
     },
+    "./sections/AlignObjectsSection": {
+      "source": "./src/sections/AlignObjectsSection/AlignObjectsSection.tsx",
+      "types": "./dist/sections/AlignObjectsSection/AlignObjectsSection.d.ts",
+      "import": "./dist/sections/AlignObjectsSection.js",
+      "require": "./dist/sections/AlignObjectsSection.cjs"
+    },
     "./panels/AnimationPanel": {
       "source": "./src/panels/AnimationPanel/AnimationPanel.tsx",
       "types": "./dist/panels/AnimationPanel/AnimationPanel.d.ts",
@@ -83,6 +89,18 @@
       "types": "./dist/canvas/BoundingBox/BoundingBox.d.ts",
       "import": "./dist/canvas/BoundingBox.js",
       "require": "./dist/canvas/BoundingBox.cjs"
+    },
+    "./BoxModelEditor": {
+      "source": "./src/components/BoxModelEditor/BoxModelEditor.tsx",
+      "types": "./dist/components/BoxModelEditor/BoxModelEditor.d.ts",
+      "import": "./dist/components/BoxModelEditor.js",
+      "require": "./dist/components/BoxModelEditor.cjs"
+    },
+    "./sections/BoxModelSection": {
+      "source": "./src/sections/BoxModelSection/BoxModelSection.tsx",
+      "types": "./dist/sections/BoxModelSection/BoxModelSection.d.ts",
+      "import": "./dist/sections/BoxModelSection.js",
+      "require": "./dist/sections/BoxModelSection.cjs"
     },
     "./Breadcrumb": {
       "source": "./src/components/Breadcrumb/Breadcrumb.tsx",
@@ -126,6 +144,18 @@
       "import": "./dist/canvas/CanvasRuler.js",
       "require": "./dist/canvas/CanvasRuler.cjs"
     },
+    "./sections/CaseTransformSection": {
+      "source": "./src/sections/CaseTransformSection/CaseTransformSection.tsx",
+      "types": "./dist/sections/CaseTransformSection/CaseTransformSection.d.ts",
+      "import": "./dist/sections/CaseTransformSection.js",
+      "require": "./dist/sections/CaseTransformSection.cjs"
+    },
+    "./CaseTransformSelect": {
+      "source": "./src/components/CaseTransformSelect/CaseTransformSelect.tsx",
+      "types": "./dist/components/CaseTransformSelect/CaseTransformSelect.d.ts",
+      "import": "./dist/components/CaseTransformSelect.js",
+      "require": "./dist/components/CaseTransformSelect.cjs"
+    },
     "./Checkbox": {
       "source": "./src/components/Checkbox/Checkbox.tsx",
       "types": "./dist/components/Checkbox/Checkbox.d.ts",
@@ -162,6 +192,24 @@
       "import": "./dist/components/ControlRow.js",
       "require": "./dist/components/ControlRow.cjs"
     },
+    "./sections/DistributeObjectsSection": {
+      "source": "./src/sections/DistributeObjectsSection/DistributeObjectsSection.tsx",
+      "types": "./dist/sections/DistributeObjectsSection/DistributeObjectsSection.d.ts",
+      "import": "./dist/sections/DistributeObjectsSection.js",
+      "require": "./dist/sections/DistributeObjectsSection.cjs"
+    },
+    "./sections/DistributeSpacingSection": {
+      "source": "./src/sections/DistributeSpacingSection/DistributeSpacingSection.tsx",
+      "types": "./dist/sections/DistributeSpacingSection/DistributeSpacingSection.d.ts",
+      "import": "./dist/sections/DistributeSpacingSection.js",
+      "require": "./dist/sections/DistributeSpacingSection.cjs"
+    },
+    "./EasingPresetSelect": {
+      "source": "./src/components/EasingPresetSelect/EasingPresetSelect.tsx",
+      "types": "./dist/components/EasingPresetSelect/EasingPresetSelect.d.ts",
+      "import": "./dist/components/EasingPresetSelect.js",
+      "require": "./dist/components/EasingPresetSelect.cjs"
+    },
     "./sections/ExportSection": {
       "source": "./src/sections/ExportSection/ExportSection.tsx",
       "types": "./dist/sections/ExportSection/ExportSection.d.ts",
@@ -179,6 +227,18 @@
       "types": "./dist/components/FillTypeSelector/FillTypeSelector.d.ts",
       "import": "./dist/components/FillTypeSelector.js",
       "require": "./dist/components/FillTypeSelector.cjs"
+    },
+    "./sections/FontMetricsSection": {
+      "source": "./src/sections/FontMetricsSection/FontMetricsSection.tsx",
+      "types": "./dist/sections/FontMetricsSection/FontMetricsSection.d.ts",
+      "import": "./dist/sections/FontMetricsSection.js",
+      "require": "./dist/sections/FontMetricsSection.cjs"
+    },
+    "./sections/FontSection": {
+      "source": "./src/sections/FontSection/FontSection.tsx",
+      "types": "./dist/sections/FontSection/FontSection.d.ts",
+      "import": "./dist/sections/FontSection.js",
+      "require": "./dist/sections/FontSection.cjs"
     },
     "./panels/FontsPanel": {
       "source": "./src/panels/FontsPanel/FontsPanel.tsx",
@@ -234,6 +294,12 @@
       "import": "./dist/sections/ImageFillSection.js",
       "require": "./dist/sections/ImageFillSection.cjs"
     },
+    "./sections/IndentSection": {
+      "source": "./src/sections/IndentSection/IndentSection.tsx",
+      "types": "./dist/sections/IndentSection/IndentSection.d.ts",
+      "import": "./dist/sections/IndentSection.js",
+      "require": "./dist/sections/IndentSection.cjs"
+    },
     "./Input": {
       "source": "./src/components/Input/Input.tsx",
       "types": "./dist/components/Input/Input.d.ts",
@@ -252,6 +318,12 @@
       "import": "./dist/components/LibraryBrowser.js",
       "require": "./dist/components/LibraryBrowser.cjs"
     },
+    "./sections/ListSection": {
+      "source": "./src/sections/ListSection/ListSection.tsx",
+      "types": "./dist/sections/ListSection/ListSection.d.ts",
+      "import": "./dist/sections/ListSection.js",
+      "require": "./dist/sections/ListSection.cjs"
+    },
     "./LogEntry": {
       "source": "./src/components/LogEntry/LogEntry.tsx",
       "types": "./dist/components/LogEntry/LogEntry.d.ts",
@@ -269,6 +341,12 @@
       "types": "./dist/panels/Panel/Panel.d.ts",
       "import": "./dist/panels/Panel.js",
       "require": "./dist/panels/Panel.cjs"
+    },
+    "./sections/ParagraphSpacingSection": {
+      "source": "./src/sections/ParagraphSpacingSection/ParagraphSpacingSection.tsx",
+      "types": "./dist/sections/ParagraphSpacingSection/ParagraphSpacingSection.d.ts",
+      "import": "./dist/sections/ParagraphSpacingSection.js",
+      "require": "./dist/sections/ParagraphSpacingSection.cjs"
     },
     "./sections/PatternFillSection": {
       "source": "./src/sections/PatternFillSection/PatternFillSection.tsx",
@@ -426,6 +504,30 @@
       "import": "./dist/components/TabBar.js",
       "require": "./dist/components/TabBar.cjs"
     },
+    "./sections/TextJustifySection": {
+      "source": "./src/sections/TextJustifySection/TextJustifySection.tsx",
+      "types": "./dist/sections/TextJustifySection/TextJustifySection.d.ts",
+      "import": "./dist/sections/TextJustifySection.js",
+      "require": "./dist/sections/TextJustifySection.cjs"
+    },
+    "./TextJustifySelect": {
+      "source": "./src/components/TextJustifySelect/TextJustifySelect.tsx",
+      "types": "./dist/components/TextJustifySelect/TextJustifySelect.d.ts",
+      "import": "./dist/components/TextJustifySelect.js",
+      "require": "./dist/components/TextJustifySelect.cjs"
+    },
+    "./sections/TextScaleSection": {
+      "source": "./src/sections/TextScaleSection/TextScaleSection.tsx",
+      "types": "./dist/sections/TextScaleSection/TextScaleSection.d.ts",
+      "import": "./dist/sections/TextScaleSection.js",
+      "require": "./dist/sections/TextScaleSection.cjs"
+    },
+    "./sections/TextTransformSection": {
+      "source": "./src/sections/TextTransformSection/TextTransformSection.tsx",
+      "types": "./dist/sections/TextTransformSection/TextTransformSection.d.ts",
+      "import": "./dist/sections/TextTransformSection.js",
+      "require": "./dist/sections/TextTransformSection.cjs"
+    },
     "./Toolbar": {
       "source": "./src/components/Toolbar/Toolbar.tsx",
       "types": "./dist/components/Toolbar/Toolbar.d.ts",
@@ -560,6 +662,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0",
     "vite": "^7.3.1",
+    "vite-plugin-svgr": "^4.5.0",
     "vitest": "^4.0.18"
   },
   "dependencies": {}

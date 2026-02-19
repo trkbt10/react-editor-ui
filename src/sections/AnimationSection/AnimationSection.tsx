@@ -10,7 +10,7 @@ import { ControlGroup } from "../../components/ControlRow/ControlGroup";
 import { BezierCurveEditor } from "../../components/BezierCurveEditor/BezierCurveEditor";
 import type { BezierControlPoints, EasingPreset } from "../../components/BezierCurveEditor/bezierTypes";
 import { EASING_PRESETS, matchPreset } from "../../components/BezierCurveEditor/bezierPresets";
-import { EasingPresetSelect } from "./EasingPresetSelect";
+import { EasingPresetSelect } from "../../components/EasingPresetSelect/EasingPresetSelect";
 import { ClockIcon, HourglassIcon } from "../../icons";
 import { SPACE_MD } from "../../themes/styles";
 import type { AnimationSectionProps, AnimationData } from "./types";

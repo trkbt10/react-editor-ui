@@ -32,6 +32,7 @@ import { SelectWithPreviewDemo } from "./pages/primitives/SelectWithPreviewDemo"
 import { TooltipDemo } from "./pages/primitives/TooltipDemo";
 import { SplitButtonDemo } from "./pages/primitives/SplitButtonDemo";
 import { TabBarDemo } from "./pages/primitives/TabBarDemo";
+import { BoxModelEditorDemo } from "./pages/primitives/BoxModelEditorDemo";
 
 // Layout demos
 import { ToolbarDemo } from "./pages/layout/ToolbarDemo";
@@ -57,6 +58,19 @@ import { TypographySectionDemo } from "./pages/sections/TypographySectionDemo";
 import { AnimationSectionDemo } from "./pages/sections/AnimationSectionDemo";
 import { StrokeSectionDemo } from "./pages/sections/StrokeSectionDemo";
 import { FontsSectionDemo } from "./pages/sections/FontsSectionDemo";
+import { AlignObjectsSectionDemo } from "./pages/sections/AlignObjectsSectionDemo";
+import { DistributeObjectsSectionDemo } from "./pages/sections/DistributeObjectsSectionDemo";
+import { DistributeSpacingSectionDemo } from "./pages/sections/DistributeSpacingSectionDemo";
+import { TextJustifySectionDemo } from "./pages/sections/TextJustifySectionDemo";
+import { ListSectionDemo } from "./pages/sections/ListSectionDemo";
+import { IndentSectionDemo } from "./pages/sections/IndentSectionDemo";
+import { ParagraphSpacingSectionDemo } from "./pages/sections/ParagraphSpacingSectionDemo";
+import { FontSectionDemo } from "./pages/sections/FontSectionDemo";
+import { FontMetricsSectionDemo } from "./pages/sections/FontMetricsSectionDemo";
+import { TextScaleSectionDemo } from "./pages/sections/TextScaleSectionDemo";
+import { TextTransformSectionDemo } from "./pages/sections/TextTransformSectionDemo";
+import { CaseTransformSectionDemo } from "./pages/sections/CaseTransformSectionDemo";
+import { BoxModelSectionDemo } from "./pages/sections/BoxModelSectionDemo";
 
 // Composite demos
 import { TransformButtonsDemo } from "./pages/composite/TransformButtonsDemo";
@@ -205,6 +219,12 @@ export const demoCategories: DemoCategory[] = [
         label: "TabBar",
         path: "tab-bar",
         element: <TabBarDemo />,
+      },
+      {
+        id: "box-model-editor",
+        label: "BoxModelEditor",
+        path: "box-model-editor",
+        element: <BoxModelEditorDemo />,
       },
     ],
   },
@@ -355,6 +375,84 @@ export const demoCategories: DemoCategory[] = [
         label: "GradientSection",
         path: "gradient",
         element: <GradientSectionDemo />,
+      },
+      {
+        id: "align-objects-section",
+        label: "AlignObjectsSection",
+        path: "align-objects",
+        element: <AlignObjectsSectionDemo />,
+      },
+      {
+        id: "distribute-objects-section",
+        label: "DistributeObjectsSection",
+        path: "distribute-objects",
+        element: <DistributeObjectsSectionDemo />,
+      },
+      {
+        id: "distribute-spacing-section",
+        label: "DistributeSpacingSection",
+        path: "distribute-spacing",
+        element: <DistributeSpacingSectionDemo />,
+      },
+      {
+        id: "text-justify-section",
+        label: "TextJustifySection",
+        path: "text-justify",
+        element: <TextJustifySectionDemo />,
+      },
+      {
+        id: "list-section",
+        label: "ListSection",
+        path: "list",
+        element: <ListSectionDemo />,
+      },
+      {
+        id: "indent-section",
+        label: "IndentSection",
+        path: "indent",
+        element: <IndentSectionDemo />,
+      },
+      {
+        id: "paragraph-spacing-section",
+        label: "ParagraphSpacingSection",
+        path: "paragraph-spacing",
+        element: <ParagraphSpacingSectionDemo />,
+      },
+      {
+        id: "font-section",
+        label: "FontSection",
+        path: "font",
+        element: <FontSectionDemo />,
+      },
+      {
+        id: "font-metrics-section",
+        label: "FontMetricsSection",
+        path: "font-metrics",
+        element: <FontMetricsSectionDemo />,
+      },
+      {
+        id: "text-scale-section",
+        label: "TextScaleSection",
+        path: "text-scale",
+        element: <TextScaleSectionDemo />,
+      },
+      {
+        id: "text-transform-section",
+        label: "TextTransformSection",
+        path: "text-transform",
+        element: <TextTransformSectionDemo />,
+      },
+      {
+        id: "case-transform-section",
+        label: "CaseTransformSection",
+        path: "case-transform",
+        element: <CaseTransformSectionDemo />,
+      },
+      {
+        id: "box-model-section",
+        label: "BoxModelSection",
+        path: "box-model",
+        element: <BoxModelSectionDemo />,
       },
     ],
   },

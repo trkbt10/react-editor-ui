@@ -21,7 +21,7 @@
  */
 
 import { memo, useMemo, useCallback, useState, type CSSProperties } from "react";
-import { LuPlus } from "react-icons/lu";
+import { PlusIcon } from "../../icons";
 import { PropertySection } from "../../components/PropertySection/PropertySection";
 import { SectionHeader } from "../../components/SectionHeader/SectionHeader";
 import { IconButton } from "../../components/IconButton/IconButton";
@@ -144,7 +144,7 @@ export const ExportSection = memo(function ExportSection({
   const addButton = useMemo(
     () => (
       <IconButton
-        icon={<LuPlus size={14} />}
+        icon={<PlusIcon size="md" />}
         aria-label="Add export setting"
         size="sm"
         variant="ghost"

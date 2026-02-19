@@ -1,14 +1,32 @@
 /**
- * @file EasingPresetSelect - Dropdown for selecting easing presets
+ * @file EasingPresetSelect component - Dropdown for selecting easing presets with curve preview
+ *
+ * @description
+ * Select component for choosing animation easing presets.
+ * Displays a mini SVG curve preview for each preset option.
+ *
+ * @example
+ * ```tsx
+ * import { EasingPresetSelect } from "react-editor-ui/EasingPresetSelect";
+ * import { useState } from "react";
+ *
+ * const [preset, setPreset] = useState<EasingPreset>("ease");
+ *
+ * <EasingPresetSelect
+ *   value={preset}
+ *   onChange={setPreset}
+ *   aria-label="Easing preset"
+ * />
+ * ```
  */
 
 import { memo, useMemo } from "react";
-import { Select, type SelectOption } from "../../components/Select/Select";
+import { Select, type SelectOption } from "../Select/Select";
 import {
   EASING_PRESETS,
   PRESET_LABELS,
-} from "../../components/BezierCurveEditor/bezierPresets";
-import type { EasingPreset } from "../../components/BezierCurveEditor/bezierTypes";
+} from "../BezierCurveEditor/bezierPresets";
+import type { EasingPreset } from "../BezierCurveEditor/bezierTypes";
 
 export type EasingPresetSelectProps = {
   value: EasingPreset;

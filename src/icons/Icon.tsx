@@ -22,8 +22,12 @@ const sizeMap = {
 } as const;
 
 function resolveSize(size?: IconSize): string {
-  if (size === undefined) return SIZE_ICON_MD;
-  if (typeof size === "number") return `${size}px`;
+  if (size === undefined) {
+    return SIZE_ICON_MD;
+  }
+  if (typeof size === "number") {
+    return `${size}px`;
+  }
   return sizeMap[size];
 }
 

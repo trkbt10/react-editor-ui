@@ -18,6 +18,7 @@ import type { TokenCache, Token } from "./types";
  * SvgRenderer uses Canvas 2D for style-aware text measurement.
  */
 function createMockCanvas2DContext(measureText: (text: string) => number): CanvasRenderingContext2D {
+  // eslint-disable-next-line custom/no-as-outside-guard -- Test mock requires partial interface
   return {
     font: "",
     measureText: (text: string) => ({
@@ -41,6 +42,7 @@ function createMockCanvas2DContext(measureText: (text: string) => number): Canva
 const originalGetContext = HTMLCanvasElement.prototype.getContext;
 
 // Global measureText function for mocking
+// eslint-disable-next-line no-restricted-syntax -- Test mock requires mutable state
 let globalMockMeasureText: ((text: string) => number) | null = null;
 
 /**
@@ -52,7 +54,10 @@ function setMockMeasureText(fn: (text: string) => number): void {
 
 // Mock HTMLCanvasElement.getContext
 beforeAll(() => {
-  HTMLCanvasElement.prototype.getContext = function (contextId: string) {
+  HTMLCanvasElement.prototype.getContext = function (
+    this: HTMLCanvasElement,
+    contextId: string,
+  ) {
     if (contextId === "2d" && globalMockMeasureText) {
       return createMockCanvas2DContext(globalMockMeasureText);
     }

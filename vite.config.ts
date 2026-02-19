@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import svgr from "vite-plugin-svgr";
 
 interface ComponentEntry {
   name: string;
@@ -65,6 +66,7 @@ function loadEntries(): Record<string, string> {
 export default defineConfig({
   plugins: [
     react(),
+    svgr(),
     // Custom plugin to prevent CSS file emission
     {
       name: 'remove-css-emission',

@@ -15,6 +15,7 @@ import rulesRestrictedSyntax from "./eslint/rules/rules-restricted-syntax.js";
 import rulesCurly from "./eslint/rules/rules-curly.js";
 import rulesNoTestImports from "./eslint/rules/rules-no-test-imports.js";
 import rulesNoMocks from "./eslint/rules/rules-no-mocks.js";
+import rulesNoDirectIconImports from "./eslint/rules/rules-no-direct-icon-imports.js";
 
 export default [
   // Ignore patterns
@@ -137,4 +138,14 @@ export default [
       },
     },
   ),
+
+  // Forbid direct imports from react-icons (must use centralized icons module)
+  // Applies to all source files EXCEPT src/icons/** (the icons module itself)
+  {
+    files: ["src/**/*.ts", "src/**/*.tsx"],
+    ignores: ["src/icons/**", "src/demo/**"],
+    rules: {
+      ...rulesNoDirectIconImports,
+    },
+  },
 ];

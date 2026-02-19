@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-17T13:37:26.362Z",
+  "generatedAt": "2026-02-19T03:40:17.224Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -18,6 +18,12 @@
       "entryType": "named",
       "relativePath": "src/components/AlignmentSelect/AlignmentSelect.tsx",
       "category": "component"
+    },
+    {
+      "name": "AlignObjectsSection",
+      "entryType": "named",
+      "relativePath": "src/sections/AlignObjectsSection/AlignObjectsSection.tsx",
+      "category": "section"
     },
     {
       "name": "AnimationPanel",
@@ -54,6 +60,18 @@
       "entryType": "named",
       "relativePath": "src/canvas/BoundingBox/BoundingBox.tsx",
       "category": "canvas"
+    },
+    {
+      "name": "BoxModelEditor",
+      "entryType": "named",
+      "relativePath": "src/components/BoxModelEditor/BoxModelEditor.tsx",
+      "category": "component"
+    },
+    {
+      "name": "BoxModelSection",
+      "entryType": "named",
+      "relativePath": "src/sections/BoxModelSection/BoxModelSection.tsx",
+      "category": "section"
     },
     {
       "name": "Breadcrumb",
@@ -98,6 +116,18 @@
       "category": "canvas"
     },
     {
+      "name": "CaseTransformSection",
+      "entryType": "named",
+      "relativePath": "src/sections/CaseTransformSection/CaseTransformSection.tsx",
+      "category": "section"
+    },
+    {
+      "name": "CaseTransformSelect",
+      "entryType": "named",
+      "relativePath": "src/components/CaseTransformSelect/CaseTransformSelect.tsx",
+      "category": "component"
+    },
+    {
       "name": "Checkbox",
       "entryType": "named",
       "relativePath": "src/components/Checkbox/Checkbox.tsx",
@@ -134,6 +164,24 @@
       "category": "component"
     },
     {
+      "name": "DistributeObjectsSection",
+      "entryType": "named",
+      "relativePath": "src/sections/DistributeObjectsSection/DistributeObjectsSection.tsx",
+      "category": "section"
+    },
+    {
+      "name": "DistributeSpacingSection",
+      "entryType": "named",
+      "relativePath": "src/sections/DistributeSpacingSection/DistributeSpacingSection.tsx",
+      "category": "section"
+    },
+    {
+      "name": "EasingPresetSelect",
+      "entryType": "named",
+      "relativePath": "src/components/EasingPresetSelect/EasingPresetSelect.tsx",
+      "category": "component"
+    },
+    {
       "name": "ExportSection",
       "entryType": "named",
       "relativePath": "src/sections/ExportSection/ExportSection.tsx",
@@ -150,6 +198,18 @@
       "entryType": "named",
       "relativePath": "src/components/FillTypeSelector/FillTypeSelector.tsx",
       "category": "component"
+    },
+    {
+      "name": "FontMetricsSection",
+      "entryType": "named",
+      "relativePath": "src/sections/FontMetricsSection/FontMetricsSection.tsx",
+      "category": "section"
+    },
+    {
+      "name": "FontSection",
+      "entryType": "named",
+      "relativePath": "src/sections/FontSection/FontSection.tsx",
+      "category": "section"
     },
     {
       "name": "FontsPanel",
@@ -206,6 +266,12 @@
       "category": "section"
     },
     {
+      "name": "IndentSection",
+      "entryType": "named",
+      "relativePath": "src/sections/IndentSection/IndentSection.tsx",
+      "category": "section"
+    },
+    {
       "name": "Input",
       "entryType": "named",
       "relativePath": "src/components/Input/Input.tsx",
@@ -224,6 +290,12 @@
       "category": "component"
     },
     {
+      "name": "ListSection",
+      "entryType": "named",
+      "relativePath": "src/sections/ListSection/ListSection.tsx",
+      "category": "section"
+    },
+    {
       "name": "LogEntry",
       "entryType": "named",
       "relativePath": "src/components/LogEntry/LogEntry.tsx",
@@ -240,6 +312,12 @@
       "entryType": "named",
       "relativePath": "src/panels/Panel/Panel.tsx",
       "category": "panel"
+    },
+    {
+      "name": "ParagraphSpacingSection",
+      "entryType": "named",
+      "relativePath": "src/sections/ParagraphSpacingSection/ParagraphSpacingSection.tsx",
+      "category": "section"
     },
     {
       "name": "PatternFillSection",
@@ -396,6 +474,30 @@
       "entryType": "named",
       "relativePath": "src/components/TabBar/TabBar.tsx",
       "category": "component"
+    },
+    {
+      "name": "TextJustifySection",
+      "entryType": "named",
+      "relativePath": "src/sections/TextJustifySection/TextJustifySection.tsx",
+      "category": "section"
+    },
+    {
+      "name": "TextJustifySelect",
+      "entryType": "named",
+      "relativePath": "src/components/TextJustifySelect/TextJustifySelect.tsx",
+      "category": "component"
+    },
+    {
+      "name": "TextScaleSection",
+      "entryType": "named",
+      "relativePath": "src/sections/TextScaleSection/TextScaleSection.tsx",
+      "category": "section"
+    },
+    {
+      "name": "TextTransformSection",
+      "entryType": "named",
+      "relativePath": "src/sections/TextTransformSection/TextTransformSection.tsx",
+      "category": "section"
     },
     {
       "name": "Toolbar",

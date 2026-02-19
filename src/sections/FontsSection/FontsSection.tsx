@@ -3,6 +3,7 @@
  */
 
 import { memo, useMemo, useCallback, type CSSProperties } from "react";
+import { FlexColumn } from "../shared/SectionLayouts";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { SearchInput } from "../../components/SearchInput/SearchInput";
 import {
@@ -26,13 +27,6 @@ const categoryOptions: SelectOption<FontCategory>[] = [
   { value: "display", label: "Display" },
   { value: "handwriting", label: "Handwriting" },
 ];
-
-// Styles
-const containerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACE_SM,
-};
 
 const listContainerStyle: CSSProperties = {
   backgroundColor: COLOR_SURFACE_RAISED,
@@ -152,7 +146,7 @@ export const FontsSection = memo(function FontsSection({
   );
 
   return (
-    <div className={className} style={containerStyle}>
+    <FlexColumn className={className}>
       <SearchInput
         value={data.searchQuery}
         onChange={handleSearchChange}
@@ -178,6 +172,6 @@ export const FontsSection = memo(function FontsSection({
           />
         ))}
       </div>
-    </div>
+    </FlexColumn>
   );
 });

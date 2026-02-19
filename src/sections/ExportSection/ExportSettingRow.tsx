@@ -3,7 +3,7 @@
  */
 
 import { memo, type CSSProperties } from "react";
-import { LuEllipsis, LuMinus } from "react-icons/lu";
+import { EllipsisIcon, MinusIcon } from "../../icons";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { IconButton } from "../../components/IconButton/IconButton";
 import { SPACE_XS, SPACE_SM } from "../../themes/styles";
@@ -79,13 +79,13 @@ export const ExportSettingRow = memo(function ExportSettingRow({
       </div>
       <div style={actionsStyle}>
         <IconButton
-          icon={<LuEllipsis size={14} />}
+          icon={<EllipsisIcon size="md" />}
           aria-label="More options"
           size="sm"
           variant="ghost"
         />
         <IconButton
-          icon={<LuMinus size={14} />}
+          icon={<MinusIcon size="md" />}
           aria-label="Remove export setting"
           size="sm"
           variant="ghost"

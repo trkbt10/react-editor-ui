@@ -491,6 +491,127 @@ const NonInteractiveSection = memo(function NonInteractiveSection() {
 });
 
 // ============================================================================
+// CURSOR ICONS SECTION - Display all cursor types used in BoundingBox
+// ============================================================================
+
+// Import rotation cursor from centralized icons
+import { rotationCursorSvg, ROTATION_CURSOR } from "../../../icons/cursor";
+
+const CURSOR_ITEMS: { name: string; cursor: string; description: string; svgPreview?: string }[] = [
+  {
+    name: "move",
+    cursor: "move",
+    description: "Box drag (move entire selection)",
+  },
+  {
+    name: "ns-resize",
+    cursor: "ns-resize",
+    description: "Top/Bottom edge resize (vertical)",
+  },
+  {
+    name: "ew-resize",
+    cursor: "ew-resize",
+    description: "Left/Right edge resize (horizontal)",
+  },
+  {
+    name: "nwse-resize",
+    cursor: "nwse-resize",
+    description: "Top-left / Bottom-right corner resize (diagonal)",
+  },
+  {
+    name: "nesw-resize",
+    cursor: "nesw-resize",
+    description: "Top-right / Bottom-left corner resize (diagonal)",
+  },
+  {
+    name: "rotate",
+    cursor: ROTATION_CURSOR,
+    description: "Rotation zone (custom SVG cursor)",
+    svgPreview: rotationCursorSvg,
+  },
+];
+
+const cursorBoxStyle: React.CSSProperties = {
+  width: 80,
+  height: 80,
+  border: "1px solid var(--rei-color-border)",
+  borderRadius: 8,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "var(--rei-color-surface-overlay)",
+  transition: "border-color 0.15s",
+};
+
+const CursorIconsSection = memo(function CursorIconsSection() {
+  return (
+    <DemoSection label="Cursor Icons">
+      <DemoMutedText>
+        Cursor icons used in BoundingBox interactions. Hover over each box to see the cursor.
+        Resize cursors rotate dynamically based on the selection's rotation angle.
+      </DemoMutedText>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: 16,
+          marginTop: 12,
+        }}
+      >
+        {CURSOR_ITEMS.map((item) => (
+          <div
+            key={item.name}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                ...cursorBoxStyle,
+                cursor: item.cursor,
+              }}
+            >
+              {item.svgPreview ? (
+                <div
+                  dangerouslySetInnerHTML={{ __html: item.svgPreview }}
+                  style={{ transform: "scale(2)" }}
+                />
+              ) : (
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "var(--rei-color-text-muted)",
+                    fontFamily: "monospace",
+                  }}
+                >
+                  {item.name}
+                </span>
+              )}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{item.name}</div>
+              <div style={{ fontSize: 11, color: "var(--rei-color-text-muted)" }}>
+                {item.description}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <DemoMutedText>
+          <strong>Source:</strong> The rotate cursor is a custom SVG showing an arc with
+          arrows at both ends - a subtle hint for corner rotation rather than a full circle.
+          White outline (stroke-width: 4) ensures visibility on any background.
+          Defined in <code>src/icons/cursor/rotation.svg</code>
+        </DemoMutedText>
+      </div>
+    </DemoSection>
+  );
+});
+
+// ============================================================================
 // MAIN COMPONENT - Just a static container now
 // ============================================================================
 export function BoundingBoxDemo() {
@@ -502,6 +623,7 @@ export function BoundingBoxDemo() {
       </DemoMutedText>
 
       <InteractiveBoundingBoxSection />
+      <CursorIconsSection />
       <NoRotationSection />
       <CornerOnlySection />
       <CustomStylingSection />

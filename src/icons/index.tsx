@@ -91,11 +91,10 @@ import {
   TbWaveSquare,
   TbAngle,
   TbArtboard,
-  TbSelect,
   TbCircleKey,
 } from "react-icons/tb";
 
-import { LuBaseline, LuFrame } from "react-icons/lu";
+import { LuBaseline } from "react-icons/lu";
 import { RiLetterSpacing2 } from "react-icons/ri";
 import { BiSelection } from "react-icons/bi";
 

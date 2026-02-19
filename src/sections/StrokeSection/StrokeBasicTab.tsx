@@ -2,15 +2,14 @@
  * @file StrokeBasicTab - Basic stroke settings tab content
  */
 
-import { memo } from "react";
-import type { CSSProperties } from "react";
+import { memo, type CSSProperties } from "react";
 import { IconButton } from "../../components/IconButton/IconButton";
 import { StrokeStyleSelect, type StrokeStyle } from "../../components/StrokeStyleSelect/StrokeStyleSelect";
 import { StrokeJoinControl, type JoinType } from "../../components/StrokeJoinControl/StrokeJoinControl";
 import { StrokeWidthProfileSelect, type WidthProfile } from "../../components/StrokeWidthProfileSelect/StrokeWidthProfileSelect";
 import { StrokeMiterAngleInput } from "../../components/StrokeMiterAngleInput/StrokeMiterAngleInput";
-import { SPACE_SM } from "../../themes/styles";
 import { FlipHorizontalIcon } from "../../icons";
+import { FlexColumn } from "../shared/SectionLayouts";
 import { StrokePropertyRow } from "./StrokePropertyRow";
 
 export type StrokeBasicTabProps = {
@@ -26,12 +25,6 @@ export type StrokeBasicTabProps = {
 
 const flexOneStyle: CSSProperties = { flex: 1 };
 
-const containerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACE_SM,
-};
-
 /**
  * Basic stroke settings tab with style, width profile, join, and miter angle.
  */
@@ -46,7 +39,7 @@ export const StrokeBasicTab = memo(function StrokeBasicTab({
   onMiterAngleChange,
 }: StrokeBasicTabProps) {
   return (
-    <div style={containerStyle}>
+    <FlexColumn>
       <StrokePropertyRow label="Style">
         <div style={flexOneStyle}>
           <StrokeStyleSelect value={style} onChange={onStyleChange} />
@@ -69,6 +62,6 @@ export const StrokeBasicTab = memo(function StrokeBasicTab({
           <StrokeMiterAngleInput value={miterAngle} onChange={onMiterAngleChange} />
         </div>
       </StrokePropertyRow>
-    </div>
+    </FlexColumn>
   );
 });

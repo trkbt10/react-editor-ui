@@ -3,10 +3,9 @@
  */
 
 import { memo, useMemo, useRef, useEffect } from "react";
-import type { CSSProperties } from "react";
+import { FlexColumn } from "../shared/SectionLayouts";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import type { JoinType } from "../../components/StrokeJoinControl/StrokeJoinControl";
-import { SPACE_SM } from "../../themes/styles";
 import type { StrokeSectionProps, StrokeTab, StrokeData, BrushDirection } from "./types";
 import { StrokeBasicTab } from "./StrokeBasicTab";
 import { StrokeDynamicTab } from "./StrokeDynamicTab";
@@ -17,12 +16,6 @@ const tabOptions = [
   { value: "dynamic" as const, label: "Dynamic" },
   { value: "brush" as const, label: "Brush" },
 ];
-
-const containerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACE_SM,
-};
 
 /**
  * Stroke section with basic, dynamic, and brush settings.
@@ -108,7 +101,7 @@ export const StrokeSection = memo(function StrokeSection({
   };
 
   return (
-    <div className={className} style={containerStyle}>
+    <FlexColumn className={className}>
       <SegmentedControl
         options={tabOptions}
         value={data.tab}
@@ -116,6 +109,6 @@ export const StrokeSection = memo(function StrokeSection({
         aria-label="Stroke settings tab"
       />
       {renderTabContent()}
-    </div>
+    </FlexColumn>
   );
 });

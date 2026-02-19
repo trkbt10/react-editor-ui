@@ -1,3 +1,7 @@
+/**
+ * @file Vite environment type declarations
+ */
+
 /// <reference types="vite/client" />
 
 declare module "*.svg?react" {

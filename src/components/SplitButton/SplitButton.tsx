@@ -329,6 +329,24 @@ function SplitButtonDropdownContent<T extends string>({
   );
 }
 
+function calculateMaxHeight(
+  placement: "top" | "bottom",
+  anchorTop: number,
+  dropdownY: number,
+  viewportPadding: number,
+  offset: number,
+  maxAllowedHeight: number,
+): number {
+  if (placement === "top") {
+    // When flipped to top, available height is from viewport top to anchor top
+    const availableHeight = anchorTop - viewportPadding - offset;
+    return Math.min(maxAllowedHeight, availableHeight);
+  }
+  // When placed at bottom, available height is from dropdown top to viewport bottom
+  const availableHeight = window.innerHeight - dropdownY - viewportPadding;
+  return Math.min(maxAllowedHeight, availableHeight);
+}
+
 /**
  * SplitButton displays a main action button with a dropdown for additional options.
  * The main button executes the selected action, while the dropdown allows changing the selection.
@@ -395,17 +413,15 @@ function SplitButtonInner<T extends string = string>({
         includeScrollOffset: false, // Using position: fixed
       });
 
-      // Calculate maxHeight based on placement
-      let maxHeight: number;
-      if (actualPlacement === "top") {
-        // When flipped to top, available height is from viewport top to anchor top
-        const availableHeight = rect.top - viewportPadding - offset;
-        maxHeight = Math.min(maxAllowedHeight, availableHeight);
-      } else {
-        // When placed at bottom, available height is from dropdown top to viewport bottom
-        const availableHeight = window.innerHeight - y - viewportPadding;
-        maxHeight = Math.min(maxAllowedHeight, availableHeight);
-      }
+      // Calculate maxHeight based on placement (only "top" or "bottom" since we use vertical placement)
+      const maxHeight = calculateMaxHeight(
+        actualPlacement as "top" | "bottom",
+        rect.top,
+        y,
+        viewportPadding,
+        offset,
+        maxAllowedHeight,
+      );
 
       setDropdownPosition({
         top: y,
