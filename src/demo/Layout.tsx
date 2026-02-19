@@ -12,6 +12,7 @@ import {
   type LayerDefinition,
 } from "react-panel-layout";
 import { LuHouse, LuMenu } from "react-icons/lu";
+import componentCategoriesConfig from "../../docs/component-categories.json";
 import { demoCategories } from "./routes";
 import { ThemeSelector, type ThemeName } from "../themes";
 
@@ -155,6 +156,76 @@ type SidebarNavProps = {
   onThemeChange: (theme: ThemeName) => void;
 };
 
+type SidebarPageLink = {
+  id: string;
+  label: string;
+  fullPath: string;
+};
+
+type SidebarCategoryGroup = {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  bases: string[];
+  pages: SidebarPageLink[];
+};
+
+type SidebarGroupConfig = {
+  id: string;
+  displayName: string;
+  categoryIds: readonly string[];
+};
+
+const buildSidebarCategoryGroup = (
+  groupId: string,
+  label: string,
+  categoryIds: readonly string[],
+): SidebarCategoryGroup => {
+  if (categoryIds.length === 0) {
+    throw new Error(`Sidebar group "${groupId}" must include at least one category id`);
+  }
+
+  const categories = categoryIds.map((categoryId) => {
+    const category = demoCategories.find((item) => item.id === categoryId);
+    if (!category) {
+      throw new Error(`Unknown demo category in sidebar group: ${categoryId}`);
+    }
+    return category;
+  });
+
+  const pages = categories.flatMap((category) =>
+    category.pages.map((page) => ({
+      id: page.id,
+      label: page.label,
+      fullPath: `${category.base}/${page.path}`,
+    })),
+  );
+
+  return {
+    id: groupId,
+    label,
+    icon: categories[0]?.icon,
+    bases: categories.map((category) => category.base),
+    pages,
+  };
+};
+
+const SIDEBAR_GROUP_CONFIGS: readonly SidebarGroupConfig[] =
+  componentCategoriesConfig.demoSidebar.groups;
+
+if (SIDEBAR_GROUP_CONFIGS.length === 0) {
+  throw new Error("docs/component-categories.json demoSidebar.groups must not be empty");
+}
+
+const SIDEBAR_CATEGORY_GROUPS: readonly SidebarCategoryGroup[] = SIDEBAR_GROUP_CONFIGS.map(
+  (groupConfig) =>
+    buildSidebarCategoryGroup(
+      groupConfig.id,
+      groupConfig.displayName,
+      groupConfig.categoryIds,
+    ),
+);
+
 const SidebarNav: FC<SidebarNavProps> = ({ theme, onThemeChange }) => {
   const location = useLocation();
   const topLinks: { path: string; label: string; icon: ReactNode }[] = [
@@ -185,28 +256,30 @@ const SidebarNav: FC<SidebarNavProps> = ({ theme, onThemeChange }) => {
           );
         })}
 
-        {demoCategories.map((category) => {
-          const isOpen = location.pathname.startsWith(category.base);
+        {SIDEBAR_CATEGORY_GROUPS.map((categoryGroup) => {
+          const isOpen = categoryGroup.bases.some((base) =>
+            location.pathname.startsWith(base),
+          );
           return (
             <details
-              key={category.id}
+              key={categoryGroup.id}
               style={styles.navCategory}
               open={isOpen}
             >
               <summary style={styles.navCategorySummary}>
-                {category.icon && (
-                  <span style={styles.navIcon}>{category.icon}</span>
+                {categoryGroup.icon && (
+                  <span style={styles.navIcon}>{categoryGroup.icon}</span>
                 )}
-                <span style={{ flex: 1 }}>{category.label}</span>
+                <span style={{ flex: 1 }}>{categoryGroup.label}</span>
                 <span style={styles.navArrow}>▸</span>
               </summary>
               <div style={{ marginTop: "2px" }}>
-                {category.pages.map((page) => {
-                  const fullPath = `${category.base}/${page.path}`;
+                {categoryGroup.pages.map((page) => {
+                  const fullPath = page.fullPath;
                   const isPageActive = location.pathname === fullPath;
                   return (
                     <Link
-                      key={page.id}
+                      key={`${categoryGroup.id}-${page.id}`}
                       to={fullPath}
                       style={{
                         ...styles.navChildLink,

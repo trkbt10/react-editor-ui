@@ -545,20 +545,20 @@ export const demoCategories: DemoCategory[] = [
     base: "/app-demo",
     pages: [
       {
-        id: "design",
-        label: "Design Tool",
-        path: "design",
-        element: <DesignDemo />,
-      },
-      {
         id: "ide",
-        label: "IDE",
+        label: "IDEDemo",
         path: "ide",
         element: <IDEDemo />,
       },
       {
+        id: "design",
+        label: "design/DesignDemo",
+        path: "design",
+        element: <DesignDemo />,
+      },
+      {
         id: "diagram",
-        label: "Diagram Editor",
+        label: "diagram/DiagramDemo",
         path: "diagram",
         element: <DiagramDemo />,
       },

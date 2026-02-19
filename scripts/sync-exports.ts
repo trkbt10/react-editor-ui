@@ -20,11 +20,7 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "
 import { join, resolve } from "node:path";
 
 const ROOT_DIR = resolve(import.meta.dirname, "..");
-const COMPONENTS_DIR = join(ROOT_DIR, "src/components");
-const PANELS_DIR = join(ROOT_DIR, "src/panels");
-const CANVAS_DIR = join(ROOT_DIR, "src/canvas");
-const EDITORS_DIR = join(ROOT_DIR, "src/editors");
-const SECTIONS_DIR = join(ROOT_DIR, "src/sections");
+const COMPONENT_CATEGORIES_PATH = join(ROOT_DIR, "docs/component-categories.json");
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
 const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
 
@@ -40,6 +36,19 @@ interface ComponentEntry {
 interface EntryCatalog {
   generatedAt: string;
   components: ComponentEntry[];
+}
+
+interface DemoSidebarGroupConfig {
+  id: string;
+  sourceDir: string;
+  entryCategory?: EntryCategory;
+  includeInExports?: boolean;
+}
+
+interface ComponentCategoriesConfig {
+  demoSidebar?: {
+    groups?: DemoSidebarGroupConfig[];
+  };
 }
 
 interface PackageJson {
@@ -187,15 +196,63 @@ function scanDirectory(
 }
 
 /**
- * Scans components and panels directories and builds entry catalog
+ * Loads docs/component-categories.json
+ */
+function loadComponentCategoriesConfig(): ComponentCategoriesConfig {
+  const content = readFileSync(COMPONENT_CATEGORIES_PATH, "utf-8");
+  return JSON.parse(content) as ComponentCategoriesConfig;
+}
+
+type ExportScanTarget = {
+  id: string;
+  dir: string;
+  category: EntryCategory;
+};
+
+/**
+ * Builds export scan targets from docs/component-categories.json demoSidebar.groups
+ */
+function getExportScanTargets(): ExportScanTarget[] {
+  const config = loadComponentCategoriesConfig();
+  const groups = config.demoSidebar?.groups;
+
+  if (!groups || groups.length === 0) {
+    throw new Error("docs/component-categories.json demoSidebar.groups must not be empty");
+  }
+
+  const exportGroups = groups.filter((group) => group.includeInExports === true);
+  if (exportGroups.length === 0) {
+    throw new Error("No demoSidebar groups are marked with includeInExports: true");
+  }
+
+  return exportGroups.map((group) => {
+    if (!group.entryCategory) {
+      throw new Error(
+        `Sidebar group "${group.id}" has includeInExports=true but no entryCategory`,
+      );
+    }
+    if (!group.sourceDir) {
+      throw new Error(
+        `Sidebar group "${group.id}" has includeInExports=true but no sourceDir`,
+      );
+    }
+
+    return {
+      id: group.id,
+      dir: join(ROOT_DIR, group.sourceDir),
+      category: group.entryCategory,
+    };
+  });
+}
+
+/**
+ * Scans configured export target directories and builds entry catalog
  */
 function buildEntryCatalog(): EntryCatalog {
-  const components = scanDirectory(COMPONENTS_DIR, "component");
-  const panels = scanDirectory(PANELS_DIR, "panel");
-  const canvas = scanDirectory(CANVAS_DIR, "canvas");
-  const editors = scanDirectory(EDITORS_DIR, "editor");
-  const sections = scanDirectory(SECTIONS_DIR, "section");
-  const allEntries = [...components, ...panels, ...canvas, ...editors, ...sections];
+  const scanTargets = getExportScanTargets();
+  const allEntries = scanTargets.flatMap((target) =>
+    scanDirectory(target.dir, target.category),
+  );
 
   allEntries.sort((a, b) => a.name.localeCompare(b.name));
 

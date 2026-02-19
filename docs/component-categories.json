@@ -123,5 +123,83 @@
         "CanvasRuler"
       ]
     }
-  ]
+  ],
+  "demoSidebar": {
+    "description": "Sidebar grouping aligned with src directory structure",
+    "groups": [
+      {
+        "id": "components",
+        "displayName": "Components",
+        "sourceDir": "src/components",
+        "entryCategory": "component",
+        "includeInExports": true,
+        "categoryIds": [
+          "primitives",
+          "layout",
+          "composite",
+          "data-display",
+          "navigation",
+          "feedback"
+        ]
+      },
+      {
+        "id": "panels",
+        "displayName": "Panels",
+        "sourceDir": "src/panels",
+        "entryCategory": "panel",
+        "includeInExports": true,
+        "categoryIds": [
+          "panels"
+        ]
+      },
+      {
+        "id": "canvas",
+        "displayName": "Canvas",
+        "sourceDir": "src/canvas",
+        "entryCategory": "canvas",
+        "includeInExports": true,
+        "categoryIds": [
+          "canvas"
+        ]
+      },
+      {
+        "id": "editors",
+        "displayName": "Editors",
+        "sourceDir": "src/editors",
+        "entryCategory": "editor",
+        "includeInExports": true,
+        "categoryIds": [
+          "editor"
+        ]
+      },
+      {
+        "id": "sections",
+        "displayName": "Sections",
+        "sourceDir": "src/sections",
+        "entryCategory": "section",
+        "includeInExports": true,
+        "categoryIds": [
+          "sections"
+        ]
+      },
+      {
+        "id": "app-demo",
+        "displayName": "App Demos",
+        "sourceDir": "src/demo/pages/app-demo",
+        "includeInExports": false,
+        "categoryIds": [
+          "app-demo"
+        ]
+      },
+      {
+        "id": "dev",
+        "displayName": "Dev Tools",
+        "sourceDir": "src/demo/pages",
+        "includeInExports": false,
+        "categoryIds": [
+          "dev"
+        ]
+      }
+    ]
+  }
 }
