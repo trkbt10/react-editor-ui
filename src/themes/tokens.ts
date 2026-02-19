@@ -423,6 +423,34 @@ export type ColorTokens = {
   "bounding-box-label-bg": string;
   /** Label text - dimension label text color */
   "bounding-box-label-text": string;
+
+  // -------------------------------------------------------------------------
+  // @group Box Model Editor Colors
+  // Visual box model editor styling
+  // -------------------------------------------------------------------------
+
+  /** Margin layer background - outer box background */
+  "box-model-margin-bg": string;
+  /** Margin layer stroke - outer box border */
+  "box-model-margin-stroke": string;
+  /** Border layer background - border box background */
+  "box-model-border-bg": string;
+  /** Border layer stroke - border box border */
+  "box-model-border-stroke": string;
+  /** Padding layer background - inner box background */
+  "box-model-padding-bg": string;
+  /** Padding layer stroke - inner box border */
+  "box-model-padding-stroke": string;
+  /** Content area background - center content area */
+  "box-model-content-bg": string;
+  /** Content area stroke - center content border */
+  "box-model-content-stroke": string;
+  /** Border indicator - dashed border line color (deprecated, use layer-specific strokes) */
+  "box-model-border": string;
+  /** Handle color - drag handle indicators */
+  "box-model-handle": string;
+  /** Handle hover color - drag handle on hover */
+  "box-model-handle-hover": string;
 };
 
 export type ThemeTokens = BaseTokens & ColorTokens;

@@ -293,3 +293,19 @@ export const SIZE_CLOSE_BUTTON = cssVar("size-close-button");
 export const SIZE_DIRTY_INDICATOR = cssVar("size-dirty-indicator");
 export const SIZE_DRAG_HANDLE = cssVar("size-drag-handle");
 export const SIZE_LAYER_ITEM_HEIGHT = cssVar("size-layer-item-height");
+
+// ========================================
+// BOX MODEL EDITOR
+// ========================================
+
+export const COLOR_BOX_MODEL_MARGIN_BG = cssVar("box-model-margin-bg");
+export const COLOR_BOX_MODEL_MARGIN_STROKE = cssVar("box-model-margin-stroke");
+export const COLOR_BOX_MODEL_BORDER_BG = cssVar("box-model-border-bg");
+export const COLOR_BOX_MODEL_BORDER_STROKE = cssVar("box-model-border-stroke");
+export const COLOR_BOX_MODEL_PADDING_BG = cssVar("box-model-padding-bg");
+export const COLOR_BOX_MODEL_PADDING_STROKE = cssVar("box-model-padding-stroke");
+export const COLOR_BOX_MODEL_CONTENT_BG = cssVar("box-model-content-bg");
+export const COLOR_BOX_MODEL_CONTENT_STROKE = cssVar("box-model-content-stroke");
+export const COLOR_BOX_MODEL_BORDER = cssVar("box-model-border");
+export const COLOR_BOX_MODEL_HANDLE = cssVar("box-model-handle");
+export const COLOR_BOX_MODEL_HANDLE_HOVER = cssVar("box-model-handle-hover");

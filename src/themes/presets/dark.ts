@@ -101,6 +101,19 @@ export const darkColorTokens: ColorTokens = {
   "bounding-box-handle-stroke": "#18a0fb",
   "bounding-box-label-bg": "#18a0fb",
   "bounding-box-label-text": "#ffffff",
+
+  // Box Model Editor
+  "box-model-margin-bg": "rgba(251, 191, 36, 0.25)",
+  "box-model-margin-stroke": "rgba(251, 191, 36, 0.7)",
+  "box-model-border-bg": "rgba(148, 163, 184, 0.25)",
+  "box-model-border-stroke": "rgba(148, 163, 184, 0.7)",
+  "box-model-padding-bg": "rgba(34, 197, 94, 0.25)",
+  "box-model-padding-stroke": "rgba(34, 197, 94, 0.7)",
+  "box-model-content-bg": "rgba(59, 130, 246, 0.2)",
+  "box-model-content-stroke": "rgba(59, 130, 246, 0.6)",
+  "box-model-border": "#6b7280",
+  "box-model-handle": "#9ca3af",
+  "box-model-handle-hover": "#3b82f6",
 };
 
 /**
