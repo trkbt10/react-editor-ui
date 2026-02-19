@@ -60,6 +60,7 @@
 import { useRef, useMemo, useCallback, memo, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
 import { useCanvasContext } from "../core/CanvasContext";
 import { calculateAngle as matrixCalculateAngle } from "../../utils/matrix";
+import { ROTATION_CURSOR } from "../../icons/cursor";
 
 /**
  * Handle position identifiers for resize
@@ -191,18 +192,6 @@ function getRotatedCursor(position: HandlePosition, rotation: number): string {
 
   return cursorTypes[index];
 }
-
-/**
- * SVG rotation cursor (LuRotateCcw icon with white outline for visibility)
- * Based on Lucide's rotate-ccw icon
- */
-const ROTATION_CURSOR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="white" stroke-width="4"/>
-  <path d="M3 3v5h5" stroke="white" stroke-width="4"/>
-  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="black" stroke-width="2"/>
-  <path d="M3 3v5h5" stroke="black" stroke-width="2"/>
-</svg>`;
-const ROTATION_CURSOR = `url("data:image/svg+xml,${encodeURIComponent(ROTATION_CURSOR_SVG)}") 10 10, crosshair`;
 
 /**
  * BoundingBox component for selection visualization and transform interactions

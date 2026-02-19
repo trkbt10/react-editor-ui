@@ -5,6 +5,7 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import svgr from "vite-plugin-svgr";
 import pkg from "./package.json";
 
 /**
@@ -42,7 +43,7 @@ export default defineConfig(({ mode }) => {
   const base = mode === "production" ? `/${getRepoName()}/` : "/";
 
   return {
-    plugins: [react()],
+    plugins: [react(), svgr()],
     root: ".",
     base,
     define: {

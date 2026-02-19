@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="square">
+  <path
+        d="M5 11V5h6"
+        stroke="currentColor"
+        stroke-width="1"
+        opacity="0.35"
+        fill="none"
+      />
+      
+      <path
+        d="M2 14V2h12"
+        stroke="currentColor"
+        stroke-width="4"
+        stroke-linecap="square"
+        fill="none"
+      />
+</svg>
