@@ -468,100 +468,102 @@ import { IconButton } from "react-editor-ui/IconButton";
 
 #### AnimationPanel
 
-Animation settings panel with easing curve editor
+Animation settings with easing curve editor
 
-Panel for configuring CSS animations with interactive bezier curve editor, duration and delay inputs. Supports preset easing functions and custom curves.
+Panel content for configuring CSS animations with interactive bezier curve editor, duration and delay inputs. Supports preset easing functions and custom curves. Wrap with PanelFrame for floating panel UI.
 
 ```tsx
-import { AnimationPanel, createDefaultAnimationSettings } from "react-editor-ui/AnimationPanel";
+import { AnimationPanel } from "react-editor-ui/panels/AnimationPanel";
+import { PanelFrame } from "react-editor-ui/PanelFrame";
 import { useState } from "react";
 
 const [settings, setSettings] = useState(createDefaultAnimationSettings());
 
-<AnimationPanel
-  settings={settings}
-  onChange={setSettings}
-  onClose={() => console.log("closed")}
-/>
+<PanelFrame title="Animation" onClose={() => console.log("closed")}>
+  <AnimationPanel settings={settings} onChange={setSettings} />
+</PanelFrame>
 ```
 
 #### FillPanel
 
-Panel for switching between fill types
+Fill type switching and editing
 
-A fill editor panel supporting solid, gradient, image, pattern, and video fills. Includes a type selector and corresponding editor section for each fill type. Use for shape fill properties in design tools.
+Fill editor panel content supporting solid, gradient, image, pattern, and video fills. Includes a type selector and corresponding editor section for each fill type. Use for shape fill properties in design tools. Wrap with PanelFrame for floating panel UI.
 
 ```tsx
 import { FillPanel } from "react-editor-ui/panels/FillPanel";
+import { PanelFrame } from "react-editor-ui/PanelFrame";
 
 const [fill, setFill] = useState({
   type: "solid",
   color: { hex: "#3b82f6", opacity: 100, visible: true },
 });
 
-<FillPanel value={fill} onChange={setFill} />
+<PanelFrame title="Fill" onClose={handleClose}>
+  <FillPanel value={fill} onChange={setFill} />
+</PanelFrame>
 ```
 
 #### FontsPanel
 
-Floating font picker panel with search and category filter
+Font picker with search and category filter
 
-A scrollable font selection panel with search input and category tabs. Displays fonts in a virtualized list with live preview using the font family. Integrates with Panel for consistent floating panel styling.
+A scrollable font selection panel content with search input and category tabs. Displays fonts in a virtualized list with live preview using the font family. Wrap with PanelFrame for floating panel UI.
 
 ```tsx
 import { FontsPanel } from "react-editor-ui/panels/FontsPanel";
+import { PanelFrame } from "react-editor-ui/PanelFrame";
 
-<FontsPanel
-  fonts={[
-    { name: "Inter", family: "Inter", category: "sans-serif" },
-    { name: "Roboto", family: "Roboto", category: "sans-serif" },
-  ]}
-  selectedFont="Inter"
-  onSelectFont={(font) => console.log(font)}
-  onClose={() => setOpen(false)}
-/>
+<PanelFrame title="Fonts" onClose={() => setOpen(false)} width={280}>
+  <FontsPanel
+    fonts={[
+      { name: "Inter", family: "Inter", category: "sans-serif" },
+      { name: "Roboto", family: "Roboto", category: "sans-serif" },
+    ]}
+    selectedFont="Inter"
+    onSelectFont={(font) => console.log(font)}
+  />
+</PanelFrame>
 ```
 
 #### Panel
 
-Floating settings panel with header and close button
-
-A fixed-width floating panel with a title header and optional close button. Use as a container for property editors, settings, and floating toolboxes. Content area has consistent padding and spacing.
+Deprecated alias for PanelFrame
 
 ```tsx
+// Old usage (deprecated)
 import { Panel } from "react-editor-ui/panels/Panel";
 
-<Panel title="Settings" onClose={() => setOpen(false)} width={280}>
-  <Input label="Name" value={name} onChange={setName} />
-</Panel>
+// New usage (recommended)
+import { PanelFrame } from "react-editor-ui/PanelFrame";
 ```
 
 #### PositionPanel
 
 Position, alignment, constraints, and rotation settings
 
-A comprehensive panel for object positioning with alignment controls, X/Y inputs, constraint settings, and rotation. Combines multiple property sections into a unified panel for design tool inspectors.
+Panel content for object positioning with alignment controls, X/Y inputs, constraint settings, and rotation. Combines multiple property sections into a unified panel for design tool inspectors. Wrap with PanelFrame for floating panel UI.
 
 ```tsx
 import { PositionPanel, createDefaultPositionSettings } from "react-editor-ui/panels/PositionPanel";
+import { PanelFrame } from "react-editor-ui/PanelFrame";
 
 const [settings, setSettings] = useState(createDefaultPositionSettings());
 
-<PositionPanel
-  settings={settings}
-  onChange={setSettings}
-  onClose={() => setOpen(false)}
-/>
+<PanelFrame title="Position" onClose={() => setOpen(false)}>
+  <PositionPanel settings={settings} onChange={setSettings} />
+</PanelFrame>
 ```
 
 #### StrokeSettingsPanel
 
-Comprehensive stroke settings panel
+Comprehensive stroke settings
 
-A tabbed panel for stroke configuration with basic settings (style, width, join), dynamic stroke options (frequency, wiggle), and brush presets. Includes reusable sub-components for caps, joins, dashes, and arrowheads.
+Panel content for stroke configuration with basic settings (style, width, join), dynamic stroke options (frequency, wiggle), and brush presets. Includes reusable sub-components for caps, joins, dashes, and arrowheads. Wrap with PanelFrame for floating panel UI.
 
 ```tsx
 import { StrokeSettingsPanel } from "react-editor-ui/panels/StrokeSettingsPanel";
+import { PanelFrame } from "react-editor-ui/PanelFrame";
 
 const [settings, setSettings] = useState({
   tab: "basic",
@@ -571,21 +573,20 @@ const [settings, setSettings] = useState({
   // ... other settings
 });
 
-<StrokeSettingsPanel
-  settings={settings}
-  onChange={setSettings}
-  onClose={() => setOpen(false)}
-/>
+<PanelFrame title="Stroke settings" onClose={() => setOpen(false)}>
+  <StrokeSettingsPanel settings={settings} onChange={setSettings} />
+</PanelFrame>
 ```
 
 #### TypographyPanel
 
-Typography settings panel for text properties
+Typography settings for text properties
 
-A panel for text styling with font family, weight, size, line height, letter spacing, and alignment controls. Supports custom font options and integration with a separate fonts panel for font selection.
+Panel content for text styling with font family, weight, size, line height, letter spacing, and alignment controls. Supports custom font options and integration with a separate fonts panel for font selection. Wrap with PanelFrame for floating panel UI.
 
 ```tsx
 import { TypographyPanel } from "react-editor-ui/panels/TypographyPanel";
+import { PanelFrame } from "react-editor-ui/PanelFrame";
 
 const [settings, setSettings] = useState({
   fontFamily: "Inter",
@@ -597,7 +598,9 @@ const [settings, setSettings] = useState({
   verticalAlign: "top",
 });
 
-<TypographyPanel settings={settings} onChange={setSettings} />
+<PanelFrame title="Typography" onClose={handleClose}>
+  <TypographyPanel settings={settings} onChange={setSettings} />
+</PanelFrame>
 ```
 
 ### Sections
@@ -922,9 +925,9 @@ const [points, setPoints] = useState<[number, number, number, number]>([0.25, 0.
 
 #### BoxModelEditor
 
-Visual box model editor for margin, padding, and border-radius
+SVG-based visual box model editor
 
-Interactive visual editor for CSS box model properties. Displays nested boxes for margin (outer), border (middle), and padding (inner), with corner radius controls and editable spacing values.
+Interactive SVG-based editor for CSS box model properties. Displays nested boxes for margin, border, padding, and content. Border-radius is applied to the border layer (not margin). Supports drag interactions to adjust values visually.
 
 ```tsx
 import { BoxModelEditor } from "react-editor-ui/BoxModelEditor";
@@ -932,9 +935,10 @@ import { useState } from "react";
 
 const [data, setData] = useState({
   margin: { top: 16, right: 16, bottom: 16, left: 16 },
+  border: { top: 1, right: 1, bottom: 1, left: 1 },
   padding: { top: 16, right: 8, bottom: 16, left: 8 },
   borderRadius: { topLeft: 16, topRight: 16, bottomRight: 16, bottomLeft: 16 },
-  contentSize: { width: 344, height: 100 },
+  contentSize: { width: 100, height: 60 },
 });
 
 <BoxModelEditor value={data} onChange={setData} />
@@ -1390,6 +1394,24 @@ Theme-dependent color values. These are overridden by each theme preset.
 | `bounding-box-handle-stroke` | `--rei-bounding-box-handle-stroke` | Handle stroke - resize handle border |
 | `bounding-box-label-bg` | `--rei-bounding-box-label-bg` | Label background - dimension label background |
 | `bounding-box-label-text` | `--rei-bounding-box-label-text` | Label text - dimension label text color |
+
+#### Box Model Editor Colors
+
+> Visual box model editor styling
+
+| Token | CSS Variable | Description |
+|-------|--------------|-------------|
+| `box-model-margin-bg` | `--rei-box-model-margin-bg` | Margin layer background - outer box background |
+| `box-model-margin-stroke` | `--rei-box-model-margin-stroke` | Margin layer stroke - outer box border |
+| `box-model-border-bg` | `--rei-box-model-border-bg` | Border layer background - border box background |
+| `box-model-border-stroke` | `--rei-box-model-border-stroke` | Border layer stroke - border box border |
+| `box-model-padding-bg` | `--rei-box-model-padding-bg` | Padding layer background - inner box background |
+| `box-model-padding-stroke` | `--rei-box-model-padding-stroke` | Padding layer stroke - inner box border |
+| `box-model-content-bg` | `--rei-box-model-content-bg` | Content area background - center content area |
+| `box-model-content-stroke` | `--rei-box-model-content-stroke` | Content area stroke - center content border |
+| `box-model-border` | `--rei-box-model-border` | Border indicator - dashed border line color (deprecated, use layer-specific strokes) |
+| `box-model-handle` | `--rei-box-model-handle` | Handle color - drag handle indicators |
+| `box-model-handle-hover` | `--rei-box-model-handle-hover` | Handle hover color - drag handle on hover |
 <!-- /AUTO:TOKENS -->
 
 
