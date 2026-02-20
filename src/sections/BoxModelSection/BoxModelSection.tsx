@@ -20,6 +20,8 @@ const containerStyle: CSSProperties = {
 export const BoxModelSection = memo(function BoxModelSection({
   data,
   onChange,
+  displayMode = "proportional",
+  editable,
   showMargin = true,
   showRadius = true,
   className,
@@ -29,6 +31,8 @@ export const BoxModelSection = memo(function BoxModelSection({
       <BoxModelEditor
         value={data}
         onChange={onChange}
+        displayMode={displayMode}
+        editable={editable}
         showMargin={showMargin}
         showRadius={showRadius}
       />

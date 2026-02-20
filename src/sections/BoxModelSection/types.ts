@@ -2,14 +2,22 @@
  * @file BoxModelSection types
  */
 
-import type { BoxModelData } from "../../components/BoxModelEditor/types";
+import type {
+  BoxModelData,
+  BoxModelDisplayMode,
+  BoxModelEditableFeatures,
+} from "../../components/BoxModelEditor/types";
 
 export type BoxModelSectionProps = {
   data: BoxModelData;
   onChange: (data: BoxModelData) => void;
-  /** Show margin layer (default: true) */
+  /** Display mode (default: proportional) */
+  displayMode?: BoxModelDisplayMode;
+  /** Editable features (default: all enabled) */
+  editable?: BoxModelEditableFeatures;
+  /** @deprecated Use editable.margin instead */
   showMargin?: boolean;
-  /** Show border-radius controls (default: true) */
+  /** @deprecated Use editable.radius instead */
   showRadius?: boolean;
   className?: string;
 };
