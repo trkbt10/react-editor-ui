@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useEffectEvent, useCallback, useRef, type RefObject } from "react";
 import type { FontMetrics } from "../core/types";
-import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "./coordinates";
+import { EDITOR_DEFAULTS } from "../styles/tokens";
 import { assertMeasureElement } from "../core/invariant";
 
 
@@ -57,9 +57,9 @@ export function useFontMetrics(
     lineHeight: number;
     isReady: boolean;
   }>({
-    charWidth: DEFAULT_CHAR_WIDTH,
-    fullWidthCharWidth: DEFAULT_CHAR_WIDTH * 2,
-    lineHeight: DEFAULT_LINE_HEIGHT,
+    charWidth: EDITOR_DEFAULTS.CHAR_WIDTH_PX,
+    fullWidthCharWidth: EDITOR_DEFAULTS.CHAR_WIDTH_PX * 2,
+    lineHeight: EDITOR_DEFAULTS.LINE_HEIGHT_PX,
     isReady: false,
   });
 
@@ -98,7 +98,7 @@ export function useFontMetrics(
 
     // Get line height
     const computedStyle = window.getComputedStyle(container);
-    const lineHeight = parseFloat(computedStyle.lineHeight) || DEFAULT_LINE_HEIGHT;
+    const lineHeight = parseFloat(computedStyle.lineHeight) || EDITOR_DEFAULTS.LINE_HEIGHT_PX;
 
     onMetricsReady({ charWidth, fullWidthCharWidth, lineHeight });
 

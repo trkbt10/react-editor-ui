@@ -28,7 +28,7 @@ import { useLineIndex } from "../font/useLineIndex";
 import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTextTokenCache } from "./useTextTokenCache";
 import { BlockRenderer } from "../renderers/BlockRenderer";
-import { DEFAULT_PADDING_PX } from "../styles/tokens";
+import { EDITOR_DEFAULTS } from "../styles/tokens";
 
 // =============================================================================
 // Types
@@ -133,7 +133,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
       // Estimate column from X position (simplified for now)
       // A proper implementation would use measureText
       const charWidth = editorConfig.fontSize * 0.6;
-      const colFromX = Math.round((x - DEFAULT_PADDING_PX) / charWidth);
+      const colFromX = Math.round((x - EDITOR_DEFAULTS.PADDING_PX) / charWidth);
       const column = Math.max(0, Math.min(colFromX, lineContent.length));
 
       // Convert to offset
@@ -169,7 +169,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
     lineHeight: editorConfig.lineHeight,
     fontSize: editorConfig.fontSize,
     showLineNumbers: false,
-    padding: DEFAULT_PADDING_PX,
+    padding: EDITOR_DEFAULTS.PADDING_PX,
   });
 
   // Only render content when font metrics are ready
@@ -197,7 +197,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
             bottomSpacerHeight={core.visibleBlockInfo.bottomSpacerHeight}
             tokenCache={tokenCache}
             lineHeight={editorConfig.lineHeight}
-            padding={DEFAULT_PADDING_PX}
+            padding={EDITOR_DEFAULTS.PADDING_PX}
             measureText={fontMetrics.measureText}
             showLineNumbers={false}
             highlights={core.allHighlights}

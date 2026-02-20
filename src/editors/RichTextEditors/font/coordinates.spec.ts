@@ -11,15 +11,18 @@ import {
   lineColumnToCoordinates,
   coordinatesToPosition,
   calculateSelectionRects,
-  DEFAULT_CHAR_WIDTH,
-  DEFAULT_LINE_HEIGHT,
-  CODE_AREA_PADDING_LEFT,
-  CODE_AREA_PADDING_TOP,
 } from "./coordinates";
+import { EDITOR_DEFAULTS } from "../styles/tokens";
+
+// Test constants from EDITOR_DEFAULTS (Single Source of Truth)
+const DEFAULT_CHAR_WIDTH = EDITOR_DEFAULTS.CHAR_WIDTH_PX;
+const DEFAULT_LINE_HEIGHT = EDITOR_DEFAULTS.LINE_HEIGHT_PX;
+const CODE_AREA_PADDING_LEFT = EDITOR_DEFAULTS.PADDING_PX;
+const CODE_AREA_PADDING_TOP = EDITOR_DEFAULTS.PADDING_PX;
 
 /**
  * Default measureText function for tests.
- * Uses fixed character width (DEFAULT_CHAR_WIDTH).
+ * Uses fixed character width from EDITOR_DEFAULTS.
  */
 const defaultMeasureText = (text: string): number => text.length * DEFAULT_CHAR_WIDTH;
 

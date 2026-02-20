@@ -33,7 +33,7 @@ import { useTextStyles } from "./useTextStyles";
 import { useTextTokenCache } from "./useTextTokenCache";
 import { useStyledMeasurement, styledCoordinatesToPosition } from "./useStyledMeasurement";
 import { BlockRenderer } from "../renderers/BlockRenderer";
-import { DEFAULT_PADDING_PX } from "../styles/tokens";
+import { EDITOR_DEFAULTS } from "../styles/tokens";
 
 // =============================================================================
 // Component
@@ -134,8 +134,8 @@ export const TextEditor = forwardRef(function TextEditor(
         lineOffsets: lineIndex.lineOffsets,
         scrollTop,
         lineHeight,
-        paddingLeft: DEFAULT_PADDING_PX,
-        paddingTop: DEFAULT_PADDING_PX,
+        paddingLeft: EDITOR_DEFAULTS.PADDING_PX,
+        paddingTop: EDITOR_DEFAULTS.PADDING_PX,
         findColumnAtStyledX: measurement.findColumnAtStyledX,
       });
 
@@ -190,7 +190,7 @@ export const TextEditor = forwardRef(function TextEditor(
     lineHeight: editorConfig.lineHeight,
     fontSize: editorConfig.fontSize,
     showLineNumbers: false,
-    padding: DEFAULT_PADDING_PX,
+    padding: EDITOR_DEFAULTS.PADDING_PX,
   });
 
   // =============================================================================
@@ -255,8 +255,8 @@ export const TextEditor = forwardRef(function TextEditor(
       const textBeforeStart = lineText.slice(0, colStart - 1);
       const selectedText = lineText.slice(colStart - 1, colEnd - 1);
 
-      const xPos = DEFAULT_PADDING_PX + styledMeasurement.measureStyledText(textBeforeStart, lineOffset);
-      const yPos = DEFAULT_PADDING_PX + lineIdx * editorConfig.lineHeight;
+      const xPos = EDITOR_DEFAULTS.PADDING_PX + styledMeasurement.measureStyledText(textBeforeStart, lineOffset);
+      const yPos = EDITOR_DEFAULTS.PADDING_PX + lineIdx * editorConfig.lineHeight;
       const width = styledMeasurement.measureStyledText(selectedText, lineOffset + colStart - 1);
 
       selectionRects.push({ x: xPos, y: yPos, width, height: editorConfig.lineHeight });
@@ -391,7 +391,7 @@ export const TextEditor = forwardRef(function TextEditor(
             bottomSpacerHeight={core.visibleBlockInfo.bottomSpacerHeight}
             tokenCache={tokenCache}
             lineHeight={editorConfig.lineHeight}
-            padding={DEFAULT_PADDING_PX}
+            padding={EDITOR_DEFAULTS.PADDING_PX}
             measureText={fontMetrics.measureText}
             showLineNumbers={false}
             highlights={core.allHighlights}

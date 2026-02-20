@@ -10,7 +10,7 @@ import { useState, useCallback, useRef, useEffect, useEffectEvent, useMemo, type
 import type { TextStyleSegment } from "../core/types";
 import type { BlockDocument, BlockTypeStyleMap } from "../block/blockDocument";
 import { getBlockAtGlobalOffset, getBlockTypeStyle } from "../block/blockDocument";
-import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "../font/coordinates";
+import { EDITOR_DEFAULTS } from "../styles/tokens";
 import { assertMeasureElement } from "../core/invariant";
 import { parseFontSize, findStyleAtOffset } from "./styledMeasurement";
 
@@ -101,8 +101,8 @@ export function useStyledMeasurement(
     lineHeight: number;
     isReady: boolean;
   }>({
-    charWidth: DEFAULT_CHAR_WIDTH,
-    lineHeight: DEFAULT_LINE_HEIGHT,
+    charWidth: EDITOR_DEFAULTS.CHAR_WIDTH_PX,
+    lineHeight: EDITOR_DEFAULTS.LINE_HEIGHT_PX,
     isReady: false,
   });
 
@@ -131,7 +131,7 @@ export function useStyledMeasurement(
 
     // Get line height
     const computedStyle = window.getComputedStyle(container);
-    const lineHeight = parseFloat(computedStyle.lineHeight) || DEFAULT_LINE_HEIGHT;
+    const lineHeight = parseFloat(computedStyle.lineHeight) || EDITOR_DEFAULTS.LINE_HEIGHT_PX;
 
     onMetricsReady({ charWidth, lineHeight });
 
@@ -277,7 +277,7 @@ export function useStyledMeasurement(
 }
 
 // =============================================================================
-// Re-exports for Backwards Compatibility
+// Re-exports
 // =============================================================================
 
 export { styledCoordinatesToPosition } from "./styledMeasurement";

@@ -14,6 +14,7 @@ import type {
   LineVisibility,
   DocumentDimensions,
 } from "./types";
+import { EDITOR_DEFAULTS } from "../../styles/tokens";
 
 // =============================================================================
 // Types
@@ -321,8 +322,9 @@ export const createViewportScrollEngine = (
 
 /**
  * Default viewport scroll engine configuration.
+ * Values are derived from EDITOR_DEFAULTS (Single Source of Truth).
  */
 export const DEFAULT_VIEWPORT_ENGINE_CONFIG: ViewportEngineConfig = {
-  estimatedLineHeight: 21,
-  overscan: 5,
+  estimatedLineHeight: EDITOR_DEFAULTS.LINE_HEIGHT_PX,
+  overscan: EDITOR_DEFAULTS.OVERSCAN,
 };

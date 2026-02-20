@@ -5,7 +5,7 @@
  */
 
 import type { TextStyleSegment, TextStyle, CursorPosition } from "../core/types";
-import { DEFAULT_LINE_HEIGHT } from "../font/coordinates";
+import { EDITOR_DEFAULTS } from "../styles/tokens";
 
 // =============================================================================
 // Types
@@ -88,7 +88,7 @@ export function styledCoordinatesToPosition(
     lines,
     lineOffsets,
     scrollTop = 0,
-    lineHeight = DEFAULT_LINE_HEIGHT,
+    lineHeight = EDITOR_DEFAULTS.LINE_HEIGHT_PX,
     paddingLeft = 8,
     paddingTop = 8,
     findColumnAtStyledX,

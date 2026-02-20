@@ -114,12 +114,14 @@ export const EDITOR_PUNCTUATION_COLOR = `var(--${EDITOR_PREFIX}-punctuation, #00
 // =============================================================================
 
 /**
- * Map of highlight types to their background colors.
+ * Map of highlight types to their background colors (CSS variables).
+ * Use HIGHLIGHT_COLORS_RAW for Canvas rendering.
  */
 export const HIGHLIGHT_COLORS = {
   selection: EDITOR_SELECTION_BG,
   match: EDITOR_MATCH_BG,
   currentMatch: EDITOR_CURRENT_MATCH_BG,
+  composition: EDITOR_COMPOSITION_BG,
 } as const;
 
 // =============================================================================
@@ -151,20 +153,46 @@ export const EDITOR_CURRENT_MATCH_BG_RAW = "rgba(255, 140, 0, 0.6)";
 export const EDITOR_COMPOSITION_BG_RAW = "rgba(100, 100, 255, 0.2)";
 
 // =============================================================================
-// Numeric Defaults (for calculations)
+// Editor Defaults (Single Source of Truth)
 // =============================================================================
 
-/** Default line height in pixels */
-export const DEFAULT_LINE_HEIGHT_PX = 21;
+/**
+ * All numeric defaults for editor configuration.
+ * This is the Single Source of Truth - all other files should import from here.
+ */
+export const EDITOR_DEFAULTS = {
+  // Layout
+  /** Padding from container edge to content (pixels) */
+  PADDING_PX: 8,
+  /** Line height in pixels */
+  LINE_HEIGHT_PX: 21,
+  /** Font size in pixels */
+  FONT_SIZE_PX: 13,
+  /** Character width for monospace font (pixels) */
+  CHAR_WIDTH_PX: 7.8,
+  /** Line number gutter width (pixels) */
+  LINE_NUMBER_WIDTH_PX: 48,
 
-/** Default font size in pixels */
-export const DEFAULT_FONT_SIZE_PX = 13;
+  // Behavior
+  /** Tab size in spaces */
+  TAB_SIZE: 4,
+  /** Number of extra lines to render above/below viewport (overscan) */
+  OVERSCAN: 5,
 
-/** Default character width in pixels (monospace) */
-export const DEFAULT_CHAR_WIDTH_PX = 7.8;
+  // Rendering
+  /** Vertical baseline ratio for text (0.75 = 75% from top) */
+  TEXT_BASELINE_RATIO: 0.75,
+  /** Right margin for line numbers (pixels) */
+  LINE_NUMBER_RIGHT_MARGIN: 8,
 
-/** Default line number width in pixels */
-export const DEFAULT_LINE_NUMBER_WIDTH_PX = 48;
+  // Cache
+  /** Maximum cache size for measurement/viewport calculations */
+  MAX_CACHE_SIZE: 2000,
 
-/** Default padding in pixels */
-export const DEFAULT_PADDING_PX = 8;
+  // History
+  /** Maximum history entries for undo/redo */
+  MAX_HISTORY: 100,
+  /** Debounce delay for history entries (milliseconds) */
+  HISTORY_DEBOUNCE_MS: 300,
+} as const;
+

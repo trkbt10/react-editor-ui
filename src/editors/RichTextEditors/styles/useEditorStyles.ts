@@ -15,10 +15,7 @@ import {
   EDITOR_LINE_NUMBER_BG,
   EDITOR_LINE_NUMBER_BORDER,
   EDITOR_LINE_NUMBER_COLOR,
-  DEFAULT_LINE_HEIGHT_PX,
-  DEFAULT_FONT_SIZE_PX,
-  DEFAULT_LINE_NUMBER_WIDTH_PX,
-  DEFAULT_PADDING_PX,
+  EDITOR_DEFAULTS,
 } from "./tokens";
 
 // =============================================================================
@@ -77,11 +74,11 @@ export type EditorStyles = {
  */
 export function useEditorStyles(config: EditorStylesConfig = {}): EditorStyles {
   const {
-    lineHeight = DEFAULT_LINE_HEIGHT_PX,
-    fontSize = DEFAULT_FONT_SIZE_PX,
+    lineHeight = EDITOR_DEFAULTS.LINE_HEIGHT_PX,
+    fontSize = EDITOR_DEFAULTS.FONT_SIZE_PX,
     showLineNumbers = true,
-    lineNumberWidth = DEFAULT_LINE_NUMBER_WIDTH_PX,
-    padding = DEFAULT_PADDING_PX,
+    lineNumberWidth = EDITOR_DEFAULTS.LINE_NUMBER_WIDTH_PX,
+    padding = EDITOR_DEFAULTS.PADDING_PX,
     width = "100%",
     height = "100%",
   } = config;

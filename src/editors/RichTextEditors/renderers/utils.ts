@@ -7,34 +7,28 @@
 import type { HighlightRange, HighlightType } from "../core/types";
 import type { LineHighlight } from "./types";
 import {
-  EDITOR_SELECTION_BG,
-  EDITOR_MATCH_BG,
-  EDITOR_CURRENT_MATCH_BG,
-  EDITOR_COMPOSITION_BG,
+  HIGHLIGHT_COLORS,
+  EDITOR_SELECTION_BG_RAW,
+  EDITOR_MATCH_BG_RAW,
+  EDITOR_CURRENT_MATCH_BG_RAW,
+  EDITOR_COMPOSITION_BG_RAW,
 } from "../styles/tokens";
 
 // =============================================================================
-// Highlight Colors
+// Highlight Colors (re-exported from tokens.ts)
 // =============================================================================
 
-/**
- * Map of highlight types to their CSS color values.
- */
-export const HIGHLIGHT_COLORS: Record<HighlightType, string> = {
-  selection: EDITOR_SELECTION_BG,
-  match: EDITOR_MATCH_BG,
-  currentMatch: EDITOR_CURRENT_MATCH_BG,
-  composition: EDITOR_COMPOSITION_BG,
-};
+// Re-export for backward compatibility
+export { HIGHLIGHT_COLORS };
 
 /**
  * Raw color values for Canvas (which can't use CSS variables directly).
  */
 export const HIGHLIGHT_COLORS_RAW: Record<HighlightType, string> = {
-  selection: "rgba(51, 144, 255, 0.3)",
-  match: "rgba(255, 213, 0, 0.4)",
-  currentMatch: "rgba(255, 140, 0, 0.6)",
-  composition: "rgba(100, 100, 255, 0.2)",
+  selection: EDITOR_SELECTION_BG_RAW,
+  match: EDITOR_MATCH_BG_RAW,
+  currentMatch: EDITOR_CURRENT_MATCH_BG_RAW,
+  composition: EDITOR_COMPOSITION_BG_RAW,
 };
 
 // =============================================================================

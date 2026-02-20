@@ -23,6 +23,7 @@
 import { useMemo, useRef, useEffect, useEffectEvent, memo, type ReactNode, type CSSProperties } from "react";
 import type { Block, LocalStyleSegment, BlockTypeStyle, BlockTypeStyleMap } from "../block/blockDocument";
 import { getBlockTypeStyle, DEFAULT_BLOCK_TYPE_STYLES } from "../block/blockDocument";
+import type { BlockLayoutIndex } from "../layout/types";
 import type { BlockCompositionState } from "../block/useBlockComposition";
 import type {
   CursorState,
@@ -92,6 +93,8 @@ export type BlockRendererProps = {
   readonly renderer?: RendererType;
   /** Block type styles (overrides defaults) */
   readonly blockTypeStyles?: BlockTypeStyleMap;
+  /** Precomputed block layout index for consistent Y positioning (Single Source of Truth) */
+  readonly blockLayoutIndex?: BlockLayoutIndex;
 
   // === Viewport-based rendering (optional) ===
 
@@ -399,6 +402,9 @@ function drawCanvasToken(
 /**
  * Compute block render info for visible blocks.
  *
+ * When blockLayoutIndex is provided (Single Source of Truth), use it for Y positions.
+ * Otherwise, fall back to fixed lineHeight calculation for backwards compatibility.
+ *
  * @param useDocumentCoordinates - When true, y positions are absolute document coordinates.
  *                                 When false (default), y positions are relative (start at 0).
  */
@@ -407,16 +413,49 @@ function computeBlockRenderInfo(
   visibleRange: { start: number; end: number },
   lineHeight: number,
   startLineNumber: number,
-  useDocumentCoordinates: boolean = false
+  useDocumentCoordinates: boolean = false,
+  blockLayoutIndex?: BlockLayoutIndex
 ): readonly BlockRenderInfo[] {
   const result: BlockRenderInfo[] = [];
 
-  // For document coordinates, y starts at the document position of the first visible line
-  // For relative coordinates (legacy), y starts at 0
+  // Use BlockLayoutIndex as Single Source of Truth when available
+  if (blockLayoutIndex && blockLayoutIndex.lines.length > 0) {
+    // Get the Y offset of the first visible block for relative positioning
+    const firstVisibleY = visibleRange.start < blockLayoutIndex.lines.length
+      ? blockLayoutIndex.lines[visibleRange.start].y
+      : 0;
+
+    for (let i = visibleRange.start; i < visibleRange.end && i < blocks.length; i++) {
+      const block = blocks[i];
+      const lineCount = block.content.split("\n").length;
+
+      // Get Y and height from the layout index (SSoT)
+      const lineLayout = i < blockLayoutIndex.lines.length
+        ? blockLayoutIndex.lines[i]
+        : null;
+
+      const y = lineLayout
+        ? (useDocumentCoordinates ? lineLayout.y : lineLayout.y - firstVisibleY)
+        : 0;
+      const height = lineLayout?.height ?? lineHeight;
+
+      result.push({
+        block,
+        blockIndex: i,
+        startLine: startLineNumber + i,
+        lineCount,
+        y,
+        height,
+      });
+    }
+
+    return result;
+  }
+
+  // Fallback: Legacy fixed lineHeight calculation
   const initialY = useDocumentCoordinates ? (startLineNumber - 1) * lineHeight : 0;
   const state = { currentLine: startLineNumber, y: initialY };
 
-  // Compute info for visible blocks
   for (let i = visibleRange.start; i < visibleRange.end && i < blocks.length; i++) {
     const block = blocks[i];
     const lineCount = block.content.split("\n").length;
@@ -1058,6 +1097,9 @@ const SingleBlock = memo(function SingleBlock({
     [block.type, blockTypeStyles]
   );
 
+  // Calculate effective line height for this block type (base * fontSizeMultiplier)
+  const effectiveLineHeight = lineHeight * (blockTypeStyle?.fontSizeMultiplier ?? 1);
+
   // Split block content into lines
   const lines = useMemo(() => block.content.split("\n"), [block.content]);
 
@@ -1080,7 +1122,8 @@ const SingleBlock = memo(function SingleBlock({
   const renderLines = (): ReactNode => {
     return lines.map((lineText, i) => {
       const lineNumber = startLine + i;
-      const lineY = y + i * lineHeight;
+      // Use effectiveLineHeight for consistent positioning with BlockLayoutIndex
+      const lineY = y + i * effectiveLineHeight;
       const localOffset = lineLocalOffsets[i];
 
       // Get highlights for this line
@@ -1109,7 +1152,7 @@ const SingleBlock = memo(function SingleBlock({
           lineIndex={startLine + i - 1}
           y={lineY}
           xOffset={padding}
-          lineHeight={lineHeight}
+          lineHeight={effectiveLineHeight}
           showLineNumbers={showLineNumbers}
           lineNumberWidth={lineNumberWidth}
           highlights={lineHighlights}
@@ -1588,6 +1631,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   startLineNumber = 1,
   renderer = "svg",
   blockTypeStyles,
+  blockLayoutIndex,
   // Viewport mode props
   viewportConfig,
   viewport,
@@ -1617,10 +1661,10 @@ export const BlockRenderer = memo(function BlockRenderer({
   const isCanvasMode = viewportConfig?.mode === "canvas";
 
   // Compute render info for visible blocks
-  // Use document coordinates in viewport mode so ctx.translate works correctly
+  // Use blockLayoutIndex (SSoT) when available for consistent Y positioning
   const blockInfos = useMemo(
-    () => computeBlockRenderInfo(blocks, visibleRange, lineHeight, startLineNumber, isViewportMode),
-    [blocks, visibleRange, lineHeight, startLineNumber, isViewportMode]
+    () => computeBlockRenderInfo(blocks, visibleRange, lineHeight, startLineNumber, isViewportMode, blockLayoutIndex),
+    [blocks, visibleRange, lineHeight, startLineNumber, isViewportMode, blockLayoutIndex]
   );
 
   // Calculate total height of visible area

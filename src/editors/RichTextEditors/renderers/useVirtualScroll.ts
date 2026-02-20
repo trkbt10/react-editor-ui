@@ -2,21 +2,26 @@
  * @file Virtual Scroll Hook
  *
  * Manages virtual scroll state for rendering only visible lines.
+ * Supports both fixed and variable line heights via BlockLayoutIndex.
  */
 
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import type { VirtualScrollState } from "../core/types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
+import type { BlockLayoutIndex } from "../layout/types";
+import { findLineAtY, getCumulativeHeight } from "../layout/BlockLayoutIndex";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export type VirtualScrollConfig = {
-  /** Height of each line in pixels */
+  /** Height of each line in pixels (used when layoutIndex is not provided) */
   readonly lineHeight: number;
   /** Number of extra lines to render above/below viewport */
   readonly overscan: number;
+  /** Optional BlockLayoutIndex for variable line heights */
+  readonly layoutIndex?: BlockLayoutIndex;
 };
 
 export type UseVirtualScrollResult = {
@@ -60,24 +65,43 @@ export function useVirtualScroll(
 ): UseVirtualScrollResult {
   const lineHeight = config?.lineHeight ?? DEFAULT_EDITOR_CONFIG.lineHeight;
   const overscan = config?.overscan ?? DEFAULT_EDITOR_CONFIG.overscan;
+  const layoutIndex = config?.layoutIndex;
 
   const containerRef = useRef<HTMLElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
 
+  // Calculate using layoutIndex if available, otherwise fall back to fixed line height
+  const useLayoutIndex = layoutIndex && layoutIndex.lines.length > 0;
+
   // Calculate total content height
-  const totalHeight = lineCount * lineHeight;
+  const totalHeight = useLayoutIndex ? layoutIndex.totalHeight : lineCount * lineHeight;
 
   // Calculate visible range
-  const startLine = Math.max(0, Math.floor(scrollTop / lineHeight) - overscan);
-  const endLine = Math.min(
-    lineCount,
-    Math.ceil((scrollTop + viewportHeight) / lineHeight) + overscan
-  );
+  let startLine: number;
+  let endLine: number;
+  let topSpacerHeight: number;
+  let bottomSpacerHeight: number;
 
-  // Calculate spacer heights
-  const topSpacerHeight = startLine * lineHeight;
-  const bottomSpacerHeight = (lineCount - endLine) * lineHeight;
+  if (useLayoutIndex) {
+    // Variable height calculation using layoutIndex
+    startLine = Math.max(0, findLineAtY(layoutIndex, scrollTop) - overscan);
+    endLine = Math.min(
+      lineCount,
+      findLineAtY(layoutIndex, scrollTop + viewportHeight) + 1 + overscan
+    );
+    topSpacerHeight = getCumulativeHeight(layoutIndex, startLine);
+    bottomSpacerHeight = layoutIndex.totalHeight - getCumulativeHeight(layoutIndex, endLine);
+  } else {
+    // Fixed height calculation
+    startLine = Math.max(0, Math.floor(scrollTop / lineHeight) - overscan);
+    endLine = Math.min(
+      lineCount,
+      Math.ceil((scrollTop + viewportHeight) / lineHeight) + overscan
+    );
+    topSpacerHeight = startLine * lineHeight;
+    bottomSpacerHeight = (lineCount - endLine) * lineHeight;
+  }
 
   // Handle viewport height changes from ResizeObserver
   const onViewportResize = useEffectEvent((height: number) => {

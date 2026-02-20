@@ -11,22 +11,7 @@ import type {
   MeasureTextFn,
   SelectionRect,
 } from "../core/types";
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/** Default character width for monospace font (pixels) */
-export const DEFAULT_CHAR_WIDTH = 7.8;
-
-/** Default line height (pixels) */
-export const DEFAULT_LINE_HEIGHT = 21;
-
-/** Left padding for code area (pixels) */
-export const CODE_AREA_PADDING_LEFT = 8;
-
-/** Top padding for code area (pixels) */
-export const CODE_AREA_PADDING_TOP = 8;
+import { EDITOR_DEFAULTS } from "../styles/tokens";
 
 // =============================================================================
 // Types
@@ -212,9 +197,9 @@ export function lineColumnToCoordinates(
     line,
     column,
     lineText = "",
-    lineHeight = DEFAULT_LINE_HEIGHT,
-    paddingLeft = CODE_AREA_PADDING_LEFT,
-    paddingTop = CODE_AREA_PADDING_TOP,
+    lineHeight = EDITOR_DEFAULTS.LINE_HEIGHT_PX,
+    paddingLeft = EDITOR_DEFAULTS.PADDING_PX,
+    paddingTop = EDITOR_DEFAULTS.PADDING_PX,
     measureText,
   } = options;
 
@@ -244,9 +229,9 @@ export function coordinatesToPosition(
     y,
     lines,
     scrollTop = 0,
-    lineHeight = DEFAULT_LINE_HEIGHT,
-    paddingLeft = CODE_AREA_PADDING_LEFT,
-    paddingTop = CODE_AREA_PADDING_TOP,
+    lineHeight = EDITOR_DEFAULTS.LINE_HEIGHT_PX,
+    paddingLeft = EDITOR_DEFAULTS.PADDING_PX,
+    paddingTop = EDITOR_DEFAULTS.PADDING_PX,
     measureText,
   } = options;
 
@@ -329,9 +314,9 @@ export function calculateSelectionRects(
     endLine,
     endColumn,
     lines,
-    lineHeight = DEFAULT_LINE_HEIGHT,
-    paddingLeft = CODE_AREA_PADDING_LEFT,
-    paddingTop = CODE_AREA_PADDING_TOP,
+    lineHeight = EDITOR_DEFAULTS.LINE_HEIGHT_PX,
+    paddingLeft = EDITOR_DEFAULTS.PADDING_PX,
+    paddingTop = EDITOR_DEFAULTS.PADDING_PX,
     measureText,
   } = options;
 

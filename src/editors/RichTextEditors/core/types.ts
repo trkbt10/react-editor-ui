@@ -263,15 +263,18 @@ export type EditorConfig = {
   readonly overscan: number;
 };
 
+import { EDITOR_DEFAULTS, EDITOR_FONT_FAMILY } from "../styles/tokens";
+
 /**
  * Default editor configuration.
+ * Values are derived from EDITOR_DEFAULTS (Single Source of Truth).
  */
 export const DEFAULT_EDITOR_CONFIG: EditorConfig = {
-  lineHeight: 21,
-  fontSize: 13,
+  lineHeight: EDITOR_DEFAULTS.LINE_HEIGHT_PX,
+  fontSize: EDITOR_DEFAULTS.FONT_SIZE_PX,
   fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
-  tabSize: 4,
-  overscan: 5,
+  tabSize: EDITOR_DEFAULTS.TAB_SIZE,
+  overscan: EDITOR_DEFAULTS.OVERSCAN,
 };
 
 // =============================================================================

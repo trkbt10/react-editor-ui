@@ -33,12 +33,8 @@ export {
   EDITOR_OPERATOR_COLOR,
   EDITOR_IDENTIFIER_COLOR,
   EDITOR_PUNCTUATION_COLOR,
-  // Numeric Defaults
-  DEFAULT_LINE_HEIGHT_PX,
-  DEFAULT_FONT_SIZE_PX,
-  DEFAULT_CHAR_WIDTH_PX,
-  DEFAULT_LINE_NUMBER_WIDTH_PX,
-  DEFAULT_PADDING_PX,
+  // Numeric Defaults (Single Source of Truth)
+  EDITOR_DEFAULTS,
 } from "./tokens";
 
 export {

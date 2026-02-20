@@ -5,11 +5,10 @@
  */
 
 import { renderHook, waitFor } from "@testing-library/react";
-import {
-  useStyledMeasurement,
-  styledCoordinatesToPosition,
-} from "./useStyledMeasurement";
+import { useStyledMeasurement } from "./useStyledMeasurement";
+import { styledCoordinatesToPosition } from "./styledMeasurement";
 import type { TextStyleSegment } from "../core/types";
+import { EDITOR_DEFAULTS } from "../styles/tokens";
 
 // =============================================================================
 // Test Setup
@@ -462,6 +461,9 @@ describe("styledCoordinatesToPosition", () => {
     return Math.floor(x / 8) + 1;
   };
 
+  const DEFAULT_PADDING = EDITOR_DEFAULTS.PADDING_PX;
+  const DEFAULT_LINE_HEIGHT = EDITOR_DEFAULTS.LINE_HEIGHT_PX;
+
   it("handles empty lines array with fallback", () => {
     const result = styledCoordinatesToPosition({
       x: 50,
@@ -469,9 +471,9 @@ describe("styledCoordinatesToPosition", () => {
       lines: [],
       lineOffsets: [],
       scrollTop: 0,
-      lineHeight: 21,
-      paddingLeft: 8,
-      paddingTop: 8,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: DEFAULT_PADDING,
+      paddingTop: DEFAULT_PADDING,
       findColumnAtStyledX: mockFindColumnAtStyledX,
     });
 
@@ -486,9 +488,9 @@ describe("styledCoordinatesToPosition", () => {
       lines: ["hello", "world"],
       lineOffsets: [0], // Missing offset for second line
       scrollTop: 0,
-      lineHeight: 21,
-      paddingLeft: 8,
-      paddingTop: 8,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: DEFAULT_PADDING,
+      paddingTop: DEFAULT_PADDING,
       findColumnAtStyledX: mockFindColumnAtStyledX,
     });
 
@@ -503,9 +505,9 @@ describe("styledCoordinatesToPosition", () => {
       lines: ["hello", "world", "test"],
       lineOffsets: [0, 6, 12],
       scrollTop: 0,
-      lineHeight: 21,
-      paddingLeft: 8,
-      paddingTop: 8,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: DEFAULT_PADDING,
+      paddingTop: DEFAULT_PADDING,
       findColumnAtStyledX: mockFindColumnAtStyledX,
     });
 
@@ -520,9 +522,9 @@ describe("styledCoordinatesToPosition", () => {
       lines: ["hello", "world", "test"],
       lineOffsets: [0, 6, 12],
       scrollTop: 21, // scrolled down one line
-      lineHeight: 21,
-      paddingLeft: 8,
-      paddingTop: 8,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: DEFAULT_PADDING,
+      paddingTop: DEFAULT_PADDING,
       findColumnAtStyledX: mockFindColumnAtStyledX,
     });
 
@@ -538,9 +540,9 @@ describe("styledCoordinatesToPosition", () => {
       lines: ["hello", "world"],
       lineOffsets: [0, 6],
       scrollTop: 0,
-      lineHeight: 21,
-      paddingLeft: 8,
-      paddingTop: 8,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: DEFAULT_PADDING,
+      paddingTop: DEFAULT_PADDING,
       findColumnAtStyledX: mockFindColumnAtStyledX,
     });
 
@@ -555,9 +557,9 @@ describe("styledCoordinatesToPosition", () => {
       lines: ["hello", "world"],
       lineOffsets: [0, 6],
       scrollTop: 0,
-      lineHeight: 21,
-      paddingLeft: 8,
-      paddingTop: 8,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: DEFAULT_PADDING,
+      paddingTop: DEFAULT_PADDING,
       findColumnAtStyledX: mockFindColumnAtStyledX,
     });
 
@@ -572,9 +574,9 @@ describe("styledCoordinatesToPosition", () => {
       lines: ["hello", "world"],
       lineOffsets: [0, 6],
       scrollTop: 0,
-      lineHeight: 21,
-      paddingLeft: 8,
-      paddingTop: 8,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: DEFAULT_PADDING,
+      paddingTop: DEFAULT_PADDING,
       findColumnAtStyledX: mockFindColumnAtStyledX,
     });
 
@@ -599,14 +601,33 @@ describe("styledCoordinatesToPosition", () => {
       lines: ["hello", "world"],
       lineOffsets: [0, 6],
       scrollTop: 0,
-      lineHeight: 21,
-      paddingLeft: 8,
-      paddingTop: 8,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: DEFAULT_PADDING,
+      paddingTop: DEFAULT_PADDING,
       findColumnAtStyledX: trackingFindColumn,
     });
 
     // Line 2 has offset 6
     expect(capturedLineOffset.value).toBe(6);
+  });
+
+  it("uses custom padding values", () => {
+    const result = styledCoordinatesToPosition({
+      x: 32, // 16 (padding) + 16 (2 chars)
+      y: 16, // paddingTop
+      lines: ["hello", "world"],
+      lineOffsets: [0, 6],
+      scrollTop: 0,
+      lineHeight: DEFAULT_LINE_HEIGHT,
+      paddingLeft: 16,
+      paddingTop: 16,
+      findColumnAtStyledX: mockFindColumnAtStyledX,
+    });
+
+    // With paddingLeft=16, adjustedX = 32 - 16 = 16, which is 2 chars -> column 3
+    expect(result.column).toBe(3);
+    // y=16 with paddingTop=16 means adjustedY=0, line 1
+    expect(result.line).toBe(1);
   });
 });
 

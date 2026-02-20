@@ -17,7 +17,7 @@ import { assertMeasureText } from "../core/invariant";
 import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTokenCache } from "./useTokenCache";
 import { BlockRenderer } from "../renderers/BlockRenderer";
-import { DEFAULT_PADDING_PX, DEFAULT_LINE_NUMBER_WIDTH_PX } from "../styles/tokens";
+import { EDITOR_DEFAULTS } from "../styles/tokens";
 
 // =============================================================================
 // Component
@@ -92,13 +92,13 @@ export const CodeEditor = memo(function CodeEditor({
       const measureText = assertMeasureText(metrics?.measureText, "CodeEditor.getOffsetFromPosition");
 
       const position = coordinatesToPosition({
-        x: x - (showLineNumbers ? DEFAULT_LINE_NUMBER_WIDTH_PX : 0),
+        x: x - (showLineNumbers ? EDITOR_DEFAULTS.LINE_NUMBER_WIDTH_PX : 0),
         y,
         lines: lineIndex.lines,
         scrollTop,
         lineHeight,
-        paddingLeft: DEFAULT_PADDING_PX,
-        paddingTop: DEFAULT_PADDING_PX,
+        paddingLeft: EDITOR_DEFAULTS.PADDING_PX,
+        paddingTop: EDITOR_DEFAULTS.PADDING_PX,
         measureText,
       });
 
@@ -134,8 +134,8 @@ export const CodeEditor = memo(function CodeEditor({
     lineHeight: editorConfig.lineHeight,
     fontSize: editorConfig.fontSize,
     showLineNumbers,
-    lineNumberWidth: DEFAULT_LINE_NUMBER_WIDTH_PX,
-    padding: DEFAULT_PADDING_PX,
+    lineNumberWidth: EDITOR_DEFAULTS.LINE_NUMBER_WIDTH_PX,
+    padding: EDITOR_DEFAULTS.PADDING_PX,
   });
 
   // Combine highlights with external highlights
@@ -169,10 +169,10 @@ export const CodeEditor = memo(function CodeEditor({
             bottomSpacerHeight={core.visibleBlockInfo.bottomSpacerHeight}
             tokenCache={tokenCache}
             lineHeight={editorConfig.lineHeight}
-            padding={DEFAULT_PADDING_PX}
+            padding={EDITOR_DEFAULTS.PADDING_PX}
             measureText={fontMetrics.measureText}
             showLineNumbers={showLineNumbers}
-            lineNumberWidth={DEFAULT_LINE_NUMBER_WIDTH_PX}
+            lineNumberWidth={EDITOR_DEFAULTS.LINE_NUMBER_WIDTH_PX}
             highlights={allHighlights}
             cursor={core.cursorState}
             tokenStyles={tokenStyles}
