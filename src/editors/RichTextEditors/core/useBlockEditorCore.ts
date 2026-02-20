@@ -70,6 +70,7 @@ import {
 } from "../block/useBlockComposition";
 import { useVirtualScroll, type UseVirtualScrollResult } from "../renderers/useVirtualScroll";
 import type { ViewportConfig, ViewportState, VisibleLineItem } from "../renderers/viewport/types";
+import type { WrapLayoutIndex } from "../wrap/types";
 import { useHistory } from "../history/useHistory";
 import { useCursorRestoration } from "../history/useCursorRestoration";
 import { useKeyHandlers } from "../user-actions/useKeyHandlers";
@@ -96,6 +97,8 @@ export type UseBlockEditorCoreConfig = {
   readonly readOnly: boolean;
   /** Viewport configuration for fixed viewport mode */
   readonly viewportConfig?: ViewportConfig;
+  /** Wrap layout index for visual line navigation (optional) */
+  readonly wrapLayoutIndex?: WrapLayoutIndex | null;
 };
 
 export type UseBlockEditorCoreResult = {
@@ -103,6 +106,8 @@ export type UseBlockEditorCoreResult = {
   readonly containerRef: RefObject<HTMLDivElement | null>;
   readonly textareaRef: RefObject<HTMLTextAreaElement | null>;
   readonly codeAreaRef: RefObject<HTMLDivElement | null>;
+  /** Ref to set wrapLayoutIndex (for visual line navigation) */
+  readonly wrapLayoutIndexRef: React.MutableRefObject<WrapLayoutIndex | null | undefined>;
 
   // State
   readonly composition: BlockCompositionState;
@@ -260,12 +265,17 @@ export function useBlockEditorCore(
   onCursorChange?: (pos: CursorPosition) => void,
   onSelectionChange?: (selection: { start: CursorPosition; end: CursorPosition } | undefined) => void
 ): UseBlockEditorCoreResult {
-  const { lineHeight, overscan, tabSize, readOnly, viewportConfig } = config;
+  const { lineHeight, overscan, tabSize, readOnly, viewportConfig, wrapLayoutIndex } = config;
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const codeAreaRef = useRef<HTMLDivElement>(null);
+
+  // Ref for wrapLayoutIndex to allow updates after initialization
+  // (needed for BlockTextEditor where wrapLayoutIndex depends on fontMetrics)
+  const wrapLayoutIndexRef = useRef(wrapLayoutIndex);
+  wrapLayoutIndexRef.current = wrapLayoutIndex;
 
   // Stable ref for onChange
   const onDocumentChangeRef = useRef(onDocumentChange);
@@ -296,10 +306,14 @@ export function useBlockEditorCore(
   // Count lines for virtual scroll
   const lineCount = useMemo(() => textValue.split("\n").length, [textValue]);
 
-  // Virtual scroll
+  // Line contents for visual line navigation (when wrap enabled)
+  const lineContents = useMemo(() => textValue.split("\n"), [textValue]);
+
+  // Virtual scroll (with optional wrap support)
   const virtualScroll = useVirtualScroll(lineCount, {
     lineHeight,
     overscan,
+    wrapLayoutIndex: wrapLayoutIndex ?? undefined,
   });
 
   // Cursor restoration
@@ -522,6 +536,27 @@ export function useBlockEditorCore(
     [readOnly, document.styleDefinitions, history, setCursorNow, updateCursorPosition]
   );
 
+  // Cursor movement callback for visual line navigation
+  const handleCursorMove = useCallback(
+    (offset: number, extendSelection?: boolean) => {
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        return;
+      }
+
+      if (extendSelection) {
+        // Extend selection from current anchor
+        const { selectionStart } = textarea;
+        textarea.setSelectionRange(selectionStart, offset, offset < selectionStart ? "backward" : "forward");
+      } else {
+        // Move cursor (collapse selection)
+        textarea.setSelectionRange(offset, offset);
+      }
+      requestAnimationFrame(updateCursorPosition);
+    },
+    [updateCursorPosition]
+  );
+
   // Key handlers
   const { handleKeyDown } = useKeyHandlers({
     isComposing: composition.isComposing,
@@ -531,6 +566,9 @@ export function useBlockEditorCore(
     onUndo: handleUndo,
     onRedo: handleRedo,
     onInsert: handleInsert,
+    wrapLayoutIndexRef,
+    lineContents,
+    onCursorMove: handleCursorMove,
   });
 
   // Pointer handlers
@@ -572,6 +610,23 @@ export function useBlockEditorCore(
 
       const offset = getOffsetFromPointerEvent(e);
       const isRightClick = e.button === 2;
+
+      // Shift+click: extend selection from current cursor position
+      if (e.shiftKey && !isRightClick) {
+        const { selectionStart, selectionEnd } = textarea;
+        // Use the anchor point (opposite end of current focus based on selection direction)
+        const anchor = textarea.selectionDirection === "backward" ? selectionEnd : selectionStart;
+
+        if (offset < anchor) {
+          textarea.setSelectionRange(offset, anchor, "backward");
+        } else {
+          textarea.setSelectionRange(anchor, offset, "forward");
+        }
+
+        dragStartOffsetRef.current = null; // Disable drag after shift+click
+        requestAnimationFrame(updateCursorPosition);
+        return;
+      }
 
       // Right-click: preserve selection if click is within it
       if (isRightClick) {
@@ -859,6 +914,7 @@ export function useBlockEditorCore(
     containerRef,
     textareaRef,
     codeAreaRef,
+    wrapLayoutIndexRef,
     composition,
     cursorState,
     selection,

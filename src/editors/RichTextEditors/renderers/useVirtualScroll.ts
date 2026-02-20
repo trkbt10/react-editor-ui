@@ -10,6 +10,8 @@ import type { VirtualScrollState } from "../core/types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
 import type { BlockLayoutIndex } from "../layout/types";
 import { findLineAtY, getCumulativeHeight } from "../layout/BlockLayoutIndex";
+import type { WrapLayoutIndex } from "../wrap/types";
+import { findVisualLineAtY as findWrapLineAtY } from "../wrap/WrapLayoutIndex";
 
 // =============================================================================
 // Types
@@ -22,6 +24,8 @@ export type VirtualScrollConfig = {
   readonly overscan: number;
   /** Optional BlockLayoutIndex for variable line heights */
   readonly layoutIndex?: BlockLayoutIndex;
+  /** Optional WrapLayoutIndex for text wrapping support */
+  readonly wrapLayoutIndex?: WrapLayoutIndex;
 };
 
 export type UseVirtualScrollResult = {
@@ -66,16 +70,27 @@ export function useVirtualScroll(
   const lineHeight = config?.lineHeight ?? DEFAULT_EDITOR_CONFIG.lineHeight;
   const overscan = config?.overscan ?? DEFAULT_EDITOR_CONFIG.overscan;
   const layoutIndex = config?.layoutIndex;
+  const wrapLayoutIndex = config?.wrapLayoutIndex;
 
   const containerRef = useRef<HTMLElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
 
-  // Calculate using layoutIndex if available, otherwise fall back to fixed line height
-  const useLayoutIndex = layoutIndex && layoutIndex.lines.length > 0;
+  // Calculate using wrapLayoutIndex first (for wrapped text), then layoutIndex, then fixed height
+  const useWrapLayoutIndex = wrapLayoutIndex && wrapLayoutIndex.visualLines.length > 0;
+  const useLayoutIndex = !useWrapLayoutIndex && layoutIndex && layoutIndex.lines.length > 0;
+
+  // Effective line count (visual lines when wrapping is enabled)
+  const effectiveLineCount = useWrapLayoutIndex
+    ? wrapLayoutIndex.visualLines.length
+    : lineCount;
 
   // Calculate total content height
-  const totalHeight = useLayoutIndex ? layoutIndex.totalHeight : lineCount * lineHeight;
+  const totalHeight = useWrapLayoutIndex
+    ? wrapLayoutIndex.totalHeight
+    : useLayoutIndex
+      ? layoutIndex.totalHeight
+      : lineCount * lineHeight;
 
   // Calculate visible range
   let startLine: number;
@@ -83,7 +98,21 @@ export function useVirtualScroll(
   let topSpacerHeight: number;
   let bottomSpacerHeight: number;
 
-  if (useLayoutIndex) {
+  if (useWrapLayoutIndex) {
+    // Wrap-aware calculation using wrapLayoutIndex
+    startLine = Math.max(0, findWrapLineAtY(wrapLayoutIndex, scrollTop) - overscan);
+    endLine = Math.min(
+      effectiveLineCount,
+      findWrapLineAtY(wrapLayoutIndex, scrollTop + viewportHeight) + 1 + overscan
+    );
+    // Calculate spacer heights from visual line Y positions
+    const startY = startLine > 0 ? wrapLayoutIndex.visualLines[startLine].y : 0;
+    const endY = endLine < effectiveLineCount
+      ? wrapLayoutIndex.visualLines[endLine].y
+      : wrapLayoutIndex.totalHeight;
+    topSpacerHeight = startY;
+    bottomSpacerHeight = wrapLayoutIndex.totalHeight - endY;
+  } else if (useLayoutIndex) {
     // Variable height calculation using layoutIndex
     startLine = Math.max(0, findLineAtY(layoutIndex, scrollTop) - overscan);
     endLine = Math.min(

@@ -24,6 +24,8 @@ import { useMemo, useRef, useEffect, useEffectEvent, memo, type ReactNode, type 
 import type { Block, LocalStyleSegment, BlockTypeStyle, BlockTypeStyleMap } from "../block/blockDocument";
 import { getBlockTypeStyle, DEFAULT_BLOCK_TYPE_STYLES } from "../block/blockDocument";
 import type { BlockLayoutIndex } from "../layout/types";
+import type { WrapLayoutIndex, VisualLine } from "../wrap/types";
+import { getVisualLine, logicalToVisual, findVisualLineAtY } from "../wrap/WrapLayoutIndex";
 import type { BlockCompositionState } from "../block/useBlockComposition";
 import type {
   CursorState,
@@ -96,6 +98,8 @@ export type BlockRendererProps = {
   readonly blockTypeStyles?: BlockTypeStyleMap;
   /** Precomputed block layout index for consistent Y positioning (Single Source of Truth) */
   readonly blockLayoutIndex?: BlockLayoutIndex;
+  /** Precomputed wrap layout index for text wrapping support */
+  readonly wrapLayoutIndex?: WrapLayoutIndex;
 
   // === Viewport-based rendering (optional) ===
 
@@ -525,6 +529,14 @@ type BlockLineProps = {
   readonly isFirstLineOfBlock?: boolean;
   /** Block height for decorations spanning multiple lines */
   readonly blockHeight?: number;
+  /** Start offset within logical line for wrapped segments (0 for first/non-wrapped) */
+  readonly wrapStartOffset?: number;
+  /** End offset within logical line for wrapped segments (lineText.length for last/non-wrapped) */
+  readonly wrapEndOffset?: number;
+  /** Whether this visual line is soft-wrapped (for rendering continuation indicators) */
+  readonly isSoftWrapped?: boolean;
+  /** Whether this is the first visual line of the logical line (for line numbers) */
+  readonly isFirstVisualLine?: boolean;
 };
 
 /**
@@ -554,7 +566,11 @@ function blockLinePropsAreEqual(
     prev.localOffset !== next.localOffset ||
     prev.blockTypeStyle !== next.blockTypeStyle ||
     prev.isFirstLineOfBlock !== next.isFirstLineOfBlock ||
-    prev.blockHeight !== next.blockHeight
+    prev.blockHeight !== next.blockHeight ||
+    prev.wrapStartOffset !== next.wrapStartOffset ||
+    prev.wrapEndOffset !== next.wrapEndOffset ||
+    prev.isSoftWrapped !== next.isSoftWrapped ||
+    prev.isFirstVisualLine !== next.isFirstVisualLine
   ) {
     return false;
   }
@@ -630,7 +646,14 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     blockHeight = lineHeight,
     localStyles,
     localOffset,
+    wrapStartOffset = 0,
+    wrapEndOffset = lineText.length,
+    isSoftWrapped = false,
+    isFirstVisualLine = true,
   } = props;
+
+  // Extract visible segment for wrapped lines
+  const visibleText = lineText.slice(wrapStartOffset, wrapEndOffset);
 
   // Extract block-type-specific styling from configuration
   const blockFontSizeMultiplier = blockTypeStyle?.fontSizeMultiplier ?? 1;
@@ -654,8 +677,34 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
   // Line numbers use base fontSize, not effectiveFontSize
   const lineNumberTextY = y + (lineHeight - fontSize) / 2;
 
-  // Get tokens for this line
-  const tokens = tokenCache.getTokens(lineText, lineIndex);
+  // Get tokens for this line (full line for proper token boundaries)
+  const allTokens = tokenCache.getTokens(lineText, lineIndex);
+
+  // Filter tokens to only those visible in this wrapped segment
+  const tokens = useMemo(() => {
+    if (wrapStartOffset === 0 && wrapEndOffset === lineText.length) {
+      return allTokens; // No wrapping, use all tokens
+    }
+    // Filter and adjust tokens for the visible segment
+    return allTokens.filter((token) => {
+      // Token overlaps with visible segment
+      return token.end > wrapStartOffset && token.start < wrapEndOffset;
+    }).map((token) => {
+      // Adjust token boundaries for the segment
+      const adjustedStart = Math.max(0, token.start - wrapStartOffset);
+      const adjustedEnd = Math.min(wrapEndOffset - wrapStartOffset, token.end - wrapStartOffset);
+      const adjustedText = token.text.slice(
+        Math.max(0, wrapStartOffset - token.start),
+        token.text.length - Math.max(0, token.end - wrapEndOffset)
+      );
+      return {
+        ...token,
+        start: adjustedStart,
+        end: adjustedEnd,
+        text: adjustedText,
+      };
+    });
+  }, [allTokens, wrapStartOffset, wrapEndOffset, lineText.length]);
 
   // Calculate token positions using style-aware measurement
   // Apply blockFontSizeMultiplier to account for block-level font size changes
@@ -665,6 +714,7 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
   );
 
   // Get X position for any column using style-aware calculation
+  // For wrapped lines, col is relative to the segment (1-based within segment)
   const getStyledColumnX = (col: number): number => {
     // Use token positions for accurate positioning with variable font styles
     for (let i = 0; i < tokens.length; i++) {
@@ -689,7 +739,7 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
         return tokenPositions[i] + widthWithinToken * totalRatio;
       }
     }
-    // Position is at or past end of line
+    // Position is at or past end of visible segment
     if (tokens.length > 0) {
       const lastIdx = tokens.length - 1;
       const lastToken = tokens[lastIdx];
@@ -700,11 +750,11 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
       const baseWidth = measureText(lastToken.text);
       return tokenPositions[lastIdx] + baseWidth * totalRatio;
     }
-    // Empty line - use measureText for cursor position (apply block multiplier)
-    return codeXOffset + measureText(lineText.slice(0, col - 1)) * blockFontSizeMultiplier;
+    // Empty segment - use measureText for cursor position (apply block multiplier)
+    return codeXOffset + measureText(visibleText.slice(0, col - 1)) * blockFontSizeMultiplier;
   };
 
-  // Render line number
+  // Render line number (only on first visual line of logical line)
   const renderLineNumber = (): ReactNode => {
     if (!showLineNumbers) {
       return null;
@@ -718,17 +768,20 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
           height={lineHeight}
           fill={EDITOR_LINE_NUMBER_BG}
         />
-        <text
-          x={xOffset + lineNumberWidth - 8}
-          y={lineNumberTextY}
-          fontFamily={fontFamily}
-          fontSize={fontSize}
-          fill={EDITOR_LINE_NUMBER_COLOR}
-          textAnchor="end"
-          dominantBaseline="hanging"
-        >
-          {lineNumber}
-        </text>
+        {/* Only show line number text on first visual line */}
+        {isFirstVisualLine && (
+          <text
+            x={xOffset + lineNumberWidth - 8}
+            y={lineNumberTextY}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+            fill={EDITOR_LINE_NUMBER_COLOR}
+            textAnchor="end"
+            dominantBaseline="hanging"
+          >
+            {lineNumber}
+          </text>
+        )}
         <line
           x1={xOffset + lineNumberWidth}
           y1={y}
@@ -740,11 +793,26 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     );
   };
 
-  // Render highlights
+  // Render highlights (adjusted for wrapped segments)
   const renderHighlights = (): ReactNode => {
     return highlights.map((h, i) => {
-      const startX = getStyledColumnX(h.startColumn);
-      const endX = getStyledColumnX(h.endColumn);
+      // Adjust highlight columns for the segment
+      // Original columns are 1-based in the full logical line
+      // We need to translate to 1-based columns within the segment
+      const segmentStartCol = wrapStartOffset + 1; // 1-based start of segment in logical line
+      const segmentEndCol = wrapEndOffset + 1; // 1-based end of segment (exclusive)
+
+      // Skip if highlight doesn't overlap with this segment
+      if (h.endColumn <= segmentStartCol || h.startColumn >= segmentEndCol) {
+        return null;
+      }
+
+      // Clamp and adjust to segment-relative columns
+      const adjustedStartCol = Math.max(1, h.startColumn - wrapStartOffset);
+      const adjustedEndCol = Math.min(visibleText.length + 1, h.endColumn - wrapStartOffset);
+
+      const startX = getStyledColumnX(adjustedStartCol);
+      const endX = getStyledColumnX(adjustedEndCol);
       const width = Math.max(endX - startX, MIN_HIGHLIGHT_WIDTH);
 
       if (h.type === "composition") {
@@ -864,13 +932,22 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     });
   };
 
-  // Render cursor
+  // Render cursor (adjusted for wrapped segments)
   const renderCursor = (): ReactNode => {
     if (!cursor) {
       return null;
     }
 
-    const cursorX = getStyledColumnX(cursor.column);
+    // cursor.column is 1-based in the full logical line
+    // Check if cursor falls within this segment
+    const cursorOffset = cursor.column - 1; // 0-based
+    if (cursorOffset < wrapStartOffset || cursorOffset > wrapEndOffset) {
+      return null;
+    }
+
+    // Adjust to segment-relative column (1-based)
+    const adjustedColumn = cursor.column - wrapStartOffset;
+    const cursorX = getStyledColumnX(adjustedColumn);
 
     return (
       <rect
@@ -954,6 +1031,8 @@ type SingleBlockProps = {
   readonly fontSize: number;
   /** Block type styles for extensible rendering */
   readonly blockTypeStyles?: BlockTypeStyleMap;
+  /** Wrap layout index for visual line mapping */
+  readonly wrapLayoutIndex?: WrapLayoutIndex;
 };
 
 /**
@@ -1072,6 +1151,11 @@ function singleBlockPropsAreEqual(
     }
   }
 
+  // WrapLayoutIndex reference equality (rebuild triggers re-render)
+  if (prev.wrapLayoutIndex !== next.wrapLayoutIndex) {
+    return false;
+  }
+
   return true;
 }
 
@@ -1089,6 +1173,7 @@ const SingleBlock = memo(function SingleBlock({
   fontFamily,
   fontSize,
   blockTypeStyles,
+  wrapLayoutIndex,
 }: SingleBlockProps): ReactNode {
   const { block, startLine, lineCount, y, height } = info;
 
@@ -1119,8 +1204,79 @@ const SingleBlock = memo(function SingleBlock({
     return offsets;
   }, [lines]);
 
-  // Render lines within this block
+  // Render lines within this block (with wrap support)
   const renderLines = (): ReactNode => {
+    // Check if we have wrap layout info for this block
+    if (wrapLayoutIndex && wrapLayoutIndex.visualLines.length > 0) {
+      // Find visual lines for this block
+      const blockIndex = info.blockIndex;
+      const firstVisualLineIdx = wrapLayoutIndex.logicalToVisualStart[blockIndex];
+      const visualLineCount = wrapLayoutIndex.visualLinesPerLogical[blockIndex] ?? 1;
+
+      const renderedLines: ReactNode[] = [];
+
+      for (let vi = 0; vi < visualLineCount; vi++) {
+        const visualLine = wrapLayoutIndex.visualLines[firstVisualLineIdx + vi];
+        if (!visualLine) {continue;}
+
+        const logicalLineIdx = visualLine.logicalLineIndex - info.blockIndex; // Relative to block start
+        const lineText = lines[logicalLineIdx] ?? "";
+        const lineNumber = startLine + logicalLineIdx;
+        const localOffset = lineLocalOffsets[logicalLineIdx] ?? 0;
+
+        // Get highlights for this logical line
+        const lineHighlights = getLineHighlights(lineNumber, lineText.length, blockHighlights);
+
+        // Check if cursor is on this logical line
+        const getLineCursor = (): { column: number; blinking: boolean } | undefined => {
+          if (!cursor?.visible || cursor.line !== lineNumber) {
+            return undefined;
+          }
+          return { column: cursor.column, blinking: cursor.blinking };
+        };
+        const lineCursor = getLineCursor();
+
+        // Get styles that apply to this line
+        const lineStyles = block.styles.filter((s) => {
+          const lineEnd = localOffset + lineText.length;
+          return s.start < lineEnd && s.end > localOffset;
+        });
+
+        renderedLines.push(
+          <BlockLine
+            key={`${logicalLineIdx}-${vi}`}
+            lineText={lineText}
+            lineNumber={lineNumber}
+            lineIndex={startLine + logicalLineIdx - 1}
+            y={visualLine.y}
+            xOffset={padding}
+            lineHeight={visualLine.height}
+            showLineNumbers={showLineNumbers}
+            lineNumberWidth={lineNumberWidth}
+            highlights={lineHighlights}
+            cursor={lineCursor}
+            measureText={measureText}
+            tokenCache={tokenCache}
+            tokenStyles={tokenStyles}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+            localStyles={lineStyles}
+            localOffset={localOffset}
+            blockTypeStyle={blockTypeStyle}
+            isFirstLineOfBlock={vi === 0}
+            blockHeight={height}
+            wrapStartOffset={visualLine.startOffset}
+            wrapEndOffset={visualLine.endOffset}
+            isSoftWrapped={visualLine.isSoftWrapped}
+            isFirstVisualLine={visualLine.wrapIndex === 0}
+          />
+        );
+      }
+
+      return renderedLines;
+    }
+
+    // No wrapping - render lines normally
     return lines.map((lineText, i) => {
       const lineNumber = startLine + i;
       // Use effectiveLineHeight for consistent positioning with BlockLayoutIndex
@@ -1633,6 +1789,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   renderer = "svg",
   blockTypeStyles,
   blockLayoutIndex,
+  wrapLayoutIndex,
   // Viewport mode props
   viewportConfig,
   viewport,
@@ -1747,6 +1904,7 @@ export const BlockRenderer = memo(function BlockRenderer({
         fontFamily={fontFamily}
         fontSize={fontSize}
         blockTypeStyles={blockTypeStyles}
+        wrapLayoutIndex={wrapLayoutIndex}
       />
     ));
 

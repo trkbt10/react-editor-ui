@@ -118,6 +118,7 @@ export function TextEditorDemo() {
     "Select some text to see the toolbar. Try applying bold, italic, or change the color!"
   ));
   const [renderer, setRenderer] = useState<"svg" | "canvas">("svg");
+  const [softWrap, setSoftWrap] = useState(false);
 
   // Toolbar configuration state
   const [enabledOps, setEnabledOps] = useState<Set<string>>(
@@ -159,6 +160,11 @@ export function TextEditorDemo() {
           >
             Canvas
           </Button>
+          <Checkbox
+            checked={softWrap}
+            onChange={setSoftWrap}
+            label="Soft Wrap"
+          />
         </DemoRow>
       </DemoSection>
 
@@ -167,6 +173,7 @@ export function TextEditorDemo() {
           document={doc}
           onDocumentChange={setDoc}
           renderer={renderer}
+          softWrap={softWrap}
           style={{
             height: 200,
             border: "1px solid var(--rei-color-border, #3a3a3c)",
@@ -180,6 +187,7 @@ export function TextEditorDemo() {
           document={plainDoc}
           onDocumentChange={setPlainDoc}
           renderer={renderer}
+          softWrap={softWrap}
           style={{
             height: 150,
             border: "1px solid var(--rei-color-border, #3a3a3c)",

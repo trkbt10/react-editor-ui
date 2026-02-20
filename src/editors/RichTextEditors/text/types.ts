@@ -57,6 +57,12 @@ export type TextEditorProps = {
    * When provided, enables viewport-based rendering.
    */
   readonly viewportConfig?: ViewportConfig;
+  /** Enable soft wrap (automatic wrapping at container width) */
+  readonly softWrap?: boolean;
+  /** Enable word wrap (break at word boundaries vs character) - only applies when softWrap=true */
+  readonly wordWrap?: boolean;
+  /** Column width for wrapping (0 = container width, >0 = fixed column count) */
+  readonly wrapColumn?: number;
 };
 
 // =============================================================================

@@ -17,7 +17,7 @@
  * ```
  */
 
-import { useMemo, useCallback, memo, type ReactNode, type CSSProperties } from "react";
+import { useMemo, useCallback, useState, useRef, memo, type ReactNode, type CSSProperties } from "react";
 import type { CursorPosition } from "../core/types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
 import type { BlockDocument } from "../block/blockDocument";
@@ -29,6 +29,11 @@ import { useEditorStyles } from "../styles/useEditorStyles";
 import { useTextTokenCache } from "./useTextTokenCache";
 import { BlockRenderer } from "../renderers/BlockRenderer";
 import { EDITOR_DEFAULTS } from "../styles/tokens";
+import type { WrapMode } from "../wrap/types";
+import { DEFAULT_WRAP_MODE } from "../wrap/types";
+import { useWrapLayoutIndex, useContainerWidth } from "../wrap/useWrapLayoutIndex";
+import { createLayoutConfig } from "../layout/types";
+import { findVisualLineAtY, visualToLogical, logicalToVisual } from "../wrap/WrapLayoutIndex";
 
 // =============================================================================
 // Types
@@ -58,6 +63,12 @@ type BlockTextEditorProps = {
   readonly onSelectionChange?: (selection: { start: CursorPosition; end: CursorPosition } | undefined) => void;
   /** Tab size in spaces */
   readonly tabSize?: number;
+  /** Enable soft wrap (automatic wrapping at container width) */
+  readonly softWrap?: boolean;
+  /** Enable word wrap (break at word boundaries vs character) - only applies when softWrap=true */
+  readonly wordWrap?: boolean;
+  /** Column width for wrapping (0 = container width, >0 = fixed column count) */
+  readonly wrapColumn?: number;
 };
 
 // =============================================================================
@@ -103,10 +114,26 @@ export const BlockTextEditor = memo(function BlockTextEditor(
     onCursorChange,
     onSelectionChange,
     tabSize = 4,
+    softWrap = false,
+    wordWrap = true,
+    wrapColumn = 0,
   } = props;
 
   // Merge config with defaults
   const editorConfig = { ...DEFAULT_EDITOR_CONFIG, ...config };
+
+  // Build wrap mode
+  const wrapMode: WrapMode = useMemo(() => ({
+    softWrap,
+    wordWrap,
+    wrapColumn,
+  }), [softWrap, wordWrap, wrapColumn]);
+
+  // Track container width for wrapping
+  const [containerWidth, setContainerRef] = useContainerWidth();
+
+  // Ref to store current wrapLayoutIndex for use in callbacks
+  const wrapLayoutIndexRef = useRef<ReturnType<typeof useWrapLayoutIndex>>(null);
 
   // Extract text for display
   const textValue = useMemo(() => getBlockDocumentText(document), [document]);
@@ -114,7 +141,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
   // Line index for rendering
   const lineIndex = useLineIndex(textValue);
 
-  // Position calculation function
+  // Position calculation function (with wrap support)
   const getOffsetFromPosition = useCallback(
     (
       x: number,
@@ -123,7 +150,38 @@ export const BlockTextEditor = memo(function BlockTextEditor(
       lineCount: number,
       lineHeight: number
     ): number => {
-      // Calculate line from Y position
+      const wrapIndex = wrapLayoutIndexRef.current;
+
+      // When wrap is enabled and wrapLayoutIndex is available, use visual line mapping
+      if (wrapIndex && wrapIndex.visualLines.length > 0) {
+        // Find visual line at Y position
+        const adjustedY = y + scrollTop - EDITOR_DEFAULTS.PADDING_PX;
+        const visualLineIdx = findVisualLineAtY(wrapIndex, adjustedY);
+        const visualLine = wrapIndex.visualLines[visualLineIdx];
+
+        if (visualLine) {
+          // Get the logical line content
+          const logicalLineContent = lineIndex.lines[visualLine.logicalLineIndex] ?? "";
+          // Get the segment of text for this visual line
+          const segmentText = logicalLineContent.slice(visualLine.startOffset, visualLine.endOffset);
+
+          // Estimate column within the segment
+          const charWidth = editorConfig.fontSize * 0.6;
+          const colFromX = Math.round((x - EDITOR_DEFAULTS.PADDING_PX) / charWidth);
+          const segmentColumn = Math.max(0, Math.min(colFromX, segmentText.length));
+
+          // Convert visual position to logical position
+          const logicalColumn = visualLine.startOffset + segmentColumn;
+
+          // Convert to offset
+          return lineIndex.getOffsetAtLineColumn(
+            visualLine.logicalLineIndex + 1,
+            logicalColumn + 1
+          );
+        }
+      }
+
+      // Fallback: standard calculation without wrapping
       const lineFromY = Math.floor((y + scrollTop) / lineHeight);
       const line = Math.max(0, Math.min(lineFromY, lineCount - 1));
 
@@ -142,7 +200,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
     [lineIndex, editorConfig.fontSize]
   );
 
-  // Core editor logic
+  // Core editor logic (wrapLayoutIndex is passed as null initially, updated via ref)
   const core = useBlockEditorCore(
     document,
     onDocumentChange,
@@ -151,6 +209,8 @@ export const BlockTextEditor = memo(function BlockTextEditor(
       overscan: editorConfig.overscan,
       tabSize,
       readOnly,
+      // wrapLayoutIndex is managed via ref due to circular dependency with fontMetrics
+      wrapLayoutIndex: null,
     },
     getOffsetFromPosition,
     onCursorChange,
@@ -159,6 +219,27 @@ export const BlockTextEditor = memo(function BlockTextEditor(
 
   // Font metrics
   const fontMetrics = useFontMetrics(core.containerRef);
+
+  // Layout config for wrap calculation
+  const layoutConfig = useMemo(
+    () => createLayoutConfig(editorConfig.lineHeight, EDITOR_DEFAULTS.PADDING_PX),
+    [editorConfig.lineHeight]
+  );
+
+  // Build wrap layout index when soft wrap is enabled
+  const wrapLayoutIndex = useWrapLayoutIndex({
+    document,
+    containerWidth,
+    measureText: fontMetrics.isReady ? fontMetrics.measureText : null,
+    wrapMode,
+    layoutConfig,
+    enabled: softWrap,
+  });
+
+  // Keep refs updated for use in callbacks and cursor positioning
+  wrapLayoutIndexRef.current = wrapLayoutIndex;
+  // Also update the ref in useBlockEditorCore for keyboard navigation
+  core.wrapLayoutIndexRef.current = wrapLayoutIndex;
 
   // Token cache (plain text tokenizer for now)
   const tokenizer = useMemo(() => createPlainTokenizer(), []);
@@ -181,6 +262,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
         ref={(node) => {
           (core.codeAreaRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
           core.virtualScroll.containerRef(node);
+          setContainerRef(node);
         }}
         style={editorStyles.codeArea}
         onPointerDown={core.handleCodePointerDown}
@@ -206,6 +288,7 @@ export const BlockTextEditor = memo(function BlockTextEditor(
             fontSize={editorConfig.fontSize}
             startLineNumber={core.visibleBlockInfo.startLineNumber}
             renderer={renderer}
+            wrapLayoutIndex={wrapLayoutIndex ?? undefined}
           />
         )}
       </div>

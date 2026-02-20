@@ -100,6 +100,7 @@ import {
   MarkdownWebGLEditor,
 } from "./pages/editor/markdown";
 import { SelectionToolbarDemo as EditorSelectionToolbarDemo } from "./pages/editor/SelectionToolbarDemo";
+import { SoftWrapDemo } from "./pages/editor/SoftWrapDemo";
 
 // Navigation demos
 import { BreadcrumbDemo } from "./pages/navigation/BreadcrumbDemo";
@@ -633,6 +634,12 @@ export const demoCategories: DemoCategory[] = [
         label: "Selection Toolbar",
         path: "selection-toolbar",
         element: <EditorSelectionToolbarDemo />,
+      },
+      {
+        id: "soft-wrap",
+        label: "Soft Wrap",
+        path: "soft-wrap",
+        element: <SoftWrapDemo />,
       },
     ],
   },
