@@ -11,7 +11,6 @@ import {
   DemoStateDisplay,
 } from "../../components";
 import { AnimationPanel } from "../../../panels/AnimationPanel/AnimationPanel";
-import { PanelFrame } from "../../../components/PanelFrame/PanelFrame";
 import { BezierCurveEditor } from "../../../components/BezierCurveEditor/BezierCurveEditor";
 import {
   EASING_PRESETS,
@@ -51,8 +50,6 @@ const controlPointsCssStyle: CSSProperties = {
 // Stable no-op handler for disabled/static components
 const noop = () => {};
 
-// Stable close handler
-const handleClose = () => alert("Close clicked");
 
 /** Memoized section for the main AnimationPanel */
 const AnimationPanelSection = memo(function AnimationPanelSection({
@@ -65,12 +62,10 @@ const AnimationPanelSection = memo(function AnimationPanelSection({
   return (
     <DemoRow>
       <DemoSection label="Full Panel">
-        <PanelFrame title="Animation" onClose={handleClose}>
-          <AnimationPanel
-            settings={settings}
-            onChange={onChange}
-          />
-        </PanelFrame>
+        <AnimationPanel
+          settings={settings}
+          onChange={onChange}
+        />
       </DemoSection>
 
       <DemoSection label="Current Settings">

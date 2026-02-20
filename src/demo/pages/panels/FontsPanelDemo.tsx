@@ -9,7 +9,6 @@ import {
   DemoPreview,
 } from "../../components";
 import { FontsPanel } from "../../../panels/FontsPanel/FontsPanel";
-import { PanelFrame } from "../../../components/PanelFrame/PanelFrame";
 import { LocalFontList } from "../../../panels/FontsPanel/LocalFontList";
 import type { FontItem } from "../../../sections/FontsSection/types";
 
@@ -42,17 +41,15 @@ export function FontsPanelDemo() {
   return (
     <DemoContainer title="FontsPanel">
       <DemoSection label="Basic Panel (with predefined fonts)">
-        <PanelFrame title="Fonts" onClose={() => alert("Close clicked")} width={280}>
-          <FontsPanel
-            fonts={sampleFonts}
-            selectedFont={selectedFont}
-            onSelectFont={(font) => {
-              setSelectedFont(font);
-              setLocalSelectedFont("");
-            }}
-            onSettings={() => alert("Settings clicked")}
-          />
-        </PanelFrame>
+        <FontsPanel
+          fonts={sampleFonts}
+          selectedFont={selectedFont}
+          onSelectFont={(font) => {
+            setSelectedFont(font);
+            setLocalSelectedFont("");
+          }}
+          onSettings={() => alert("Settings clicked")}
+        />
       </DemoSection>
 
       <DemoSection label="Local Font List (via queryLocalFonts API)">
@@ -79,14 +76,12 @@ export function FontsPanelDemo() {
       </DemoSection>
 
       <DemoSection label="Custom Size">
-        <PanelFrame title="Fonts" width={350}>
-          <FontsPanel
-            fonts={sampleFonts}
-            selectedFont={selectedFont}
-            onSelectFont={setSelectedFont}
-            maxHeight={300}
-          />
-        </PanelFrame>
+        <FontsPanel
+          fonts={sampleFonts}
+          selectedFont={selectedFont}
+          onSelectFont={setSelectedFont}
+          maxHeight={300}
+        />
       </DemoSection>
     </DemoContainer>
   );

@@ -12,7 +12,7 @@ export { SegmentedControlDemo } from "./SegmentedControlDemo";
 export { ColorPickerDemo } from "./ColorPickerDemo";
 export { ColorInputDemo } from "./ColorInputDemo";
 export { GradientSectionDemo } from "./GradientSectionDemo";
-export { FillPanelDemo } from "./FillPanelDemo";
+export { FillPanelDemo } from "../panels/FillPanelDemo";
 export { SelectWithPreviewDemo } from "./SelectWithPreviewDemo";
 export { TooltipDemo } from "./TooltipDemo";
 export { SplitButtonDemo } from "./SplitButtonDemo";

@@ -10,7 +10,6 @@ import {
   DemoStateDisplay,
 } from "../../components";
 import { StrokeSettingsPanel } from "../../../panels/StrokeSettingsPanel/StrokeSettingsPanel";
-import { PanelFrame } from "../../../components/PanelFrame/PanelFrame";
 import {
   StrokePanelExpanded,
   createDefaultExpandedSettings,
@@ -53,31 +52,25 @@ export function StrokeSettingsPanelDemo() {
     <DemoContainer title="StrokeSettingsPanel">
       <DemoRow>
         <DemoSection label="Expanded (all options visible)">
-          <PanelFrame title="Stroke" onClose={() => alert("Close")} width={340}>
-            <StrokePanelExpanded
-              settings={expandedSettings}
-              onChange={setExpandedSettings}
-            />
-          </PanelFrame>
+          <StrokePanelExpanded
+            settings={expandedSettings}
+            onChange={setExpandedSettings}
+          />
         </DemoSection>
 
         <DemoSection label="Compact (tabbed interface)">
-          <PanelFrame title="Stroke Settings" onClose={() => alert("Close")}>
-            <StrokePanelCompact
-              settings={compactSettings}
-              onChange={setCompactSettings}
-            />
-          </PanelFrame>
+          <StrokePanelCompact
+            settings={compactSettings}
+            onChange={setCompactSettings}
+          />
         </DemoSection>
       </DemoRow>
 
       <DemoSection label="Legacy Panel (backward compatible)">
-        <PanelFrame title="Stroke settings" onClose={() => alert("Close")}>
-          <StrokeSettingsPanel
-            settings={legacySettings}
-            onChange={setLegacySettings}
-          />
-        </PanelFrame>
+        <StrokeSettingsPanel
+          settings={legacySettings}
+          onChange={setLegacySettings}
+        />
       </DemoSection>
 
       <DemoSection label="Expanded Settings">

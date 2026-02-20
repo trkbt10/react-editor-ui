@@ -27,7 +27,7 @@ import { SegmentedControlDemo } from "./pages/primitives/SegmentedControlDemo";
 import { ColorPickerDemo } from "./pages/primitives/ColorPickerDemo";
 import { ColorInputDemo } from "./pages/primitives/ColorInputDemo";
 import { GradientSectionDemo } from "./pages/primitives/GradientSectionDemo";
-import { FillPanelDemo } from "./pages/primitives/FillPanelDemo";
+import { FillPanelDemo } from "./pages/panels/FillPanelDemo";
 import { SelectWithPreviewDemo } from "./pages/primitives/SelectWithPreviewDemo";
 import { TooltipDemo } from "./pages/primitives/TooltipDemo";
 import { SplitButtonDemo } from "./pages/primitives/SplitButtonDemo";
@@ -97,6 +97,7 @@ import {
   MarkdownLayout,
   MarkdownSvgEditor,
   MarkdownCanvasEditor,
+  MarkdownWebGLEditor,
 } from "./pages/editor/markdown";
 import { SelectionToolbarDemo as EditorSelectionToolbarDemo } from "./pages/editor/SelectionToolbarDemo";
 
@@ -236,6 +237,12 @@ export const demoCategories: DemoCategory[] = [
         path: "box-model-editor",
         element: <BoxModelEditorDemo />,
       },
+      {
+        id: "panel-frame",
+        label: "PanelFrame",
+        path: "panel-frame",
+        element: <PanelDemo />,
+      },
     ],
   },
   {
@@ -276,12 +283,6 @@ export const demoCategories: DemoCategory[] = [
     icon: <LuLayers size={18} />,
     base: "/components/panels",
     pages: [
-      {
-        id: "panel",
-        label: "Panel",
-        path: "panel",
-        element: <PanelDemo />,
-      },
       {
         id: "animation-panel",
         label: "AnimationPanel",
@@ -612,6 +613,12 @@ export const demoCategories: DemoCategory[] = [
             label: "Canvas",
             path: "canvas",
             element: <MarkdownCanvasEditor />,
+          },
+          {
+            id: "markdown-webgl",
+            label: "WebGL",
+            path: "webgl",
+            element: <MarkdownWebGLEditor />,
           },
         ],
       },

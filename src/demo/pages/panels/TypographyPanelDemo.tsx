@@ -11,7 +11,6 @@ import {
   DemoPreview,
 } from "../../components";
 import { TypographyPanel } from "../../../panels/TypographyPanel/TypographyPanel";
-import { PanelFrame } from "../../../components/PanelFrame/PanelFrame";
 import { FontsPanel } from "../../../panels/FontsPanel/FontsPanel";
 import type { TypographySettings } from "../../../panels/TypographyPanel/TypographyPanel";
 import type { FontItem } from "../../../sections/FontsSection/types";
@@ -44,16 +43,15 @@ function renderFontsPanelSection(
   }
   return (
     <DemoSection label="FontsPanel (triggered from icon)">
-      <PanelFrame title="Fonts" onClose={() => setShowFontsPanel(false)} width={280}>
-        <FontsPanel
-          fonts={sampleFonts}
-          selectedFont={settings.fontFamily}
-          onSelectFont={(font) => {
-            setSettings({ ...settings, fontFamily: font });
-          }}
-          onSettings={() => alert("Font settings clicked")}
-        />
-      </PanelFrame>
+      <FontsPanel
+        fonts={sampleFonts}
+        selectedFont={settings.fontFamily}
+        onSelectFont={(font) => {
+          setSettings({ ...settings, fontFamily: font });
+          setShowFontsPanel(false);
+        }}
+        onSettings={() => alert("Font settings clicked")}
+      />
     </DemoSection>
   );
 }
@@ -75,14 +73,12 @@ export function TypographyPanelDemo() {
     <DemoContainer title="TypographyPanel">
       <DemoSection label="Complete Panel">
         <DemoSurface>
-          <PanelFrame title="Typography" width={320}>
-            <TypographyPanel
-              settings={settings}
-              onChange={setSettings}
-              onOpenFontsPanel={() => setShowFontsPanel(true)}
-              onOpenSettings={() => alert("Settings clicked")}
-            />
-          </PanelFrame>
+          <TypographyPanel
+            settings={settings}
+            onChange={setSettings}
+            onOpenFontsPanel={() => setShowFontsPanel(true)}
+            onOpenSettings={() => alert("Settings clicked")}
+          />
         </DemoSurface>
       </DemoSection>
 
