@@ -1,83 +1,38 @@
 /**
- * @file Markdown Editor demo page
+ * @file Markdown Editor shared layout
  *
- * Demonstrates the block-based Markdown editor with:
- * - Live parsing of Markdown syntax
- * - Visual rendering of block types (headings, lists, quotes, code)
- * - Inline styles (bold, italic, code, strikethrough)
- * - Real-time Markdown export preview
+ * Provides shared state and layout for Markdown editor demos.
+ * Uses Outlet context to inject doc, setDoc, and computed values to child routes.
  */
 
 import { useState, useMemo, type CSSProperties } from "react";
-import { DemoContainer } from "../../components";
-import { TextEditorWithToolbar } from "../../../editors/RichTextEditors/text/TextEditorWithToolbar";
-import type { BlockDocument } from "../../../editors/RichTextEditors/block/blockDocument";
+import { Outlet, useOutletContext, NavLink, useLocation } from "react-router";
+import { DemoContainer } from "../../../components";
+import type { BlockDocument } from "../../../../editors/RichTextEditors/block/blockDocument";
 import {
   parseMarkdownToBlockDocument,
   blockDocumentToMarkdown,
-} from "../../../editors/RichTextEditors/block/markdownParser";
+} from "../../../../editors/RichTextEditors/block/markdownParser";
+import { sampleMarkdown } from "../markdownEditorCommon";
 
 // =============================================================================
-// Sample Markdown Content
+// Types
 // =============================================================================
 
-const sampleMarkdown = `# Markdown Block Editor
+export type MarkdownOutletContext = {
+  doc: BlockDocument;
+  setDoc: (doc: BlockDocument) => void;
+  markdownOutput: string;
+  stats: { blocks: number; chars: number; styles: number };
+};
 
-This is a paragraph with **bold**, *italic*, and \`inline code\`.
+// =============================================================================
+// Hook for child routes
+// =============================================================================
 
-## Features
-
-The editor supports:
-
-- **Bold** text with \`**\` delimiters
-- *Italic* text with \`*\` delimiters
-- \`Code\` with backticks
-- ~~Strikethrough~~ with \`~~\`
-- ***Bold and italic*** combined
-
-### Nested Styles
-
-You can have **bold with *nested italic* inside** for complex formatting.
-
-## Block Types
-
-### Headings
-
-Three levels of headings are supported (H1, H2, H3).
-
-### Lists
-
-Unordered lists:
-
-- First item
-- Second item
-- Third item
-
-Ordered lists:
-
-1. Step one
-2. Step two
-3. Step three
-
-### Blockquotes
-
-> This is a blockquote.
-> It can span multiple lines.
-
-### Code Blocks
-
-\`\`\`
-function greet(name: string) {
-  console.log(\`Hello, \${name}!\`);
+export function useMarkdownContext(): MarkdownOutletContext {
+  return useOutletContext<MarkdownOutletContext>();
 }
-
-greet("World");
-\`\`\`
-
-## Round-trip Integrity
-
-Edit the content above and see the Markdown output update in real-time.
-The parser ensures that Markdown → BlockDocument → Markdown preserves your content.`;
 
 // =============================================================================
 // Styles
@@ -87,7 +42,7 @@ const containerStyle: CSSProperties = {
   display: "grid",
   gridTemplateColumns: "1fr 1fr",
   gap: 16,
-  height: "calc(100vh - 140px)",
+  height: "calc(100vh - 180px)",
   minHeight: 500,
 };
 
@@ -148,11 +103,58 @@ const infoBoxStyle: CSSProperties = {
   marginBottom: 16,
 };
 
+const tabsStyle: CSSProperties = {
+  display: "flex",
+  gap: 8,
+  marginBottom: 16,
+};
+
+const tabStyle: CSSProperties = {
+  padding: "6px 12px",
+  fontSize: 12,
+  fontWeight: 500,
+  color: "var(--rei-color-text-secondary)",
+  backgroundColor: "transparent",
+  border: "1px solid var(--rei-color-border)",
+  borderRadius: 4,
+  textDecoration: "none",
+  transition: "all 0.15s ease",
+};
+
+const activeTabStyle: CSSProperties = {
+  ...tabStyle,
+  color: "var(--rei-color-text-primary)",
+  backgroundColor: "var(--rei-color-bg-secondary)",
+  borderColor: "var(--rei-color-primary)",
+};
+
+const statsStyle: CSSProperties = {
+  display: "flex",
+  gap: 16,
+  marginBottom: 16,
+  alignItems: "center",
+};
+
+const statsTextStyle: CSSProperties = {
+  fontSize: 12,
+  color: "var(--rei-color-text-tertiary)",
+};
+
+// =============================================================================
+// Renderer tabs configuration
+// =============================================================================
+
+const rendererTabs = [
+  { path: "svg", label: "SVG" },
+  { path: "canvas", label: "Canvas" },
+];
+
 // =============================================================================
 // Component
 // =============================================================================
 
-export function MarkdownEditorDemo() {
+export function MarkdownLayout() {
+  const location = useLocation();
   const [doc, setDoc] = useState<BlockDocument>(() =>
     parseMarkdownToBlockDocument(sampleMarkdown)
   );
@@ -168,6 +170,16 @@ export function MarkdownEditorDemo() {
     return { blocks, chars, styles };
   }, [doc]);
 
+  // Get current renderer from path
+  const currentRenderer = location.pathname.split("/").pop() ?? "svg";
+
+  const context: MarkdownOutletContext = {
+    doc,
+    setDoc,
+    markdownOutput,
+    stats,
+  };
+
   return (
     <DemoContainer title="Markdown Editor">
       <div style={infoBoxStyle}>
@@ -179,14 +191,30 @@ export function MarkdownEditorDemo() {
         <code>~~strikethrough~~</code> are preserved.
       </div>
 
-      <div style={{ display: "flex", gap: 16, marginBottom: 16, alignItems: "center" }}>
-        <span style={{ fontSize: 12, color: "var(--rei-color-text-tertiary)" }}>
+      {/* Renderer tabs */}
+      <div style={tabsStyle}>
+        {rendererTabs.map(({ path, label }) => (
+          <NavLink
+            key={path}
+            to={path}
+            style={currentRenderer === path ? activeTabStyle : tabStyle}
+          >
+            {label}
+          </NavLink>
+        ))}
+      </div>
+
+      <div style={statsStyle}>
+        <span style={statsTextStyle}>
           {stats.blocks} blocks · {stats.chars} chars · {stats.styles} styles
+        </span>
+        <span style={statsTextStyle}>
+          Renderer: <strong>{currentRenderer.toUpperCase()}</strong>
         </span>
       </div>
 
       <div style={containerStyle}>
-        {/* Editor Panel */}
+        {/* Editor Panel - rendered by child route */}
         <div style={panelStyle}>
           <div style={panelHeaderStyle}>
             <span style={panelTitleStyle}>Editor</span>
@@ -195,12 +223,7 @@ export function MarkdownEditorDemo() {
             </span>
           </div>
           <div style={editorContainerStyle}>
-            <TextEditorWithToolbar
-              document={doc}
-              onDocumentChange={setDoc}
-              enabledOperations={["bold", "italic", "underline", "strikethrough", "code"]}
-              style={{ height: "100%", padding: 8 }}
-            />
+            <Outlet context={context} />
           </div>
         </div>
 

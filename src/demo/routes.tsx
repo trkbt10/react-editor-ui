@@ -93,7 +93,11 @@ import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
 import { CodeEditorDemo } from "./pages/editor/CodeEditorDemo";
 import { TextEditorDemo } from "./pages/editor/TextEditorDemo";
 import { TextEditorPerfDemo } from "./pages/editor/TextEditorPerfDemo";
-import { MarkdownEditorDemo } from "./pages/editor/MarkdownEditorDemo";
+import {
+  MarkdownLayout,
+  MarkdownSvgEditor,
+  MarkdownCanvasEditor,
+} from "./pages/editor/markdown";
 import { SelectionToolbarDemo as EditorSelectionToolbarDemo } from "./pages/editor/SelectionToolbarDemo";
 
 // Navigation demos
@@ -121,6 +125,10 @@ export type DemoPage = {
   label: string;
   path: string;
   element: ReactNode;
+  /** Child routes for nested layouts */
+  children?: readonly DemoPage[];
+  /** Index redirect path for parent routes */
+  indexRedirect?: string;
 };
 
 export type DemoCategory = {
@@ -589,8 +597,23 @@ export const demoCategories: DemoCategory[] = [
       {
         id: "markdown-editor",
         label: "MarkdownEditor",
-        path: "markdown-editor",
-        element: <MarkdownEditorDemo />,
+        path: "markdown",
+        element: <MarkdownLayout />,
+        indexRedirect: "svg",
+        children: [
+          {
+            id: "markdown-svg",
+            label: "SVG",
+            path: "svg",
+            element: <MarkdownSvgEditor />,
+          },
+          {
+            id: "markdown-canvas",
+            label: "Canvas",
+            path: "canvas",
+            element: <MarkdownCanvasEditor />,
+          },
+        ],
       },
       {
         id: "text-editor-perf",
