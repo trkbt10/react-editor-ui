@@ -147,6 +147,7 @@ const statsTextStyle: CSSProperties = {
 const rendererTabs = [
   { path: "svg", label: "SVG" },
   { path: "canvas", label: "Canvas" },
+  { path: "webgl", label: "WebGL" },
 ];
 
 // =============================================================================

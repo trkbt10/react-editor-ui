@@ -140,7 +140,7 @@ export const ColorOperationButton = memo(function ColorOperationButton({
 
   // Close dropdown when clicking outside
   useLayoutEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {return;}
 
     const handleClickOutside = (e: globalThis.MouseEvent) => {
       if (

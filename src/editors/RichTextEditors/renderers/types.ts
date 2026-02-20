@@ -72,7 +72,7 @@ export type TokenCache = {
 /**
  * Available renderer types.
  */
-export type RendererType = "svg" | "canvas";
+export type RendererType = "svg" | "canvas" | "webgl";
 
 /**
  * Common props for all code renderers.

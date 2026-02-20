@@ -39,8 +39,8 @@ type BlockTextEditorProps = {
   readonly document: BlockDocument;
   /** Called when document changes */
   readonly onDocumentChange: (doc: BlockDocument) => void;
-  /** Renderer type: svg (default) or canvas */
-  readonly renderer?: "svg" | "canvas";
+  /** Renderer type: svg (default), canvas, or webgl */
+  readonly renderer?: "svg" | "canvas" | "webgl";
   /** Editor configuration overrides */
   readonly config?: Partial<{
     lineHeight: number;

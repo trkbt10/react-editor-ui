@@ -33,8 +33,8 @@ export type TextEditorProps = {
   readonly document: BlockDocument;
   /** Called when document changes */
   readonly onDocumentChange: (doc: BlockDocument) => void;
-  /** Renderer type */
-  readonly renderer?: "svg" | "canvas";
+  /** Renderer type (svg, canvas, or webgl) */
+  readonly renderer?: "svg" | "canvas" | "webgl";
   /** Editor configuration */
   readonly config?: Partial<EditorConfig>;
   /** Custom container style */

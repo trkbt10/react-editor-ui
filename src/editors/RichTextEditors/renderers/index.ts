@@ -36,3 +36,7 @@ export { SvgRenderer } from "./SvgRenderer";
 export { CanvasRenderer } from "./CanvasRenderer";
 export { BlockRenderer } from "./BlockRenderer";
 export type { BlockRendererProps, BlockRenderInfo } from "./BlockRenderer";
+
+// WebGL Renderer
+export { WebGLBlockRenderer } from "./webgl";
+export type { WebGLBlockRendererProps } from "./webgl";

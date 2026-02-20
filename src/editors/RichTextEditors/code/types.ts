@@ -87,8 +87,8 @@ export type CodeEditorProps = {
   readonly tokenizer: Tokenizer;
   /** Token styles for syntax highlighting */
   readonly tokenStyles?: TokenStyleMap;
-  /** Renderer type (currently both render as SVG) */
-  readonly renderer?: "svg" | "canvas";
+  /** Renderer type (svg, canvas, or webgl) */
+  readonly renderer?: "svg" | "canvas" | "webgl";
   /** Editor configuration */
   readonly config?: Partial<EditorConfig>;
   /** Custom container style */

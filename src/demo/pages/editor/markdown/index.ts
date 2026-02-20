@@ -6,3 +6,4 @@ export { MarkdownLayout, useMarkdownContext } from "./MarkdownLayout";
 export type { MarkdownOutletContext } from "./MarkdownLayout";
 export { MarkdownSvgEditor } from "./MarkdownSvgEditor";
 export { MarkdownCanvasEditor } from "./MarkdownCanvasEditor";
+export { MarkdownWebGLEditor } from "./MarkdownWebGLEditor";

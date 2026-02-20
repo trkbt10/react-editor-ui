@@ -45,6 +45,7 @@ import {
 } from "../styles/tokens";
 import { getContrastCursorColor, CURSOR_COLOR_DARK } from "../styles/colorUtils";
 import type { ViewportConfig, ViewportState, VisibleLineItem } from "./viewport/types";
+import { WebGLBlockRenderer } from "./webgl";
 
 // =============================================================================
 // Types
@@ -815,12 +816,12 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     };
     const merged: MutableTextStyle = {};
     for (const s of overlapping) {
-      if (s.style.fontWeight) merged.fontWeight = s.style.fontWeight;
-      if (s.style.fontStyle) merged.fontStyle = s.style.fontStyle;
-      if (s.style.fontFamily) merged.fontFamily = s.style.fontFamily;
-      if (s.style.textDecoration) merged.textDecoration = s.style.textDecoration;
-      if (s.style.color) merged.color = s.style.color;
-      if (s.style.fontSize) merged.fontSize = s.style.fontSize;
+      if (s.style.fontWeight) {merged.fontWeight = s.style.fontWeight;}
+      if (s.style.fontStyle) {merged.fontStyle = s.style.fontStyle;}
+      if (s.style.fontFamily) {merged.fontFamily = s.style.fontFamily;}
+      if (s.style.textDecoration) {merged.textDecoration = s.style.textDecoration;}
+      if (s.style.color) {merged.color = s.style.color;}
+      if (s.style.fontSize) {merged.fontSize = s.style.fontSize;}
     }
 
     return Object.keys(merged).length > 0 ? (merged as LocalStyleSegment["style"]) : null;
@@ -1370,12 +1371,12 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
       };
       const merged: MutableTextStyle = {};
       for (const s of overlapping) {
-        if (s.style.fontWeight) merged.fontWeight = s.style.fontWeight;
-        if (s.style.fontStyle) merged.fontStyle = s.style.fontStyle;
-        if (s.style.fontFamily) merged.fontFamily = s.style.fontFamily;
-        if (s.style.textDecoration) merged.textDecoration = s.style.textDecoration;
-        if (s.style.color) merged.color = s.style.color;
-        if (s.style.fontSize) merged.fontSize = s.style.fontSize;
+        if (s.style.fontWeight) {merged.fontWeight = s.style.fontWeight;}
+        if (s.style.fontStyle) {merged.fontStyle = s.style.fontStyle;}
+        if (s.style.fontFamily) {merged.fontFamily = s.style.fontFamily;}
+        if (s.style.textDecoration) {merged.textDecoration = s.style.textDecoration;}
+        if (s.style.color) {merged.color = s.style.color;}
+        if (s.style.fontSize) {merged.fontSize = s.style.fontSize;}
       }
       return Object.keys(merged).length > 0 ? (merged as LocalStyleSegment["style"]) : null;
     };
@@ -1677,6 +1678,33 @@ export const BlockRenderer = memo(function BlockRenderer({
   const canvasHeight = height ?? (isViewportMode ? viewport.size.height : totalHeight);
 
   const renderContent = (): ReactNode => {
+    if (renderer === "webgl") {
+      return (
+        <WebGLBlockRenderer
+          blocks={blocks}
+          visibleRange={visibleRange}
+          topSpacerHeight={topSpacerHeight}
+          bottomSpacerHeight={bottomSpacerHeight}
+          tokenCache={tokenCache}
+          lineHeight={lineHeight}
+          padding={padding}
+          width={canvasWidth}
+          height={isViewportMode ? canvasHeight : undefined}
+          showLineNumbers={showLineNumbers}
+          lineNumberWidth={lineNumberWidth}
+          highlights={highlights}
+          cursor={cursor}
+          tokenStyles={tokenStyles}
+          fontFamily={fontFamily}
+          fontSize={fontSize}
+          startLineNumber={startLineNumber}
+          blockTypeStyles={blockTypeStyles}
+          blockLayoutIndex={blockLayoutIndex}
+          viewport={viewport}
+          cursorColor={effectiveCursorColor}
+        />
+      );
+    }
     if (renderer === "canvas") {
       return (
         <CanvasBlockRenderer
