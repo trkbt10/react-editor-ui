@@ -50,8 +50,130 @@ export function createBlockId(): BlockId {
 
 /**
  * Block type determines rendering and behavior.
+ * Extended to support Markdown-style block formats.
  */
-export type BlockType = "paragraph" | "code-block" | "heading";
+export type BlockType =
+  | "paragraph"
+  | "code-block"
+  | "heading"
+  | "heading-1"
+  | "heading-2"
+  | "heading-3"
+  | "bullet-list"
+  | "numbered-list"
+  | "blockquote";
+
+// =============================================================================
+// Block Type Styling
+// =============================================================================
+
+/**
+ * Visual styling configuration for a block type.
+ * This enables extensible block type rendering without hardcoding in the renderer.
+ */
+export type BlockTypeStyle = {
+  /** Font size multiplier relative to base font size (default: 1) */
+  readonly fontSizeMultiplier?: number;
+  /** Font weight (e.g., "bold", "normal") */
+  readonly fontWeight?: string;
+  /** Font family override */
+  readonly fontFamily?: string;
+  /** Left indentation in pixels */
+  readonly indentation?: number;
+  /** Text color override */
+  readonly color?: string;
+  /** Left border decoration */
+  readonly leftBorder?: {
+    readonly width: number;
+    readonly color: string;
+  };
+  /** Background color */
+  readonly backgroundColor?: string;
+  /** Extra vertical padding */
+  readonly verticalPadding?: number;
+};
+
+/**
+ * Map of block type to visual style configuration.
+ */
+export type BlockTypeStyleMap = Partial<Record<BlockType, BlockTypeStyle>>;
+
+/**
+ * Default block type styles for Markdown-style rendering.
+ * These can be overridden or extended via BlockDocument.blockTypeStyles.
+ */
+export const DEFAULT_BLOCK_TYPE_STYLES: BlockTypeStyleMap = {
+  "heading-1": {
+    fontSizeMultiplier: 1.75,
+    fontWeight: "bold",
+  },
+  "heading-2": {
+    fontSizeMultiplier: 1.5,
+    fontWeight: "bold",
+  },
+  "heading-3": {
+    fontSizeMultiplier: 1.25,
+    fontWeight: "bold",
+  },
+  heading: {
+    fontSizeMultiplier: 1.5,
+    fontWeight: "bold",
+  },
+  "bullet-list": {
+    indentation: 16,
+  },
+  "numbered-list": {
+    indentation: 16,
+  },
+  blockquote: {
+    indentation: 12,
+    leftBorder: {
+      width: 3,
+      color: "#6b7280",
+    },
+    backgroundColor: "rgba(107, 114, 128, 0.1)",
+  },
+  "code-block": {
+    fontSizeMultiplier: 0.9,
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+  },
+};
+
+/**
+ * Get effective block type style by merging defaults with document overrides.
+ *
+ * @param blockType - The block type to get styles for
+ * @param documentStyles - Optional document-specific style overrides
+ * @returns Merged block type style or undefined if no styles defined
+ */
+export function getBlockTypeStyle(
+  blockType: BlockType,
+  documentStyles?: BlockTypeStyleMap
+): BlockTypeStyle | undefined {
+  const defaultStyle = DEFAULT_BLOCK_TYPE_STYLES[blockType];
+  const documentStyle = documentStyles?.[blockType];
+
+  if (!defaultStyle && !documentStyle) {
+    return undefined;
+  }
+
+  if (!documentStyle) {
+    return defaultStyle;
+  }
+
+  if (!defaultStyle) {
+    return documentStyle;
+  }
+
+  // Merge document styles on top of defaults
+  return {
+    ...defaultStyle,
+    ...documentStyle,
+    // Deep merge leftBorder if both exist
+    leftBorder: documentStyle.leftBorder ?? defaultStyle.leftBorder,
+  };
+}
 
 /**
  * Style segment with block-local offsets.
@@ -89,8 +211,10 @@ export type Block = {
 export type BlockDocument = {
   /** Ordered list of blocks */
   readonly blocks: readonly Block[];
-  /** Tag to style mapping (shared across blocks) */
+  /** Tag to style mapping for inline styles (shared across blocks) */
   readonly styleDefinitions: StyleDefinitions;
+  /** Block type to visual style mapping (optional, uses defaults if not provided) */
+  readonly blockTypeStyles?: BlockTypeStyleMap;
   /** Version number for optimistic locking */
   readonly version: number;
 };
@@ -139,6 +263,18 @@ export function createEmptyBlockDocument(): BlockDocument {
 }
 
 /**
+ * Default style definitions for common formatting operations.
+ * Used by createBlockDocumentWithStyles for toolbar-enabled editors.
+ */
+export const DEFAULT_STYLE_DEFINITIONS: StyleDefinitions = {
+  bold: { fontWeight: "bold" },
+  italic: { fontStyle: "italic" },
+  underline: { textDecoration: "underline" },
+  strikethrough: { textDecoration: "line-through" },
+  code: { fontFamily: "monospace" },
+};
+
+/**
  * Create a BlockDocument from plain text.
  *
  * Splits text by newlines to create paragraph blocks.
@@ -161,6 +297,22 @@ export function createBlockDocument(
     styleDefinitions: styleDefinitions ?? {},
     version: 1,
   };
+}
+
+/**
+ * Create a BlockDocument with default style definitions.
+ *
+ * Use this when the document will be edited with a SelectionToolbar
+ * that applies formatting commands like bold, italic, etc.
+ */
+export function createBlockDocumentWithStyles(
+  text: string,
+  additionalStyles?: StyleDefinitions
+): BlockDocument {
+  return createBlockDocument(text, {
+    ...DEFAULT_STYLE_DEFINITIONS,
+    ...additionalStyles,
+  });
 }
 
 // =============================================================================

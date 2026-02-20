@@ -16,7 +16,7 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
-import type { TextEditorProps, TextEditorHandle, TextSelectionEvent } from "./types";
+import type { TextEditorProps, TextEditorHandle, TextSelectionEvent, CommandParams } from "./types";
 import { DEFAULT_EDITOR_CONFIG } from "../core/types";
 import { useLineIndex } from "../font/useLineIndex";
 import {
@@ -25,7 +25,6 @@ import {
   getTagsAtBlockOffset,
 } from "../block/blockDocument";
 import { executeBlockCommand } from "./commands";
-import { calculateSelectionRects } from "../font/coordinates";
 import { useBlockEditorCore, type GetOffsetFromPositionFn } from "../core/useBlockEditorCore";
 import { useFontMetrics } from "../font/useFontMetrics";
 import { invariant } from "../core/invariant";
@@ -161,10 +160,13 @@ export const TextEditor = forwardRef(function TextEditor(
   );
 
   // Initialize styled measurement with containerRef
+  // Include blockDocument for block-level font size multipliers (headings, etc.)
   const styledMeasurement = useStyledMeasurement(core.containerRef, {
     styles: globalStyles,
     fontSize: editorConfig.fontSize,
     fontFamily: editorConfig.fontFamily,
+    blockDocument,
+    blockTypeStyles: blockDocument.blockTypeStyles,
   });
   styledMeasurementRef.current = styledMeasurement;
 
@@ -210,7 +212,7 @@ export const TextEditor = forwardRef(function TextEditor(
     const textarea = core.textareaRef.current;
     const container = core.containerRef.current;
 
-    if (!textarea || !container || !fontMetrics.isReady) {
+    if (!textarea || !container || !styledMeasurement.isReady) {
       return;
     }
 
@@ -223,17 +225,42 @@ export const TextEditor = forwardRef(function TextEditor(
     }
 
     const lines = lineIndex.lines;
-    const selectionRects = calculateSelectionRects({
-      startLine: selectionHighlight.startLine,
-      startColumn: selectionHighlight.startColumn,
-      endLine: selectionHighlight.endLine,
-      endColumn: selectionHighlight.endColumn,
-      lines,
-      lineHeight: editorConfig.lineHeight,
-      paddingLeft: DEFAULT_PADDING_PX,
-      paddingTop: DEFAULT_PADDING_PX,
-      measureText: fontMetrics.measureText,
-    });
+    const lineOffsets = lineIndex.lineOffsets;
+
+    // Calculate selection rects per line with styled measurement
+    // We need to compute each line's rect individually to pass correct lineOffset
+    const selectionRects: Array<{ x: number; y: number; width: number; height: number }> = [];
+
+    // Normalize selection range
+    const sLine = selectionHighlight.startLine;
+    const sCol = selectionHighlight.startColumn;
+    const eLine = selectionHighlight.endLine;
+    const eCol = selectionHighlight.endColumn;
+
+    for (let lineNum = sLine; lineNum <= eLine; lineNum++) {
+      const lineIdx = lineNum - 1;
+      const lineText = lines[lineIdx] ?? "";
+      const lineOffset = lineOffsets[lineIdx] ?? 0;
+      const lineLength = lineText.length;
+
+      // Determine column range for this line
+      const colStart = lineNum === sLine ? sCol : 1;
+      const colEnd = lineNum === eLine ? eCol : lineLength + 1;
+
+      if (colEnd <= colStart) {
+        continue;
+      }
+
+      // Measure text using styled measurement (considers block fontSizeMultiplier)
+      const textBeforeStart = lineText.slice(0, colStart - 1);
+      const selectedText = lineText.slice(colStart - 1, colEnd - 1);
+
+      const xPos = DEFAULT_PADDING_PX + styledMeasurement.measureStyledText(textBeforeStart, lineOffset);
+      const yPos = DEFAULT_PADDING_PX + lineIdx * editorConfig.lineHeight;
+      const width = styledMeasurement.measureStyledText(selectedText, lineOffset + colStart - 1);
+
+      selectionRects.push({ x: xPos, y: yPos, width, height: editorConfig.lineHeight });
+    }
 
     if (selectionRects.length === 0) {
       onTextSelectionChange(null);
@@ -280,9 +307,10 @@ export const TextEditor = forwardRef(function TextEditor(
     core.textareaRef,
     core.containerRef,
     core.virtualScroll.state.scrollTop,
-    fontMetrics.isReady,
-    fontMetrics.measureText,
+    styledMeasurement.isReady,
+    styledMeasurement.measureStyledText,
     lineIndex.lines,
+    lineIndex.lineOffsets,
     editorConfig.lineHeight,
     textValue,
     blockDocumentRef,
@@ -294,7 +322,7 @@ export const TextEditor = forwardRef(function TextEditor(
 
   // Handle command execution with BlockDocument
   const handleExecuteCommand = useCallback(
-    (commandId: string) => {
+    (commandId: string, params?: CommandParams) => {
       const textarea = core.textareaRef.current;
       if (!textarea || readOnly) {
         return;
@@ -307,7 +335,7 @@ export const TextEditor = forwardRef(function TextEditor(
         return;
       }
 
-      const newDoc = executeBlockCommand(blockDocumentRef.current, commandId, start, end);
+      const newDoc = executeBlockCommand(blockDocumentRef.current, commandId, start, end, params);
       if (newDoc !== blockDocumentRef.current) {
         onDocumentChangeRef.current(newDoc);
       }
@@ -373,6 +401,7 @@ export const TextEditor = forwardRef(function TextEditor(
             fontSize={editorConfig.fontSize}
             startLineNumber={core.visibleBlockInfo.startLineNumber}
             renderer={renderer}
+            blockTypeStyles={blockDocument.blockTypeStyles}
             // Viewport mode props
             viewportConfig={core.viewportConfig}
             viewport={core.viewport}

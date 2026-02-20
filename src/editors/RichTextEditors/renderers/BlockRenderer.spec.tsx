@@ -303,4 +303,121 @@ describe("BlockRenderer", () => {
       expect(svg?.getAttribute("width")).toBe("100%");
     });
   });
+
+  describe("inline styles", () => {
+    it("applies bold style from LocalStyleSegment", () => {
+      const blocks: Block[] = [
+        {
+          id: "test-block-1" as any,
+          type: "paragraph",
+          content: "Hello World",
+          styles: [{ start: 0, end: 5, style: { fontWeight: "bold" } }],
+        },
+      ];
+
+      const { container } = render(
+        <BlockRenderer {...defaultProps} blocks={blocks} />
+      );
+
+      const tspans = container.querySelectorAll("tspan");
+      // Should have at least one tspan with bold
+      const boldTspans = Array.from(tspans).filter(
+        (t) => t.getAttribute("font-weight") === "bold"
+      );
+      expect(boldTspans.length).toBeGreaterThan(0);
+    });
+
+    it("applies italic style from LocalStyleSegment", () => {
+      const blocks: Block[] = [
+        {
+          id: "test-block-1" as any,
+          type: "paragraph",
+          content: "Hello World",
+          styles: [{ start: 6, end: 11, style: { fontStyle: "italic" } }],
+        },
+      ];
+
+      const { container } = render(
+        <BlockRenderer {...defaultProps} blocks={blocks} />
+      );
+
+      const tspans = container.querySelectorAll("tspan");
+      // Should have at least one tspan with italic
+      const italicTspans = Array.from(tspans).filter(
+        (t) => t.getAttribute("font-style") === "italic"
+      );
+      expect(italicTspans.length).toBeGreaterThan(0);
+    });
+
+    it("applies text decoration from LocalStyleSegment", () => {
+      const blocks: Block[] = [
+        {
+          id: "test-block-1" as any,
+          type: "paragraph",
+          content: "Hello World",
+          styles: [{ start: 0, end: 5, style: { textDecoration: "underline" } }],
+        },
+      ];
+
+      const { container } = render(
+        <BlockRenderer {...defaultProps} blocks={blocks} />
+      );
+
+      const tspans = container.querySelectorAll("tspan");
+      // Should have at least one tspan with underline
+      const underlineTspans = Array.from(tspans).filter(
+        (t) => t.getAttribute("text-decoration") === "underline"
+      );
+      expect(underlineTspans.length).toBeGreaterThan(0);
+    });
+
+    it("applies color style from LocalStyleSegment", () => {
+      const blocks: Block[] = [
+        {
+          id: "test-block-1" as any,
+          type: "paragraph",
+          content: "Hello World",
+          styles: [{ start: 0, end: 5, style: { color: "#ff0000" } }],
+        },
+      ];
+
+      const { container } = render(
+        <BlockRenderer {...defaultProps} blocks={blocks} />
+      );
+
+      const tspans = container.querySelectorAll("tspan");
+      // Should have at least one tspan with red color
+      const redTspans = Array.from(tspans).filter(
+        (t) => t.getAttribute("fill") === "#ff0000"
+      );
+      expect(redTspans.length).toBeGreaterThan(0);
+    });
+
+    it("applies multiple styles to the same range", () => {
+      const blocks: Block[] = [
+        {
+          id: "test-block-1" as any,
+          type: "paragraph",
+          content: "Hello World",
+          styles: [
+            { start: 0, end: 5, style: { fontWeight: "bold" } },
+            { start: 0, end: 5, style: { fontStyle: "italic" } },
+          ],
+        },
+      ];
+
+      const { container } = render(
+        <BlockRenderer {...defaultProps} blocks={blocks} />
+      );
+
+      const tspans = container.querySelectorAll("tspan");
+      // Should have tspan with both bold and italic
+      const boldItalicTspans = Array.from(tspans).filter(
+        (t) =>
+          t.getAttribute("font-weight") === "bold" &&
+          t.getAttribute("font-style") === "italic"
+      );
+      expect(boldItalicTspans.length).toBeGreaterThan(0);
+    });
+  });
 });

@@ -121,12 +121,27 @@ export type TextSelectionEvent = {
 // =============================================================================
 
 /**
+ * Parameters for commands that require additional data.
+ * Used for color commands and other parameterized operations.
+ */
+export type CommandParams = {
+  /** Text color to apply */
+  readonly color?: string;
+  /** Background color to apply */
+  readonly backgroundColor?: string;
+};
+
+/**
  * Ref handle exposed by TextEditor via forwardRef.
  * Allows parent components to control the editor programmatically.
  */
 export type TextEditorHandle = {
-  /** Execute a style command (e.g., "bold", "italic") on the current selection */
-  readonly executeCommand: (commandId: string) => void;
+  /**
+   * Execute a style command on the current selection.
+   * @param commandId - Command ID (e.g., "bold", "italic", "textColor")
+   * @param params - Optional parameters for commands like textColor
+   */
+  readonly executeCommand: (commandId: string, params?: CommandParams) => void;
   /** Focus the editor */
   readonly focus: () => void;
   /** Get the current selection offsets */

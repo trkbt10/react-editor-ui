@@ -38,10 +38,6 @@ import { Z_POPOVER } from "../../themes/styles";
 const DEFAULT_TOOLBAR_WIDTH = 200;
 const DEFAULT_TOOLBAR_HEIGHT = 36;
 
-/** Prevent text deselection on pointer down - defined outside to avoid recreating */
-const handlePointerDown = (e: React.PointerEvent) => {
-  e.preventDefault();
-};
 
 // =============================================================================
 // Sub-components
@@ -57,6 +53,11 @@ type OperationButtonProps = {
   readonly onSelect: (id: string) => void;
 };
 
+/** Prevent text deselection on pointer down - defined outside to avoid recreating */
+const handlePointerDown = (e: React.PointerEvent) => {
+  e.preventDefault();
+};
+
 const OperationButton = memo(function OperationButton({
   id,
   label,
@@ -68,8 +69,6 @@ const OperationButton = memo(function OperationButton({
 }: OperationButtonProps) {
   const handleClick = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
-      // Prevent the click from propagating and potentially deselecting text
-      e.preventDefault();
       e.stopPropagation();
       onSelect(id);
     },

@@ -93,6 +93,8 @@ import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
 import { CodeEditorDemo } from "./pages/editor/CodeEditorDemo";
 import { TextEditorDemo } from "./pages/editor/TextEditorDemo";
 import { TextEditorPerfDemo } from "./pages/editor/TextEditorPerfDemo";
+import { MarkdownEditorDemo } from "./pages/editor/MarkdownEditorDemo";
+import { SelectionToolbarDemo as EditorSelectionToolbarDemo } from "./pages/editor/SelectionToolbarDemo";
 
 // Navigation demos
 import { BreadcrumbDemo } from "./pages/navigation/BreadcrumbDemo";
@@ -585,10 +587,22 @@ export const demoCategories: DemoCategory[] = [
         element: <TextEditorDemo />,
       },
       {
+        id: "markdown-editor",
+        label: "MarkdownEditor",
+        path: "markdown-editor",
+        element: <MarkdownEditorDemo />,
+      },
+      {
         id: "text-editor-perf",
         label: "TextEditor (Perf)",
         path: "text-editor-perf",
         element: <TextEditorPerfDemo />,
+      },
+      {
+        id: "editor-selection-toolbar",
+        label: "Selection Toolbar",
+        path: "selection-toolbar",
+        element: <EditorSelectionToolbarDemo />,
       },
     ],
   },

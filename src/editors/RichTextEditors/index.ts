@@ -57,9 +57,34 @@ export { DEFAULT_EDITOR_CONFIG, INITIAL_COMPOSITION_STATE } from "./core";
 // Block Document Model
 // =============================================================================
 
-export type { BlockDocument, Block, BlockId } from "./block/blockDocument";
+export type {
+  BlockDocument,
+  Block,
+  BlockId,
+  BlockType,
+  BlockTypeStyle,
+  BlockTypeStyleMap,
+} from "./block/blockDocument";
 
-export { createBlockDocument, getBlockDocumentText } from "./block/blockDocument";
+export {
+  createBlockDocument,
+  createBlockDocumentWithStyles,
+  getBlockDocumentText,
+  getBlockTypeStyle,
+  DEFAULT_STYLE_DEFINITIONS,
+  DEFAULT_BLOCK_TYPE_STYLES,
+} from "./block/blockDocument";
+
+// =============================================================================
+// Markdown Parser
+// =============================================================================
+
+export {
+  detectBlockType,
+  parseMarkdownToBlockDocument,
+  blockDocumentToMarkdown,
+  parseInlineMarkdown,
+} from "./block/markdownParser";
 
 // =============================================================================
 // Font & Coordinates
@@ -142,6 +167,14 @@ export type {
   SelectionAnchorRect,
   StyleToken,
   TextEditorCommand,
+  CommandParams,
+  // Integration types
+  TextEditorWithToolbarProps,
+  UseTextSelectionToolbarOptions,
+  UseTextSelectionToolbarReturn,
+  // Operation types
+  OperationType,
+  OperationDefinition,
 } from "./text";
 
 export {
@@ -153,9 +186,20 @@ export {
   getCommand,
   executeCommand,
   getActiveTagsAtRange,
+  executeBlockCommand,
   // Default operations for SelectionToolbar
   createInlineOperations,
   defaultInlineOperations,
+  allOperationDefinitions,
+  operationDefinitionsMap,
+  DEFAULT_ENABLED_OPERATIONS,
+  getEnabledOperations,
+  createConfiguredOperations,
+  hasColorOperation,
+  // Integration components
+  TextEditorWithToolbar,
+  ColorOperationButton,
+  useTextSelectionToolbar,
 } from "./text";
 
 // =============================================================================

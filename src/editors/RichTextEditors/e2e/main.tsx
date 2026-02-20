@@ -26,6 +26,7 @@ const TextEditorCanvasMount = lazy(() => import("./pages/TextEditorCanvasMount")
 const TextEditorStyledMount = lazy(() => import("./pages/TextEditorStyledMount"));
 const CodeEditorViewportMount = lazy(() => import("./pages/CodeEditorViewportMount"));
 const CodeEditorContextMenuMount = lazy(() => import("./pages/CodeEditorContextMenuMount"));
+const TextEditorToolbarMount = lazy(() => import("./pages/TextEditorToolbarMount"));
 
 const App = () => {
   return (
@@ -88,6 +89,14 @@ const App = () => {
           }
         />
         <Route
+          path="/text-editor-toolbar"
+          element={
+            <Suspense fallback={null}>
+              <TextEditorToolbarMount />
+            </Suspense>
+          }
+        />
+        <Route
           path="/"
           element={
             <div style={{ padding: 20 }}>
@@ -100,6 +109,7 @@ const App = () => {
                 <li><a href="#/text-editor-styled">TextEditor Styled (serif/sans-serif)</a></li>
                 <li><a href="#/code-editor-viewport">CodeEditor Viewport (100 lines)</a></li>
                 <li><a href="#/code-editor-context-menu">CodeEditor Context Menu</a></li>
+                <li><a href="#/text-editor-toolbar">TextEditor with Selection Toolbar</a></li>
               </ul>
             </div>
           }

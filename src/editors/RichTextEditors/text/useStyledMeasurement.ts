@@ -8,6 +8,8 @@
 
 import { useState, useCallback, useRef, useEffect, useEffectEvent, useMemo, type RefObject } from "react";
 import type { TextStyleSegment } from "../core/types";
+import type { BlockDocument, BlockTypeStyleMap } from "../block/blockDocument";
+import { getBlockAtGlobalOffset, getBlockTypeStyle } from "../block/blockDocument";
 import { DEFAULT_CHAR_WIDTH, DEFAULT_LINE_HEIGHT } from "../font/coordinates";
 import { assertMeasureElement } from "../core/invariant";
 import { parseFontSize, findStyleAtOffset } from "./styledMeasurement";
@@ -44,6 +46,10 @@ export type UseStyledMeasurementOptions = {
   readonly fontSize: number;
   /** Base font family */
   readonly fontFamily: string;
+  /** Block document for block-level font size multipliers (optional) */
+  readonly blockDocument?: BlockDocument;
+  /** Block type styles for overriding defaults (optional) */
+  readonly blockTypeStyles?: BlockTypeStyleMap;
 };
 
 // =============================================================================
@@ -87,7 +93,7 @@ export function useStyledMeasurement(
   containerRef: RefObject<HTMLElement | null>,
   options: UseStyledMeasurementOptions
 ): StyledMeasurement {
-  const { styles, fontSize, fontFamily } = options;
+  const { styles, fontSize, fontFamily, blockDocument, blockTypeStyles } = options;
 
   const measureElRef = useRef<HTMLSpanElement | null>(null);
   const [metrics, setMetrics] = useState<{
@@ -144,6 +150,25 @@ export function useStyledMeasurement(
   );
 
   /**
+   * Get the block font size multiplier for a given offset.
+   * Returns 1 if block document is not provided or block type has no multiplier.
+   */
+  const getBlockFontSizeMultiplier = useCallback(
+    (offset: number): number => {
+      if (!blockDocument) {
+        return 1;
+      }
+      const location = getBlockAtGlobalOffset(blockDocument, offset);
+      if (!location) {
+        return 1;
+      }
+      const blockStyle = getBlockTypeStyle(location.block.type, blockTypeStyles);
+      return blockStyle?.fontSizeMultiplier ?? 1;
+    },
+    [blockDocument, blockTypeStyles]
+  );
+
+  /**
    * Measure a single character with its style.
    * @throws Error if measurement element is not available
    */
@@ -153,7 +178,13 @@ export function useStyledMeasurement(
       const measureEl = assertMeasureElement(measureElRef.current, "measureStyledChar");
 
       const style = findStyleAtOffset(charOffset, sortedStyles);
-      const charFontSize = parseFontSize(style?.fontSize, fontSize);
+
+      // Get block-level font size multiplier
+      const blockMultiplier = getBlockFontSizeMultiplier(charOffset);
+
+      // Apply both inline style and block-level multiplier
+      const baseFontSize = parseFontSize(style?.fontSize, fontSize);
+      const charFontSize = baseFontSize * blockMultiplier;
       const charFontFamily = style?.fontFamily ?? fontFamily;
       const charFontWeight = style?.fontWeight ?? "normal";
       const charFontStyle = style?.fontStyle ?? "normal";
@@ -164,7 +195,7 @@ export function useStyledMeasurement(
 
       return measureEl.getBoundingClientRect().width;
     },
-    [sortedStyles, fontSize, fontFamily]
+    [sortedStyles, fontSize, fontFamily, getBlockFontSizeMultiplier]
   );
 
   /**

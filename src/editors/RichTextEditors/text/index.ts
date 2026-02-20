@@ -9,6 +9,7 @@ export type {
   TextSelectionEvent,
   TextEditorHandle,
   SelectionAnchorRect,
+  CommandParams,
 } from "./types";
 
 // Note: Core types should be imported directly from ../core/types and ../core/styledDocument
@@ -62,11 +63,42 @@ export {
   getCommand,
   executeCommand,
   getActiveTagsAtRange,
+  executeBlockCommand,
+  // Block-level commands (Markdown-style)
+  executeBlockLevelCommand,
+  setBlockType,
+  toggleBulletList,
+  toggleNumberedList,
+  toggleBlockquote,
+  toggleHeading,
 } from "./commands";
-export type { TextEditorCommand } from "./commands";
+export type { TextEditorCommand, CommandParams as CommandParamsFromCommands } from "./commands";
 
 // Default Operations for SelectionToolbar
 export {
   createInlineOperations,
   defaultInlineOperations,
+  allOperationDefinitions,
+  inlineOperationDefinitions,
+  blockOperationDefinitions,
+  operationDefinitionsMap,
+  DEFAULT_ENABLED_OPERATIONS,
+  getEnabledOperations,
+  createConfiguredOperations,
+  hasColorOperation,
 } from "./defaultOperations";
+export type { OperationType, OperationDefinition } from "./defaultOperations";
+
+// Integration Components
+export { TextEditorWithToolbar } from "./TextEditorWithToolbar";
+export type { TextEditorWithToolbarProps } from "./TextEditorWithToolbar";
+
+export { ColorOperationButton } from "./ColorOperationButton";
+export type { ColorOperationButtonProps } from "./ColorOperationButton";
+
+// Integration Hooks
+export { useTextSelectionToolbar } from "./useTextSelectionToolbar";
+export type {
+  UseTextSelectionToolbarOptions,
+  UseTextSelectionToolbarReturn,
+} from "./useTextSelectionToolbar";

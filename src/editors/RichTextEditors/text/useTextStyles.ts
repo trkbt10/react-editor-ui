@@ -15,6 +15,7 @@ import {
   textStyleToCss,
   buildStyleEntries,
   findOverlappingEntries,
+  type StyleEntry,
 } from "./textStyles";
 
 // =============================================================================
@@ -120,14 +121,58 @@ export function useTextStyles(
   const styleEntries = useMemo(() => buildStyleEntries(styles), [styles]);
 
   // Build token style map for the renderer
+  // Also generates merged styles for overlapping segments (e.g., "styled-0+styled-1")
   const computedTokenStyles = useMemo((): TokenStyleMap => {
     const map: Record<string, CSSProperties> = {
       [DEFAULT_TOKEN_TYPE]: {},
     };
 
+    // Add individual styles
     for (const entry of styleEntries) {
       map[entry.tokenType] = textStyleToCss(entry.style);
     }
+
+    // Pre-compute merged styles for all possible combinations
+    // This handles cases where multiple styles overlap
+    const generateMergedStyles = (entries: readonly StyleEntry[]): void => {
+      // Generate all 2^n combinations of active entries
+      const n = entries.length;
+      if (n === 0 || n > 10) {
+        return; // Skip for empty or too many entries (prevent exponential blowup)
+      }
+
+      for (let mask = 1; mask < (1 << n); mask++) {
+        // Skip single entries (already added above)
+        if ((mask & (mask - 1)) === 0) {
+          continue;
+        }
+
+        const activeEntries: StyleEntry[] = [];
+        for (let i = 0; i < n; i++) {
+          if (mask & (1 << i)) {
+            activeEntries.push(entries[i]);
+          }
+        }
+
+        // Generate merged type key
+        const mergedType = activeEntries.map((e) => e.tokenType).sort().join("+");
+
+        // Skip if already computed
+        if (map[mergedType]) {
+          continue;
+        }
+
+        // Merge CSS properties from all active entries
+        const mergedCss: CSSProperties = {};
+        for (const entry of activeEntries) {
+          const css = textStyleToCss(entry.style);
+          Object.assign(mergedCss, css);
+        }
+        map[mergedType] = mergedCss;
+      }
+    };
+
+    generateMergedStyles(styleEntries);
 
     return map;
   }, [styleEntries]);
@@ -215,6 +260,7 @@ export function useTextStyles(
   );
 
   // Create a tokenizer that splits text based on style segments
+  // When multiple segments overlap, merge their styles
   const tokenizer = useMemo((): Tokenizer => {
     return {
       tokenize: (line: string, lineOffset?: number): readonly Token[] => {
@@ -239,43 +285,75 @@ export function useTextStyles(
           }];
         }
 
-        // Build tokens based on style segments
-        const tokens: Token[] = [];
-        const pos = { current: 0 };
+        // Build a map of style changes at each position
+        // This allows us to properly handle overlapping segments by merging styles
+        type StyleChange = { pos: number; type: "start" | "end"; entry: StyleEntry };
+        const changes: StyleChange[] = [];
 
         for (const entry of overlapping) {
           const entryStartInLine = Math.max(0, entry.start - lineStart);
           const entryEndInLine = Math.min(line.length, entry.end - lineStart);
 
-          // Gap before this entry
-          if (pos.current < entryStartInLine) {
-            tokens.push({
-              type: DEFAULT_TOKEN_TYPE,
-              text: line.slice(pos.current, entryStartInLine),
-              start: pos.current,
-              end: entryStartInLine,
-            });
-            pos.current = entryStartInLine;
-          }
-
-          // This entry
           if (entryStartInLine < entryEndInLine) {
-            tokens.push({
-              type: entry.tokenType,
-              text: line.slice(entryStartInLine, entryEndInLine),
-              start: entryStartInLine,
-              end: entryEndInLine,
-            });
-            pos.current = entryEndInLine;
+            changes.push({ pos: entryStartInLine, type: "start", entry });
+            changes.push({ pos: entryEndInLine, type: "end", entry });
           }
         }
 
-        // Gap after last entry
-        if (pos.current < line.length) {
+        // Sort changes by position, starts before ends at same position
+        changes.sort((a, b) => {
+          if (a.pos !== b.pos) {
+            return a.pos - b.pos;
+          }
+          // At same position: "start" comes before "end"
+          return a.type === "start" ? -1 : 1;
+        });
+
+        // Build tokens by processing changes
+        const tokens: Token[] = [];
+        const activeEntries = new Set<StyleEntry>();
+        let currentPos = 0;
+
+        for (const change of changes) {
+          // Add gap/styled token from currentPos to change.pos
+          if (change.pos > currentPos) {
+            if (activeEntries.size === 0) {
+              // No active styles - default token
+              tokens.push({
+                type: DEFAULT_TOKEN_TYPE,
+                text: line.slice(currentPos, change.pos),
+                start: currentPos,
+                end: change.pos,
+              });
+            } else {
+              // Merge active styles into a combined token type
+              const activeArray = Array.from(activeEntries);
+              const mergedType = activeArray.map((e) => e.tokenType).sort().join("+");
+
+              tokens.push({
+                type: mergedType,
+                text: line.slice(currentPos, change.pos),
+                start: currentPos,
+                end: change.pos,
+              });
+            }
+            currentPos = change.pos;
+          }
+
+          // Apply the change
+          if (change.type === "start") {
+            activeEntries.add(change.entry);
+          } else {
+            activeEntries.delete(change.entry);
+          }
+        }
+
+        // Gap after all changes
+        if (currentPos < line.length) {
           tokens.push({
             type: DEFAULT_TOKEN_TYPE,
-            text: line.slice(pos.current),
-            start: pos.current,
+            text: line.slice(currentPos),
+            start: currentPos,
             end: line.length,
           });
         }

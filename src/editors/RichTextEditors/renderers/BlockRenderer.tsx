@@ -21,7 +21,8 @@
  */
 
 import { useMemo, useRef, useEffect, useEffectEvent, memo, type ReactNode, type CSSProperties } from "react";
-import type { Block, LocalStyleSegment } from "../block/blockDocument";
+import type { Block, LocalStyleSegment, BlockTypeStyle, BlockTypeStyleMap } from "../block/blockDocument";
+import { getBlockTypeStyle, DEFAULT_BLOCK_TYPE_STYLES } from "../block/blockDocument";
 import type { BlockCompositionState } from "../block/useBlockComposition";
 import type {
   CursorState,
@@ -89,6 +90,8 @@ export type BlockRendererProps = {
   readonly startLineNumber?: number;
   /** Renderer type: svg (default) or canvas */
   readonly renderer?: RendererType;
+  /** Block type styles (overrides defaults) */
+  readonly blockTypeStyles?: BlockTypeStyleMap;
 
   // === Viewport-based rendering (optional) ===
 
@@ -129,6 +132,7 @@ type BlockRenderInfo = {
 
 const MIN_HIGHLIGHT_WIDTH = 8;
 
+
 // =============================================================================
 // Style-Aware Position Calculation
 // =============================================================================
@@ -157,13 +161,16 @@ function parseFontSizeRatio(size: string | number, baseSize: number): number {
 /**
  * Calculate token X positions considering individual token styles.
  * Returns array of X positions for each token.
+ *
+ * @param blockFontSizeMultiplier - Block-level font size multiplier (e.g., 1.75 for H1)
  */
 function calculateTokenPositions(
   tokens: readonly Token[],
   tokenStyles: TokenStyleMap | undefined,
   baseXOffset: number,
   baseFontSize: number,
-  measureText: (text: string) => number
+  measureText: (text: string) => number,
+  blockFontSizeMultiplier: number = 1
 ): readonly number[] {
   const positions: number[] = [];
   const acc = { x: baseXOffset };
@@ -175,12 +182,15 @@ function calculateTokenPositions(
     const style = tokenStyles?.[token.type];
     const tokenFontSize = style?.fontSize;
 
-    // If token has custom font size, apply font size ratio
-    const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, baseFontSize) : 1;
+    // If token has custom font size, apply token-specific ratio
+    const tokenFontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, baseFontSize) : 1;
+
+    // Total ratio = block multiplier * token-specific ratio
+    const totalRatio = blockFontSizeMultiplier * tokenFontSizeRatio;
 
     // Measure actual text width (handles CJK correctly)
     const baseWidth = measureText(token.text);
-    const tokenWidth = baseWidth * fontSizeRatio;
+    const tokenWidth = baseWidth * totalRatio;
     acc.x += tokenWidth;
   }
 
@@ -267,7 +277,8 @@ function drawCanvasLineNumber(
   y: number
 ): void {
   const { ctx, padding, lineHeight, lineNumberWidth, fontFamily, fontSize } = context;
-  const textY = y + lineHeight * 0.75;
+  // Vertical center with textBaseline="top"
+  const textY = y + (lineHeight - fontSize) / 2;
 
   // Background
   ctx.fillStyle = EDITOR_LINE_NUMBER_BG_RAW;
@@ -283,9 +294,11 @@ function drawCanvasLineNumber(
   // Number text
   ctx.fillStyle = EDITOR_LINE_NUMBER_COLOR_RAW;
   ctx.textAlign = "right";
+  ctx.textBaseline = "top";
   ctx.font = `${fontSize}px ${fontFamily}`;
   ctx.fillText(String(lineNumber), padding + lineNumberWidth - 8, textY);
   ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
 }
 
 /**
@@ -342,7 +355,6 @@ function drawCanvasToken(
   y: number
 ): void {
   const { ctx, lineHeight, tokenStyles, fontFamily, fontSize } = context;
-  const textY = y + lineHeight * 0.75;
 
   const style = tokenStyles?.[token.type];
   const color = (style?.color as string) ?? "#000000";
@@ -351,15 +363,22 @@ function drawCanvasToken(
   const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
   const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
 
+  // Vertical center with textBaseline="top"
+  const textY = y + (lineHeight - tokenFontSize) / 2;
+
   ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
   ctx.fillStyle = color;
+  ctx.textBaseline = "top";
   ctx.fillText(token.text, x, textY);
 
   // Handle text decoration
   const textDecoration = style?.textDecoration as string | undefined;
   if (textDecoration === "underline" || textDecoration === "line-through") {
     const textWidth = ctx.measureText(token.text).width;
-    const decorationY = textDecoration === "underline" ? textY + 2 : textY - tokenFontSize * 0.3;
+    // With textBaseline="top", underline is below text, strikethrough is at center
+    const decorationY = textDecoration === "underline"
+      ? textY + tokenFontSize + 2
+      : textY + tokenFontSize * 0.5;
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -368,8 +387,9 @@ function drawCanvasToken(
     ctx.stroke();
   }
 
-  // Reset font
+  // Reset
   ctx.font = `normal normal ${fontSize}px ${fontFamily}`;
+  ctx.textBaseline = "alphabetic";
 }
 
 // =============================================================================
@@ -392,7 +412,7 @@ function computeBlockRenderInfo(
   const result: BlockRenderInfo[] = [];
 
   // For document coordinates, y starts at the document position of the first visible line
-  // For relative coordinates (legacy), y starts at 0 (after top spacer)
+  // For relative coordinates (legacy), y starts at 0
   const initialY = useDocumentCoordinates ? (startLineNumber - 1) * lineHeight : 0;
   const state = { currentLine: startLineNumber, y: initialY };
 
@@ -434,6 +454,9 @@ function getBlockHighlights(
   });
 }
 
+// Block type styling is now configuration-based via BlockTypeStyle.
+// See getBlockTypeStyle() in blockDocument.ts for the implementation.
+
 // =============================================================================
 // Block Line Component
 // =============================================================================
@@ -456,6 +479,12 @@ type BlockLineProps = {
   readonly fontSize: number;
   readonly localStyles: readonly LocalStyleSegment[];
   readonly localOffset: number;
+  /** Block type style configuration (resolved from document or defaults) */
+  readonly blockTypeStyle?: BlockTypeStyle;
+  /** Whether this is the first line of the block (for decorations) */
+  readonly isFirstLineOfBlock?: boolean;
+  /** Block height for decorations spanning multiple lines */
+  readonly blockHeight?: number;
 };
 
 /**
@@ -482,7 +511,10 @@ function blockLinePropsAreEqual(
     prev.lineNumberWidth !== next.lineNumberWidth ||
     prev.fontFamily !== next.fontFamily ||
     prev.fontSize !== next.fontSize ||
-    prev.localOffset !== next.localOffset
+    prev.localOffset !== next.localOffset ||
+    prev.blockTypeStyle !== next.blockTypeStyle ||
+    prev.isFirstLineOfBlock !== next.isFirstLineOfBlock ||
+    prev.blockHeight !== next.blockHeight
   ) {
     return false;
   }
@@ -553,20 +585,43 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     tokenStyles,
     fontFamily,
     fontSize,
-    // localStyles and localOffset are passed for future styled text rendering
+    blockTypeStyle,
+    isFirstLineOfBlock = false,
+    blockHeight = lineHeight,
+    localStyles,
+    localOffset,
   } = props;
 
-  // Calculate code X offset (after line numbers if shown)
-  const codeXOffset = showLineNumbers ? xOffset + lineNumberWidth : xOffset;
-  const textY = y + lineHeight * 0.75;
+  // Extract block-type-specific styling from configuration
+  const blockFontSizeMultiplier = blockTypeStyle?.fontSizeMultiplier ?? 1;
+  const blockFontWeight = blockTypeStyle?.fontWeight;
+  const blockFontFamily = blockTypeStyle?.fontFamily;
+  const blockIndent = blockTypeStyle?.indentation ?? 0;
+  const blockColor = blockTypeStyle?.color;
+
+  // Effective font size for this block type
+  const effectiveFontSize = fontSize * blockFontSizeMultiplier;
+
+  // Calculate code X offset (after line numbers if shown) + block indentation
+  const baseXOffset = showLineNumbers ? xOffset + lineNumberWidth : xOffset;
+  const leftBorderWidth = blockTypeStyle?.leftBorder?.width ?? 0;
+  const codeXOffset = baseXOffset + blockIndent + leftBorderWidth + (leftBorderWidth > 0 ? 4 : 0);
+
+  // Calculate text Y position for vertical centering
+  // With dominantBaseline="hanging", y is the top of the text box
+  // Center vertically: (lineHeight - fontSize) / 2
+  const textY = y + (lineHeight - effectiveFontSize) / 2;
+  // Line numbers use base fontSize, not effectiveFontSize
+  const lineNumberTextY = y + (lineHeight - fontSize) / 2;
 
   // Get tokens for this line
   const tokens = tokenCache.getTokens(lineText, lineIndex);
 
   // Calculate token positions using style-aware measurement
+  // Apply blockFontSizeMultiplier to account for block-level font size changes
   const tokenPositions = useMemo(
-    () => calculateTokenPositions(tokens, tokenStyles, codeXOffset, fontSize, measureText),
-    [tokens, tokenStyles, codeXOffset, fontSize, measureText]
+    () => calculateTokenPositions(tokens, tokenStyles, codeXOffset, fontSize, measureText, blockFontSizeMultiplier),
+    [tokens, tokenStyles, codeXOffset, fontSize, measureText, blockFontSizeMultiplier]
   );
 
   // Get X position for any column using style-aware calculation
@@ -585,12 +640,13 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
         // Measure actual text width (handles CJK characters correctly)
         const widthWithinToken = measureText(textWithinToken);
 
-        // Apply font size ratio if token has custom font size
+        // Apply font size ratio: block multiplier * token-specific ratio
         const style = tokenStyles?.[token.type];
         const tokenFontSize = style?.fontSize;
-        const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, fontSize) : 1;
+        const tokenFontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, fontSize) : 1;
+        const totalRatio = blockFontSizeMultiplier * tokenFontSizeRatio;
 
-        return tokenPositions[i] + widthWithinToken * fontSizeRatio;
+        return tokenPositions[i] + widthWithinToken * totalRatio;
       }
     }
     // Position is at or past end of line
@@ -599,12 +655,13 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
       const lastToken = tokens[lastIdx];
       const style = tokenStyles?.[lastToken.type];
       const tokenFontSize = style?.fontSize;
-      const fontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, fontSize) : 1;
+      const tokenFontSizeRatio = tokenFontSize ? parseFontSizeRatio(tokenFontSize, fontSize) : 1;
+      const totalRatio = blockFontSizeMultiplier * tokenFontSizeRatio;
       const baseWidth = measureText(lastToken.text);
-      return tokenPositions[lastIdx] + baseWidth * fontSizeRatio;
+      return tokenPositions[lastIdx] + baseWidth * totalRatio;
     }
-    // Empty line - use measureText for cursor position
-    return codeXOffset + measureText(lineText.slice(0, col - 1));
+    // Empty line - use measureText for cursor position (apply block multiplier)
+    return codeXOffset + measureText(lineText.slice(0, col - 1)) * blockFontSizeMultiplier;
   };
 
   // Render line number
@@ -623,11 +680,12 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
         />
         <text
           x={xOffset + lineNumberWidth - 8}
-          y={textY}
+          y={lineNumberTextY}
           fontFamily={fontFamily}
           fontSize={fontSize}
           fill={EDITOR_LINE_NUMBER_COLOR}
           textAnchor="end"
+          dominantBaseline="hanging"
         >
           {lineNumber}
         </text>
@@ -687,6 +745,48 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     });
   };
 
+  // Get inline styles that apply to a token
+  const getInlineStylesForToken = (token: Token): LocalStyleSegment["style"] | null => {
+    if (localStyles.length === 0) {
+      return null;
+    }
+
+    // Token position in block coordinates
+    const tokenStartInBlock = localOffset + token.start;
+    const tokenEndInBlock = localOffset + token.end;
+
+    // Find overlapping inline styles and merge them
+    const overlapping = localStyles.filter(
+      (s) => s.start < tokenEndInBlock && s.end > tokenStartInBlock
+    );
+
+    if (overlapping.length === 0) {
+      return null;
+    }
+
+    // Merge all overlapping styles (later styles override earlier ones)
+    // Using mutable type since we're building a new object
+    type MutableTextStyle = {
+      fontFamily?: string;
+      fontSize?: string;
+      fontWeight?: string;
+      fontStyle?: "normal" | "italic";
+      textDecoration?: "none" | "underline" | "line-through";
+      color?: string;
+    };
+    const merged: MutableTextStyle = {};
+    for (const s of overlapping) {
+      if (s.style.fontWeight) merged.fontWeight = s.style.fontWeight;
+      if (s.style.fontStyle) merged.fontStyle = s.style.fontStyle;
+      if (s.style.fontFamily) merged.fontFamily = s.style.fontFamily;
+      if (s.style.textDecoration) merged.textDecoration = s.style.textDecoration;
+      if (s.style.color) merged.color = s.style.color;
+      if (s.style.fontSize) merged.fontSize = s.style.fontSize;
+    }
+
+    return Object.keys(merged).length > 0 ? (merged as LocalStyleSegment["style"]) : null;
+  };
+
   // Render tokens with styles
   const renderTokens = (): ReactNode => {
     if (tokens.length === 0) {
@@ -695,12 +795,17 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
 
     return tokens.map((token, i) => {
       const style = tokenStyles?.[token.type];
-      const fill = (style?.color as string) ?? "inherit";
-      const fontWeight = style?.fontWeight as string | undefined;
-      const fontStyle = style?.fontStyle as string | undefined;
-      const textDecoration = style?.textDecoration as string | undefined;
-      const tokenFontSize = style?.fontSize as string | undefined;
-      const tokenFontFamily = style?.fontFamily as string | undefined;
+      const inlineStyle = getInlineStylesForToken(token);
+
+      // Style priority: block > inline > token > inherit
+      // Block styles take highest precedence
+      const fill = blockColor ?? inlineStyle?.color ?? (style?.color as string) ?? "inherit";
+      const fontWeight = blockFontWeight ?? inlineStyle?.fontWeight ?? (style?.fontWeight as string | undefined);
+      const fontStyle = inlineStyle?.fontStyle ?? (style?.fontStyle as string | undefined);
+      const textDecoration = inlineStyle?.textDecoration ?? (style?.textDecoration as string | undefined);
+      const tokenFontSize = inlineStyle?.fontSize ?? (style?.fontSize as string | undefined);
+      // Block font family takes precedence (e.g., for code blocks), then inline, then token
+      const tokenFontFamily = blockFontFamily ?? inlineStyle?.fontFamily ?? (style?.fontFamily as string | undefined);
 
       return (
         <tspan
@@ -741,11 +846,48 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     );
   };
 
+  // Render block decoration (left border, background) from blockTypeStyle
+  const renderBlockDecoration = (): ReactNode => {
+    const hasDecoration = blockTypeStyle?.backgroundColor || blockTypeStyle?.leftBorder;
+    if (!hasDecoration || !isFirstLineOfBlock) {
+      return null;
+    }
+
+    const decorationX = baseXOffset + blockIndent;
+
+    return (
+      <g>
+        {/* Background */}
+        {blockTypeStyle.backgroundColor && (
+          <rect
+            x={decorationX}
+            y={y}
+            width={500} // Full width, will be clipped by parent
+            height={blockHeight}
+            fill={blockTypeStyle.backgroundColor}
+          />
+        )}
+        {/* Left border */}
+        {blockTypeStyle.leftBorder && blockTypeStyle.leftBorder.width > 0 && (
+          <rect
+            x={decorationX}
+            y={y}
+            width={blockTypeStyle.leftBorder.width}
+            height={blockHeight}
+            fill={blockTypeStyle.leftBorder.color}
+            rx={1}
+          />
+        )}
+      </g>
+    );
+  };
+
   return (
     <g>
+      {renderBlockDecoration()}
       {renderLineNumber()}
       {renderHighlights()}
-      <text x={codeXOffset} y={textY} fontFamily={fontFamily} fontSize={fontSize}>
+      <text x={codeXOffset} y={textY} fontFamily={fontFamily} fontSize={effectiveFontSize} dominantBaseline="hanging">
         {renderTokens()}
       </text>
       {renderCursor()}
@@ -770,6 +912,8 @@ type SingleBlockProps = {
   readonly tokenStyles?: TokenStyleMap;
   readonly fontFamily: string;
   readonly fontSize: number;
+  /** Block type styles for extensible rendering */
+  readonly blockTypeStyles?: BlockTypeStyleMap;
 };
 
 /**
@@ -904,8 +1048,15 @@ const SingleBlock = memo(function SingleBlock({
   tokenStyles,
   fontFamily,
   fontSize,
+  blockTypeStyles,
 }: SingleBlockProps): ReactNode {
-  const { block, startLine, lineCount, y } = info;
+  const { block, startLine, lineCount, y, height } = info;
+
+  // Get resolved block type style from configuration
+  const blockTypeStyle = useMemo(
+    () => getBlockTypeStyle(block.type, blockTypeStyles),
+    [block.type, blockTypeStyles]
+  );
 
   // Split block content into lines
   const lines = useMemo(() => block.content.split("\n"), [block.content]);
@@ -970,6 +1121,9 @@ const SingleBlock = memo(function SingleBlock({
           fontSize={fontSize}
           localStyles={lineStyles}
           localOffset={localOffset}
+          blockTypeStyle={blockTypeStyle}
+          isFirstLineOfBlock={i === 0}
+          blockHeight={height}
         />
       );
     });
@@ -1001,6 +1155,8 @@ type CanvasBlockRendererProps = {
   readonly viewport?: ViewportState;
   // Cursor color
   readonly cursorColor: string;
+  // Block type styles for headings, etc.
+  readonly blockTypeStyles?: BlockTypeStyleMap;
 };
 
 /**
@@ -1084,6 +1240,7 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
   isViewportMode,
   viewport,
   cursorColor,
+  blockTypeStyles,
 }: CanvasBlockRendererProps): ReactNode {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafIdRef = useRef<number | null>(null);
@@ -1140,7 +1297,45 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
       cursorColor,
     };
 
-    const codeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
+    const baseCodeXOffset = showLineNumbers ? padding + lineNumberWidth : padding;
+
+    // Helper to get inline styles for a token from block.styles
+    const getInlineStylesForToken = (
+      token: Token,
+      localOffset: number,
+      localStyles: readonly LocalStyleSegment[]
+    ): LocalStyleSegment["style"] | null => {
+      if (localStyles.length === 0) {
+        return null;
+      }
+      const tokenStartInBlock = localOffset + token.start;
+      const tokenEndInBlock = localOffset + token.end;
+      const overlapping = localStyles.filter(
+        (s) => s.start < tokenEndInBlock && s.end > tokenStartInBlock
+      );
+      if (overlapping.length === 0) {
+        return null;
+      }
+      // Merge overlapping styles
+      type MutableTextStyle = {
+        fontFamily?: string;
+        fontSize?: string;
+        fontWeight?: string;
+        fontStyle?: "normal" | "italic";
+        textDecoration?: "none" | "underline" | "line-through";
+        color?: string;
+      };
+      const merged: MutableTextStyle = {};
+      for (const s of overlapping) {
+        if (s.style.fontWeight) merged.fontWeight = s.style.fontWeight;
+        if (s.style.fontStyle) merged.fontStyle = s.style.fontStyle;
+        if (s.style.fontFamily) merged.fontFamily = s.style.fontFamily;
+        if (s.style.textDecoration) merged.textDecoration = s.style.textDecoration;
+        if (s.style.color) merged.color = s.style.color;
+        if (s.style.fontSize) merged.fontSize = s.style.fontSize;
+      }
+      return Object.keys(merged).length > 0 ? (merged as LocalStyleSegment["style"]) : null;
+    };
 
     // Draw each block - highlights, line numbers, tokens all in one pass
     for (const info of blockInfos) {
@@ -1148,12 +1343,39 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
       const lines = block.content.split("\n");
       const blockHighlights = getBlockHighlights(startLine, lines.length, highlights);
 
+      // Get block type style
+      const blockTypeStyle = getBlockTypeStyle(block.type, blockTypeStyles);
+      const blockFontSizeMultiplier = blockTypeStyle?.fontSizeMultiplier ?? 1;
+      const blockFontWeight = blockTypeStyle?.fontWeight;
+      const blockFontFamily = blockTypeStyle?.fontFamily;
+      const blockIndent = blockTypeStyle?.indentation ?? 0;
+      const blockColor = blockTypeStyle?.color;
+      const leftBorderWidth = blockTypeStyle?.leftBorder?.width ?? 0;
+
+      // Effective font size for this block
+      const effectiveFontSize = fontSize * blockFontSizeMultiplier;
+
+      // Code X offset with block indentation
+      const codeXOffset = baseCodeXOffset + blockIndent + leftBorderWidth + (leftBorderWidth > 0 ? 4 : 0);
+
       for (let i = 0; i < lines.length; i++) {
         const lineText = lines[i];
         const lineNumber = startLine + i;
         // All drawing uses relative position (y=0 for first visible line)
         const lineY = blockY - firstBlockDocY + i * lineHeight;
         const lineIndex = startLine + i - 1;
+
+        // Calculate local offset for inline styles
+        let localOffset = 0;
+        for (let k = 0; k < i; k++) {
+          localOffset += lines[k].length + 1; // +1 for newline
+        }
+
+        // Get styles that apply to this line
+        const lineStyles = block.styles.filter((s) => {
+          const lineEnd = localOffset + lineText.length;
+          return s.start < lineEnd && s.end > localOffset;
+        });
 
         // Get tokens and calculate positions
         const tokens = tokenCache.getTokens(lineText, lineIndex);
@@ -1164,10 +1386,12 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
         for (const token of tokens) {
           tokenPositions.push(acc.x);
           const style = tokenStyles?.[token.type];
-          const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
-          const fontWeight = (style?.fontWeight as string) ?? "normal";
-          const fontStyle = (style?.fontStyle as string) ?? "normal";
-          const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+          const inlineStyle = getInlineStylesForToken(token, localOffset, lineStyles);
+          // Priority: block > inline > token
+          const tokenFontSize = parseFontSize(inlineStyle?.fontSize ?? style?.fontSize as string | undefined, effectiveFontSize);
+          const fontWeight = blockFontWeight ?? inlineStyle?.fontWeight ?? (style?.fontWeight as string) ?? "normal";
+          const fontStyle = inlineStyle?.fontStyle ?? (style?.fontStyle as string) ?? "normal";
+          const tokenFontFamily = blockFontFamily ?? inlineStyle?.fontFamily ?? (style?.fontFamily as string) ?? fontFamily;
           ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
           acc.x += ctx.measureText(token.text).width;
         }
@@ -1188,10 +1412,11 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
             if (targetCol <= token.end) {
               // Position within this token
               const style = tokenStyles?.[token.type];
-              const tokenFontSize = parseFontSize(style?.fontSize as string | undefined, fontSize);
-              const fontWeight = (style?.fontWeight as string) ?? "normal";
-              const fontStyle = (style?.fontStyle as string) ?? "normal";
-              const tokenFontFamily = (style?.fontFamily as string) ?? fontFamily;
+              const inlineStyle = getInlineStylesForToken(token, localOffset, lineStyles);
+              const tokenFontSize = parseFontSize(inlineStyle?.fontSize ?? style?.fontSize as string | undefined, effectiveFontSize);
+              const fontWeight = blockFontWeight ?? inlineStyle?.fontWeight ?? (style?.fontWeight as string) ?? "normal";
+              const fontStyle = inlineStyle?.fontStyle ?? (style?.fontStyle as string) ?? "normal";
+              const tokenFontFamily = blockFontFamily ?? inlineStyle?.fontFamily ?? (style?.fontFamily as string) ?? fontFamily;
               ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
               const textBefore = token.text.slice(0, targetCol - token.start);
               return tokenPositions[j] + ctx.measureText(textBefore).width;
@@ -1200,7 +1425,29 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
           return lineEndX;
         };
 
-        // 1. Draw highlights (behind everything)
+        // Calculate text Y for vertical centering with textBaseline="top"
+        const textY = lineY + (lineHeight - effectiveFontSize) / 2;
+
+        // 1. Draw block decoration (background, left border)
+        if (i === 0 && blockTypeStyle) {
+          // Draw background
+          if (blockTypeStyle.backgroundColor) {
+            ctx.fillStyle = blockTypeStyle.backgroundColor;
+            ctx.fillRect(codeXOffset - 4, lineY, lineEndX - codeXOffset + 8, info.height);
+          }
+          // Draw left border
+          if (blockTypeStyle.leftBorder) {
+            ctx.fillStyle = blockTypeStyle.leftBorder.color;
+            ctx.fillRect(
+              baseCodeXOffset + blockIndent,
+              lineY,
+              blockTypeStyle.leftBorder.width,
+              info.height
+            );
+          }
+        }
+
+        // 2. Draw highlights (behind everything)
         const lineHighlights = getLineHighlights(lineNumber, lineText.length, blockHighlights);
         for (const h of lineHighlights) {
           const startX = getColumnX(h.startColumn);
@@ -1208,20 +1455,53 @@ const CanvasBlockRenderer = memo(function CanvasBlockRenderer({
           drawCanvasHighlight(drawContext, h, lineY, startX, endX);
         }
 
-        // 2. Draw line number
+        // 3. Draw line number
         if (showLineNumbers) {
           drawCanvasLineNumber(drawContext, lineNumber, lineY);
         }
 
-        // 3. Draw tokens
+        // 4. Draw tokens with inline styles
+        ctx.textBaseline = "top";
         for (let j = 0; j < tokens.length; j++) {
-          drawCanvasToken(drawContext, tokens[j], tokenPositions[j], lineY);
-        }
+          const token = tokens[j];
+          const x = tokenPositions[j];
+          const style = tokenStyles?.[token.type];
+          const inlineStyle = getInlineStylesForToken(token, localOffset, lineStyles);
 
-        // 4. Draw cursor if on this line
+          // Priority: block > inline > token
+          const color = blockColor ?? inlineStyle?.color ?? (style?.color as string) ?? "#000000";
+          const fontWeight = blockFontWeight ?? inlineStyle?.fontWeight ?? (style?.fontWeight as string) ?? "normal";
+          const fontStyle = inlineStyle?.fontStyle ?? (style?.fontStyle as string) ?? "normal";
+          const tokenFontSize = parseFontSize(inlineStyle?.fontSize ?? style?.fontSize as string | undefined, effectiveFontSize);
+          const tokenFontFamily = blockFontFamily ?? inlineStyle?.fontFamily ?? (style?.fontFamily as string) ?? fontFamily;
+
+          ctx.font = `${fontStyle} ${fontWeight} ${tokenFontSize}px ${tokenFontFamily}`;
+          ctx.fillStyle = color;
+          ctx.fillText(token.text, x, textY);
+
+          // Handle text decoration
+          const textDecoration = inlineStyle?.textDecoration ?? (style?.textDecoration as string | undefined);
+          if (textDecoration === "underline" || textDecoration === "line-through") {
+            const textWidth = ctx.measureText(token.text).width;
+            // With textBaseline="top", underline is below text, strikethrough is at center
+            const decorationY = textDecoration === "underline"
+              ? textY + tokenFontSize + 2
+              : textY + tokenFontSize * 0.5;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x, decorationY);
+            ctx.lineTo(x + textWidth, decorationY);
+            ctx.stroke();
+          }
+        }
+        ctx.textBaseline = "alphabetic";
+
+        // 5. Draw cursor if on this line
         if (cursor?.visible && cursor.line === lineNumber) {
           const cursorX = getColumnX(cursor.column);
-          drawCanvasCursor(drawContext, cursorX, lineY);
+          ctx.fillStyle = cursorColor;
+          ctx.fillRect(cursorX, lineY, 2, lineHeight);
         }
       }
     }
@@ -1307,6 +1587,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   fontSize = DEFAULT_FONT_SIZE,
   startLineNumber = 1,
   renderer = "svg",
+  blockTypeStyles,
   // Viewport mode props
   viewportConfig,
   viewport,
@@ -1371,6 +1652,7 @@ export const BlockRenderer = memo(function BlockRenderer({
           isViewportMode={isViewportMode}
           viewport={viewport}
           cursorColor={effectiveCursorColor}
+          blockTypeStyles={blockTypeStyles}
         />
       );
     }
@@ -1392,6 +1674,7 @@ export const BlockRenderer = memo(function BlockRenderer({
         tokenStyles={tokenStyles}
         fontFamily={fontFamily}
         fontSize={fontSize}
+        blockTypeStyles={blockTypeStyles}
       />
     ));
 

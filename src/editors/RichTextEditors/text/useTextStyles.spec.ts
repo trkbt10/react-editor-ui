@@ -694,3 +694,95 @@ describe("useTextStyles memoization", () => {
     expect(result.current.tokenStyles).not.toBe(initialTokenStyles);
   });
 });
+
+// =============================================================================
+// Overlapping Styles Tests (Bug Prevention)
+// =============================================================================
+
+describe("useTextStyles overlapping segments", () => {
+  it("does not create overlapping tokens for overlapping style segments", () => {
+    // This tests the bug fix: when two style segments overlap,
+    // the tokenizer should not create overlapping tokens
+    const styles: TextStyleSegment[] = [
+      { start: 0, end: 5, style: BOLD_STYLE },   // "Hello"
+      { start: 2, end: 7, style: ITALIC_STYLE }, // "llo W" - overlapping!
+    ];
+    const { result } = renderHook(() => useTextStyles(styles));
+
+    // Line "Hello World" at offset 0
+    const tokens = result.current.tokenizer.tokenize("Hello World", 0);
+
+    // Tokens should not overlap - each character should be covered by at most one token
+    const coverage = new Array(11).fill(0);
+    for (const token of tokens) {
+      for (let i = token.start; i < token.end; i++) {
+        coverage[i]++;
+      }
+    }
+
+    // Each character should be covered exactly once
+    expect(coverage.every(c => c === 1)).toBe(true);
+  });
+
+  it("handles fully contained overlapping segment", () => {
+    // Segment 1: 0-10, Segment 2: 3-6 (fully contained)
+    const styles: TextStyleSegment[] = [
+      { start: 0, end: 10, style: BOLD_STYLE },
+      { start: 3, end: 6, style: ITALIC_STYLE },
+    ];
+    const { result } = renderHook(() => useTextStyles(styles));
+
+    const tokens = result.current.tokenizer.tokenize("0123456789", 0);
+
+    // Verify no overlapping tokens
+    for (let i = 0; i < tokens.length - 1; i++) {
+      expect(tokens[i].end).toBeLessThanOrEqual(tokens[i + 1].start);
+    }
+
+    // Total coverage should equal line length
+    const totalCoverage = tokens.reduce((sum, t) => sum + (t.end - t.start), 0);
+    expect(totalCoverage).toBe(10);
+  });
+
+  it("handles multiple overlapping segments", () => {
+    // Three overlapping segments
+    const styles: TextStyleSegment[] = [
+      { start: 0, end: 6, style: BOLD_STYLE },    // "Hello "
+      { start: 3, end: 9, style: ITALIC_STYLE },  // "lo Wor"
+      { start: 6, end: 11, style: RED_STYLE },    // "World"
+    ];
+    const { result } = renderHook(() => useTextStyles(styles));
+
+    const tokens = result.current.tokenizer.tokenize("Hello World", 0);
+
+    // Count character coverage
+    const coverage = new Array(11).fill(0);
+    for (const token of tokens) {
+      for (let i = token.start; i < token.end; i++) {
+        coverage[i]++;
+      }
+    }
+
+    // Each character should be covered exactly once
+    expect(coverage.every(c => c === 1)).toBe(true);
+  });
+
+  it("adjacent tokens should not have gaps", () => {
+    const styles: TextStyleSegment[] = [
+      { start: 0, end: 5, style: BOLD_STYLE },
+      { start: 5, end: 10, style: ITALIC_STYLE },
+    ];
+    const { result } = renderHook(() => useTextStyles(styles));
+
+    const tokens = result.current.tokenizer.tokenize("HelloWorld", 0);
+
+    // Each character should be covered exactly once (no gaps, no overlaps)
+    const coverage = new Array(10).fill(0);
+    for (const token of tokens) {
+      for (let i = token.start; i < token.end; i++) {
+        coverage[i]++;
+      }
+    }
+    expect(coverage.every(c => c === 1)).toBe(true);
+  });
+});
