@@ -1,27 +1,29 @@
 /**
- * @file FillPanel component - Panel for switching between fill types
+ * @file FillPanel component - Fill type switching and editing
  *
  * @description
- * A fill editor panel supporting solid, gradient, image, pattern, and video fills.
+ * Fill editor panel content supporting solid, gradient, image, pattern, and video fills.
  * Includes a type selector and corresponding editor section for each fill type.
- * Use for shape fill properties in design tools.
+ * Use for shape fill properties in design tools. Wrap with PanelFrame for floating panel UI.
  *
  * @example
  * ```tsx
  * import { FillPanel } from "react-editor-ui/panels/FillPanel";
+ * import { PanelFrame } from "react-editor-ui/PanelFrame";
  *
  * const [fill, setFill] = useState({
  *   type: "solid",
  *   color: { hex: "#3b82f6", opacity: 100, visible: true },
  * });
  *
- * <FillPanel value={fill} onChange={setFill} />
+ * <PanelFrame title="Fill" onClose={handleClose}>
+ *   <FillPanel value={fill} onChange={setFill} />
+ * </PanelFrame>
  * ```
  */
 
 import { memo, useCallback, type CSSProperties } from "react";
 import { SPACE_MD } from "../../themes/styles";
-import { Panel } from "../Panel/Panel";
 import { ColorInput } from "../../components/ColorInput/ColorInput";
 import { FillTypeSelector } from "../../components/FillTypeSelector/FillTypeSelector";
 import type { ColorValue } from "../../utils/color/types";
@@ -47,9 +49,7 @@ export type FillPanelProps = {
   onChange: (value: FillValue) => void;
   onImageUpload?: () => void;
   onPatternSelect?: () => void;
-  onClose?: () => void;
   disabled?: boolean;
-  width?: number;
   className?: string;
   "aria-label"?: string;
 };
@@ -61,16 +61,14 @@ const containerStyle: CSSProperties = {
 };
 
 /**
- * Fill editor panel with type selection and corresponding editor sections.
+ * Fill editor panel content with type selection and corresponding editor sections.
  */
 export const FillPanel = memo(function FillPanel({
   value,
   onChange,
   onImageUpload,
   onPatternSelect,
-  onClose,
   disabled = false,
-  width = 280,
   className,
   "aria-label": ariaLabel = "Fill editor",
 }: FillPanelProps) {
@@ -181,26 +179,20 @@ export const FillPanel = memo(function FillPanel({
   };
 
   return (
-    <Panel
-      title="Fill"
-      onClose={onClose}
-      width={width}
+    <div
+      role="group"
+      aria-label={ariaLabel}
       className={className}
+      style={containerStyle}
     >
-      <div
-        role="group"
-        aria-label={ariaLabel}
-        style={containerStyle}
-      >
-        <FillTypeSelector
-          value={value.type}
-          onChange={handleTypeChange}
-          disabled={disabled}
-          aria-label="Fill type"
-        />
+      <FillTypeSelector
+        value={value.type}
+        onChange={handleTypeChange}
+        disabled={disabled}
+        aria-label="Fill type"
+      />
 
-        {renderContent()}
-      </div>
-    </Panel>
+      {renderContent()}
+    </div>
   );
 });

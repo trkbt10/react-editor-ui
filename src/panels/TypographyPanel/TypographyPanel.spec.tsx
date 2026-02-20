@@ -16,11 +16,6 @@ describe("TypographyPanel", () => {
     verticalAlign: "top",
   };
 
-  it("renders typography section header", () => {
-    render(<TypographyPanel settings={defaultSettings} onChange={() => {}} />);
-    expect(screen.getByText("Typography")).toBeInTheDocument();
-  });
-
   it("renders font family selector", () => {
     render(<TypographyPanel settings={defaultSettings} onChange={() => {}} />);
     expect(screen.getByLabelText("Font family")).toBeInTheDocument();
@@ -125,8 +120,8 @@ describe("TypographyPanel", () => {
       />
     );
 
-    // Font is available, so shows "A" icon
-    const fontIcon = screen.getByTestId("font-icon");
+    // Font is not in defaultFontOptions, so shows "A?" icon (font-icon-missing)
+    const fontIcon = screen.getByTestId("font-icon-missing");
     fireEvent.click(fontIcon);
 
     expect(ref.value).toBe(true);
@@ -145,10 +140,13 @@ describe("TypographyPanel", () => {
   });
 
   it("shows A icon when font is in options list", () => {
+    // Provide fontOptions that include the settings fontFamily
+    const fontOptions = [{ value: "SF Pro", label: "SF Pro" }];
     render(
       <TypographyPanel
         settings={defaultSettings}
         onChange={() => {}}
+        fontOptions={fontOptions}
       />
     );
 

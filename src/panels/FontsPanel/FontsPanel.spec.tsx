@@ -18,13 +18,6 @@ describe("FontsPanel", () => {
     { name: "Dancing Script", family: "'Dancing Script', cursive", category: "handwriting" },
   ];
 
-  it("renders panel title", () => {
-    render(
-      <FontsPanel fonts={sampleFonts} selectedFont="SF Pro" onSelectFont={() => {}} />
-    );
-    expect(screen.getByText("Fonts")).toBeInTheDocument();
-  });
-
   it("renders search input", () => {
     render(
       <FontsPanel fonts={sampleFonts} selectedFont="SF Pro" onSelectFont={() => {}} />
@@ -124,33 +117,6 @@ describe("FontsPanel", () => {
     expect(screen.getByText("No fonts found")).toBeInTheDocument();
   });
 
-  it("calls onClose when close button is clicked", () => {
-    const ref = { called: false };
-    const handleClose = () => {
-      ref.called = true;
-    };
-    render(
-      <FontsPanel
-        fonts={sampleFonts}
-        selectedFont="SF Pro"
-        onSelectFont={() => {}}
-        onClose={handleClose}
-      />
-    );
-
-    const closeButton = screen.getByLabelText("Close");
-    fireEvent.click(closeButton);
-
-    expect(ref.called).toBe(true);
-  });
-
-  it("does not render close button when onClose is not provided", () => {
-    render(
-      <FontsPanel fonts={sampleFonts} selectedFont="SF Pro" onSelectFont={() => {}} />
-    );
-    expect(screen.queryByLabelText("Close")).not.toBeInTheDocument();
-  });
-
   it("combines search and category filters", () => {
     render(
       <FontsPanel fonts={sampleFonts} selectedFont="SF Pro" onSelectFont={() => {}} />
@@ -182,32 +148,6 @@ describe("FontsPanel", () => {
 
     expect(screen.getByText("SF Pro")).toBeInTheDocument();
     expect(screen.getByText("SF Pro Rounded")).toBeInTheDocument();
-  });
-
-  it("applies custom width", () => {
-    const { container } = render(
-      <FontsPanel
-        fonts={sampleFonts}
-        selectedFont="SF Pro"
-        onSelectFont={() => {}}
-        width={400}
-      />
-    );
-    const panel = container.firstChild as HTMLElement;
-    expect(panel.style.width).toBe("400px");
-  });
-
-  it("applies custom width as string", () => {
-    const { container } = render(
-      <FontsPanel
-        fonts={sampleFonts}
-        selectedFont="SF Pro"
-        onSelectFont={() => {}}
-        width="50%"
-      />
-    );
-    const panel = container.firstChild as HTMLElement;
-    expect(panel.style.width).toBe("50%");
   });
 
   it("displays fonts in their own font family", () => {

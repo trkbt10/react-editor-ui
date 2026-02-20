@@ -20,10 +20,8 @@ export type PositionSettings = {
 export type PositionPanelProps = {
   settings: PositionSettings;
   onChange: (settings: PositionSettings) => void;
-  onClose?: () => void;
   onToggleConstraints?: () => void;
   onTransformAction?: (action: string) => void;
-  width?: number | string;
   className?: string;
 };
 

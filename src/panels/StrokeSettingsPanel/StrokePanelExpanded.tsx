@@ -1,5 +1,21 @@
 /**
- * @file StrokePanelExpanded - Stroke settings panel with all options visible
+ * @file StrokePanelExpanded - Stroke settings with all options visible
+ *
+ * @description
+ * Expanded stroke settings content with all options visible: weight, caps, joins, dashes, and arrowheads.
+ * Wrap with PanelFrame for floating panel UI.
+ *
+ * @example
+ * ```tsx
+ * import { StrokePanelExpanded, createDefaultExpandedSettings } from "react-editor-ui/panels/StrokeSettingsPanel";
+ * import { PanelFrame } from "react-editor-ui/PanelFrame";
+ *
+ * const [settings, setSettings] = useState(createDefaultExpandedSettings());
+ *
+ * <PanelFrame title="Stroke" onClose={handleClose}>
+ *   <StrokePanelExpanded settings={settings} onChange={setSettings} />
+ * </PanelFrame>
+ * ```
  */
 
 import type { CSSProperties } from "react";
@@ -12,7 +28,6 @@ import type {
   WidthProfile,
 } from "./types";
 import type { WeightUnit } from "./StrokeWeightInput";
-import { Panel } from "../../panels/Panel/Panel";
 import { Input } from "../../components/Input/Input";
 import { StrokeCapSelect } from "./StrokeCapSelect";
 import { StrokeJoinSelect } from "./StrokeJoinSelect";
@@ -46,9 +61,6 @@ export type StrokePanelExpandedSettings = {
 export type StrokePanelExpandedProps = {
   settings: StrokePanelExpandedSettings;
   onChange: (settings: StrokePanelExpandedSettings) => void;
-  onClose?: () => void;
-  title?: string;
-  width?: number;
   className?: string;
 };
 
@@ -95,13 +107,10 @@ export function createDefaultExpandedSettings(): StrokePanelExpandedSettings {
   };
 }
 
-/** Expanded stroke panel with weight, caps, joins, dashes, and arrowheads */
+/** Expanded stroke panel content with weight, caps, joins, dashes, and arrowheads */
 export function StrokePanelExpanded({
   settings,
   onChange,
-  onClose,
-  title = "Stroke",
-  width = 340,
   className,
 }: StrokePanelExpandedProps) {
   const update = <K extends keyof StrokePanelExpandedSettings>(
@@ -111,87 +120,85 @@ export function StrokePanelExpanded({
     onChange({ ...settings, [key]: value });
   };
 
-  const contentStyle: CSSProperties = {
+  const containerStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column",
     gap: SPACE_MD,
   };
 
   return (
-    <Panel title={title} onClose={onClose} width={width} className={className}>
-      <div style={contentStyle}>
-        <ControlRow label="Weight:" labelWidth={LABEL_WIDTH} gap="sm">
-          <StrokeWeightInput
-            value={settings.weight}
-            onChange={(v) => update("weight", v)}
-            unit={settings.weightUnit}
-            onUnitChange={(u) => update("weightUnit", u)}
-          />
-        </ControlRow>
+    <div className={className} style={containerStyle}>
+      <ControlRow label="Weight:" labelWidth={LABEL_WIDTH} gap="sm">
+        <StrokeWeightInput
+          value={settings.weight}
+          onChange={(v) => update("weight", v)}
+          unit={settings.weightUnit}
+          onUnitChange={(u) => update("weightUnit", u)}
+        />
+      </ControlRow>
 
-        <ControlRow label="Cap:" labelWidth={LABEL_WIDTH} gap="sm">
-          <StrokeCapSelect
-            value={settings.cap}
-            onChange={(v) => update("cap", v)}
-          />
-        </ControlRow>
+      <ControlRow label="Cap:" labelWidth={LABEL_WIDTH} gap="sm">
+        <StrokeCapSelect
+          value={settings.cap}
+          onChange={(v) => update("cap", v)}
+        />
+      </ControlRow>
 
-        {/* Corner row has special layout with inline Limit label */}
-        <div style={cornerRowStyle}>
-          <span style={cornerLabelStyle}>Corner:</span>
-          <div style={{ flex: 1 }}>
-            <StrokeJoinSelect
-              value={settings.join}
-              onChange={(v) => update("join", v)}
-            />
-          </div>
-          <span style={{ color: COLOR_TEXT_MUTED, fontSize: SIZE_FONT_SM, marginLeft: SPACE_MD }}>
-            Limit:
-          </span>
-          <div style={{ width: "50px" }}>
-            <Input
-              value={settings.miterLimit}
-              onChange={(v) => update("miterLimit", v)}
-              type="number"
-              disabled={settings.join !== "miter"}
-              aria-label="Miter limit"
-            />
-          </div>
+      {/* Corner row has special layout with inline Limit label */}
+      <div style={cornerRowStyle}>
+        <span style={cornerLabelStyle}>Corner:</span>
+        <div style={{ flex: 1 }}>
+          <StrokeJoinSelect
+            value={settings.join}
+            onChange={(v) => update("join", v)}
+          />
         </div>
-
-        <ControlRow label="Align:" labelWidth={LABEL_WIDTH} gap="sm">
-          <StrokeAlignSelect
-            value={settings.align}
-            onChange={(v) => update("align", v)}
+        <span style={{ color: COLOR_TEXT_MUTED, fontSize: SIZE_FONT_SM, marginLeft: SPACE_MD }}>
+          Limit:
+        </span>
+        <div style={{ width: "50px" }}>
+          <Input
+            value={settings.miterLimit}
+            onChange={(v) => update("miterLimit", v)}
+            type="number"
+            disabled={settings.join !== "miter"}
+            aria-label="Miter limit"
           />
-        </ControlRow>
-
-        <div style={dividerStyle} />
-
-        <StrokeDashEditor
-          enabled={settings.dashed}
-          onEnabledChange={(v) => update("dashed", v)}
-          pattern={settings.dashPattern}
-          onPatternChange={(v) => update("dashPattern", v)}
-          columns={6}
-        />
-
-        <div style={dividerStyle} />
-
-        <StrokeArrowheadSelect
-          value={settings.arrowheads}
-          onChange={(v) => update("arrowheads", v)}
-        />
-
-        <div style={dividerStyle} />
-
-        <ControlRow label="Profile:" labelWidth={LABEL_WIDTH} gap="sm">
-          <StrokeProfileSelect
-            value={settings.profile}
-            onChange={(v) => update("profile", v)}
-          />
-        </ControlRow>
+        </div>
       </div>
-    </Panel>
+
+      <ControlRow label="Align:" labelWidth={LABEL_WIDTH} gap="sm">
+        <StrokeAlignSelect
+          value={settings.align}
+          onChange={(v) => update("align", v)}
+        />
+      </ControlRow>
+
+      <div style={dividerStyle} />
+
+      <StrokeDashEditor
+        enabled={settings.dashed}
+        onEnabledChange={(v) => update("dashed", v)}
+        pattern={settings.dashPattern}
+        onPatternChange={(v) => update("dashPattern", v)}
+        columns={6}
+      />
+
+      <div style={dividerStyle} />
+
+      <StrokeArrowheadSelect
+        value={settings.arrowheads}
+        onChange={(v) => update("arrowheads", v)}
+      />
+
+      <div style={dividerStyle} />
+
+      <ControlRow label="Profile:" labelWidth={LABEL_WIDTH} gap="sm">
+        <StrokeProfileSelect
+          value={settings.profile}
+          onChange={(v) => update("profile", v)}
+        />
+      </ControlRow>
+    </div>
   );
 }

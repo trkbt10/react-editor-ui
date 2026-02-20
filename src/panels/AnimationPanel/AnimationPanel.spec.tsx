@@ -14,14 +14,6 @@ describe("AnimationPanel", () => {
     delay: "0",
   };
 
-  it("renders with title", () => {
-    render(
-      <AnimationPanel settings={defaultSettings} onChange={() => {}} />
-    );
-
-    expect(screen.getByText("Animation")).toBeInTheDocument();
-  });
-
   it("renders easing preset selector", () => {
     render(
       <AnimationPanel settings={defaultSettings} onChange={() => {}} />
@@ -55,35 +47,6 @@ describe("AnimationPanel", () => {
 
     expect(screen.getByText("Delay")).toBeInTheDocument();
     expect(screen.getByLabelText("Delay")).toBeInTheDocument();
-  });
-
-  it("calls onClose when close button is clicked", () => {
-    const onClose = vi.fn();
-    render(
-      <AnimationPanel
-        settings={defaultSettings}
-        onChange={() => {}}
-        onClose={onClose}
-      />
-    );
-
-    const closeButton = screen.getByLabelText("Close");
-    fireEvent.click(closeButton);
-
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("renders with custom width", () => {
-    const { container } = render(
-      <AnimationPanel
-        settings={defaultSettings}
-        onChange={() => {}}
-        width={400}
-      />
-    );
-
-    const panel = container.firstChild as HTMLElement;
-    expect(panel).toHaveStyle({ width: "400px" });
   });
 
   it("displays current duration value", () => {

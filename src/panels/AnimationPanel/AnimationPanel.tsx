@@ -1,27 +1,26 @@
 /**
- * @file AnimationPanel component - Animation settings panel with easing curve editor
+ * @file AnimationPanel component - Animation settings with easing curve editor
  *
  * @description
- * Panel for configuring CSS animations with interactive bezier curve editor,
+ * Panel content for configuring CSS animations with interactive bezier curve editor,
  * duration and delay inputs. Supports preset easing functions and custom curves.
+ * Wrap with PanelFrame for floating panel UI.
  *
  * @example
  * ```tsx
- * import { AnimationPanel, createDefaultAnimationSettings } from "react-editor-ui/AnimationPanel";
+ * import { AnimationPanel } from "react-editor-ui/panels/AnimationPanel";
+ * import { PanelFrame } from "react-editor-ui/PanelFrame";
  * import { useState } from "react";
  *
  * const [settings, setSettings] = useState(createDefaultAnimationSettings());
  *
- * <AnimationPanel
- *   settings={settings}
- *   onChange={setSettings}
- *   onClose={() => console.log("closed")}
- * />
+ * <PanelFrame title="Animation" onClose={() => console.log("closed")}>
+ *   <AnimationPanel settings={settings} onChange={setSettings} />
+ * </PanelFrame>
  * ```
  */
 
 import { memo, useCallback, useMemo } from "react";
-import { Panel } from "../Panel/Panel";
 import { AnimationSection } from "../../sections/AnimationSection/AnimationSection";
 import type { AnimationData } from "../../sections/AnimationSection/types";
 import type { AnimationSettings } from "../../components/BezierCurveEditor/bezierTypes";
@@ -29,19 +28,15 @@ import type { AnimationSettings } from "../../components/BezierCurveEditor/bezie
 export type AnimationPanelProps = {
   settings: AnimationSettings;
   onChange: (settings: AnimationSettings) => void;
-  onClose?: () => void;
-  width?: number;
   className?: string;
 };
 
 /**
- * Animation panel with easing curve editor and timing controls.
+ * Animation panel content with easing curve editor and timing controls.
  */
 export const AnimationPanel = memo(function AnimationPanel({
   settings,
   onChange,
-  onClose,
-  width = 320,
   className,
 }: AnimationPanelProps) {
   const data = useMemo<AnimationData>(
@@ -61,9 +56,5 @@ export const AnimationPanel = memo(function AnimationPanel({
     [onChange],
   );
 
-  return (
-    <Panel title="Animation" onClose={onClose} width={width} className={className}>
-      <AnimationSection data={data} onChange={handleChange} />
-    </Panel>
-  );
+  return <AnimationSection data={data} onChange={handleChange} className={className} />;
 });

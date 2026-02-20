@@ -2,7 +2,7 @@
  * @file AnimationPanel demo page
  */
 
-import { memo, useState, useCallback } from "react";
+import { memo, useState } from "react";
 import type { CSSProperties } from "react";
 import {
   DemoContainer,
@@ -11,6 +11,7 @@ import {
   DemoStateDisplay,
 } from "../../components";
 import { AnimationPanel } from "../../../panels/AnimationPanel/AnimationPanel";
+import { PanelFrame } from "../../../components/PanelFrame/PanelFrame";
 import { BezierCurveEditor } from "../../../components/BezierCurveEditor/BezierCurveEditor";
 import {
   EASING_PRESETS,
@@ -64,11 +65,12 @@ const AnimationPanelSection = memo(function AnimationPanelSection({
   return (
     <DemoRow>
       <DemoSection label="Full Panel">
-        <AnimationPanel
-          settings={settings}
-          onChange={onChange}
-          onClose={handleClose}
-        />
+        <PanelFrame title="Animation" onClose={handleClose}>
+          <AnimationPanel
+            settings={settings}
+            onChange={onChange}
+          />
+        </PanelFrame>
       </DemoSection>
 
       <DemoSection label="Current Settings">

@@ -28,17 +28,6 @@ const defaultSettings: StrokeSettings = {
 };
 
 describe("StrokeSettingsPanel", () => {
-  it("renders with title", () => {
-    render(
-      <StrokeSettingsPanel
-        settings={defaultSettings}
-        onChange={() => {}}
-      />,
-    );
-
-    expect(screen.getByText("Stroke settings")).toBeInTheDocument();
-  });
-
   it("renders tab control", () => {
     render(
       <StrokeSettingsPanel
@@ -114,21 +103,6 @@ describe("StrokeSettingsPanel", () => {
 
     expect(calls.length).toBe(1);
     expect(calls[0]?.tab).toBe("dynamic");
-  });
-
-  it("calls onClose when close button is clicked", () => {
-    const { fn: handleClose, calls } = createTracker<void>();
-    render(
-      <StrokeSettingsPanel
-        settings={defaultSettings}
-        onChange={() => {}}
-        onClose={() => handleClose(undefined)}
-      />,
-    );
-
-    fireEvent.click(screen.getByLabelText("Close"));
-
-    expect(calls.length).toBe(1);
   });
 
   it("calls onChange when join type is changed", () => {

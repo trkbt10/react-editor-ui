@@ -9,6 +9,7 @@ import {
   DemoStateDisplay,
 } from "../../components";
 import { FillPanel } from "../../../panels/FillPanel/FillPanel";
+import { PanelFrame } from "../../../components/PanelFrame/PanelFrame";
 import type { FillValue } from "../../../panels/FillPanel/types";
 import type { GradientStop } from "../../../utils/gradient/types";
 
@@ -48,9 +49,9 @@ export function FillPanelDemo() {
   return (
     <DemoContainer title="FillPanel">
       <DemoSection label="Fill Type Selection">
-        <div style={{ width: 280 }}>
+        <PanelFrame title="Fill" onClose={() => alert("Close clicked")} width={280}>
           <FillPanel value={fill} onChange={setFill} />
-        </div>
+        </PanelFrame>
       </DemoSection>
 
       <DemoSection label="Preview">

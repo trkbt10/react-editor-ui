@@ -6,10 +6,10 @@ import { useState } from "react";
 import {
   DemoContainer,
   DemoSection,
-  DemoSurface,
   DemoPreview,
 } from "../../components";
 import { FontsPanel } from "../../../panels/FontsPanel/FontsPanel";
+import { PanelFrame } from "../../../components/PanelFrame/PanelFrame";
 import { LocalFontList } from "../../../panels/FontsPanel/LocalFontList";
 import type { FontItem } from "../../../sections/FontsSection/types";
 
@@ -42,16 +42,17 @@ export function FontsPanelDemo() {
   return (
     <DemoContainer title="FontsPanel">
       <DemoSection label="Basic Panel (with predefined fonts)">
-        <FontsPanel
-          fonts={sampleFonts}
-          selectedFont={selectedFont}
-          onSelectFont={(font) => {
-            setSelectedFont(font);
-            setLocalSelectedFont("");
-          }}
-          onClose={() => alert("Close clicked")}
-          onSettings={() => alert("Settings clicked")}
-        />
+        <PanelFrame title="Fonts" onClose={() => alert("Close clicked")} width={280}>
+          <FontsPanel
+            fonts={sampleFonts}
+            selectedFont={selectedFont}
+            onSelectFont={(font) => {
+              setSelectedFont(font);
+              setLocalSelectedFont("");
+            }}
+            onSettings={() => alert("Settings clicked")}
+          />
+        </PanelFrame>
       </DemoSection>
 
       <DemoSection label="Local Font List (via queryLocalFonts API)">
@@ -78,13 +79,14 @@ export function FontsPanelDemo() {
       </DemoSection>
 
       <DemoSection label="Custom Size">
-        <FontsPanel
-          fonts={sampleFonts}
-          selectedFont={selectedFont}
-          onSelectFont={setSelectedFont}
-          width={350}
-          maxHeight={300}
-        />
+        <PanelFrame title="Fonts" width={350}>
+          <FontsPanel
+            fonts={sampleFonts}
+            selectedFont={selectedFont}
+            onSelectFont={setSelectedFont}
+            maxHeight={300}
+          />
+        </PanelFrame>
       </DemoSection>
     </DemoContainer>
   );

@@ -342,6 +342,12 @@
       "import": "./dist/panels/Panel.js",
       "require": "./dist/panels/Panel.cjs"
     },
+    "./PanelFrame": {
+      "source": "./src/components/PanelFrame/PanelFrame.tsx",
+      "types": "./dist/components/PanelFrame/PanelFrame.d.ts",
+      "import": "./dist/components/PanelFrame.js",
+      "require": "./dist/components/PanelFrame.cjs"
+    },
     "./sections/ParagraphSpacingSection": {
       "source": "./src/sections/ParagraphSpacingSection/ParagraphSpacingSection.tsx",
       "types": "./dist/sections/ParagraphSpacingSection/ParagraphSpacingSection.d.ts",

@@ -1,14 +1,16 @@
 /**
- * @file StrokeSettingsPanel component - Comprehensive stroke settings panel
+ * @file StrokeSettingsPanel component - Comprehensive stroke settings
  *
  * @description
- * A tabbed panel for stroke configuration with basic settings (style, width, join),
+ * Panel content for stroke configuration with basic settings (style, width, join),
  * dynamic stroke options (frequency, wiggle), and brush presets.
  * Includes reusable sub-components for caps, joins, dashes, and arrowheads.
+ * Wrap with PanelFrame for floating panel UI.
  *
  * @example
  * ```tsx
  * import { StrokeSettingsPanel } from "react-editor-ui/panels/StrokeSettingsPanel";
+ * import { PanelFrame } from "react-editor-ui/PanelFrame";
  *
  * const [settings, setSettings] = useState({
  *   tab: "basic",
@@ -18,16 +20,13 @@
  *   // ... other settings
  * });
  *
- * <StrokeSettingsPanel
- *   settings={settings}
- *   onChange={setSettings}
- *   onClose={() => setOpen(false)}
- * />
+ * <PanelFrame title="Stroke settings" onClose={() => setOpen(false)}>
+ *   <StrokeSettingsPanel settings={settings} onChange={setSettings} />
+ * </PanelFrame>
  * ```
  */
 
 import { memo, useCallback, useMemo } from "react";
-import { Panel } from "../../panels/Panel/Panel";
 import { StrokeSection } from "../../sections/StrokeSection/StrokeSection";
 import type { StrokeData } from "../../sections/StrokeSection/types";
 
@@ -37,17 +36,15 @@ export type StrokeSettings = StrokeData;
 export type StrokeSettingsPanelProps = {
   settings: StrokeSettings;
   onChange: (settings: StrokeSettings) => void;
-  onClose?: () => void;
   className?: string;
 };
 
 /**
- * Stroke settings panel with basic, dynamic, and brush settings.
+ * Stroke settings panel content with basic, dynamic, and brush settings.
  */
 export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
   settings,
   onChange,
-  onClose,
   className,
 }: StrokeSettingsPanelProps) {
   const data = useMemo<StrokeData>(
@@ -74,11 +71,7 @@ export const StrokeSettingsPanel = memo(function StrokeSettingsPanel({
     [onChange],
   );
 
-  return (
-    <Panel title="Stroke settings" onClose={onClose} width={320} className={className}>
-      <StrokeSection data={data} onChange={handleChange} />
-    </Panel>
-  );
+  return <StrokeSection data={data} onChange={handleChange} className={className} />;
 });
 
 // =============================================================================

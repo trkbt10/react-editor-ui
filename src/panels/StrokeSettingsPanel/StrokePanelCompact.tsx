@@ -1,5 +1,21 @@
 /**
- * @file StrokePanelCompact - Stroke settings panel with tabbed interface
+ * @file StrokePanelCompact - Stroke settings with tabbed interface
+ *
+ * @description
+ * Compact stroke settings content with tabbed interface for Basic, Dynamic, and Brush options.
+ * Wrap with PanelFrame for floating panel UI.
+ *
+ * @example
+ * ```tsx
+ * import { StrokePanelCompact, createDefaultCompactSettings } from "react-editor-ui/panels/StrokeSettingsPanel";
+ * import { PanelFrame } from "react-editor-ui/PanelFrame";
+ *
+ * const [settings, setSettings] = useState(createDefaultCompactSettings());
+ *
+ * <PanelFrame title="Stroke Settings" onClose={handleClose}>
+ *   <StrokePanelCompact settings={settings} onChange={setSettings} />
+ * </PanelFrame>
+ * ```
  */
 
 import { useState } from "react";
@@ -10,7 +26,6 @@ import type {
   ArrowheadSettings,
   WidthProfile,
 } from "./types";
-import { Panel } from "../../panels/Panel/Panel";
 import { SegmentedControl } from "../../components/SegmentedControl/SegmentedControl";
 import { Select, type SelectOption } from "../../components/Select/Select";
 import { Input } from "../../components/Input/Input";
@@ -59,10 +74,7 @@ export type StrokePanelCompactTab = "basic" | "dynamic" | "brush";
 export type StrokePanelCompactProps = {
   settings: StrokePanelCompactSettings;
   onChange: (settings: StrokePanelCompactSettings) => void;
-  onClose?: () => void;
   initialTab?: StrokePanelCompactTab;
-  title?: string;
-  width?: number;
   className?: string;
 };
 
@@ -177,14 +189,11 @@ export function createDefaultCompactSettings(): StrokePanelCompactSettings {
   };
 }
 
-/** Compact stroke panel with line style, arrowheads, and effect options */
+/** Compact stroke panel content with line style, arrowheads, and effect options */
 export function StrokePanelCompact({
   settings,
   onChange,
-  onClose,
   initialTab = "basic",
-  title = "Stroke Settings",
-  width = 320,
   className,
 }: StrokePanelCompactProps) {
   const [activeTab, setActiveTab] = useState<StrokePanelCompactTab>(initialTab);
@@ -361,21 +370,21 @@ export function StrokePanelCompact({
     }
   };
 
-  const contentStyle: CSSProperties = {
+  const containerStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column",
     gap: SPACE_MD,
   };
 
   return (
-    <Panel title={title} onClose={onClose} width={width} className={className}>
+    <div className={className} style={containerStyle}>
       <SegmentedControl
         options={tabOptions}
         value={activeTab}
         onChange={(v) => setActiveTab(v as StrokePanelCompactTab)}
         aria-label="Tab"
       />
-      <div style={contentStyle}>{renderContent()}</div>
-    </Panel>
+      <div style={containerStyle}>{renderContent()}</div>
+    </div>
   );
 }

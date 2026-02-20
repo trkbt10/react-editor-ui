@@ -2,32 +2,31 @@
  * @file PositionPanel component - Position, alignment, constraints, and rotation settings
  *
  * @description
- * A comprehensive panel for object positioning with alignment controls, X/Y inputs,
+ * Panel content for object positioning with alignment controls, X/Y inputs,
  * constraint settings, and rotation. Combines multiple property sections into
- * a unified panel for design tool inspectors.
+ * a unified panel for design tool inspectors. Wrap with PanelFrame for floating panel UI.
  *
  * @example
  * ```tsx
  * import { PositionPanel, createDefaultPositionSettings } from "react-editor-ui/panels/PositionPanel";
+ * import { PanelFrame } from "react-editor-ui/PanelFrame";
  *
  * const [settings, setSettings] = useState(createDefaultPositionSettings());
  *
- * <PositionPanel
- *   settings={settings}
- *   onChange={setSettings}
- *   onClose={() => setOpen(false)}
- * />
+ * <PanelFrame title="Position" onClose={() => setOpen(false)}>
+ *   <PositionPanel settings={settings} onChange={setSettings} />
+ * </PanelFrame>
  * ```
  */
 
-import { memo, useCallback, useMemo } from "react";
-import { Panel } from "../../panels/Panel/Panel";
+import { memo, useCallback, useMemo, type CSSProperties } from "react";
 import { IconButton } from "../../components/IconButton/IconButton";
 import { AlignmentSection } from "../../sections/AlignmentSection/AlignmentSection";
 import { PositionSection } from "../../sections/PositionSection/PositionSection";
 import { ConstraintsSection } from "../../sections/ConstraintsSection/ConstraintsSection";
 import { RotationSection } from "../../sections/RotationSection/RotationSection";
 import { ConstraintToggleIcon } from "../../icons";
+import { SPACE_MD } from "../../themes/styles";
 import type { AlignmentData } from "../../sections/AlignmentSection/types";
 import type { PositionData } from "../../sections/PositionSection/types";
 import type { ConstraintsData } from "../../sections/ConstraintsSection/types";
@@ -46,16 +45,20 @@ export type {
 
 export { createDefaultPositionSettings } from "./positionTypes";
 
+const containerStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: SPACE_MD,
+};
+
 /**
- * Position panel with alignment, position, constraints, and rotation controls.
+ * Position panel content with alignment, position, constraints, and rotation controls.
  */
 export const PositionPanel = memo(function PositionPanel({
   settings,
   onChange,
-  onClose,
   onToggleConstraints,
   onTransformAction,
-  width = 320,
   className,
 }: PositionPanelProps) {
   // Alignment data and handler
@@ -150,7 +153,7 @@ export const PositionPanel = memo(function PositionPanel({
   );
 
   return (
-    <Panel title="Position" onClose={onClose} width={width} className={className}>
+    <div className={className} style={containerStyle}>
       <AlignmentSection data={alignmentData} onChange={handleAlignmentChange} />
 
       <PositionSection
@@ -166,6 +169,6 @@ export const PositionPanel = memo(function PositionPanel({
         onChange={handleRotationChange}
         onTransformAction={onTransformAction}
       />
-    </Panel>
+    </div>
   );
 });

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-19T03:40:17.224Z",
+  "generatedAt": "2026-02-20T02:14:59.344Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -312,6 +312,12 @@
       "entryType": "named",
       "relativePath": "src/panels/Panel/Panel.tsx",
       "category": "panel"
+    },
+    {
+      "name": "PanelFrame",
+      "entryType": "named",
+      "relativePath": "src/components/PanelFrame/PanelFrame.tsx",
+      "category": "component"
     },
     {
       "name": "ParagraphSpacingSection",

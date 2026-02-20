@@ -15,7 +15,6 @@ describe("PositionPanel", () => {
   it("renders with default settings", () => {
     render(<PositionPanel settings={defaultSettings} onChange={() => {}} />);
 
-    expect(screen.getByRole("heading", { name: "Position" })).toBeInTheDocument();
     expect(screen.getByText("Alignment")).toBeInTheDocument();
     expect(screen.getByText("Constraints")).toBeInTheDocument();
     expect(screen.getByText("Rotation")).toBeInTheDocument();
@@ -120,18 +119,6 @@ describe("PositionPanel", () => {
     expect(ref.settings!.verticalAlign).toBe("middle");
   });
 
-  it("calls onClose when close button is clicked", () => {
-    const ref = { count: 0 };
-    render(
-      <PositionPanel settings={defaultSettings} onChange={() => {}} onClose={() => { ref.count += 1; }} />,
-    );
-
-    const closeButton = screen.getByLabelText("Close");
-    fireEvent.click(closeButton);
-
-    expect(ref.count).toBe(1);
-  });
-
   it("calls onToggleConstraints when constraint toggle is clicked", () => {
     const ref = { count: 0 };
     render(
@@ -162,15 +149,6 @@ describe("PositionPanel", () => {
     fireEvent.click(flipHButton);
 
     expect(ref.action).toBe("flip-horizontal");
-  });
-
-  it("applies custom width", () => {
-    const { container } = render(
-      <PositionPanel settings={defaultSettings} onChange={() => {}} width={400} />,
-    );
-
-    const panel = container.firstChild as HTMLElement;
-    expect(panel.style.width).toBe("400px");
   });
 
   it("applies custom className", () => {
@@ -226,7 +204,7 @@ describe("PositionPanel", () => {
   describe("layout overflow prevention", () => {
     it("segmented controls have minWidth: 0 wrapper to allow shrinking", () => {
       render(
-        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+        <PositionPanel settings={defaultSettings} onChange={() => {}} />,
       );
 
       const horizontalAlignment = screen.getByLabelText("Horizontal alignment");
@@ -241,7 +219,7 @@ describe("PositionPanel", () => {
 
     it("constraint visualization has flexShrink: 0", () => {
       render(
-        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+        <PositionPanel settings={defaultSettings} onChange={() => {}} />,
       );
 
       const constraintsSection = screen.getByText("Constraints").closest("div")?.parentElement;
@@ -253,7 +231,7 @@ describe("PositionPanel", () => {
 
     it("position input wrappers have minWidth: 0", () => {
       render(
-        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+        <PositionPanel settings={defaultSettings} onChange={() => {}} />,
       );
 
       const xInput = screen.getByLabelText("X position");
@@ -269,7 +247,7 @@ describe("PositionPanel", () => {
 
     it("rotation input wrapper has minWidth: 0", () => {
       render(
-        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+        <PositionPanel settings={defaultSettings} onChange={() => {}} />,
       );
 
       const rotationInput = screen.getByLabelText("Rotation");
@@ -283,7 +261,7 @@ describe("PositionPanel", () => {
 
     it("constraints selects column has minWidth: 0", () => {
       render(
-        <PositionPanel settings={defaultSettings} onChange={() => {}} width={320} />,
+        <PositionPanel settings={defaultSettings} onChange={() => {}} />,
       );
 
       const hConstraint = screen.getByLabelText("Horizontal constraint");
