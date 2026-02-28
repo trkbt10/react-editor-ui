@@ -33,3 +33,4 @@ export type {
   MarkdownParserPlugin,
   DetectedElement,
 } from "./types";
+export { parseTable, type ParsedTable } from "./table-detector";
