@@ -33,4 +33,33 @@ export type {
   MarkdownParserPlugin,
   DetectedElement,
 } from "./types";
-export { parseTable, type ParsedTable } from "./table-detector";
+// Table utilities
+export {
+  parseTable,
+  parseTableRow,
+  parseTableSeparator,
+  type ParsedTable,
+} from "./table-detector";
+// Inline emphasis detection
+export {
+  detectInlineEmphasis,
+  detectInlineCode,
+  detectStrong,
+  detectEmphasis,
+  detectStrikethrough,
+  findAllInlineEmphasis,
+  type InlineEmphasis,
+} from "./emphasis-detector";
+// Block detection
+export {
+  detectBlock,
+  detectCodeBlock,
+  detectHeader,
+  detectQuote,
+  detectList,
+  detectHorizontalRule,
+  detectMath,
+  detectLink,
+  type DetectedBlock,
+  type LinkMatch,
+} from "./block-detectors";
