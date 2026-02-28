@@ -1,8 +1,11 @@
 name: Publish to npm
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
   workflow_dispatch:
     inputs:
       dry-run:
@@ -12,7 +15,45 @@ on:
         type: boolean
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should-publish: ${{ steps.check.outputs.should-publish }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check version change
+        id: check
+        run: |
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should-publish=true" >> "$GITHUB_OUTPUT"
+            echo "Manual trigger: publishing v$VERSION"
+            exit 0
+          fi
+
+          OLD_VERSION=$(git show HEAD~1:package.json | node -e "
+            let d=''; process.stdin.on('data',c=>d+=c);
+            process.stdin.on('end',()=>console.log(JSON.parse(d).version))
+          ")
+
+          if [ "$OLD_VERSION" = "$VERSION" ]; then
+            echo "should-publish=false" >> "$GITHUB_OUTPUT"
+            echo "Version unchanged ($VERSION), skipping"
+          else
+            echo "should-publish=true" >> "$GITHUB_OUTPUT"
+            echo "Version changed: $OLD_VERSION → $VERSION"
+          fi
+
   publish:
+    needs: check-version
+    if: ${{ needs.check-version.outputs.should-publish == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
