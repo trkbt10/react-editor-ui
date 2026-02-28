@@ -24,7 +24,7 @@ const COMPONENT_CATEGORIES_PATH = join(ROOT_DIR, "docs/component-categories.json
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
 const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
 
-type EntryCategory = "component" | "panel" | "canvas" | "editor" | "section" | "viewer";
+type EntryCategory = "component" | "panel" | "canvas" | "editor" | "section" | "viewer" | "parser";
 
 interface ComponentEntry {
   name: string;
@@ -67,7 +67,7 @@ interface ExportEntry {
  * Components that are allowed to use index.ts as entry point.
  * These are complex modules with many submodules (e.g., RichTextEditors with code/, core/, text/, etc.)
  */
-const ALLOWED_INDEX_ENTRIES = new Set(["RichTextEditors"]);
+const ALLOWED_INDEX_ENTRIES = new Set(["RichTextEditors", "Markdown"]);
 
 /**
  * Maps category to directory name
@@ -86,6 +86,8 @@ function getCategoryDir(category: EntryCategory): string {
       return "sections";
     case "viewer":
       return "viewers";
+    case "parser":
+      return "parsers";
   }
 }
 

@@ -22,6 +22,7 @@ import noSectionsInComponents from "./rules/no-sections-in-components.js";
 import noCanvasImport from "./rules/no-canvas-import.js";
 import noInlineHandlerInMap from "./rules/no-inline-handler-in-map.js";
 import noRedundantTypeAlias from "./rules/no-redundant-type-alias.js";
+import noCrossBoundaryExport from "./rules/no-cross-boundary-export.js";
 
 export default {
   rules: {
@@ -46,5 +47,6 @@ export default {
     "no-canvas-import": noCanvasImport,
     "no-inline-handler-in-map": noInlineHandlerInMap,
     "no-redundant-type-alias": noRedundantTypeAlias,
+    "no-cross-boundary-export": noCrossBoundaryExport,
   },
 };

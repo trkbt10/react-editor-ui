@@ -5,9 +5,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { DemoContainer, DemoSection, DemoMutedText } from "../../components";
 import { MarkdownViewer } from "../../../viewers/MarkdownViewer/MarkdownViewer";
-import { createStreamingMarkdownParser } from "../../../viewers/MarkdownViewer/parser/streaming-parser";
-import { parseTable } from "../../../viewers/MarkdownViewer/parser/table-detector";
-import type { MarkdownParseEvent, EndEvent } from "../../../viewers/MarkdownViewer/parser/types";
+import { createStreamingMarkdownParser } from "../../../parsers/Markdown/streaming-parser";
+import { parseTable } from "../../../parsers/Markdown/table-detector";
+import type { MarkdownParseEvent, EndEvent } from "../../../parsers/Markdown/types";
 import { LogViewer } from "../../../viewers/LogViewer/LogViewer";
 import type { LogItem } from "../../../viewers/LogViewer/LogViewer";
 import {

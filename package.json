@@ -1,6 +1,6 @@
 {
   "name": "react-editor-ui",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "Unlicense",
   "type": "module",
   "main": "dist/index.cjs",
@@ -336,17 +336,17 @@
       "import": "./dist/viewers/LogViewer.js",
       "require": "./dist/viewers/LogViewer.cjs"
     },
+    "./parsers/Markdown": {
+      "source": "./src/parsers/Markdown/index.ts",
+      "types": "./dist/parsers/Markdown/index.d.ts",
+      "import": "./dist/parsers/Markdown.js",
+      "require": "./dist/parsers/Markdown.cjs"
+    },
     "./viewers/MarkdownViewer": {
       "source": "./src/viewers/MarkdownViewer/MarkdownViewer.tsx",
       "types": "./dist/viewers/MarkdownViewer/MarkdownViewer.d.ts",
       "import": "./dist/viewers/MarkdownViewer.js",
       "require": "./dist/viewers/MarkdownViewer.cjs"
-    },
-    "./panels/Panel": {
-      "source": "./src/panels/Panel/Panel.tsx",
-      "types": "./dist/panels/Panel/Panel.d.ts",
-      "import": "./dist/panels/Panel.js",
-      "require": "./dist/panels/Panel.cjs"
     },
     "./PanelFrame": {
       "source": "./src/components/PanelFrame/PanelFrame.tsx",

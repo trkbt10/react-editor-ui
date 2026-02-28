@@ -41,7 +41,6 @@
         "AnimationPanel",
         "FillPanel",
         "FontsPanel",
-        "Panel",
         "PositionPanel",
         "StrokeSettingsPanel",
         "TypographyPanel"
@@ -199,6 +198,14 @@
         "entryCategory": "viewer",
         "includeInExports": true,
         "categoryIds": ["viewer"]
+      },
+      {
+        "id": "parsers",
+        "displayName": "Parsers",
+        "sourceDir": "src/parsers",
+        "entryCategory": "parser",
+        "includeInExports": true,
+        "categoryIds": []
       },
       {
         "id": "app-demo",

@@ -12,7 +12,7 @@ interface ComponentEntry {
   name: string;
   entryType: "index" | "named";
   relativePath: string;
-  category: "component" | "panel" | "canvas" | "editor" | "section" | "viewer";
+  category: "component" | "panel" | "canvas" | "editor" | "section" | "viewer" | "parser";
 }
 
 interface EntryCatalog {
@@ -34,6 +34,8 @@ function getCategoryDir(category: ComponentEntry["category"]): string {
       return "sections";
     case "viewer":
       return "viewers";
+    case "parser":
+      return "parsers";
   }
 }
 

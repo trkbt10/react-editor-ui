@@ -75,6 +75,7 @@ export default [
         "custom/no-iife": "error",
         "custom/no-inline-handler-in-map": "warn",
         "custom/no-redundant-type-alias": "error",
+        "custom/no-cross-boundary-export": "error",
         // Spread from modular groups
         ...rulesJSDoc,
         ...rulesRestrictedSyntax,

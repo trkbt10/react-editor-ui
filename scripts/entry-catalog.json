@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-28T04:56:03.905Z",
+  "generatedAt": "2026-02-28T12:40:55.019Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -308,16 +308,16 @@
       "category": "viewer"
     },
     {
+      "name": "Markdown",
+      "entryType": "index",
+      "relativePath": "src/parsers/Markdown/index.ts",
+      "category": "parser"
+    },
+    {
       "name": "MarkdownViewer",
       "entryType": "named",
       "relativePath": "src/viewers/MarkdownViewer/MarkdownViewer.tsx",
       "category": "viewer"
-    },
-    {
-      "name": "Panel",
-      "entryType": "named",
-      "relativePath": "src/panels/Panel/Panel.tsx",
-      "category": "panel"
     },
     {
       "name": "PanelFrame",
