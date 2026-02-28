@@ -217,14 +217,15 @@ if (SIDEBAR_GROUP_CONFIGS.length === 0) {
   throw new Error("docs/component-categories.json demoSidebar.groups must not be empty");
 }
 
-const SIDEBAR_CATEGORY_GROUPS: readonly SidebarCategoryGroup[] = SIDEBAR_GROUP_CONFIGS.map(
-  (groupConfig) =>
+const SIDEBAR_CATEGORY_GROUPS: readonly SidebarCategoryGroup[] = SIDEBAR_GROUP_CONFIGS
+  .filter((groupConfig) => groupConfig.categoryIds.length > 0)
+  .map((groupConfig) =>
     buildSidebarCategoryGroup(
       groupConfig.id,
       groupConfig.displayName,
       groupConfig.categoryIds,
     ),
-);
+  );
 
 const SidebarNav: FC<SidebarNavProps> = ({ theme, onThemeChange }) => {
   const location = useLocation();

@@ -13,6 +13,7 @@ import {
   LuPenTool,
   LuAppWindow,
   LuCompass,
+  LuEye,
 } from "react-icons/lu";
 
 // Primitives demos
@@ -87,7 +88,6 @@ import { LibraryBrowserDemo } from "./pages/data-display/LibraryBrowserDemo";
 // Feedback demos
 import { StatusBarDemo } from "./pages/feedback/StatusBarDemo";
 import { LogEntryDemo } from "./pages/feedback/LogEntryDemo";
-import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
 
 // Editor demos
 import { CodeEditorDemo } from "./pages/editor/CodeEditorDemo";
@@ -113,6 +113,10 @@ import { CanvasGridLayerDemo } from "./pages/canvas/CanvasGridLayerDemo";
 import { CanvasRulerDemo } from "./pages/canvas/CanvasRulerDemo";
 import { CanvasGuideDemo } from "./pages/canvas/CanvasGuideDemo";
 import { CanvasCheckerboardDemo } from "./pages/canvas/CanvasCheckerboardDemo";
+
+// Viewer demos
+import { MarkdownViewerDemo } from "./pages/viewer/MarkdownViewerDemo";
+import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
 
 // App demos
 import { DesignDemo } from "./pages/app-demo/design/DesignDemo";
@@ -570,12 +574,6 @@ export const demoCategories: DemoCategory[] = [
         path: "log-entry",
         element: <LogEntryDemo />,
       },
-      {
-        id: "log-viewer",
-        label: "LogViewer",
-        path: "log-viewer",
-        element: <LogViewerDemo />,
-      },
     ],
   },
   {
@@ -684,6 +682,26 @@ export const demoCategories: DemoCategory[] = [
         label: "CanvasCheckerboard",
         path: "canvas-checkerboard",
         element: <CanvasCheckerboardDemo />,
+      },
+    ],
+  },
+  {
+    id: "viewer",
+    label: "Viewers",
+    icon: <LuEye size={18} />,
+    base: "/components/viewer",
+    pages: [
+      {
+        id: "markdown-viewer",
+        label: "MarkdownViewer",
+        path: "markdown-viewer",
+        element: <MarkdownViewerDemo />,
+      },
+      {
+        id: "log-viewer",
+        label: "LogViewer",
+        path: "log-viewer",
+        element: <LogViewerDemo />,
       },
     ],
   },

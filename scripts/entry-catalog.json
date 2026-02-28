@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-20T02:14:59.344Z",
+  "generatedAt": "2026-02-28T04:56:03.905Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -304,8 +304,14 @@
     {
       "name": "LogViewer",
       "entryType": "named",
-      "relativePath": "src/components/LogViewer/LogViewer.tsx",
-      "category": "component"
+      "relativePath": "src/viewers/LogViewer/LogViewer.tsx",
+      "category": "viewer"
+    },
+    {
+      "name": "MarkdownViewer",
+      "entryType": "named",
+      "relativePath": "src/viewers/MarkdownViewer/MarkdownViewer.tsx",
+      "category": "viewer"
     },
     {
       "name": "Panel",

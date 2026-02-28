@@ -8,7 +8,7 @@ import {
   DemoSection,
   DemoMutedText,
 } from "../../components";
-import { LogViewer, type LogItem } from "../../../components/LogViewer/LogViewer";
+import { LogViewer, type LogItem } from "../../../viewers/LogViewer/LogViewer";
 
 // Generate large dataset for LogViewer demo
 function generateLogItems(count: number): LogItem[] {

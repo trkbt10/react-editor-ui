@@ -330,11 +330,17 @@
       "import": "./dist/components/LogEntry.js",
       "require": "./dist/components/LogEntry.cjs"
     },
-    "./LogViewer": {
-      "source": "./src/components/LogViewer/LogViewer.tsx",
-      "types": "./dist/components/LogViewer/LogViewer.d.ts",
-      "import": "./dist/components/LogViewer.js",
-      "require": "./dist/components/LogViewer.cjs"
+    "./viewers/LogViewer": {
+      "source": "./src/viewers/LogViewer/LogViewer.tsx",
+      "types": "./dist/viewers/LogViewer/LogViewer.d.ts",
+      "import": "./dist/viewers/LogViewer.js",
+      "require": "./dist/viewers/LogViewer.cjs"
+    },
+    "./viewers/MarkdownViewer": {
+      "source": "./src/viewers/MarkdownViewer/MarkdownViewer.tsx",
+      "types": "./dist/viewers/MarkdownViewer/MarkdownViewer.d.ts",
+      "import": "./dist/viewers/MarkdownViewer.js",
+      "require": "./dist/viewers/MarkdownViewer.cjs"
     },
     "./panels/Panel": {
       "source": "./src/panels/Panel/Panel.tsx",

@@ -91,7 +91,6 @@
       "description": "Components for status and feedback display",
       "components": [
         "LogEntry",
-        "LogViewer",
         "StatusBar"
       ]
     },
@@ -111,6 +110,15 @@
         "BezierCurveEditor",
         "BoxModelEditor",
         "Portal"
+      ]
+    },
+    {
+      "id": "viewer",
+      "label": "Viewers",
+      "description": "Read-only content viewers and renderers",
+      "components": [
+        "LogViewer",
+        "MarkdownViewer"
       ]
     },
     {
@@ -183,6 +191,14 @@
         "categoryIds": [
           "sections"
         ]
+      },
+      {
+        "id": "viewers",
+        "displayName": "Viewers",
+        "sourceDir": "src/viewers",
+        "entryCategory": "viewer",
+        "includeInExports": true,
+        "categoryIds": ["viewer"]
       },
       {
         "id": "app-demo",

@@ -26,7 +26,7 @@
 import type { CSSProperties, ReactNode, RefObject, PointerEvent } from "react";
 import { useRef, useCallback, useLayoutEffect, useState, useMemo, useImperativeHandle, memo } from "react";
 import { useVirtualScroll, type VirtualItem } from "./useVirtualScroll";
-import { LogEntry, type LogEntryProps } from "../LogEntry/LogEntry";
+import { LogEntry, type LogEntryProps } from "../../components/LogEntry/LogEntry";
 import {
   COLOR_SURFACE,
   COLOR_BORDER,
