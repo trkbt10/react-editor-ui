@@ -28,15 +28,7 @@
  * ```
  */
 
-import {
-  memo,
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-  useLayoutEffect,
-  forwardRef,
-} from "react";
+import { memo, useMemo, useCallback, useRef, forwardRef } from "react";
 import type {
   CSSProperties,
   Ref,
@@ -47,13 +39,9 @@ import type {
 import {
   COLOR_SURFACE_RAISED,
   COLOR_TEXT,
-  COLOR_TEXT_MUTED,
   COLOR_TEXT_DISABLED,
-  COLOR_PRIMARY,
-  COLOR_PRIMARY_HOVER,
   COLOR_BORDER,
   RADIUS_LG,
-  RADIUS_FULL,
   DURATION_FAST,
   EASING_DEFAULT,
   SIZE_FONT_MD,
@@ -63,6 +51,8 @@ import {
   SHADOW_SM,
   SHADOW_MD,
 } from "../../themes/styles";
+import { useAutoResize } from "../../hooks/useAutoResize";
+import { SendButton } from "./SendButton";
 
 // =============================================================================
 // Types
@@ -109,131 +99,6 @@ const DEFAULT_MIN_HEIGHT = 24;
 const DEFAULT_MAX_HEIGHT = 200;
 
 // =============================================================================
-// Sub-components
-// =============================================================================
-
-/**
- * Default send button icon (arrow up).
- */
-const SendIcon = memo(function SendIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 19V5" />
-      <path d="M5 12L12 5L19 12" />
-    </svg>
-  );
-});
-
-/**
- * Loading spinner for send button.
- */
-const LoadingSpinner = memo(function LoadingSpinner() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      style={{
-        animation: "chat-input-spin 1s linear infinite",
-      }}
-    >
-      <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-      <path d="M12 2a10 10 0 0 1 10 10" />
-    </svg>
-  );
-});
-
-// Track keyframes injection state at module scope
-const keyframesState = { injected: false };
-
-function injectKeyframes(): void {
-  if (keyframesState.injected || typeof document === "undefined") {
-    return;
-  }
-  const style = document.createElement("style");
-  style.textContent = `
-    @keyframes chat-input-spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-  `;
-  document.head.appendChild(style);
-  keyframesState.injected = true;
-}
-
-/**
- * Default send button component.
- */
-const DefaultSendButton = memo(function DefaultSendButton({
-  canSend,
-  isLoading,
-  onClick,
-}: {
-  canSend: boolean;
-  isLoading: boolean;
-  onClick: () => void;
-}) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const buttonBg = canSend ? (isHovered ? COLOR_PRIMARY_HOVER : COLOR_PRIMARY) : COLOR_TEXT_MUTED;
-  const buttonCursor = canSend ? "pointer" : "default";
-
-  const buttonStyle = useMemo<CSSProperties>(
-    () => ({
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: 32,
-      height: 32,
-      padding: 0,
-      border: "none",
-      borderRadius: RADIUS_FULL,
-      backgroundColor: buttonBg,
-      color: "#fff",
-      cursor: buttonCursor,
-      transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-      flexShrink: 0,
-      opacity: canSend ? 1 : 0.5,
-    }),
-    [buttonBg, buttonCursor, canSend],
-  );
-
-  const handlePointerEnter = useCallback(() => {
-    setIsHovered(true);
-  }, []);
-
-  const handlePointerLeave = useCallback(() => {
-    setIsHovered(false);
-  }, []);
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!canSend}
-      aria-label={isLoading ? "Sending..." : "Send message"}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-      style={buttonStyle}
-    >
-      {isLoading ? <LoadingSpinner /> : <SendIcon />}
-    </button>
-  );
-});
-
-// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -259,24 +124,8 @@ export const ChatInput = memo(
   ) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    // Inject spinner keyframes on mount
-    useLayoutEffect(() => {
-      injectKeyframes();
-    }, []);
-
-    // Auto-resize textarea
-    useLayoutEffect(() => {
-      const textarea = textareaRef.current;
-      if (!textarea) {
-        return;
-      }
-
-      // Reset height to get accurate scrollHeight
-      textarea.style.height = "auto";
-      const scrollHeight = textarea.scrollHeight;
-      const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight);
-      textarea.style.height = `${newHeight}px`;
-    }, [value, minHeight, maxHeight]);
+    // Auto-resize textarea hook
+    useAutoResize(textareaRef, value, { minHeight, maxHeight });
 
     // Container style based on variant
     const containerStyle = useMemo<CSSProperties>(() => {
@@ -291,7 +140,6 @@ export const ChatInput = memo(
       };
 
       if (variant === "ghost") {
-        // Ghost: no border, subtle shadow
         return {
           ...base,
           border: "none",
@@ -299,7 +147,6 @@ export const ChatInput = memo(
         };
       }
 
-      // Default: with border
       return {
         ...base,
         border: `1px solid ${COLOR_BORDER}`,
@@ -375,11 +222,15 @@ export const ChatInput = memo(
     // Merge refs
     const mergedRef = useCallback(
       (node: HTMLTextAreaElement | null) => {
-        (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = node;
+        (
+          textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>
+        ).current = node;
         if (typeof ref === "function") {
           ref(node);
         } else if (ref) {
-          (ref as React.MutableRefObject<HTMLTextAreaElement | null>).current = node;
+          (
+            ref as React.MutableRefObject<HTMLTextAreaElement | null>
+          ).current = node;
         }
       },
       [ref],
@@ -409,7 +260,7 @@ export const ChatInput = memo(
           <div style={toolbarStyle}>
             {toolbar}
             {!hideSendButton && !sendButton && (
-              <DefaultSendButton
+              <SendButton
                 canSend={canSend}
                 isLoading={isLoading}
                 onClick={handleSend}
