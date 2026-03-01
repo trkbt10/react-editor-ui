@@ -207,6 +207,22 @@ const [value, setValue] = useState("");
 />
 ```
 
+#### Pagination
+
+Page navigation controls
+
+A reusable pagination component with First/Prev/Next/Last buttons. Supports controlled pagination with 0-indexed page numbers.
+
+```tsx
+import { Pagination } from "react-editor-ui/Pagination";
+
+<Pagination
+  currentPage={page}
+  totalPages={totalPages}
+  onPageChange={setPage}
+/>
+```
+
 #### SearchInput
 
 Search input with icon and clear button

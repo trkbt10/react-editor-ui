@@ -47,7 +47,7 @@ import React, {
 } from "react";
 import type { DataTableViewerProps } from "./types";
 import type { SortDirection } from "../../components/Table/types";
-import { useVirtualGrid } from "./useVirtualGrid";
+import { useVirtualGrid } from "../../hooks/useVirtualGrid";
 import { DataTableToolbar } from "./DataTableToolbar";
 import {
   TableHeader,

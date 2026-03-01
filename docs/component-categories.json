@@ -12,6 +12,7 @@
         "ColorPicker",
         "IconButton",
         "Input",
+        "Pagination",
         "SearchInput",
         "Select",
         "SegmentedControl",

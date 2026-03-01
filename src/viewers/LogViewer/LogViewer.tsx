@@ -23,24 +23,19 @@
  * ```
  */
 
-import type { CSSProperties, ReactNode, RefObject, PointerEvent } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import { useRef, useCallback, useLayoutEffect, useState, useMemo, useImperativeHandle, memo } from "react";
-import { useVirtualScroll, type VirtualItem } from "./useVirtualScroll";
+import { useVirtualScroll, type VirtualItem } from "../../hooks/useVirtualScroll";
 import { LogEntry, type LogEntryProps } from "../../components/LogEntry/LogEntry";
+import { Pagination } from "../../components/Pagination/Pagination";
 import {
   COLOR_SURFACE,
   COLOR_BORDER,
   COLOR_TEXT,
   COLOR_TEXT_MUTED,
-  COLOR_HOVER,
   RADIUS_MD,
   SPACE_SM,
-  SPACE_MD,
-  SIZE_FONT_SM,
   SIZE_FONT_XS,
-  SIZE_HEIGHT_SM,
-  DURATION_FAST,
-  EASING_DEFAULT,
 } from "../../themes/styles";
 
 export type LogItem = Omit<LogEntryProps, "selected" | "onClick">;
@@ -349,10 +344,11 @@ export function LogViewer({
         <div style={innerStyle}>{virtualItems.map(renderItem)}</div>
       </div>
       {pagination && totalPages > 1 && (
-        <LogViewerPagination
+        <Pagination
           currentPage={page}
           totalPages={totalPages}
           onPageChange={onPageChange}
+          size="sm"
         />
       )}
     </div>
@@ -403,131 +399,3 @@ const LogViewerHeader = memo(function LogViewerHeader({
   );
 });
 
-// Pagination styles
-const paginationContainerStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  gap: SPACE_SM,
-  padding: SPACE_SM,
-};
-
-const paginationButtonStyle: CSSProperties = {
-  height: SIZE_HEIGHT_SM,
-  padding: `0 ${SPACE_MD}`,
-  fontSize: SIZE_FONT_SM,
-  border: `1px solid ${COLOR_BORDER}`,
-  borderRadius: RADIUS_MD,
-  backgroundColor: COLOR_SURFACE,
-  color: COLOR_TEXT,
-  cursor: "pointer",
-  transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-};
-
-const paginationButtonDisabledStyle: CSSProperties = {
-  ...paginationButtonStyle,
-  opacity: 0.5,
-  cursor: "not-allowed",
-};
-
-const pageInfoStyle: CSSProperties = {
-  fontSize: SIZE_FONT_SM,
-  color: COLOR_TEXT_MUTED,
-  minWidth: "100px",
-  textAlign: "center",
-};
-
-type PaginationButtonProps = {
-  label: string;
-  disabled: boolean;
-  onClick: () => void;
-};
-
-const PaginationButton = memo(function PaginationButton({
-  label,
-  disabled,
-  onClick,
-}: PaginationButtonProps) {
-  const handlePointerEnter = useCallback(
-    (e: PointerEvent<HTMLButtonElement>) => {
-      if (!disabled) {
-        e.currentTarget.style.backgroundColor = COLOR_HOVER;
-      }
-    },
-    [disabled],
-  );
-
-  const handlePointerLeave = useCallback((e: PointerEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = COLOR_SURFACE;
-  }, []);
-
-  return (
-    <button
-      type="button"
-      style={disabled ? paginationButtonDisabledStyle : paginationButtonStyle}
-      onClick={onClick}
-      disabled={disabled}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-    >
-      {label}
-    </button>
-  );
-});
-
-// Pagination component
-const LogViewerPagination = memo(function LogViewerPagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-}: {
-  currentPage: number;
-  totalPages: number;
-  onPageChange?: (page: number) => void;
-}) {
-  const handlePrev = useCallback(() => {
-    if (currentPage > 0) {
-      onPageChange?.(currentPage - 1);
-    }
-  }, [currentPage, onPageChange]);
-
-  const handleNext = useCallback(() => {
-    if (currentPage < totalPages - 1) {
-      onPageChange?.(currentPage + 1);
-    }
-  }, [currentPage, totalPages, onPageChange]);
-
-  const handleFirst = useCallback(() => {
-    onPageChange?.(0);
-  }, [onPageChange]);
-
-  const handleLast = useCallback(() => {
-    onPageChange?.(totalPages - 1);
-  }, [totalPages, onPageChange]);
-
-  const isAtStart = currentPage === 0;
-  const isAtEnd = currentPage >= totalPages - 1;
-
-  return (
-    <div style={paginationContainerStyle}>
-      <PaginationButton label="First" disabled={isAtStart} onClick={handleFirst} />
-      <PaginationButton label="Prev" disabled={isAtStart} onClick={handlePrev} />
-      <span style={pageInfoStyle}>
-        {currentPage + 1} / {totalPages}
-      </span>
-      <PaginationButton label="Next" disabled={isAtEnd} onClick={handleNext} />
-      <PaginationButton label="Last" disabled={isAtEnd} onClick={handleLast} />
-    </div>
-  );
-});
-
-// =============================================================================
-// Re-exports for module entry point
-// =============================================================================
-
-export { useVirtualScroll } from "./useVirtualScroll";
-export type { VirtualScrollOptions, VirtualScrollResult, VirtualItem } from "./useVirtualScroll";
-export { createSegmentTree, SegmentTree } from "./SegmentTree";
-export type { SegmentTree as SegmentTreeType } from "./SegmentTree";
-export { createVirtualScrollEngine } from "./VirtualScrollEngine";
-export type { VirtualScrollCalculator, VisibleRange, EngineConfig } from "./VirtualScrollEngine";

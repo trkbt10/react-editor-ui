@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T06:36:14.543Z",
+  "generatedAt": "2026-03-01T07:49:44.881Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -336,6 +336,12 @@
       "entryType": "named",
       "relativePath": "src/viewers/MarkdownViewer/MarkdownViewer.tsx",
       "category": "viewer"
+    },
+    {
+      "name": "Pagination",
+      "entryType": "named",
+      "relativePath": "src/components/Pagination/Pagination.tsx",
+      "category": "component"
     },
     {
       "name": "PanelFrame",

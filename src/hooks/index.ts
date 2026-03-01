@@ -38,3 +38,18 @@ export type {
 
 export { useMediaStream } from "./useMediaStream";
 export type { UseMediaStreamOptions, UseMediaStreamResult } from "./useMediaStream";
+
+export { useVirtualScroll } from "./useVirtualScroll";
+export type {
+  VirtualScrollOptions,
+  VirtualScrollResult,
+  VirtualItem,
+} from "./useVirtualScroll";
+
+export { useVirtualGrid } from "./useVirtualGrid";
+export type {
+  VirtualGridOptions,
+  VirtualGridResult,
+  VirtualGridItem,
+  VirtualGridRange,
+} from "./useVirtualGrid";

@@ -12,7 +12,7 @@ import {
   type VirtualScrollCalculator,
   type VirtualItem,
   type VisibleRange,
-} from "./VirtualScrollEngine";
+} from "../utils/virtualScroll/VirtualScrollEngine";
 
 export type { VirtualItem };
 

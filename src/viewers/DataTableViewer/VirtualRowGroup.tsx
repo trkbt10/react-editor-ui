@@ -116,17 +116,17 @@ function arePropsEqual<TData>(
     next.selectedRowIndex >= next.group.startRow &&
     next.selectedRowIndex < next.group.endRow;
 
-  if (prevSelected !== nextSelected) return false;
+  if (prevSelected !== nextSelected) {return false;}
   if (prevSelected && prev.selectedRowIndex !== next.selectedRowIndex) {
     return false;
   }
 
   // Handlers (stable references expected)
-  if (prev.onRowClick !== next.onRowClick) return false;
-  if (prev.renderCell !== next.renderCell) return false;
+  if (prev.onRowClick !== next.onRowClick) {return false;}
+  if (prev.renderCell !== next.renderCell) {return false;}
 
   // Columns reference (should be stable)
-  if (prev.columns !== next.columns) return false;
+  if (prev.columns !== next.columns) {return false;}
 
   // Rows data - check if rows in this group changed
   // Note: We compare by reference for performance
@@ -134,7 +134,7 @@ function arePropsEqual<TData>(
   if (prev.rows !== next.rows) {
     // Deep check for rows in this group only
     for (let i = prev.group.startRow; i < prev.group.endRow; i++) {
-      if (prev.rows[i] !== next.rows[i]) return false;
+      if (prev.rows[i] !== next.rows[i]) {return false;}
     }
   }
 
@@ -170,7 +170,7 @@ export const VirtualRowGroup = memo(function VirtualRowGroup<TData>({
       {Array.from({ length: group.endRow - group.startRow }, (_, i) => {
         const rowIndex = group.startRow + i;
         const row = rows[rowIndex];
-        if (!row) return null;
+        if (!row) {return null;}
 
         const rowY = group.rowOffsets[i];
         const rowHeight = group.rowHeights[i];
@@ -219,7 +219,7 @@ export function calculateRowGroups<TData>(
   getRowPosition: (index: number) => number,
   getRowHeight: (index: number) => number
 ): RowGroupData<TData>[] {
-  if (startRow >= endRow) return [];
+  if (startRow >= endRow) {return [];}
 
   const groups: RowGroupData<TData>[] = [];
 

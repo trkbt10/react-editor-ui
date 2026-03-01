@@ -16,7 +16,7 @@ import {
   type VirtualGrid2DCalculator,
   type VirtualGridItem,
   type VirtualGridRange,
-} from "./VirtualGrid2DEngine";
+} from "../utils/virtualScroll/VirtualGrid2DEngine";
 
 export type { VirtualGridItem, VirtualGridRange };
 

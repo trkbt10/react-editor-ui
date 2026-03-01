@@ -5,7 +5,7 @@
  * Uses two SegmentTrees for O(log n) cumulative offset calculations.
  */
 
-import { createSegmentTree, type SegmentTree } from "../LogViewer/SegmentTree";
+import { createSegmentTree, type SegmentTree } from "./SegmentTree";
 
 // ============================================================================
 // Types

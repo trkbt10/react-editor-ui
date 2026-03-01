@@ -366,6 +366,12 @@
       "import": "./dist/viewers/MarkdownViewer.js",
       "require": "./dist/viewers/MarkdownViewer.cjs"
     },
+    "./Pagination": {
+      "source": "./src/components/Pagination/Pagination.tsx",
+      "types": "./dist/components/Pagination/Pagination.d.ts",
+      "import": "./dist/components/Pagination.js",
+      "require": "./dist/components/Pagination.cjs"
+    },
     "./PanelFrame": {
       "source": "./src/components/PanelFrame/PanelFrame.tsx",
       "types": "./dist/components/PanelFrame/PanelFrame.d.ts",
