@@ -123,6 +123,7 @@ import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
 
 // Chat demos
 import { ChatInputDemo } from "./pages/chat/ChatInputDemo";
+import { VoiceInputDemo } from "./pages/chat/VoiceInputDemo";
 
 // App demos
 import { DesignDemo } from "./pages/app-demo/design/DesignDemo";
@@ -734,6 +735,12 @@ export const demoCategories: DemoCategory[] = [
         label: "ChatInput",
         path: "chat-input",
         element: <ChatInputDemo />,
+      },
+      {
+        id: "voice-input",
+        label: "VoiceInput",
+        path: "voice-input",
+        element: <VoiceInputDemo />,
       },
     ],
   },

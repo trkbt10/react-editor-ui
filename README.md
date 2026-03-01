@@ -1149,6 +1149,21 @@ import { Select } from "react-editor-ui/Select";
   }
 />
 ```
+
+#### VoiceInput
+
+Voice input with audio visualizer
+
+A voice input component using the Web Speech API with real-time audio visualization. Designed to work alongside ChatInput with seamless transitions.
+
+```tsx
+import { VoiceInput } from "react-editor-ui/chat/VoiceInput";
+
+<VoiceInput
+  onResult={(text) => console.log("Transcribed:", text)}
+  onCancel={() => setIsVoiceMode(false)}
+/>
+```
 <!-- /AUTO:COMPONENTS -->
 
 ## Theming

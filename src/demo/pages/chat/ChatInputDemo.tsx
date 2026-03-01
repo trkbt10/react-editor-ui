@@ -2,8 +2,10 @@
  * @file ChatInput demo page
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useInsertionEffect } from "react";
+import type { CSSProperties } from "react";
 import { ChatInput } from "../../../chat/ChatInput/ChatInput";
+import { VoiceInput } from "../../../chat/VoiceInput/VoiceInput";
 import { IconButton } from "../../../components/IconButton/IconButton";
 import { Select, type SelectOption } from "../../../components/Select/Select";
 import {
@@ -124,10 +126,149 @@ const modelOptions: SelectOption<ModelId>[] = [
   },
 ];
 
+// =============================================================================
+// View Transition CSS injection with reference counting
+// =============================================================================
+
+const viewTransitionStyleId = "chat-input-view-transition-styles";
+let styleRefCount = 0;
+
+function injectViewTransitionStyles(): () => void {
+  if (typeof document === "undefined") {
+    return () => {};
+  }
+
+  styleRefCount++;
+
+  if (!document.getElementById(viewTransitionStyleId)) {
+    const style = document.createElement("style");
+    style.id = viewTransitionStyleId;
+    style.textContent = `
+      @keyframes chat-input-fade-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes chat-input-fade-out {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.95); }
+      }
+      ::view-transition-old(chat-input-container) {
+        animation: chat-input-fade-out 0.2s ease-out forwards;
+      }
+      ::view-transition-new(chat-input-container) {
+        animation: chat-input-fade-in 0.2s ease-out forwards;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  return () => {
+    styleRefCount--;
+    if (styleRefCount === 0) {
+      const style = document.getElementById(viewTransitionStyleId);
+      style?.remove();
+    }
+  };
+}
+
+// =============================================================================
+// VoiceTransitionDemo - Uses View Transition API for smooth switching
+// =============================================================================
+
+type VoiceTransitionDemoProps = {
+  isVoiceMode: boolean;
+  value: string;
+  model: ModelId;
+  isLoading: boolean;
+  onValueChange: (value: string) => void;
+  onModelChange: (model: ModelId) => void;
+  onSend: (text: string) => void;
+  onVoiceResult: (text: string) => void;
+  onVoiceCancel: () => void;
+  onMicClick: () => void;
+};
+
+function VoiceTransitionDemo({
+  isVoiceMode,
+  value,
+  model,
+  isLoading,
+  onValueChange,
+  onModelChange,
+  onSend,
+  onVoiceResult,
+  onVoiceCancel,
+  onMicClick,
+}: VoiceTransitionDemoProps) {
+  // Inject view transition styles before DOM mutations
+  useInsertionEffect(() => {
+    return injectViewTransitionStyles();
+  }, []);
+
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "relative",
+      viewTransitionName: "chat-input-container",
+    }),
+    [],
+  );
+
+  if (isVoiceMode) {
+    return (
+      <div style={containerStyle}>
+        <VoiceInput
+          variant="ghost"
+          onResult={onVoiceResult}
+          onCancel={onVoiceCancel}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div style={containerStyle}>
+      <ChatInput
+        value={value}
+        onChange={onValueChange}
+        onSend={onSend}
+        isLoading={isLoading}
+        placeholder="Ask anything"
+        variant="ghost"
+        toolbar={
+          <>
+            <IconButton icon={<PlusIcon />} aria-label="Add attachment" variant="ghost" size="sm" />
+            <IconButton icon={<GlobeIcon />} aria-label="Web search" variant="ghost" size="sm" />
+            <IconButton icon={<ImageIcon />} aria-label="Add image" variant="ghost" size="sm" />
+            <IconButton icon={<SparklesIcon />} aria-label="AI features" variant="ghost" size="sm" />
+            <Select<ModelId>
+              value={model}
+              options={modelOptions}
+              onChange={onModelChange}
+              variant="ghost"
+              size="sm"
+              aria-label="Select AI model"
+            />
+            <div style={{ flex: 1 }} />
+            <IconButton icon={<RecordIcon />} aria-label="Record" variant="ghost" size="sm" />
+            <IconButton
+              icon={<MicIcon />}
+              aria-label="Voice input"
+              variant="ghost"
+              size="sm"
+              onClick={onMicClick}
+            />
+          </>
+        }
+      />
+    </div>
+  );
+}
+
 export function ChatInputDemo() {
   const [value, setValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [model, setModel] = useState<ModelId>("5.2-thinking");
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, role: "assistant", content: "Hello! How can I help you today?" },
   ]);
@@ -153,6 +294,29 @@ export function ChatInputDemo() {
       setIsLoading(false);
     }, 1000);
   }, [model]);
+
+  // Use View Transition API for smooth mode switching
+  const startViewTransition = useCallback((callback: () => void) => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => void };
+    if (doc.startViewTransition) {
+      doc.startViewTransition(callback);
+    } else {
+      callback();
+    }
+  }, []);
+
+  const handleVoiceResult = useCallback((text: string) => {
+    startViewTransition(() => setIsVoiceMode(false));
+    handleSend(text);
+  }, [handleSend, startViewTransition]);
+
+  const handleVoiceCancel = useCallback(() => {
+    startViewTransition(() => setIsVoiceMode(false));
+  }, [startViewTransition]);
+
+  const handleMicClick = useCallback(() => {
+    startViewTransition(() => setIsVoiceMode(true));
+  }, [startViewTransition]);
 
   return (
     <div style={{ padding: SPACE_LG, maxWidth: 700, margin: "0 auto" }}>
@@ -205,14 +369,27 @@ export function ChatInputDemo() {
         )}
       </div>
 
-      {/* Full featured: ghost variant with flexible toolbar */}
-      <h3 style={{ marginBottom: SPACE_MD }}>variant="ghost" + Select variant="ghost"</h3>
-      <ChatInput
+      {/* Voice Input Transition Demo */}
+      <h3 style={{ marginBottom: SPACE_MD }}>Voice Input (click mic to switch)</h3>
+      <VoiceTransitionDemo
+        isVoiceMode={isVoiceMode}
         value={value}
-        onChange={setValue}
-        onSend={handleSend}
+        model={model}
         isLoading={isLoading}
-        placeholder="Ask anything"
+        onValueChange={setValue}
+        onModelChange={setModel}
+        onSend={handleSend}
+        onVoiceResult={handleVoiceResult}
+        onVoiceCancel={handleVoiceCancel}
+        onMicClick={handleMicClick}
+      />
+
+      {/* Static example: ghost variant with flexible toolbar */}
+      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>variant="ghost" + Select variant="ghost"</h3>
+      <ChatInput
+        value=""
+        onChange={() => {}}
+        placeholder="Static example..."
         variant="ghost"
         toolbar={
           <>
@@ -220,7 +397,6 @@ export function ChatInputDemo() {
             <IconButton icon={<GlobeIcon />} aria-label="Web search" variant="ghost" size="sm" />
             <IconButton icon={<ImageIcon />} aria-label="Add image" variant="ghost" size="sm" />
             <IconButton icon={<SparklesIcon />} aria-label="AI features" variant="ghost" size="sm" />
-            {/* Ghost select - no border */}
             <Select<ModelId>
               value={model}
               options={modelOptions}
@@ -229,7 +405,6 @@ export function ChatInputDemo() {
               size="sm"
               aria-label="Select AI model"
             />
-            {/* Spacer pushes right content */}
             <div style={{ flex: 1 }} />
             <IconButton icon={<RecordIcon />} aria-label="Record" variant="ghost" size="sm" />
             <IconButton icon={<MicIcon />} aria-label="Voice input" variant="ghost" size="sm" />

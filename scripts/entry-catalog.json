@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T06:07:15.373Z",
+  "generatedAt": "2026-03-01T06:36:14.543Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -588,6 +588,12 @@
       "entryType": "named",
       "relativePath": "src/sections/VideoFillSection/VideoFillSection.tsx",
       "category": "section"
+    },
+    {
+      "name": "VoiceInput",
+      "entryType": "named",
+      "relativePath": "src/chat/VoiceInput/VoiceInput.tsx",
+      "category": "chat"
     }
   ]
 }

@@ -618,6 +618,12 @@
       "import": "./dist/sections/VideoFillSection.js",
       "require": "./dist/sections/VideoFillSection.cjs"
     },
+    "./chat/VoiceInput": {
+      "source": "./src/chat/VoiceInput/VoiceInput.tsx",
+      "types": "./dist/chat/VoiceInput/VoiceInput.d.ts",
+      "import": "./dist/chat/VoiceInput.js",
+      "require": "./dist/chat/VoiceInput.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
