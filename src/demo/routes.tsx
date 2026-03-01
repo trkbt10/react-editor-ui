@@ -35,6 +35,7 @@ import { TooltipDemo } from "./pages/primitives/TooltipDemo";
 import { SplitButtonDemo } from "./pages/primitives/SplitButtonDemo";
 import { TabBarDemo } from "./pages/primitives/TabBarDemo";
 import { BoxModelEditorDemo } from "./pages/primitives/BoxModelEditorDemo";
+import { PaginationDemo } from "./pages/primitives/PaginationDemo";
 
 // Layout demos
 import { ToolbarDemo } from "./pages/layout/ToolbarDemo";
@@ -230,6 +231,12 @@ export const demoCategories: DemoCategory[] = [
         label: "Tooltip",
         path: "tooltip",
         element: <TooltipDemo />,
+      },
+      {
+        id: "pagination",
+        label: "Pagination",
+        path: "pagination",
+        element: <PaginationDemo />,
       },
       {
         id: "split-button",
