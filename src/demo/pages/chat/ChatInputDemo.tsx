@@ -265,12 +265,12 @@ function BasicDemo({
         />
       </ChatInput.Content>
       <ChatInput.Toolbar>
-        <IconButton icon={<PlusIcon />} aria-label="Add" variant="ghost" size="sm" />
-        <IconButton icon={<GlobeIcon />} aria-label="Search" variant="ghost" size="sm" />
-        <IconButton icon={<ImageIcon />} aria-label="Image" variant="ghost" size="sm" />
+        <IconButton icon={<PlusIcon />} aria-label="Add" variant="ghost" size="md" />
+        <IconButton icon={<GlobeIcon />} aria-label="Search" variant="ghost" size="md" />
+        <IconButton icon={<ImageIcon />} aria-label="Image" variant="ghost" size="md" />
         <Select<ModelId> value={model} options={modelOptions} onChange={setModel} variant="ghost" size="sm" />
         <div style={{ flex: 1 }} />
-        <IconButton icon={<MicIcon />} aria-label="Voice" variant="ghost" size="sm" />
+        <IconButton icon={<MicIcon />} aria-label="Voice" variant="ghost" size="md" />
         <SendButton canSend={canSend} isLoading={isLoading} onClick={handleSend} />
       </ChatInput.Toolbar>
     </ChatInput.Root>
@@ -331,7 +331,7 @@ function BadgesDemo() {
         />
       </ChatInput.Content>
       <ChatInput.Toolbar>
-        <IconButton icon={<PlusIcon />} aria-label="Add context" variant="ghost" size="sm" />
+        <IconButton icon={<PlusIcon />} aria-label="Add context" variant="ghost" size="md" />
         <div style={{ flex: 1 }} />
         <SendButton canSend={canSend} isLoading={false} onClick={handleSend} />
       </ChatInput.Toolbar>
@@ -438,7 +438,7 @@ function DnDDemo() {
         <div style={dropOverlayStyle}>Drop files here</div>
       </ChatInput.Overlay>
       <ChatInput.Toolbar>
-        <IconButton icon={<PlusIcon />} aria-label="Add file" variant="ghost" size="sm" onClick={handleAddFileClick} />
+        <IconButton icon={<PlusIcon />} aria-label="Add file" variant="ghost" size="md" onClick={handleAddFileClick} />
         <div style={{ flex: 1 }} />
         <SendButton canSend={canSend} isLoading={false} onClick={handleSend} />
       </ChatInput.Toolbar>
