@@ -9,6 +9,7 @@ import {
   LuLayers,
   LuList,
   LuMessageSquare,
+  LuMessageCircle,
   LuCode,
   LuPenTool,
   LuAppWindow,
@@ -119,6 +120,9 @@ import { CanvasCheckerboardDemo } from "./pages/canvas/CanvasCheckerboardDemo";
 import { MarkdownViewerDemo } from "./pages/viewer/MarkdownViewerDemo";
 import { DataTableViewerDemo } from "./pages/viewer/DataTableViewerDemo";
 import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
+
+// Chat demos
+import { ChatInputDemo } from "./pages/chat/ChatInputDemo";
 
 // App demos
 import { DesignDemo } from "./pages/app-demo/design/DesignDemo";
@@ -716,6 +720,20 @@ export const demoCategories: DemoCategory[] = [
         label: "MarkdownViewer",
         path: "markdown-viewer",
         element: <MarkdownViewerDemo />,
+      },
+    ],
+  },
+  {
+    id: "chat",
+    label: "Chat",
+    icon: <LuMessageCircle size={18} />,
+    base: "/components/chat",
+    pages: [
+      {
+        id: "chat-input",
+        label: "ChatInput",
+        path: "chat-input",
+        element: <ChatInputDemo />,
       },
     ],
   },

@@ -1105,7 +1105,7 @@ import { CanvasGuide } from "react-editor-ui/canvas/CanvasGuide";
 
 Horizontal and Vertical rulers for Canvas
 
-Renders measurement rulers positioned outside the Canvas element. Shows tick marks, labels, and mouse position indicator. Receives viewport state via props for synchronization.
+Renders measurement rulers positioned outside the Canvas element. Shows tick marks, labels, and mouse position indicator. Receives viewport state via props for synchronization. Double-click on ruler to add a guide line at that position.
 
 ```tsx
 import { CanvasRuler } from "react-editor-ui/canvas/CanvasRuler";
@@ -1115,6 +1115,38 @@ import { CanvasRuler } from "react-editor-ui/canvas/CanvasRuler";
   viewport={viewport}
   length={800}
   mousePosition={100}
+  onAddGuide={(guide) => setGuides([...guides, guide])}
+/>
+```
+
+### Chat
+
+> Chat UI components for conversational interfaces
+
+#### ChatInput
+
+Extensible chat input with toolbar
+
+A multi-line text input optimized for chat interfaces. Features auto-resize, Enter to send (Shift+Enter for newline), and a flexible toolbar slot.
+
+```tsx
+import { ChatInput } from "react-editor-ui/chat/ChatInput";
+import { IconButton } from "react-editor-ui/IconButton";
+import { Select } from "react-editor-ui/Select";
+
+<ChatInput
+  value={value}
+  onChange={setValue}
+  onSend={handleSend}
+  placeholder="Ask anything"
+  toolbar={
+    <>
+      <IconButton icon={<PlusIcon />} aria-label="Add" variant="ghost" size="sm" />
+      <Select value={model} options={models} onChange={setModel} variant="ghost" size="sm" />
+      <div style={{ flex: 1 }} />
+      <IconButton icon={<MicIcon />} aria-label="Voice" variant="ghost" size="sm" />
+    </>
+  }
 />
 ```
 <!-- /AUTO:COMPONENTS -->
@@ -1447,6 +1479,8 @@ Theme-dependent color values. These are overridden by each theme preset.
 | `canvas-grid-minor` | `--rei-canvas-grid-minor` | Grid minor - secondary grid lines |
 | `canvas-grid-origin` | `--rei-canvas-grid-origin` | Grid origin - origin axis lines |
 | `canvas-guide` | `--rei-canvas-guide` | Guide lines - alignment guides |
+| `canvas-guide-locked` | `--rei-canvas-guide-locked` | Guide lines locked - locked guide indicator |
+| `canvas-guide-hover` | `--rei-canvas-guide-hover` | Guide lines hover - guide on hover/select |
 | `canvas-checker-light` | `--rei-canvas-checker-light` | Checker light - transparency pattern light |
 | `canvas-checker-dark` | `--rei-canvas-checker-dark` | Checker dark - transparency pattern dark |
 

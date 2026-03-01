@@ -24,7 +24,7 @@ const COMPONENT_CATEGORIES_PATH = join(ROOT_DIR, "docs/component-categories.json
 const PACKAGE_JSON_PATH = join(ROOT_DIR, "package.json");
 const ENTRY_CATALOG_PATH = join(ROOT_DIR, "scripts/entry-catalog.json");
 
-type EntryCategory = "component" | "panel" | "canvas" | "editor" | "section" | "viewer" | "parser";
+type EntryCategory = "component" | "panel" | "canvas" | "editor" | "section" | "viewer" | "parser" | "chat";
 
 interface ComponentEntry {
   name: string;
@@ -88,6 +88,8 @@ function getCategoryDir(category: EntryCategory): string {
       return "viewers";
     case "parser":
       return "parsers";
+    case "chat":
+      return "chat";
   }
 }
 

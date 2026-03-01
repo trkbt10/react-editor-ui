@@ -69,12 +69,16 @@ export type SelectOption<T extends string = string> = {
   disabled?: boolean;
 };
 
+export type SelectVariant = "default" | "ghost";
+
 export type SelectProps<T extends string = string> = {
   options: SelectOption<T>[];
   value: T;
   onChange: (value: T) => void;
   placeholder?: string;
   size?: "sm" | "md" | "lg";
+  /** Visual variant: "default" has border, "ghost" is borderless */
+  variant?: SelectVariant;
   disabled?: boolean;
   "aria-label"?: string;
   className?: string;
@@ -296,11 +300,13 @@ export const Select = memo(function Select<T extends string = string>({
   onChange,
   placeholder = "Select...",
   size = "md",
+  variant = "default",
   disabled = false,
   "aria-label": ariaLabel,
   className,
 }: SelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, left: 0, width: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -391,25 +397,43 @@ export const Select = memo(function Select<T extends string = string>({
     }
   };
 
-  const triggerStyle = useMemo<CSSProperties>(() => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-    height: sizeConfig.height,
-    padding: `0 ${sizeConfig.padding}`,
-    backgroundColor: COLOR_INPUT_BG,
-    border: `1px solid ${isOpen ? COLOR_INPUT_BORDER_FOCUS : COLOR_INPUT_BORDER}`,
-    borderRadius: RADIUS_SM,
-    color: selectedOption ? COLOR_TEXT : COLOR_TEXT_MUTED,
-    fontSize: sizeConfig.fontSize,
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
-    transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
-    outline: "none",
-    boxShadow: isOpen ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
-    gap: SPACE_SM,
-  }), [sizeConfig.height, sizeConfig.padding, sizeConfig.fontSize, isOpen, selectedOption, disabled]);
+  const triggerStyle = useMemo<CSSProperties>(() => {
+    const base: CSSProperties = {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      width: "100%",
+      height: sizeConfig.height,
+      padding: `0 ${sizeConfig.padding}`,
+      borderRadius: RADIUS_SM,
+      color: selectedOption ? COLOR_TEXT : COLOR_TEXT_MUTED,
+      fontSize: sizeConfig.fontSize,
+      cursor: disabled ? "not-allowed" : "pointer",
+      opacity: disabled ? 0.5 : 1,
+      outline: "none",
+      gap: SPACE_SM,
+    };
+
+    if (variant === "ghost") {
+      // Ghost: no border, transparent bg, hover shows subtle bg
+      return {
+        ...base,
+        backgroundColor: isHovered ? COLOR_HOVER : "transparent",
+        border: "none",
+        boxShadow: isOpen ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+        transition: `background-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+      };
+    }
+
+    // Default: with border and background
+    return {
+      ...base,
+      backgroundColor: COLOR_INPUT_BG,
+      border: `1px solid ${isOpen ? COLOR_INPUT_BORDER_FOCUS : COLOR_INPUT_BORDER}`,
+      boxShadow: isOpen ? `0 0 0 2px ${COLOR_FOCUS_RING}` : "none",
+      transition: `border-color ${DURATION_FAST} ${EASING_DEFAULT}`,
+    };
+  }, [sizeConfig.height, sizeConfig.padding, sizeConfig.fontSize, isOpen, isHovered, selectedOption, disabled, variant]);
 
   const previewContainerStyle = useMemo<CSSProperties>(() => ({
     flex: 1,
@@ -426,6 +450,16 @@ export const Select = memo(function Select<T extends string = string>({
     }
   }, [disabled]);
 
+  const handlePointerEnter = useCallback(() => {
+    if (!disabled) {
+      setIsHovered(true);
+    }
+  }, [disabled]);
+
+  const handlePointerLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
+
   const handleOptionClick = useCallback((optionValue: T, optionDisabled?: boolean) => {
     if (!optionDisabled) {
       onChange(optionValue);
@@ -435,8 +469,8 @@ export const Select = memo(function Select<T extends string = string>({
 
   const containerStyle = useMemo<CSSProperties>(() => ({
     position: "relative",
-    width: "100%",
-  }), []);
+    width: variant === "ghost" ? "auto" : "100%",
+  }), [variant]);
 
   const labelStyle = useMemo<CSSProperties>(() => ({
     overflow: "hidden",
@@ -468,6 +502,8 @@ export const Select = memo(function Select<T extends string = string>({
         disabled={disabled}
         onClick={handleTriggerClick}
         onKeyDown={handleKeyDown}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
         style={triggerStyle}
       >
         {selectedOption?.preview && <div style={previewContainerStyle}>{selectedOption.preview}</div>}

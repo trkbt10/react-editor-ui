@@ -133,6 +133,14 @@
         "CanvasGuide",
         "CanvasRuler"
       ]
+    },
+    {
+      "id": "chat",
+      "label": "Chat",
+      "description": "Chat UI components for conversational interfaces",
+      "components": [
+        "ChatInput"
+      ]
     }
   ],
   "demoSidebar": {
@@ -208,6 +216,14 @@
         "entryCategory": "parser",
         "includeInExports": true,
         "categoryIds": []
+      },
+      {
+        "id": "chat",
+        "displayName": "Chat",
+        "sourceDir": "src/chat",
+        "entryCategory": "chat",
+        "includeInExports": true,
+        "categoryIds": ["chat"]
       },
       {
         "id": "app-demo",
