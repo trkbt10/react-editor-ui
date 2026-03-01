@@ -2,7 +2,7 @@
  * @file CanvasRuler demo page
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   DemoContainer,
   DemoSection,
@@ -50,6 +50,32 @@ export function CanvasRulerDemo() {
       prev.map((g) => (g.id === id ? { ...g, locked: !g.locked } : g)),
     );
   }, []);
+
+  // Demo: Keyboard shortcuts for guide operations
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedGuideId) return;
+
+      const guide = guides.find((g) => g.id === selectedGuideId);
+      if (!guide) return;
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (!guide.locked) {
+          e.preventDefault();
+          handleDeleteGuide(selectedGuideId);
+          setSelectedGuideId(null);
+        }
+      } else if (e.key === "l" || e.key === "L") {
+        e.preventDefault();
+        handleToggleLock(selectedGuideId);
+      } else if (e.key === "Escape") {
+        setSelectedGuideId(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedGuideId, guides, handleDeleteGuide, handleToggleLock]);
 
   return (
     <DemoContainer title="CanvasRuler">

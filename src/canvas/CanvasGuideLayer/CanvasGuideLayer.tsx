@@ -161,34 +161,6 @@ export const CanvasGuideLayer = memo(function CanvasGuideLayer({
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<GuideDragState | null>(null);
 
-  // Handle keyboard events for delete and lock
-  useEffect(() => {
-    if (!selectedGuideId) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const guide = guides.find((g) => g.id === selectedGuideId);
-      if (!guide) return;
-
-      if (e.key === "Delete" || e.key === "Backspace") {
-        if (!guide.locked && onDeleteGuide) {
-          e.preventDefault();
-          onDeleteGuide(selectedGuideId);
-          onSelectGuide?.(null);
-        }
-      } else if (e.key === "l" || e.key === "L") {
-        if (onToggleLock) {
-          e.preventDefault();
-          onToggleLock(selectedGuideId);
-        }
-      } else if (e.key === "Escape") {
-        onSelectGuide?.(null);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedGuideId, guides, onDeleteGuide, onToggleLock, onSelectGuide]);
-
   // Handle drag
   useEffect(() => {
     if (!dragState) return;

@@ -2,7 +2,7 @@
  * @file CanvasGuideLayer unit tests
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { CanvasGuideLayer } from "./CanvasGuideLayer";
 import type { CanvasGuide, ViewportState } from "../core/types";
@@ -118,115 +118,6 @@ describe("CanvasGuideLayer", () => {
 
       fireEvent.pointerDown(hitArea!);
       expect(onSelectGuide).toHaveBeenCalledWith("g1");
-    });
-  });
-
-  describe("keyboard interactions", () => {
-    beforeEach(() => {
-      vi.useFakeTimers({ shouldAdvanceTime: true });
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it("calls onDeleteGuide on Delete key when guide is selected", () => {
-      const onDeleteGuide = vi.fn();
-      const onSelectGuide = vi.fn();
-      const guides = [createGuide("g1", "horizontal", 100)];
-
-      renderGuideLayer({
-        guides,
-        selectedGuideId: "g1",
-        onSelectGuide,
-        onDeleteGuide,
-      });
-
-      fireEvent.keyDown(window, { key: "Delete" });
-
-      expect(onDeleteGuide).toHaveBeenCalledWith("g1");
-      expect(onSelectGuide).toHaveBeenCalledWith(null);
-    });
-
-    it("calls onDeleteGuide on Backspace key when guide is selected", () => {
-      const onDeleteGuide = vi.fn();
-      const onSelectGuide = vi.fn();
-      const guides = [createGuide("g1", "horizontal", 100)];
-
-      renderGuideLayer({
-        guides,
-        selectedGuideId: "g1",
-        onSelectGuide,
-        onDeleteGuide,
-      });
-
-      fireEvent.keyDown(window, { key: "Backspace" });
-
-      expect(onDeleteGuide).toHaveBeenCalledWith("g1");
-    });
-
-    it("does not delete locked guide", () => {
-      const onDeleteGuide = vi.fn();
-      const guides = [createGuide("g1", "horizontal", 100, true)];
-
-      renderGuideLayer({
-        guides,
-        selectedGuideId: "g1",
-        onDeleteGuide,
-      });
-
-      fireEvent.keyDown(window, { key: "Delete" });
-
-      expect(onDeleteGuide).not.toHaveBeenCalled();
-    });
-
-    it("calls onToggleLock on L key when guide is selected", () => {
-      const onToggleLock = vi.fn();
-      const guides = [createGuide("g1", "horizontal", 100)];
-
-      renderGuideLayer({
-        guides,
-        selectedGuideId: "g1",
-        onToggleLock,
-      });
-
-      fireEvent.keyDown(window, { key: "l" });
-
-      expect(onToggleLock).toHaveBeenCalledWith("g1");
-    });
-
-    it("calls onSelectGuide with null on Escape key", () => {
-      const onSelectGuide = vi.fn();
-      const guides = [createGuide("g1", "horizontal", 100)];
-
-      renderGuideLayer({
-        guides,
-        selectedGuideId: "g1",
-        onSelectGuide,
-      });
-
-      fireEvent.keyDown(window, { key: "Escape" });
-
-      expect(onSelectGuide).toHaveBeenCalledWith(null);
-    });
-
-    it("does nothing when no guide is selected", () => {
-      const onDeleteGuide = vi.fn();
-      const onToggleLock = vi.fn();
-      const guides = [createGuide("g1", "horizontal", 100)];
-
-      renderGuideLayer({
-        guides,
-        selectedGuideId: null,
-        onDeleteGuide,
-        onToggleLock,
-      });
-
-      fireEvent.keyDown(window, { key: "Delete" });
-      fireEvent.keyDown(window, { key: "l" });
-
-      expect(onDeleteGuide).not.toHaveBeenCalled();
-      expect(onToggleLock).not.toHaveBeenCalled();
     });
   });
 
