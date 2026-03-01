@@ -1141,29 +1141,30 @@ import { CanvasRuler } from "react-editor-ui/canvas/CanvasRuler";
 
 #### ChatInput
 
-Extensible chat input with toolbar
+ChatInput - Compound components for building chat input UIs
 
-A multi-line text input optimized for chat interfaces. Features auto-resize, Enter to send (Shift+Enter for newline), and a flexible toolbar slot.
+A set of composable components for building flexible chat input interfaces. Use ChatInput.Root as the container and compose with Badges, Content, Overlay, and Toolbar.
 
 ```tsx
 import { ChatInput } from "react-editor-ui/chat/ChatInput";
-import { IconButton } from "react-editor-ui/IconButton";
-import { Select } from "react-editor-ui/Select";
 
-<ChatInput
-  value={value}
-  onChange={setValue}
-  onSend={handleSend}
-  placeholder="Ask anything"
-  toolbar={
-    <>
-      <IconButton icon={<PlusIcon />} aria-label="Add" variant="ghost" size="sm" />
-      <Select value={model} options={models} onChange={setModel} variant="ghost" size="sm" />
-      <div style={{ flex: 1 }} />
-      <IconButton icon={<MicIcon />} aria-label="Voice" variant="ghost" size="sm" />
-    </>
-  }
-/>
+<ChatInput.Root variant="ghost">
+  <ChatInput.Badges>
+    <FilePreview file={file} onRemove={handleRemove} />
+  </ChatInput.Badges>
+
+  <ChatInput.Content>
+    <textarea value={value} onChange={handleChange} />
+  </ChatInput.Content>
+
+  <ChatInput.Overlay visible={isDragging}>
+    <DropOverlay />
+  </ChatInput.Overlay>
+
+  <ChatInput.Toolbar>
+    <SendButton onClick={handleSend} />
+  </ChatInput.Toolbar>
+</ChatInput.Root>
 ```
 
 #### VoiceInput

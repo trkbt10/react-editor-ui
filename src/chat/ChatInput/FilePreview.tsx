@@ -16,7 +16,7 @@
  * ```
  */
 
-import { memo, useState, useMemo, useCallback, useEffect } from "react";
+import { memo, useState, useMemo, useCallback, useEffect, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   COLOR_BORDER,
@@ -129,6 +129,29 @@ function getFileInfo(file: File | FileInfo): FileInfo {
   return file;
 }
 
+// Static styles for thumbnail content
+const thumbnailImageStyle: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+};
+
+const iconContainerStyle: CSSProperties = {
+  color: COLOR_TEXT_MUTED,
+};
+
+/** Render thumbnail image or fallback icon */
+function renderThumbnailContent(
+  thumbnailUrl: string | null,
+  altText: string,
+  customIcon: ReactNode | undefined,
+): ReactNode {
+  if (thumbnailUrl) {
+    return <img src={thumbnailUrl} alt={altText} style={thumbnailImageStyle} />;
+  }
+  return <span style={iconContainerStyle}>{customIcon || <FileIcon />}</span>;
+}
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -142,31 +165,47 @@ export const FilePreview = memo(function FilePreview({
 }: FilePreviewProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isCloseHovered, setIsCloseHovered] = useState(false);
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
 
   const fileInfo = getFileInfo(file);
   const isImage = isImageType(fileInfo.type);
 
-  // Generate thumbnail URL for image files
-  useEffect(() => {
-    if (thumbnailProp) {
-      setThumbnailUrl(thumbnailProp);
-      return;
+  // Compute blob URL for File objects (sync)
+  const blobUrl = useMemo(() => {
+    // Cleanup previous blob URL
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
     }
 
-    if (fileInfo.url) {
-      setThumbnailUrl(fileInfo.url);
-      return;
-    }
-
+    // Create new blob URL if applicable
     if (file instanceof File && isImage) {
       const url = URL.createObjectURL(file);
-      setThumbnailUrl(url);
-      return () => URL.revokeObjectURL(url);
+      blobUrlRef.current = url;
+      return url;
     }
+    return null;
+  }, [file, isImage]);
 
-    setThumbnailUrl(null);
-  }, [file, fileInfo.url, isImage, thumbnailProp]);
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+      }
+    };
+  }, []);
+
+  // Compute thumbnail URL (prioritized: prop > fileInfo.url > blob)
+  const thumbnailUrl = useMemo(() => {
+    if (thumbnailProp) {
+      return thumbnailProp;
+    }
+    if (fileInfo.url) {
+      return fileInfo.url;
+    }
+    return blobUrl;
+  }, [thumbnailProp, fileInfo.url, blobUrl]);
 
   const containerStyle = useMemo<CSSProperties>(
     () => ({
@@ -199,22 +238,6 @@ export const FilePreview = memo(function FilePreview({
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: COLOR_HOVER,
-    }),
-    [],
-  );
-
-  const thumbnailImageStyle = useMemo<CSSProperties>(
-    () => ({
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-    }),
-    [],
-  );
-
-  const iconContainerStyle = useMemo<CSSProperties>(
-    () => ({
-      color: COLOR_TEXT_MUTED,
     }),
     [],
   );
@@ -297,15 +320,7 @@ export const FilePreview = memo(function FilePreview({
     >
       {/* Thumbnail or Icon */}
       <div style={thumbnailContainerStyle}>
-        {thumbnailUrl ? (
-          <img
-            src={thumbnailUrl}
-            alt={fileInfo.name}
-            style={thumbnailImageStyle}
-          />
-        ) : (
-          <span style={iconContainerStyle}>{icon || <FileIcon />}</span>
-        )}
+        {renderThumbnailContent(thumbnailUrl, fileInfo.name, icon)}
       </div>
 
       {/* File info */}

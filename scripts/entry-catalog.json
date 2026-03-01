@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T07:49:44.881Z",
+  "generatedAt": "2026-03-01T10:47:32.147Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -137,6 +137,12 @@
       "name": "ChatInput",
       "entryType": "named",
       "relativePath": "src/chat/ChatInput/ChatInput.tsx",
+      "category": "chat"
+    },
+    {
+      "name": "ChatMessageDisplay",
+      "entryType": "named",
+      "relativePath": "src/chat/ChatMessageDisplay/ChatMessageDisplay.tsx",
       "category": "chat"
     },
     {

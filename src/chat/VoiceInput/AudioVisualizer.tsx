@@ -346,9 +346,8 @@ export const AudioVisualizer = memo(function AudioVisualizer({
   const realAnalyser = useAudioAnalyser(mockMode ? null : stream, isActive && !mockMode);
   const mockAnalyser = useMockOscillator(isActive && mockMode);
 
-  const getFrequencyData = mockMode
-    ? mockAnalyser.getFrequencyData
-    : realAnalyser.getFrequencyData;
+  // Select frequency data source based on mode
+  const getFrequencyData = mockMode ? mockAnalyser.getFrequencyData : realAnalyser.getFrequencyData;
 
   const drawFrame = useCallback(() => {
     const canvas = canvasRef.current;

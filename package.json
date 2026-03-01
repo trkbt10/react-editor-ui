@@ -168,6 +168,12 @@
       "import": "./dist/chat/ChatInput.js",
       "require": "./dist/chat/ChatInput.cjs"
     },
+    "./chat/ChatMessageDisplay": {
+      "source": "./src/chat/ChatMessageDisplay/ChatMessageDisplay.tsx",
+      "types": "./dist/chat/ChatMessageDisplay/ChatMessageDisplay.d.ts",
+      "import": "./dist/chat/ChatMessageDisplay.js",
+      "require": "./dist/chat/ChatMessageDisplay.cjs"
+    },
     "./Checkbox": {
       "source": "./src/components/Checkbox/Checkbox.tsx",
       "types": "./dist/components/Checkbox/Checkbox.d.ts",
