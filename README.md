@@ -780,6 +780,41 @@ const [expanded, setExpanded] = useState(true);
 />
 ```
 
+#### Table
+
+Flexible table with sortable headers and drag reorder
+
+A composable table component with sticky headers, sortable columns, and drag-and-drop column reordering. Designed for data display with external data management (sorting, filtering logic provided by consumer).
+
+```tsx
+import {
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "react-editor-ui/Table";
+
+const columns = [
+  { key: "name", label: "Name", sortable: true },
+  { key: "age", label: "Age", sortable: true, align: "right" },
+];
+
+<TableHeader
+  columns={columns}
+  sortKey={sortKey}
+  sortDirection={sortDirection}
+  onSort={(key) => handleSort(key)}
+/>
+<TableBody>
+  {rows.map((row, i) => (
+    <TableRow key={i} rowIndex={i}>
+      <TableCell>{row.name}</TableCell>
+      <TableCell align="right">{row.age}</TableCell>
+    </TableRow>
+  ))}
+</TableBody>
+```
+
 #### TreeItem
 
 Tree node for hierarchical data
@@ -928,6 +963,33 @@ import { Portal } from "react-editor-ui/Portal";
 ### Viewers
 
 > Read-only content viewers and renderers
+
+#### DataTableViewer
+
+DataTableViewer - Virtualized data table viewer
+
+A high-performance data table viewer with 2D virtualization for handling large datasets. Features include sticky headers, sortable columns, column reordering via drag-and-drop, search, and filtering. All data manipulation logic (sorting, filtering) is external - this component provides UI only.
+
+```tsx
+import { DataTableViewer } from "react-editor-ui/viewers/DataTableViewer";
+
+const columns = [
+  { key: "id", label: "ID", width: 80, sortable: true },
+  { key: "name", label: "Name", sortable: true },
+  { key: "status", label: "Status" },
+];
+
+<DataTableViewer
+  rows={data}
+  columns={columns}
+  height={400}
+  sortKey={sortKey}
+  sortDirection={sortDirection}
+  onSort={(key, dir) => handleSort(key, dir)}
+  searchQuery={query}
+  onSearchChange={setQuery}
+/>
+```
 
 #### LogViewer
 

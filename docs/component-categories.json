@@ -81,6 +81,7 @@
         "LayerItem",
         "PropertyRow",
         "SectionHeader",
+        "Table",
         "TreeItem"
       ]
     },
@@ -116,6 +117,7 @@
       "label": "Viewers",
       "description": "Read-only content viewers and renderers",
       "components": [
+        "DataTableViewer",
         "LogViewer",
         "MarkdownViewer"
       ]

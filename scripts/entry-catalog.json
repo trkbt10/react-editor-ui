@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-28T12:40:55.019Z",
+  "generatedAt": "2026-03-01T03:33:50.720Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -162,6 +162,12 @@
       "entryType": "named",
       "relativePath": "src/components/ControlRow/ControlRow.tsx",
       "category": "component"
+    },
+    {
+      "name": "DataTableViewer",
+      "entryType": "named",
+      "relativePath": "src/viewers/DataTableViewer/DataTableViewer.tsx",
+      "category": "viewer"
     },
     {
       "name": "DistributeObjectsSection",
@@ -485,6 +491,12 @@
       "name": "TabBar",
       "entryType": "named",
       "relativePath": "src/components/TabBar/TabBar.tsx",
+      "category": "component"
+    },
+    {
+      "name": "Table",
+      "entryType": "named",
+      "relativePath": "src/components/Table/Table.tsx",
       "category": "component"
     },
     {

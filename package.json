@@ -192,6 +192,12 @@
       "import": "./dist/components/ControlRow.js",
       "require": "./dist/components/ControlRow.cjs"
     },
+    "./viewers/DataTableViewer": {
+      "source": "./src/viewers/DataTableViewer/DataTableViewer.tsx",
+      "types": "./dist/viewers/DataTableViewer/DataTableViewer.d.ts",
+      "import": "./dist/viewers/DataTableViewer.js",
+      "require": "./dist/viewers/DataTableViewer.cjs"
+    },
     "./sections/DistributeObjectsSection": {
       "source": "./src/sections/DistributeObjectsSection/DistributeObjectsSection.tsx",
       "types": "./dist/sections/DistributeObjectsSection/DistributeObjectsSection.d.ts",
@@ -515,6 +521,12 @@
       "types": "./dist/components/TabBar/TabBar.d.ts",
       "import": "./dist/components/TabBar.js",
       "require": "./dist/components/TabBar.cjs"
+    },
+    "./Table": {
+      "source": "./src/components/Table/Table.tsx",
+      "types": "./dist/components/Table/Table.d.ts",
+      "import": "./dist/components/Table.js",
+      "require": "./dist/components/Table.cjs"
     },
     "./sections/TextJustifySection": {
       "source": "./src/sections/TextJustifySection/TextJustifySection.tsx",

@@ -84,6 +84,7 @@ import { LayerItemDemo } from "./pages/data-display/LayerItemDemo";
 import { SelectDemo } from "./pages/data-display/SelectDemo";
 import { ContextMenuDemo } from "./pages/data-display/ContextMenuDemo";
 import { LibraryBrowserDemo } from "./pages/data-display/LibraryBrowserDemo";
+import { TableDemo } from "./pages/data-display/TableDemo";
 
 // Feedback demos
 import { StatusBarDemo } from "./pages/feedback/StatusBarDemo";
@@ -116,6 +117,7 @@ import { CanvasCheckerboardDemo } from "./pages/canvas/CanvasCheckerboardDemo";
 
 // Viewer demos
 import { MarkdownViewerDemo } from "./pages/viewer/MarkdownViewerDemo";
+import { DataTableViewerDemo } from "./pages/viewer/DataTableViewerDemo";
 import { LogViewerDemo } from "./pages/feedback/LogViewerDemo";
 
 // App demos
@@ -534,6 +536,12 @@ export const demoCategories: DemoCategory[] = [
         path: "library-browser",
         element: <LibraryBrowserDemo />,
       },
+      {
+        id: "table",
+        label: "Table",
+        path: "table",
+        element: <TableDemo />,
+      },
     ],
   },
   {
@@ -692,16 +700,22 @@ export const demoCategories: DemoCategory[] = [
     base: "/components/viewer",
     pages: [
       {
-        id: "markdown-viewer",
-        label: "MarkdownViewer",
-        path: "markdown-viewer",
-        element: <MarkdownViewerDemo />,
+        id: "data-table-viewer",
+        label: "DataTableViewer",
+        path: "data-table-viewer",
+        element: <DataTableViewerDemo />,
       },
       {
         id: "log-viewer",
         label: "LogViewer",
         path: "log-viewer",
         element: <LogViewerDemo />,
+      },
+      {
+        id: "markdown-viewer",
+        label: "MarkdownViewer",
+        path: "markdown-viewer",
+        element: <MarkdownViewerDemo />,
       },
     ],
   },
