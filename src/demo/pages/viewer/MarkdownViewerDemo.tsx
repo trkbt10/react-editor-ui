@@ -2,11 +2,16 @@
  * @file MarkdownViewer demo page
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { DemoContainer, DemoSection, DemoMutedText } from "../../components";
-import { MarkdownViewer } from "../../../viewers/MarkdownViewer/MarkdownViewer";
-import { createStreamingMarkdownParser, parseTable } from "../../../parsers/Markdown";
-import type { MarkdownParseEvent, EndEvent } from "../../../parsers/Markdown";
+import {
+  MarkdownViewer,
+  useMarkdownBlocks,
+} from "../../../viewers/MarkdownViewer/MarkdownViewer";
+import type {
+  CodeBlockProps,
+  BlockComponentMap,
+} from "../../../viewers/MarkdownViewer/MarkdownViewer";
 import { LogViewer } from "../../../viewers/LogViewer/LogViewer";
 import type { LogItem } from "../../../viewers/LogViewer/LogViewer";
 import {
@@ -14,7 +19,6 @@ import {
   COLOR_SURFACE_RAISED,
   COLOR_TEXT,
   COLOR_BORDER,
-  SPACE_SM,
   SPACE_MD,
   SPACE_LG,
   SPACE_XL,
@@ -60,228 +64,57 @@ function greet(name: string): string {
 That's all for now!
 `;
 
-type ParsedBlock = {
-  id: string;
-  type: string;
-  content: string;
-  metadata?: Record<string, unknown>;
+// Custom code block renderer demo: adds language label and line numbers
+const customCodeStyle: React.CSSProperties = {
+  fontFamily: "monospace",
+  fontSize: "12px",
+  backgroundColor: "#1e1e2e",
+  color: "#cdd6f4",
+  padding: `${SPACE_MD} ${SPACE_LG}`,
+  borderRadius: RADIUS_SM,
+  whiteSpace: "pre",
+  overflow: "auto",
+  display: "block",
+  margin: "4px 0",
+  position: "relative",
 };
 
-/** Snapshot finished + in-progress blocks for rendering. */
-function snapshotBlocks(
-  finishedBlocks: ParsedBlock[],
-  pendingBlocks: Map<string, ParsedBlock>,
-): ParsedBlock[] {
-  // Clone pending blocks so React sees new object references
-  const pending = Array.from(pendingBlocks.values(), (b) => ({ ...b }));
-  return [...finishedBlocks, ...pending];
-}
-
-function useMarkdownParser() {
-  const [blocks, setBlocks] = useState<ParsedBlock[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-
-  const parse = useCallback(async (text: string) => {
-    setBlocks([]);
-    setIsStreaming(true);
-
-    const parser = createStreamingMarkdownParser();
-    const pendingBlocks = new Map<string, ParsedBlock>();
-    const finishedBlocks: ParsedBlock[] = [];
-
-    for await (const event of parser.processChunk(text)) {
-      handleEvent(event, pendingBlocks, finishedBlocks);
-    }
-
-    for await (const event of parser.complete()) {
-      handleEvent(event, pendingBlocks, finishedBlocks);
-    }
-
-    setBlocks(finishedBlocks);
-    setIsStreaming(false);
-  }, []);
-
-  const streamParse = useCallback(async (text: string, chunkSize: number) => {
-    setBlocks([]);
-    setIsStreaming(true);
-
-    const parser = createStreamingMarkdownParser();
-    const pendingBlocks = new Map<string, ParsedBlock>();
-    const finishedBlocks: ParsedBlock[] = [];
-
-    for (const [i] of Array.from({ length: Math.ceil(text.length / chunkSize) }).entries()) {
-      const chunk = text.slice(i * chunkSize, (i + 1) * chunkSize);
-
-      for await (const event of parser.processChunk(chunk)) {
-        handleEvent(event, pendingBlocks, finishedBlocks);
-      }
-
-      // Include both finished and in-progress blocks for real-time text streaming
-      setBlocks(snapshotBlocks(finishedBlocks, pendingBlocks));
-      await new Promise((resolve) => setTimeout(resolve, 30));
-    }
-
-    for await (const event of parser.complete()) {
-      handleEvent(event, pendingBlocks, finishedBlocks);
-    }
-
-    setBlocks([...finishedBlocks]);
-    setIsStreaming(false);
-  }, []);
-
-  return { blocks, isStreaming, parse, streamParse };
-}
-
-function handleEvent(
-  event: MarkdownParseEvent,
-  pendingBlocks: Map<string, ParsedBlock>,
-  finishedBlocks: ParsedBlock[],
-): void {
-  if (event.type === "begin") {
-    pendingBlocks.set(event.elementId, {
-      id: event.elementId,
-      type: event.elementType,
-      content: "",
-      metadata: event.metadata,
-    });
-    return;
-  }
-
-  if (event.type === "delta") {
-    const block = pendingBlocks.get(event.elementId);
-    if (block) {
-      block.content += event.content;
-    }
-    return;
-  }
-
-  if (event.type === "end") {
-    const endEvent = event as EndEvent;
-    const block = pendingBlocks.get(endEvent.elementId);
-    if (block) {
-      block.content = endEvent.finalContent;
-      finishedBlocks.push(block);
-      pendingBlocks.delete(endEvent.elementId);
-    }
-  }
-}
-
-const blockStyle: Record<string, React.CSSProperties> = {
-  header: { fontWeight: "bold", fontSize: "1.2em", margin: `${SPACE_MD} 0 ${SPACE_SM}` },
-  text: { margin: `${SPACE_SM} 0` },
-  code: {
-    fontFamily: "monospace",
-    fontSize: "12px",
-    backgroundColor: COLOR_SURFACE,
-    color: COLOR_TEXT,
-    padding: `${SPACE_MD} ${SPACE_LG}`,
-    borderRadius: RADIUS_SM,
-    whiteSpace: "pre",
-    overflow: "auto",
-    display: "block",
-    margin: `${SPACE_SM} 0`,
-  },
-  list: { margin: `${SPACE_SM} 0`, paddingLeft: "20px" },
-  quote: {
-    borderLeft: `3px solid ${COLOR_BORDER}`,
-    paddingLeft: SPACE_LG,
-    margin: `${SPACE_SM} 0`,
-    fontStyle: "italic",
-    opacity: 0.85,
-  },
-  table: {
-    borderCollapse: "collapse" as const,
-    width: "100%",
-    fontSize: "13px",
-    margin: `${SPACE_SM} 0`,
-  },
-  th: {
-    border: `1px solid ${COLOR_BORDER}`,
-    padding: `${SPACE_SM} ${SPACE_MD}`,
-    fontWeight: "bold",
-    backgroundColor: COLOR_SURFACE,
-    color: COLOR_TEXT,
-  },
-  td: {
-    border: `1px solid ${COLOR_BORDER}`,
-    padding: `${SPACE_SM} ${SPACE_MD}`,
-    color: COLOR_TEXT,
-  },
-  horizontal_rule: {
-    borderTop: `1px solid ${COLOR_BORDER}`,
-    margin: `${SPACE_MD} 0`,
-  },
+const langLabelStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "4px",
+  right: "8px",
+  fontSize: "10px",
+  color: "#a6adc8",
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
 };
 
-function BlockView({ block }: { block: ParsedBlock }) {
-  const style = blockStyle[block.type] ?? blockStyle.text;
-
-  if (block.type === "horizontal_rule") {
-    return <hr style={style} />;
-  }
-
-  if (block.type === "code") {
-    return (
-      <pre style={style}>
-        <code>{block.content}</code>
-      </pre>
-    );
-  }
-
-  if (block.type === "table") {
-    const parsed = parseTable(block.content);
-    if (parsed) {
-      const alignToTextAlign = (a: "left" | "center" | "right" | undefined): React.CSSProperties["textAlign"] =>
-        a ?? "left";
-      return (
-        <table style={blockStyle.table}>
-          <thead>
-            <tr>
-              {parsed.headers.map((h, i) => (
-                <th key={i} style={{ ...blockStyle.th, textAlign: alignToTextAlign(parsed.alignments[i]) }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {parsed.rows.map((row, ri) => (
-              <tr key={ri}>
-                {row.map((cell, ci) => (
-                  <td key={ci} style={{ ...blockStyle.td, textAlign: alignToTextAlign(parsed.alignments[ci]) }}>
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      );
-    }
-    // Fallback: render as preformatted text if parseTable fails (e.g. streaming partial)
-    return <pre style={blockStyle.code}>{block.content}</pre>;
-  }
-
-  if (block.type === "list") {
-    const lines = block.content.split("\n").filter(Boolean);
-    const ListTag = block.metadata?.ordered ? "ol" : "ul";
-    return (
-      <ListTag style={style}>
+const CustomCodeBlock = memo(function CustomCodeBlock({
+  block,
+  language,
+}: CodeBlockProps) {
+  const lines = block.content.split("\n");
+  return (
+    <pre style={customCodeStyle}>
+      {language ? <span style={langLabelStyle}>{language}</span> : null}
+      <code>
         {lines.map((line, i) => (
-          <li key={i}>{line}</li>
+          <span key={i}>
+            <span style={{ color: "#585b70", marginRight: "16px", userSelect: "none" }}>
+              {String(i + 1).padStart(3)}
+            </span>
+            {line}
+            {"\n"}
+          </span>
         ))}
-      </ListTag>
-    );
-  }
+      </code>
+    </pre>
+  );
+});
 
-  if (block.type === "header") {
-    const level = (block.metadata?.level as number) ?? 1;
-    const fontSize = `${Math.max(1, 1.6 - level * 0.15)}em`;
-    return <div style={{ ...style, fontSize }}>{block.content}</div>;
-  }
-
-  return <div style={style}>{block.content}</div>;
-}
+const customComponents: BlockComponentMap = {
+  code: CustomCodeBlock,
+};
 
 const textareaStyle: React.CSSProperties = {
   width: "100%",
@@ -318,7 +151,8 @@ const viewerContainerStyle: React.CSSProperties = {
 
 export function MarkdownViewerDemo() {
   const [source, setSource] = useState(SAMPLE_MARKDOWN);
-  const { blocks, isStreaming, parse, streamParse } = useMarkdownParser();
+  const [useCustomCode, setUseCustomCode] = useState(false);
+  const { blocks, isStreaming, parse, streamParse } = useMarkdownBlocks();
 
   const handleParse = useCallback(() => {
     parse(source);
@@ -335,6 +169,10 @@ export function MarkdownViewerDemo() {
     [],
   );
 
+  const handleToggleCustomCode = useCallback(() => {
+    setUseCustomCode((v) => !v);
+  }, []);
+
   const logItems = useMemo<LogItem[]>(
     () =>
       blocks.map((block) => ({
@@ -346,16 +184,7 @@ export function MarkdownViewerDemo() {
     [blocks],
   );
 
-  const renderedContent = useMemo(
-    () => (
-      <MarkdownViewer value={source} className="markdown-viewer-demo">
-        {blocks.map((block) => (
-          <BlockView key={block.id} block={block} />
-        ))}
-      </MarkdownViewer>
-    ),
-    [source, blocks],
-  );
+  const components = useCustomCode ? customComponents : undefined;
 
   return (
     <DemoContainer title="MarkdownViewer">
@@ -370,13 +199,21 @@ export function MarkdownViewerDemo() {
           value={source}
           onChange={handleSourceChange}
         />
-        <div style={{ display: "flex", gap: SPACE_MD, marginTop: SPACE_MD }}>
+        <div style={{ display: "flex", gap: SPACE_MD, marginTop: SPACE_MD, alignItems: "center" }}>
           <button type="button" style={buttonStyle} onClick={handleParse}>
             Parse (instant)
           </button>
           <button type="button" style={buttonStyle} onClick={handleStreamParse}>
             Parse (streaming)
           </button>
+          <label style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+            <input
+              type="checkbox"
+              checked={useCustomCode}
+              onChange={handleToggleCustomCode}
+            />
+            Custom code block
+          </label>
           {isStreaming ? (
             <DemoMutedText size={12}>Streaming...</DemoMutedText>
           ) : null}
@@ -386,7 +223,12 @@ export function MarkdownViewerDemo() {
       <DemoSection label="Parsed Output">
         <div style={viewerContainerStyle}>
           {blocks.length > 0 ? (
-            renderedContent
+            <MarkdownViewer
+              value={source}
+              blocks={blocks}
+              components={components}
+              className="markdown-viewer-demo"
+            />
           ) : (
             <DemoMutedText size={12}>
               Click &quot;Parse&quot; to see the rendered output.

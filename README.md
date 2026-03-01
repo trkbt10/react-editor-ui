@@ -526,18 +526,6 @@ import { PanelFrame } from "react-editor-ui/PanelFrame";
 </PanelFrame>
 ```
 
-#### Panel
-
-Deprecated alias for PanelFrame
-
-```tsx
-// Old usage (deprecated)
-import { Panel } from "react-editor-ui/panels/Panel";
-
-// New usage (recommended)
-import { PanelFrame } from "react-editor-ui/PanelFrame";
-```
-
 #### PositionPanel
 
 Position, alignment, constraints, and rotation settings
@@ -834,27 +822,6 @@ import { LogEntry } from "react-editor-ui/LogEntry";
 />
 ```
 
-#### LogViewer
-
-High-performance log display with virtual scrolling
-
-A virtualized log viewer for efficiently displaying large amounts of log data. Supports filtering, search highlighting, pagination, and imperative scroll control. Only renders visible items for optimal performance with thousands of entries.
-
-```tsx
-import { LogViewer } from "react-editor-ui/LogViewer";
-
-const logs = [
-  { level: "info", message: "Application started", timestamp: new Date() },
-  { level: "error", message: "Failed to load config", timestamp: new Date() },
-];
-
-<LogViewer
-  items={logs}
-  height={400}
-  filter={(item) => item.level !== "debug"}
-/>
-```
-
 #### StatusBar
 
 Bottom status bar container
@@ -956,6 +923,55 @@ import { Portal } from "react-editor-ui/Portal";
 <Portal>
   <div className="modal">Modal content</div>
 </Portal>
+```
+
+### Viewers
+
+> Read-only content viewers and renderers
+
+#### LogViewer
+
+High-performance log display with virtual scrolling
+
+A virtualized log viewer for efficiently displaying large amounts of log data. Supports filtering, search highlighting, pagination, and imperative scroll control. Only renders visible items for optimal performance with thousands of entries.
+
+```tsx
+import { LogViewer } from "react-editor-ui/LogViewer";
+
+const logs = [
+  { level: "info", message: "Application started", timestamp: new Date() },
+  { level: "error", message: "Failed to load config", timestamp: new Date() },
+];
+
+<LogViewer
+  items={logs}
+  height={400}
+  filter={(item) => item.level !== "debug"}
+/>
+```
+
+#### MarkdownViewer
+
+MarkdownViewer - Read-only Markdown renderer with customizable block components
+
+Renders parsed Markdown blocks as styled HTML. Supports three rendering modes: 1. Manual children (escape hatch for full control) 2. Data-driven blocks + components overrides 3. Empty fallback
+
+```tsx
+import { MarkdownViewer, useMarkdownBlocks } from "react-editor-ui/viewers/MarkdownViewer";
+
+const { blocks, parse } = useMarkdownBlocks();
+// Parse on mount or user action
+parse(markdownSource);
+
+// Basic usage
+<MarkdownViewer value={source} blocks={blocks} />
+
+// With custom code block renderer
+<MarkdownViewer
+  value={source}
+  blocks={blocks}
+  components={{ code: MySyntaxHighlighter }}
+/>
 ```
 
 ### Canvas
