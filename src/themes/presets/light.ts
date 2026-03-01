@@ -86,6 +86,8 @@ export const lightColorTokens: ColorTokens = {
   "canvas-grid-minor": "rgba(0, 0, 0, 0.04)",
   "canvas-grid-origin": "rgba(37, 99, 235, 0.6)",
   "canvas-guide": "rgba(37, 99, 235, 0.8)",
+  "canvas-guide-locked": "rgba(156, 163, 175, 0.8)",
+  "canvas-guide-hover": "rgba(37, 99, 235, 1)",
   "canvas-checker-light": "#e5e7eb",
   "canvas-checker-dark": "#d1d5db",
 

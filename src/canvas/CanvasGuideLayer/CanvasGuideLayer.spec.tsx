@@ -1,0 +1,305 @@
+/**
+ * @file CanvasGuideLayer unit tests
+ */
+
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { CanvasGuideLayer } from "./CanvasGuideLayer";
+import type { CanvasGuide, ViewportState } from "../core/types";
+
+const createGuide = (
+  id: string,
+  orientation: "horizontal" | "vertical",
+  position: number,
+  locked = false,
+): CanvasGuide => ({
+  id,
+  orientation,
+  position,
+  locked,
+});
+
+const defaultViewport: ViewportState = { x: 0, y: 0, scale: 1 };
+
+// Wrap CanvasGuideLayer in SVG for proper rendering
+function renderGuideLayer(props: React.ComponentProps<typeof CanvasGuideLayer>) {
+  return render(
+    <svg data-testid="svg-container">
+      <CanvasGuideLayer {...props} />
+    </svg>,
+  );
+}
+
+describe("CanvasGuideLayer", () => {
+  describe("rendering", () => {
+    it("renders empty when no guides", () => {
+      renderGuideLayer({ guides: [] });
+      const layer = screen.getByTestId("canvas-guide-layer");
+      expect(layer).toBeInTheDocument();
+      expect(layer.children).toHaveLength(0);
+    });
+
+    it("renders guide lines", () => {
+      const guides = [
+        createGuide("g1", "horizontal", 100),
+        createGuide("g2", "vertical", 200),
+      ];
+      renderGuideLayer({ guides });
+
+      const layer = screen.getByTestId("canvas-guide-layer");
+      // Each guide has 2 elements: visible line + hit area
+      expect(layer.querySelectorAll("g[data-guide-id]")).toHaveLength(2);
+    });
+
+    it("renders horizontal guide as horizontal line", () => {
+      const guides = [createGuide("g1", "horizontal", 100)];
+      renderGuideLayer({ guides });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const lines = guideGroup?.querySelectorAll("line");
+      expect(lines).toHaveLength(2);
+
+      // Both lines should have same y1 and y2
+      const visibleLine = lines?.[0];
+      expect(visibleLine?.getAttribute("y1")).toBe("100");
+      expect(visibleLine?.getAttribute("y2")).toBe("100");
+    });
+
+    it("renders vertical guide as vertical line", () => {
+      const guides = [createGuide("g1", "vertical", 150)];
+      renderGuideLayer({ guides });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const lines = guideGroup?.querySelectorAll("line");
+
+      const visibleLine = lines?.[0];
+      expect(visibleLine?.getAttribute("x1")).toBe("150");
+      expect(visibleLine?.getAttribute("x2")).toBe("150");
+    });
+
+    it("renders locked guide with dashed stroke", () => {
+      const guides = [createGuide("g1", "horizontal", 100, true)];
+      renderGuideLayer({ guides });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const visibleLine = guideGroup?.querySelector("line");
+      expect(visibleLine?.getAttribute("stroke-dasharray")).toBe("4 2");
+    });
+  });
+
+  describe("selection", () => {
+    it("calls onSelectGuide when guide is clicked", () => {
+      const onSelectGuide = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100)];
+      renderGuideLayer({ guides, onSelectGuide });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const hitArea = guideGroup?.querySelectorAll("line")[1]; // Second line is hit area
+
+      fireEvent.pointerDown(hitArea!);
+      expect(onSelectGuide).toHaveBeenCalledWith("g1");
+    });
+  });
+
+  describe("keyboard interactions", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("calls onDeleteGuide on Delete key when guide is selected", () => {
+      const onDeleteGuide = vi.fn();
+      const onSelectGuide = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100)];
+
+      renderGuideLayer({
+        guides,
+        selectedGuideId: "g1",
+        onSelectGuide,
+        onDeleteGuide,
+      });
+
+      fireEvent.keyDown(window, { key: "Delete" });
+
+      expect(onDeleteGuide).toHaveBeenCalledWith("g1");
+      expect(onSelectGuide).toHaveBeenCalledWith(null);
+    });
+
+    it("calls onDeleteGuide on Backspace key when guide is selected", () => {
+      const onDeleteGuide = vi.fn();
+      const onSelectGuide = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100)];
+
+      renderGuideLayer({
+        guides,
+        selectedGuideId: "g1",
+        onSelectGuide,
+        onDeleteGuide,
+      });
+
+      fireEvent.keyDown(window, { key: "Backspace" });
+
+      expect(onDeleteGuide).toHaveBeenCalledWith("g1");
+    });
+
+    it("does not delete locked guide", () => {
+      const onDeleteGuide = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100, true)];
+
+      renderGuideLayer({
+        guides,
+        selectedGuideId: "g1",
+        onDeleteGuide,
+      });
+
+      fireEvent.keyDown(window, { key: "Delete" });
+
+      expect(onDeleteGuide).not.toHaveBeenCalled();
+    });
+
+    it("calls onToggleLock on L key when guide is selected", () => {
+      const onToggleLock = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100)];
+
+      renderGuideLayer({
+        guides,
+        selectedGuideId: "g1",
+        onToggleLock,
+      });
+
+      fireEvent.keyDown(window, { key: "l" });
+
+      expect(onToggleLock).toHaveBeenCalledWith("g1");
+    });
+
+    it("calls onSelectGuide with null on Escape key", () => {
+      const onSelectGuide = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100)];
+
+      renderGuideLayer({
+        guides,
+        selectedGuideId: "g1",
+        onSelectGuide,
+      });
+
+      fireEvent.keyDown(window, { key: "Escape" });
+
+      expect(onSelectGuide).toHaveBeenCalledWith(null);
+    });
+
+    it("does nothing when no guide is selected", () => {
+      const onDeleteGuide = vi.fn();
+      const onToggleLock = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100)];
+
+      renderGuideLayer({
+        guides,
+        selectedGuideId: null,
+        onDeleteGuide,
+        onToggleLock,
+      });
+
+      fireEvent.keyDown(window, { key: "Delete" });
+      fireEvent.keyDown(window, { key: "l" });
+
+      expect(onDeleteGuide).not.toHaveBeenCalled();
+      expect(onToggleLock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("dragging", () => {
+    it("calls onMoveGuide during drag", () => {
+      const onMoveGuide = vi.fn();
+      const onSelectGuide = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100)];
+
+      renderGuideLayer({
+        guides,
+        viewport: defaultViewport,
+        onSelectGuide,
+        onMoveGuide,
+      });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const hitArea = guideGroup?.querySelectorAll("line")[1];
+
+      // Start drag
+      fireEvent.pointerDown(hitArea!, { clientX: 10, clientY: 100 });
+
+      // Move
+      fireEvent.pointerMove(window, { clientX: 10, clientY: 150 });
+
+      expect(onMoveGuide).toHaveBeenCalledWith("g1", 150);
+
+      // End drag
+      fireEvent.pointerUp(window);
+    });
+
+    it("does not drag locked guide", () => {
+      const onMoveGuide = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100, true)];
+
+      renderGuideLayer({
+        guides,
+        viewport: defaultViewport,
+        onMoveGuide,
+      });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const hitArea = guideGroup?.querySelectorAll("line")[1];
+
+      fireEvent.pointerDown(hitArea!, { clientX: 10, clientY: 100 });
+      fireEvent.pointerMove(window, { clientX: 10, clientY: 150 });
+
+      expect(onMoveGuide).not.toHaveBeenCalled();
+    });
+
+    it("converts screen delta to canvas coordinates with scale", () => {
+      const onMoveGuide = vi.fn();
+      const guides = [createGuide("g1", "horizontal", 100)];
+      const viewport: ViewportState = { x: 0, y: 0, scale: 2 };
+
+      renderGuideLayer({
+        guides,
+        viewport,
+        onMoveGuide,
+      });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const hitArea = guideGroup?.querySelectorAll("line")[1];
+
+      fireEvent.pointerDown(hitArea!, { clientX: 10, clientY: 100 });
+      fireEvent.pointerMove(window, { clientX: 10, clientY: 200 });
+
+      // Screen delta = 100, canvas delta = 100 / 2 = 50
+      // New position = 100 + 50 = 150
+      expect(onMoveGuide).toHaveBeenCalledWith("g1", 150);
+
+      fireEvent.pointerUp(window);
+    });
+
+    it("handles vertical guide drag", () => {
+      const onMoveGuide = vi.fn();
+      const guides = [createGuide("g1", "vertical", 100)];
+
+      renderGuideLayer({
+        guides,
+        viewport: defaultViewport,
+        onMoveGuide,
+      });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const hitArea = guideGroup?.querySelectorAll("line")[1];
+
+      fireEvent.pointerDown(hitArea!, { clientX: 100, clientY: 10 });
+      fireEvent.pointerMove(window, { clientX: 150, clientY: 10 });
+
+      expect(onMoveGuide).toHaveBeenCalledWith("g1", 150);
+
+      fireEvent.pointerUp(window);
+    });
+  });
+});

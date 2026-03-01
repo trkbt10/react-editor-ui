@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-01T03:33:50.720Z",
+  "generatedAt": "2026-03-01T06:07:15.373Z",
   "components": [
     {
       "name": "AlignmentGrid",
@@ -110,6 +110,12 @@
       "category": "canvas"
     },
     {
+      "name": "CanvasGuideLayer",
+      "entryType": "named",
+      "relativePath": "src/canvas/CanvasGuideLayer/CanvasGuideLayer.tsx",
+      "category": "canvas"
+    },
+    {
       "name": "CanvasRuler",
       "entryType": "named",
       "relativePath": "src/canvas/CanvasRuler/CanvasRuler.tsx",
@@ -126,6 +132,12 @@
       "entryType": "named",
       "relativePath": "src/components/CaseTransformSelect/CaseTransformSelect.tsx",
       "category": "component"
+    },
+    {
+      "name": "ChatInput",
+      "entryType": "named",
+      "relativePath": "src/chat/ChatInput/ChatInput.tsx",
+      "category": "chat"
     },
     {
       "name": "Checkbox",

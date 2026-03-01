@@ -389,6 +389,10 @@ export type ColorTokens = {
   "canvas-grid-origin": string;
   /** Guide lines - alignment guides */
   "canvas-guide": string;
+  /** Guide lines locked - locked guide indicator */
+  "canvas-guide-locked": string;
+  /** Guide lines hover - guide on hover/select */
+  "canvas-guide-hover": string;
   /** Checker light - transparency pattern light */
   "canvas-checker-light": string;
   /** Checker dark - transparency pattern dark */

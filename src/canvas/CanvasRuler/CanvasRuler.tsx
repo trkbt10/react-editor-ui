@@ -5,6 +5,7 @@
  * Renders measurement rulers positioned outside the Canvas element.
  * Shows tick marks, labels, and mouse position indicator.
  * Receives viewport state via props for synchronization.
+ * Double-click on ruler to add a guide line at that position.
  *
  * @example
  * ```tsx
@@ -15,11 +16,12 @@
  *   viewport={viewport}
  *   length={800}
  *   mousePosition={100}
+ *   onAddGuide={(guide) => setGuides([...guides, guide])}
  * />
  * ```
  */
 
-import { memo, useMemo, useRef, type ReactNode, type CSSProperties } from "react";
+import { memo, useMemo, useRef, useCallback, type ReactNode, type CSSProperties } from "react";
 import {
   COLOR_CANVAS_RULER_BG,
   COLOR_CANVAS_RULER_TEXT,
@@ -28,7 +30,7 @@ import {
   COLOR_BORDER,
   SIZE_FONT_XS,
 } from "../../themes/styles";
-import type { ViewportState, RulerConfig } from "../core/types";
+import type { ViewportState, RulerConfig, CanvasGuide } from "../core/types";
 import { DEFAULT_RULER_CONFIG } from "../core/types";
 
 type Orientation = "horizontal" | "vertical";
@@ -37,6 +39,8 @@ type BaseRulerProps = {
   viewport: ViewportState;
   /** Current mouse position indicator (canvas coordinate) */
   indicatorPosition?: number;
+  /** Called when user double-clicks to add a guide */
+  onAddGuide?: (guide: CanvasGuide) => void;
 } & Partial<RulerConfig>;
 
 export type CanvasHorizontalRulerProps = BaseRulerProps & {
@@ -187,18 +191,21 @@ function generateTicks(params: TickParams): ReactNode[] {
         );
       } else {
         // iOS does not support dominant-baseline="hanging".
-        // We adjust y coordinate and rotation center by fontBoundingBoxAscent
-        // to achieve the same positioning.
-        const adjustedY = screenPos + 3 + fontBoundingBoxAscent;
+        // For vertical ruler, we position text at the bottom of the ruler
+        // and rotate it so it reads from bottom to top.
+        // The text is anchored at the end (right side before rotation, bottom after rotation)
+        const textX = size - 3;
+        const textY = screenPos - 3;
         result.push(
           <text
             key={`label-${pos}`}
-            x={2}
-            y={adjustedY}
+            x={textX}
+            y={textY}
             fill={COLOR_CANVAS_RULER_TEXT}
             fontSize={SIZE_FONT_XS}
             fontFamily="system-ui, -apple-system, sans-serif"
-            transform={`rotate(-90, 2, ${adjustedY})`}
+            textAnchor="end"
+            transform={`rotate(-90, ${textX}, ${textY})`}
           >
             {label}
           </text>,
@@ -272,9 +279,9 @@ function generateIndicator(params: IndicatorParams): ReactNode {
     );
   }
 
-  // iOS does not support dominant-baseline="hanging".
-  // We adjust y coordinate and rotation center by fontBoundingBoxAscent.
-  const adjustedY = screenPos + 3 + fontBoundingBoxAscent;
+  // For vertical ruler, position text similar to ticks
+  const textX = size - 3;
+  const textY = screenPos - 3;
   return (
     <g key="indicator">
       <line
@@ -286,13 +293,14 @@ function generateIndicator(params: IndicatorParams): ReactNode {
         strokeWidth={1}
       />
       <text
-        x={2}
-        y={adjustedY}
+        x={textX}
+        y={textY}
         fill={COLOR_CANVAS_RULER_INDICATOR}
         fontSize={SIZE_FONT_XS}
         fontFamily="system-ui, -apple-system, sans-serif"
         fontWeight={500}
-        transform={`rotate(-90, 2, ${adjustedY})`}
+        textAnchor="end"
+        transform={`rotate(-90, ${textX}, ${textY})`}
       >
         {label}
       </text>
@@ -328,6 +336,13 @@ function getContainerStyle(params: ContainerStyleParams): CSSProperties {
 }
 
 /**
+ * Generate unique ID for guide
+ */
+function generateGuideId(): string {
+  return `guide-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
  * Horizontal ruler (top)
  */
 export const CanvasHorizontalRuler = memo(function CanvasHorizontalRuler({
@@ -338,6 +353,7 @@ export const CanvasHorizontalRuler = memo(function CanvasHorizontalRuler({
   tickInterval: baseTickInterval = DEFAULT_RULER_CONFIG.tickInterval,
   labelInterval: baseLabelInterval = DEFAULT_RULER_CONFIG.labelInterval,
   indicatorPosition,
+  onAddGuide,
 }: CanvasHorizontalRulerProps): ReactNode {
   const { tickInterval, labelInterval } = getAdaptiveIntervals(
     viewport.scale,
@@ -404,18 +420,41 @@ export const CanvasHorizontalRuler = memo(function CanvasHorizontalRuler({
   }, [indicatorPosition, viewport.x, viewport.scale, size, rulerOffset, width, fontBoundingBoxAscent]);
 
   const containerStyle = useMemo(
-    () =>
-      getContainerStyle({
+    () => ({
+      ...getContainerStyle({
         orientation: "horizontal",
         size,
         length: width,
         screenOffset: rulerOffset,
       }),
-    [size, width, rulerOffset],
+      cursor: onAddGuide ? "crosshair" : undefined,
+    }),
+    [size, width, rulerOffset, onAddGuide],
+  );
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!onAddGuide) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const screenX = e.clientX - rect.left - rulerOffset;
+      // Convert screen position to canvas position
+      const canvasX = screenX / viewport.scale + viewport.x;
+      onAddGuide({
+        id: generateGuideId(),
+        orientation: "vertical",
+        position: Math.round(canvasX),
+        locked: false,
+      });
+    },
+    [onAddGuide, rulerOffset, viewport.scale, viewport.x],
   );
 
   return (
-    <div style={containerStyle} data-testid="canvas-ruler-horizontal">
+    <div
+      style={containerStyle}
+      data-testid="canvas-ruler-horizontal"
+      onDoubleClick={handleDoubleClick}
+    >
       <svg width={width + rulerOffset} height={size}>
         {ticks}
         {indicator}
@@ -434,6 +473,7 @@ export const CanvasVerticalRuler = memo(function CanvasVerticalRuler({
   tickInterval: baseTickInterval = DEFAULT_RULER_CONFIG.tickInterval,
   labelInterval: baseLabelInterval = DEFAULT_RULER_CONFIG.labelInterval,
   indicatorPosition,
+  onAddGuide,
 }: CanvasVerticalRulerProps): ReactNode {
   const { tickInterval, labelInterval } = getAdaptiveIntervals(
     viewport.scale,
@@ -500,18 +540,41 @@ export const CanvasVerticalRuler = memo(function CanvasVerticalRuler({
   }, [indicatorPosition, viewport.y, viewport.scale, size, height, fontBoundingBoxAscent]);
 
   const containerStyle = useMemo(
-    () =>
-      getContainerStyle({
+    () => ({
+      ...getContainerStyle({
         orientation: "vertical",
         size,
         length: height,
         screenOffset: 0,
       }),
-    [size, height],
+      cursor: onAddGuide ? "crosshair" : undefined,
+    }),
+    [size, height, onAddGuide],
+  );
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!onAddGuide) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const screenY = e.clientY - rect.top;
+      // Convert screen position to canvas position
+      const canvasY = screenY / viewport.scale + viewport.y;
+      onAddGuide({
+        id: generateGuideId(),
+        orientation: "horizontal",
+        position: Math.round(canvasY),
+        locked: false,
+      });
+    },
+    [onAddGuide, viewport.scale, viewport.y],
   );
 
   return (
-    <div style={containerStyle} data-testid="canvas-ruler-vertical">
+    <div
+      style={containerStyle}
+      data-testid="canvas-ruler-vertical"
+      onDoubleClick={handleDoubleClick}
+    >
       <svg width={size} height={height}>
         {ticks}
         {indicator}

@@ -155,3 +155,48 @@ export const DEFAULT_RULER_CONFIG: RulerConfig = {
   tickInterval: 10,
   labelInterval: 100,
 };
+
+// ========================================
+// CANVAS GUIDE TYPES
+// ========================================
+
+/**
+ * Guide line orientation
+ */
+export type GuideOrientation = "horizontal" | "vertical";
+
+/**
+ * A single guide line
+ */
+export type CanvasGuide = {
+  /** Unique identifier */
+  readonly id: string;
+  /** Orientation of the guide */
+  readonly orientation: GuideOrientation;
+  /** Position in canvas coordinates */
+  readonly position: number;
+  /** Whether the guide is locked (cannot be moved/deleted) */
+  readonly locked: boolean;
+};
+
+/**
+ * Guide state managed by parent component
+ */
+export type CanvasGuideState = {
+  /** List of guides */
+  readonly guides: readonly CanvasGuide[];
+};
+
+/**
+ * Guide event handlers
+ */
+export type CanvasGuideHandlers = {
+  /** Called when a new guide should be added */
+  onAddGuide?: (guide: CanvasGuide) => void;
+  /** Called when a guide is moved */
+  onMoveGuide?: (id: string, position: number) => void;
+  /** Called when a guide should be deleted */
+  onDeleteGuide?: (id: string) => void;
+  /** Called when a guide's locked state changes */
+  onToggleLock?: (id: string) => void;
+};

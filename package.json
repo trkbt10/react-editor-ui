@@ -138,6 +138,12 @@
       "import": "./dist/canvas/CanvasGuide.js",
       "require": "./dist/canvas/CanvasGuide.cjs"
     },
+    "./canvas/CanvasGuideLayer": {
+      "source": "./src/canvas/CanvasGuideLayer/CanvasGuideLayer.tsx",
+      "types": "./dist/canvas/CanvasGuideLayer/CanvasGuideLayer.d.ts",
+      "import": "./dist/canvas/CanvasGuideLayer.js",
+      "require": "./dist/canvas/CanvasGuideLayer.cjs"
+    },
     "./canvas/CanvasRuler": {
       "source": "./src/canvas/CanvasRuler/CanvasRuler.tsx",
       "types": "./dist/canvas/CanvasRuler/CanvasRuler.d.ts",
@@ -155,6 +161,12 @@
       "types": "./dist/components/CaseTransformSelect/CaseTransformSelect.d.ts",
       "import": "./dist/components/CaseTransformSelect.js",
       "require": "./dist/components/CaseTransformSelect.cjs"
+    },
+    "./chat/ChatInput": {
+      "source": "./src/chat/ChatInput/ChatInput.tsx",
+      "types": "./dist/chat/ChatInput/ChatInput.d.ts",
+      "import": "./dist/chat/ChatInput.js",
+      "require": "./dist/chat/ChatInput.cjs"
     },
     "./Checkbox": {
       "source": "./src/components/Checkbox/Checkbox.tsx",
@@ -645,6 +657,9 @@
     "e2e:design": "vite --config src/demo/pages/app-demo/design/e2e/vite.config.ts",
     "e2e:design:test": "playwright test --config src/demo/pages/app-demo/design/e2e/playwright.config.ts",
     "e2e:design:ui": "playwright test --config src/demo/pages/app-demo/design/e2e/playwright.config.ts --ui",
+    "e2e:chat": "vite --config e2e/chat/chat-input/vite.config.ts",
+    "e2e:chat:test": "playwright test --config e2e/chat/chat-input/playwright.config.ts",
+    "e2e:chat:ui": "playwright test --config e2e/chat/chat-input/playwright.config.ts --ui",
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:tokens:fix": "bun scripts/check-tokens.ts --fix",
     "check:tokens:strict": "bun scripts/check-tokens.ts --strict",
