@@ -52,7 +52,7 @@ type GuideDragState = {
   startPointer: number;
 };
 
-const GUIDE_HIT_AREA = 6;
+const GUIDE_HIT_AREA_PX = 8;
 
 /**
  * Single guide line component
@@ -61,6 +61,7 @@ const GuideLine = memo(function GuideLine({
   guide,
   isSelected,
   isHovered,
+  hitAreaWidth,
   onPointerDown,
   onPointerEnter,
   onPointerLeave,
@@ -68,6 +69,8 @@ const GuideLine = memo(function GuideLine({
   guide: CanvasGuide;
   isSelected: boolean;
   isHovered: boolean;
+  /** Hit area width in canvas units (adjusted for zoom) */
+  hitAreaWidth: number;
   onPointerDown: (e: React.PointerEvent) => void;
   onPointerEnter: () => void;
   onPointerLeave: () => void;
@@ -133,8 +136,8 @@ const GuideLine = memo(function GuideLine({
       <line
         {...hitAreaProps}
         stroke="transparent"
-        strokeWidth={GUIDE_HIT_AREA}
-        style={{ cursor }}
+        strokeWidth={hitAreaWidth}
+        style={{ cursor, pointerEvents: "all" }}
         onPointerDown={onPointerDown}
         onPointerEnter={onPointerEnter}
         onPointerLeave={onPointerLeave}
@@ -240,6 +243,10 @@ export const CanvasGuideLayer = memo(function CanvasGuideLayer({
     };
   }, [onSelectGuide]);
 
+  // Calculate hit area width in canvas units (consistent screen size regardless of zoom)
+  const scale = viewport?.scale ?? 1;
+  const hitAreaWidth = GUIDE_HIT_AREA_PX / scale;
+
   return (
     <g data-testid="canvas-guide-layer">
       {guides.map((guide) => (
@@ -248,6 +255,7 @@ export const CanvasGuideLayer = memo(function CanvasGuideLayer({
           guide={guide}
           isSelected={guide.id === selectedGuideId}
           isHovered={guide.id === hoveredId}
+          hitAreaWidth={hitAreaWidth}
           onPointerDown={handlers.createPointerDown(guide)}
           onPointerEnter={handlers.createPointerEnter(guide.id)}
           onPointerLeave={handlers.createPointerLeave()}

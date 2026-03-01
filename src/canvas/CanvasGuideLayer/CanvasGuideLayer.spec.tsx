@@ -85,6 +85,26 @@ describe("CanvasGuideLayer", () => {
       const visibleLine = guideGroup?.querySelector("line");
       expect(visibleLine?.getAttribute("stroke-dasharray")).toBe("4 2");
     });
+
+    it("hit area has pointerEvents: all for interaction", () => {
+      const guides = [createGuide("g1", "horizontal", 100)];
+      renderGuideLayer({ guides });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const hitArea = guideGroup?.querySelectorAll("line")[1];
+      expect(hitArea?.style.pointerEvents).toBe("all");
+    });
+
+    it("adjusts hit area width based on viewport scale", () => {
+      const guides = [createGuide("g1", "horizontal", 100)];
+      const viewport: ViewportState = { x: 0, y: 0, scale: 2 };
+      renderGuideLayer({ guides, viewport });
+
+      const guideGroup = screen.getByTestId("canvas-guide-layer").querySelector("[data-guide-id='g1']");
+      const hitArea = guideGroup?.querySelectorAll("line")[1];
+      // GUIDE_HIT_AREA_PX (8) / scale (2) = 4
+      expect(hitArea?.getAttribute("stroke-width")).toBe("4");
+    });
   });
 
   describe("selection", () => {
