@@ -194,7 +194,8 @@ function generateTicks(params: TickParams): ReactNode[] {
         // For vertical ruler, we position text at the bottom of the ruler
         // and rotate it so it reads from bottom to top.
         // The text is anchored at the end (right side before rotation, bottom after rotation)
-        const textX = size - 3;
+        // Use tickSize offset to prevent label from overlapping with tick marks
+        const textX = size - tickSize - 3;
         const textY = screenPos - 3;
         result.push(
           <text
@@ -280,7 +281,8 @@ function generateIndicator(params: IndicatorParams): ReactNode {
   }
 
   // For vertical ruler, position text similar to ticks
-  const textX = size - 3;
+  // Use half of ruler size as offset to prevent overlapping with indicator line
+  const textX = size * 0.5 - 3;
   const textY = screenPos - 3;
   return (
     <g key="indicator">
