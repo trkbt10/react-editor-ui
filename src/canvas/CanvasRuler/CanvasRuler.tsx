@@ -19,7 +19,7 @@
  * ```
  */
 
-import { memo, useMemo, type ReactNode, type CSSProperties } from "react";
+import { memo, useMemo, useRef, type ReactNode, type CSSProperties } from "react";
 import {
   COLOR_CANVAS_RULER_BG,
   COLOR_CANVAS_RULER_TEXT,
@@ -105,6 +105,11 @@ type TickParams = {
   size: number;
   screenOffset: number;
   length: number;
+  /**
+   * Font bounding box ascent for iOS-compatible SVG text positioning.
+   * iOS does not support dominant-baseline="hanging".
+   */
+  fontBoundingBoxAscent: number;
 };
 
 /**
@@ -122,6 +127,7 @@ function generateTicks(params: TickParams): ReactNode[] {
     size,
     screenOffset,
     length,
+    fontBoundingBoxAscent,
   } = params;
 
   const isHorizontal = orientation === "horizontal";
@@ -180,16 +186,19 @@ function generateTicks(params: TickParams): ReactNode[] {
           </text>,
         );
       } else {
+        // iOS does not support dominant-baseline="hanging".
+        // We adjust y coordinate and rotation center by fontBoundingBoxAscent
+        // to achieve the same positioning.
+        const adjustedY = screenPos + 3 + fontBoundingBoxAscent;
         result.push(
           <text
             key={`label-${pos}`}
             x={2}
-            y={screenPos + 3}
+            y={adjustedY}
             fill={COLOR_CANVAS_RULER_TEXT}
             fontSize={SIZE_FONT_XS}
             fontFamily="system-ui, -apple-system, sans-serif"
-            transform={`rotate(-90, 2, ${screenPos + 3})`}
-            dominantBaseline="hanging"
+            transform={`rotate(-90, 2, ${adjustedY})`}
           >
             {label}
           </text>,
@@ -209,6 +218,10 @@ type IndicatorParams = {
   size: number;
   screenOffset: number;
   length: number;
+  /**
+   * Font bounding box ascent for iOS-compatible SVG text positioning.
+   */
+  fontBoundingBoxAscent: number;
 };
 
 /**
@@ -223,6 +236,7 @@ function generateIndicator(params: IndicatorParams): ReactNode {
     size,
     screenOffset,
     length,
+    fontBoundingBoxAscent,
   } = params;
 
   const screenPos = (position - viewportOffset) * scale + screenOffset;
@@ -258,6 +272,9 @@ function generateIndicator(params: IndicatorParams): ReactNode {
     );
   }
 
+  // iOS does not support dominant-baseline="hanging".
+  // We adjust y coordinate and rotation center by fontBoundingBoxAscent.
+  const adjustedY = screenPos + 3 + fontBoundingBoxAscent;
   return (
     <g key="indicator">
       <line
@@ -270,13 +287,12 @@ function generateIndicator(params: IndicatorParams): ReactNode {
       />
       <text
         x={2}
-        y={screenPos + 3}
+        y={adjustedY}
         fill={COLOR_CANVAS_RULER_INDICATOR}
         fontSize={SIZE_FONT_XS}
         fontFamily="system-ui, -apple-system, sans-serif"
         fontWeight={500}
-        transform={`rotate(-90, 2, ${screenPos + 3})`}
-        dominantBaseline="hanging"
+        transform={`rotate(-90, 2, ${adjustedY})`}
       >
         {label}
       </text>
@@ -329,6 +345,26 @@ export const CanvasHorizontalRuler = memo(function CanvasHorizontalRuler({
     baseLabelInterval,
   );
 
+  // Font size in pixels for ruler labels
+  const RULER_FONT_SIZE_PX = 9;
+
+  // Canvas context for font metrics (iOS-compatible SVG text positioning)
+  const measureCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const fontBoundingBoxAscent = useMemo(() => {
+    if (!measureCtxRef.current) {
+      const canvas = document.createElement("canvas");
+      measureCtxRef.current = canvas.getContext("2d");
+    }
+    const ctx = measureCtxRef.current;
+    if (!ctx) {
+      // Fallback for environments without canvas
+      return RULER_FONT_SIZE_PX * 0.75;
+    }
+    ctx.font = `normal normal ${RULER_FONT_SIZE_PX}px system-ui, -apple-system, sans-serif`;
+    const metrics = ctx.measureText("M");
+    return metrics.fontBoundingBoxAscent;
+  }, []);
+
   const viewWidth = width / viewport.scale;
   const startX = Math.floor(viewport.x / tickInterval) * tickInterval;
   const endX = viewport.x + viewWidth;
@@ -346,8 +382,9 @@ export const CanvasHorizontalRuler = memo(function CanvasHorizontalRuler({
         size,
         screenOffset: rulerOffset,
         length: width,
+        fontBoundingBoxAscent,
       }),
-    [startX, endX, tickInterval, labelInterval, viewport.x, viewport.scale, size, rulerOffset, width],
+    [startX, endX, tickInterval, labelInterval, viewport.x, viewport.scale, size, rulerOffset, width, fontBoundingBoxAscent],
   );
 
   const indicator = useMemo(() => {
@@ -362,8 +399,9 @@ export const CanvasHorizontalRuler = memo(function CanvasHorizontalRuler({
       size,
       screenOffset: rulerOffset,
       length: width,
+      fontBoundingBoxAscent,
     });
-  }, [indicatorPosition, viewport.x, viewport.scale, size, rulerOffset, width]);
+  }, [indicatorPosition, viewport.x, viewport.scale, size, rulerOffset, width, fontBoundingBoxAscent]);
 
   const containerStyle = useMemo(
     () =>
@@ -403,6 +441,26 @@ export const CanvasVerticalRuler = memo(function CanvasVerticalRuler({
     baseLabelInterval,
   );
 
+  // Font size in pixels for ruler labels
+  const RULER_FONT_SIZE_PX = 9;
+
+  // Canvas context for font metrics (iOS-compatible SVG text positioning)
+  const measureCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const fontBoundingBoxAscent = useMemo(() => {
+    if (!measureCtxRef.current) {
+      const canvas = document.createElement("canvas");
+      measureCtxRef.current = canvas.getContext("2d");
+    }
+    const ctx = measureCtxRef.current;
+    if (!ctx) {
+      // Fallback for environments without canvas
+      return RULER_FONT_SIZE_PX * 0.75;
+    }
+    ctx.font = `normal normal ${RULER_FONT_SIZE_PX}px system-ui, -apple-system, sans-serif`;
+    const metrics = ctx.measureText("M");
+    return metrics.fontBoundingBoxAscent;
+  }, []);
+
   const viewHeight = height / viewport.scale;
   const startY = Math.floor(viewport.y / tickInterval) * tickInterval;
   const endY = viewport.y + viewHeight;
@@ -420,8 +478,9 @@ export const CanvasVerticalRuler = memo(function CanvasVerticalRuler({
         size,
         screenOffset: 0,
         length: height,
+        fontBoundingBoxAscent,
       }),
-    [startY, endY, tickInterval, labelInterval, viewport.y, viewport.scale, size, height],
+    [startY, endY, tickInterval, labelInterval, viewport.y, viewport.scale, size, height, fontBoundingBoxAscent],
   );
 
   const indicator = useMemo(() => {
@@ -436,8 +495,9 @@ export const CanvasVerticalRuler = memo(function CanvasVerticalRuler({
       size,
       screenOffset: 0,
       length: height,
+      fontBoundingBoxAscent,
     });
-  }, [indicatorPosition, viewport.y, viewport.scale, size, height]);
+  }, [indicatorPosition, viewport.y, viewport.scale, size, height, fontBoundingBoxAscent]);
 
   const containerStyle = useMemo(
     () =>

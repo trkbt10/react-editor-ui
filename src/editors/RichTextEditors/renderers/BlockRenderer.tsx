@@ -20,7 +20,7 @@
  * ```
  */
 
-import { useMemo, useRef, useEffect, useEffectEvent, memo, type ReactNode, type CSSProperties } from "react";
+import { useMemo, useRef, useEffect, useEffectEvent, memo, useCallback, type ReactNode, type CSSProperties } from "react";
 import type { Block, LocalStyleSegment, BlockTypeStyle, BlockTypeStyleMap } from "../block/blockDocument";
 import { getBlockTypeStyle, DEFAULT_BLOCK_TYPE_STYLES } from "../block/blockDocument";
 import type { BlockLayoutIndex } from "../layout/types";
@@ -140,6 +140,32 @@ type BlockRenderInfo = {
 
 const MIN_HIGHLIGHT_WIDTH = 8;
 
+// =============================================================================
+// Font Metrics for SVG Text Positioning
+// =============================================================================
+
+/**
+ * Get font metrics from Canvas 2D for accurate SVG text positioning.
+ *
+ * iOS does not properly support dominant-baseline="hanging" in SVG.
+ * Instead, we use Canvas 2D TextMetrics.fontBoundingBoxAscent to calculate
+ * the exact offset needed to position text with its top edge at y.
+ *
+ * @param ctx - Canvas 2D rendering context
+ * @param fontFamily - Font family string
+ * @param fontSize - Font size in pixels
+ * @returns fontBoundingBoxAscent value for the given font configuration
+ */
+function getFontBoundingBoxAscent(
+  ctx: CanvasRenderingContext2D,
+  fontFamily: string,
+  fontSize: number
+): number {
+  ctx.font = `normal normal ${fontSize}px ${fontFamily}`;
+  const metrics = ctx.measureText("M");
+  // fontBoundingBoxAscent is the distance from the alphabetic baseline to the top of the font bounding box
+  return metrics.fontBoundingBoxAscent;
+}
 
 // =============================================================================
 // Style-Aware Position Calculation
@@ -537,6 +563,11 @@ type BlockLineProps = {
   readonly isSoftWrapped?: boolean;
   /** Whether this is the first visual line of the logical line (for line numbers) */
   readonly isFirstVisualLine?: boolean;
+  /**
+   * Font bounding box ascent for iOS-compatible SVG text positioning.
+   * Used instead of dominant-baseline="hanging" which iOS doesn't support.
+   */
+  readonly fontBoundingBoxAscent: number;
 };
 
 /**
@@ -650,6 +681,7 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
     wrapEndOffset = lineText.length,
     isSoftWrapped = false,
     isFirstVisualLine = true,
+    fontBoundingBoxAscent,
   } = props;
 
   // Extract visible segment for wrapped lines
@@ -671,11 +703,18 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
   const codeXOffset = baseXOffset + blockIndent + leftBorderWidth + (leftBorderWidth > 0 ? 4 : 0);
 
   // Calculate text Y position for vertical centering
-  // With dominantBaseline="hanging", y is the top of the text box
-  // Center vertically: (lineHeight - fontSize) / 2
-  const textY = y + (lineHeight - effectiveFontSize) / 2;
+  // iOS does not support dominant-baseline="hanging", so we use fontBoundingBoxAscent
+  // to calculate the alphabetic baseline position for the text.
+  //
+  // Step 1: Calculate where the top of the text should be (vertical centering)
+  const textTopY = y + (lineHeight - effectiveFontSize) / 2;
+  // Step 2: SVG text y attribute specifies the alphabetic baseline position.
+  // fontBoundingBoxAscent is the distance from baseline to font top, scaled for block font size.
+  const scaledFontAscent = fontBoundingBoxAscent * blockFontSizeMultiplier;
+  const textY = textTopY + scaledFontAscent;
   // Line numbers use base fontSize, not effectiveFontSize
-  const lineNumberTextY = y + (lineHeight - fontSize) / 2;
+  const lineNumberTextTopY = y + (lineHeight - fontSize) / 2;
+  const lineNumberTextY = lineNumberTextTopY + fontBoundingBoxAscent;
 
   // Get tokens for this line (full line for proper token boundaries)
   const allTokens = tokenCache.getTokens(lineText, lineIndex);
@@ -777,7 +816,6 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
             fontSize={fontSize}
             fill={EDITOR_LINE_NUMBER_COLOR}
             textAnchor="end"
-            dominantBaseline="hanging"
           >
             {lineNumber}
           </text>
@@ -1004,7 +1042,7 @@ const BlockLine = memo(function BlockLine(props: BlockLineProps): ReactNode {
       {renderBlockDecoration()}
       {renderLineNumber()}
       {renderHighlights()}
-      <text x={codeXOffset} y={textY} fontFamily={fontFamily} fontSize={effectiveFontSize} dominantBaseline="hanging">
+      <text x={codeXOffset} y={textY} fontFamily={fontFamily} fontSize={effectiveFontSize}>
         {renderTokens()}
       </text>
       {renderCursor()}
@@ -1033,6 +1071,10 @@ type SingleBlockProps = {
   readonly blockTypeStyles?: BlockTypeStyleMap;
   /** Wrap layout index for visual line mapping */
   readonly wrapLayoutIndex?: WrapLayoutIndex;
+  /**
+   * Font bounding box ascent for iOS-compatible SVG text positioning.
+   */
+  readonly fontBoundingBoxAscent: number;
 };
 
 /**
@@ -1174,6 +1216,7 @@ const SingleBlock = memo(function SingleBlock({
   fontSize,
   blockTypeStyles,
   wrapLayoutIndex,
+  fontBoundingBoxAscent,
 }: SingleBlockProps): ReactNode {
   const { block, startLine, lineCount, y, height } = info;
 
@@ -1269,6 +1312,7 @@ const SingleBlock = memo(function SingleBlock({
             wrapEndOffset={visualLine.endOffset}
             isSoftWrapped={visualLine.isSoftWrapped}
             isFirstVisualLine={visualLine.wrapIndex === 0}
+            fontBoundingBoxAscent={fontBoundingBoxAscent}
           />
         );
       }
@@ -1324,6 +1368,7 @@ const SingleBlock = memo(function SingleBlock({
           blockTypeStyle={blockTypeStyle}
           isFirstLineOfBlock={i === 0}
           blockHeight={height}
+          fontBoundingBoxAscent={fontBoundingBoxAscent}
         />
       );
     });
@@ -1814,6 +1859,30 @@ export const BlockRenderer = memo(function BlockRenderer({
     return CURSOR_COLOR_DARK;
   }, [cursorColorProp, backgroundColor]);
 
+  // Create Canvas 2D context for font metrics (iOS-compatible SVG text positioning)
+  const measureCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const measureCtx = useMemo(() => {
+    if (measureCtxRef.current) {
+      return measureCtxRef.current;
+    }
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      measureCtxRef.current = ctx;
+    }
+    return ctx;
+  }, []);
+
+  // Get font bounding box ascent for iOS-compatible SVG text positioning
+  // This replaces dominant-baseline="hanging" which iOS doesn't support
+  const fontBoundingBoxAscent = useMemo(() => {
+    if (!measureCtx) {
+      // Fallback: approximate based on fontSize (typical cap-height ratio ~0.75)
+      return fontSize * 0.75;
+    }
+    return getFontBoundingBoxAscent(measureCtx, fontFamily, fontSize);
+  }, [measureCtx, fontFamily, fontSize]);
+
   // Check if viewport mode is enabled
   const isViewportMode = !!(viewportConfig?.fixedViewport && viewport && visibleLines);
   const isCanvasMode = viewportConfig?.mode === "canvas";
@@ -1905,6 +1974,7 @@ export const BlockRenderer = memo(function BlockRenderer({
         fontSize={fontSize}
         blockTypeStyles={blockTypeStyles}
         wrapLayoutIndex={wrapLayoutIndex}
+        fontBoundingBoxAscent={fontBoundingBoxAscent}
       />
     ));
 
