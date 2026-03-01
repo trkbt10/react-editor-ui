@@ -5,16 +5,22 @@
 import { useState, useCallback, useMemo, useInsertionEffect } from "react";
 import type { CSSProperties } from "react";
 import { VoiceInput } from "../../../chat/VoiceInput/VoiceInput";
-import { ChatInput } from "../../../chat/ChatInput/ChatInput";
+import { AudioVisualizer } from "../../../chat/VoiceInput/AudioVisualizer";
+import { ChatInput, SendButton } from "../../../chat/ChatInput/ChatInput";
 import { IconButton } from "../../../components/IconButton/IconButton";
 import {
   SPACE_MD,
   SPACE_LG,
   SIZE_FONT_SM,
+  SIZE_FONT_MD,
+  COLOR_TEXT,
   COLOR_TEXT_MUTED,
   COLOR_SURFACE,
   COLOR_BORDER,
   RADIUS_MD,
+  COLOR_SURFACE_RAISED,
+  RADIUS_LG,
+  SHADOW_SM,
 } from "../../../themes/styles";
 
 // Mic icon
@@ -128,27 +134,62 @@ function TransitionSection({
     );
   }
 
+  const canSend = textValue.trim().length > 0;
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.nativeEvent.isComposing) return;
+      if (e.key === "Enter" && !e.shiftKey && canSend) {
+        e.preventDefault();
+        onTextSend(textValue);
+      }
+    },
+    [canSend, onTextSend, textValue],
+  );
+
+  const textareaStyle = useMemo<CSSProperties>(
+    () => ({
+      width: "100%",
+      minHeight: 24,
+      maxHeight: 200,
+      padding: 0,
+      border: "none",
+      backgroundColor: "transparent",
+      color: COLOR_TEXT,
+      fontSize: SIZE_FONT_MD,
+      lineHeight: 1.5,
+      resize: "none",
+      outline: "none",
+      overflow: "auto",
+      fontFamily: "inherit",
+    }),
+    [],
+  );
+
   return (
     <div style={containerStyle}>
-      <ChatInput
-        value={textValue}
-        onChange={onTextChange}
-        onSend={onTextSend}
-        placeholder="Type a message..."
-        variant="ghost"
-        toolbar={
-          <>
-            <div style={{ flex: 1 }} />
-            <IconButton
-              icon={<MicIcon />}
-              aria-label="Voice input"
-              variant="ghost"
-              size="sm"
-              onClick={onMicClick}
-            />
-          </>
-        }
-      />
+      <ChatInput.Root variant="ghost">
+        <ChatInput.Content>
+          <textarea
+            value={textValue}
+            onChange={(e) => onTextChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            style={textareaStyle}
+          />
+        </ChatInput.Content>
+        <ChatInput.Toolbar>
+          <div style={{ flex: 1 }} />
+          <IconButton
+            icon={<MicIcon />}
+            aria-label="Voice input"
+            variant="ghost"
+            size="sm"
+            onClick={onMicClick}
+          />
+          <SendButton canSend={canSend} isLoading={false} onClick={() => onTextSend(textValue)} />
+        </ChatInput.Toolbar>
+      </ChatInput.Root>
     </div>
   );
 }
@@ -292,23 +333,163 @@ export function VoiceInputDemo() {
         onMicClick={handleMicClick}
       />
 
-      {/* Standalone VoiceInput */}
-      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>Standalone VoiceInput</h3>
-      <VoiceInput
-        variant="ghost"
-        onResult={(text) => console.log("Result:", text)}
-        onCancel={() => console.log("Cancelled")}
-        onError={(err) => console.log("Error:", err)}
-      />
+      {/* Mock AudioVisualizer Preview */}
+      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>
+        AudioVisualizer (Mock Mode - No Mic Required)
+      </h3>
+      <MockVisualizerDemo />
 
-      {/* Default variant */}
-      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>variant="default"</h3>
-      <VoiceInput
-        variant="default"
-        listeningText="Listening..."
-        onResult={(text) => console.log("Result:", text)}
-        onCancel={() => console.log("Cancelled")}
-      />
+      {/* Lazy-loaded VoiceInput demos */}
+      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>
+        Standalone VoiceInput (Click to Activate)
+      </h3>
+      <LazyVoiceInputDemo variant="ghost" />
+
+      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>
+        variant="default" (Click to Activate)
+      </h3>
+      <LazyVoiceInputDemo variant="default" listeningText="Listening..." />
     </div>
+  );
+}
+
+// =============================================================================
+// Mock Visualizer Demo
+// =============================================================================
+
+function MockVisualizerDemo() {
+  const [isActive, setIsActive] = useState(false);
+
+  const containerStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      gap: SPACE_MD,
+      padding: SPACE_MD,
+      backgroundColor: COLOR_SURFACE_RAISED,
+      borderRadius: RADIUS_LG,
+      boxShadow: SHADOW_SM,
+    }),
+    [],
+  );
+
+  const textStyle = useMemo<CSSProperties>(
+    () => ({
+      fontSize: SIZE_FONT_MD,
+      color: COLOR_TEXT_MUTED,
+    }),
+    [],
+  );
+
+  return (
+    <div style={containerStyle}>
+      <button
+        type="button"
+        onClick={() => setIsActive(!isActive)}
+        style={{
+          padding: `${SPACE_MD} ${SPACE_LG}`,
+          borderRadius: RADIUS_MD,
+          border: `1px solid ${COLOR_BORDER}`,
+          backgroundColor: isActive ? COLOR_SURFACE : COLOR_SURFACE_RAISED,
+          cursor: "pointer",
+        }}
+      >
+        {isActive ? "Stop" : "Start"} Mock
+      </button>
+      <AudioVisualizer
+        isActive={isActive}
+        mockMode
+        barCount={5}
+        barWidth={4}
+        barGap={3}
+        maxHeight={28}
+        minHeight={6}
+      />
+      <span style={textStyle}>{isActive ? "Playing mock audio..." : "Click Start to preview"}</span>
+    </div>
+  );
+}
+
+// =============================================================================
+// Lazy VoiceInput Demo (Click to Activate)
+// =============================================================================
+
+type LazyVoiceInputDemoProps = {
+  variant?: "default" | "ghost";
+  listeningText?: string;
+};
+
+function LazyVoiceInputDemo({ variant = "ghost", listeningText }: LazyVoiceInputDemoProps) {
+  const [isActive, setIsActive] = useState(false);
+  const [lastResult, setLastResult] = useState<string | null>(null);
+
+  const handleResult = useCallback((text: string) => {
+    console.log("Result:", text);
+    setLastResult(text);
+    setIsActive(false);
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    console.log("Cancelled");
+    setIsActive(false);
+  }, []);
+
+  const handleError = useCallback((err: string) => {
+    console.log("Error:", err);
+    setIsActive(false);
+  }, []);
+
+  const placeholderStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_MD,
+      padding: SPACE_MD,
+      backgroundColor: COLOR_SURFACE_RAISED,
+      borderRadius: RADIUS_LG,
+      boxShadow: SHADOW_SM,
+    }),
+    [],
+  );
+
+  if (!isActive) {
+    return (
+      <div style={placeholderStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: SPACE_MD }}>
+          <button
+            type="button"
+            onClick={() => setIsActive(true)}
+            style={{
+              padding: `${SPACE_MD} ${SPACE_LG}`,
+              borderRadius: RADIUS_MD,
+              border: `1px solid ${COLOR_BORDER}`,
+              backgroundColor: COLOR_SURFACE_RAISED,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: SPACE_MD,
+            }}
+          >
+            <MicIcon />
+            Start Voice Input
+          </button>
+          {lastResult && (
+            <span style={{ color: COLOR_TEXT_MUTED, fontSize: SIZE_FONT_SM }}>
+              Last result: "{lastResult}"
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <VoiceInput
+      variant={variant}
+      listeningText={listeningText}
+      onResult={handleResult}
+      onCancel={handleCancel}
+      onError={handleError}
+    />
   );
 }

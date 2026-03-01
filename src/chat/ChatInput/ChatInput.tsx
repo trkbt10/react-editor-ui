@@ -1,58 +1,55 @@
 /**
- * @file ChatInput component - Extensible chat input with toolbar
+ * @file ChatInput - Compound components for building chat input UIs
  *
  * @description
- * A multi-line text input optimized for chat interfaces. Features auto-resize,
- * Enter to send (Shift+Enter for newline), and a flexible toolbar slot.
+ * A set of composable components for building flexible chat input interfaces.
+ * Use ChatInput.Root as the container and compose with Badges, Content, Overlay, and Toolbar.
  *
  * @example
  * ```tsx
  * import { ChatInput } from "react-editor-ui/chat/ChatInput";
- * import { IconButton } from "react-editor-ui/IconButton";
- * import { Select } from "react-editor-ui/Select";
  *
- * <ChatInput
- *   value={value}
- *   onChange={setValue}
- *   onSend={handleSend}
- *   placeholder="Ask anything"
- *   toolbar={
- *     <>
- *       <IconButton icon={<PlusIcon />} aria-label="Add" variant="ghost" size="sm" />
- *       <Select value={model} options={models} onChange={setModel} variant="ghost" size="sm" />
- *       <div style={{ flex: 1 }} />
- *       <IconButton icon={<MicIcon />} aria-label="Voice" variant="ghost" size="sm" />
- *     </>
- *   }
- * />
+ * <ChatInput.Root variant="ghost">
+ *   <ChatInput.Badges>
+ *     <FilePreview file={file} onRemove={handleRemove} />
+ *   </ChatInput.Badges>
+ *
+ *   <ChatInput.Content>
+ *     <textarea value={value} onChange={handleChange} />
+ *   </ChatInput.Content>
+ *
+ *   <ChatInput.Overlay visible={isDragging}>
+ *     <DropOverlay />
+ *   </ChatInput.Overlay>
+ *
+ *   <ChatInput.Toolbar>
+ *     <SendButton onClick={handleSend} />
+ *   </ChatInput.Toolbar>
+ * </ChatInput.Root>
  * ```
  */
 
-import { memo, useMemo, useCallback, useRef, forwardRef } from "react";
-import type {
-  CSSProperties,
-  Ref,
-  KeyboardEvent,
-  ChangeEvent,
-  ReactNode,
-} from "react";
+import { memo, useMemo } from "react";
+import type { CSSProperties, ReactNode, ComponentPropsWithoutRef } from "react";
 import {
   COLOR_SURFACE_RAISED,
-  COLOR_TEXT,
-  COLOR_TEXT_DISABLED,
   COLOR_BORDER,
   RADIUS_LG,
   DURATION_FAST,
   EASING_DEFAULT,
-  SIZE_FONT_MD,
-  SPACE_XS,
   SPACE_SM,
   SPACE_MD,
   SHADOW_SM,
   SHADOW_MD,
 } from "../../themes/styles";
-import { useAutoResize } from "../../hooks/useAutoResize";
-import { SendButton } from "./SendButton";
+
+// =============================================================================
+// Re-exports
+// =============================================================================
+
+export { ContextBadge, type ContextBadgeProps } from "./ContextBadge";
+export { FilePreview, type FilePreviewProps, type FileInfo } from "./FilePreview";
+export { SendButton, type SendButtonProps } from "./SendButton";
 
 // =============================================================================
 // Types
@@ -60,216 +57,204 @@ import { SendButton } from "./SendButton";
 
 export type ChatInputVariant = "default" | "ghost";
 
-export type ChatInputProps = {
-  /** Current input value */
-  value: string;
-  /** Called when the input value changes */
-  onChange: (value: string) => void;
-  /** Called when the user submits (Enter or send button) */
-  onSend?: (value: string) => void;
-  /** Placeholder text */
-  placeholder?: string;
-  /** Disable the input */
-  disabled?: boolean;
-  /** Show loading state on send button */
-  isLoading?: boolean;
-  /** Visual variant: "default" has border, "ghost" is borderless */
+export type ChatInputRootProps = ComponentPropsWithoutRef<"div"> & {
+  /** Visual variant */
   variant?: ChatInputVariant;
-  /** Maximum height before scrolling (in px) */
-  maxHeight?: number;
-  /** Minimum height for textarea (in px) */
-  minHeight?: number;
-  /** Toolbar content - fully flexible, render anything */
-  toolbar?: ReactNode;
-  /** Custom send button (replaces default) */
-  sendButton?: ReactNode;
-  /** Hide the default send button */
-  hideSendButton?: boolean;
-  /** Aria label for the textarea */
-  "aria-label"?: string;
-  /** Custom class name */
-  className?: string;
+  /** Disable interaction styling */
+  disabled?: boolean;
+  /** Children components */
+  children: ReactNode;
+};
+
+export type ChatInputBadgesProps = ComponentPropsWithoutRef<"div"> & {
+  /** Badge/preview content */
+  children: ReactNode;
+};
+
+export type ChatInputContentProps = ComponentPropsWithoutRef<"div"> & {
+  /** Editor/input content */
+  children: ReactNode;
+};
+
+export type ChatInputOverlayProps = ComponentPropsWithoutRef<"div"> & {
+  /** Whether the overlay is visible */
+  visible: boolean;
+  /** Overlay content */
+  children: ReactNode;
+};
+
+export type ChatInputToolbarProps = ComponentPropsWithoutRef<"div"> & {
+  /** Toolbar content */
+  children: ReactNode;
 };
 
 // =============================================================================
-// Constants
+// Root Component
 // =============================================================================
 
-const DEFAULT_MIN_HEIGHT = 24;
-const DEFAULT_MAX_HEIGHT = 200;
+const Root = memo(function ChatInputRoot({
+  variant = "default",
+  disabled = false,
+  children,
+  className,
+  style,
+  ...props
+}: ChatInputRootProps) {
+  const rootStyle = useMemo<CSSProperties>(() => {
+    const base: CSSProperties = {
+      position: "relative",
+      display: "flex",
+      flexDirection: "column",
+      gap: SPACE_SM,
+      padding: SPACE_MD,
+      backgroundColor: COLOR_SURFACE_RAISED,
+      borderRadius: RADIUS_LG,
+      overflow: "hidden",
+      opacity: disabled ? 0.6 : 1,
+      transition: `opacity ${DURATION_FAST} ${EASING_DEFAULT}`,
+    };
 
-// =============================================================================
-// Main Component
-// =============================================================================
-
-export const ChatInput = memo(
-  forwardRef(function ChatInput(
-    {
-      value,
-      onChange,
-      onSend,
-      placeholder = "Ask anything",
-      disabled = false,
-      isLoading = false,
-      variant = "default",
-      maxHeight = DEFAULT_MAX_HEIGHT,
-      minHeight = DEFAULT_MIN_HEIGHT,
-      toolbar,
-      sendButton,
-      hideSendButton = false,
-      "aria-label": ariaLabel,
-      className,
-    }: ChatInputProps,
-    ref: Ref<HTMLTextAreaElement>,
-  ) {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-    // Auto-resize textarea hook
-    useAutoResize(textareaRef, value, { minHeight, maxHeight });
-
-    // Container style based on variant
-    const containerStyle = useMemo<CSSProperties>(() => {
-      const base: CSSProperties = {
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: COLOR_SURFACE_RAISED,
-        borderRadius: RADIUS_LG,
-        overflow: "hidden",
-        opacity: disabled ? 0.6 : 1,
-        transition: `opacity ${DURATION_FAST} ${EASING_DEFAULT}`,
-      };
-
-      if (variant === "ghost") {
-        return {
-          ...base,
-          border: "none",
-          boxShadow: SHADOW_SM,
-        };
-      }
-
+    if (variant === "ghost") {
       return {
         ...base,
-        border: `1px solid ${COLOR_BORDER}`,
-        boxShadow: SHADOW_MD,
-      };
-    }, [disabled, variant]);
-
-    // Textarea wrapper style
-    const textareaWrapperStyle = useMemo<CSSProperties>(
-      () => ({
-        padding: `${SPACE_MD} ${SPACE_MD} ${SPACE_XS} ${SPACE_MD}`,
-      }),
-      [],
-    );
-
-    // Textarea style
-    const textareaStyle = useMemo<CSSProperties>(
-      () => ({
-        width: "100%",
-        minHeight,
-        maxHeight,
-        padding: 0,
         border: "none",
-        backgroundColor: "transparent",
-        color: disabled ? COLOR_TEXT_DISABLED : COLOR_TEXT,
-        fontSize: SIZE_FONT_MD,
-        lineHeight: 1.5,
-        resize: "none",
-        outline: "none",
-        overflow: "auto",
-        fontFamily: "inherit",
-      }),
-      [disabled, minHeight, maxHeight],
-    );
+        boxShadow: SHADOW_SM,
+        ...style,
+      };
+    }
 
-    // Toolbar style
-    const toolbarStyle = useMemo<CSSProperties>(
-      () => ({
-        display: "flex",
-        alignItems: "center",
-        gap: SPACE_XS,
-        padding: `${SPACE_XS} ${SPACE_SM} ${SPACE_SM} ${SPACE_SM}`,
-      }),
-      [],
-    );
+    return {
+      ...base,
+      border: `1px solid ${COLOR_BORDER}`,
+      boxShadow: SHADOW_MD,
+      ...style,
+    };
+  }, [disabled, variant, style]);
 
-    const canSend = value.trim().length > 0 && !disabled && !isLoading;
+  return (
+    <div className={className} style={rootStyle} {...props}>
+      {children}
+    </div>
+  );
+});
 
-    const handleChange = useCallback(
-      (e: ChangeEvent<HTMLTextAreaElement>) => {
-        onChange(e.target.value);
-      },
-      [onChange],
-    );
+// =============================================================================
+// Badges Component
+// =============================================================================
 
-    const handleSend = useCallback(() => {
-      if (canSend && onSend) {
-        onSend(value);
-      }
-    }, [canSend, onSend, value]);
+const Badges = memo(function ChatInputBadges({
+  children,
+  className,
+  style,
+  ...props
+}: ChatInputBadgesProps) {
+  const badgesStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      flexWrap: "wrap",
+      gap: SPACE_SM,
+      ...style,
+    }),
+    [style],
+  );
 
-    const handleKeyDown = useCallback(
-      (e: KeyboardEvent<HTMLTextAreaElement>) => {
-        // Enter without Shift sends the message
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          handleSend();
-        }
-      },
-      [handleSend],
-    );
+  return (
+    <div className={className} style={badgesStyle} {...props}>
+      {children}
+    </div>
+  );
+});
 
-    // Merge refs
-    const mergedRef = useCallback(
-      (node: HTMLTextAreaElement | null) => {
-        (
-          textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>
-        ).current = node;
-        if (typeof ref === "function") {
-          ref(node);
-        } else if (ref) {
-          (
-            ref as React.MutableRefObject<HTMLTextAreaElement | null>
-          ).current = node;
-        }
-      },
-      [ref],
-    );
+// =============================================================================
+// Content Component
+// =============================================================================
 
-    const showToolbar = toolbar || sendButton || !hideSendButton;
+const Content = memo(function ChatInputContent({
+  children,
+  className,
+  style,
+  ...props
+}: ChatInputContentProps) {
+  const contentStyle = useMemo<CSSProperties>(
+    () => ({
+      ...style,
+    }),
+    [style],
+  );
 
-    return (
-      <div className={className} style={containerStyle}>
-        {/* Textarea area */}
-        <div style={textareaWrapperStyle}>
-          <textarea
-            ref={mergedRef}
-            value={value}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            disabled={disabled}
-            aria-label={ariaLabel || "Chat message input"}
-            rows={1}
-            style={textareaStyle}
-          />
-        </div>
+  return (
+    <div className={className} style={contentStyle} {...props}>
+      {children}
+    </div>
+  );
+});
 
-        {/* Toolbar - fully flexible */}
-        {showToolbar && (
-          <div style={toolbarStyle}>
-            {toolbar}
-            {!hideSendButton && !sendButton && (
-              <SendButton
-                canSend={canSend}
-                isLoading={isLoading}
-                onClick={handleSend}
-              />
-            )}
-            {sendButton}
-          </div>
-        )}
-      </div>
-    );
-  }),
-);
+// =============================================================================
+// Overlay Component
+// =============================================================================
+
+const Overlay = memo(function ChatInputOverlay({
+  visible,
+  children,
+  className,
+  style,
+  ...props
+}: ChatInputOverlayProps) {
+  const overlayStyle = useMemo<CSSProperties>(
+    () => ({
+      position: "absolute",
+      inset: 0,
+      zIndex: 10,
+      display: visible ? "flex" : "none",
+      alignItems: "center",
+      justifyContent: "center",
+      ...style,
+    }),
+    [visible, style],
+  );
+
+  return (
+    <div className={className} style={overlayStyle} {...props}>
+      {children}
+    </div>
+  );
+});
+
+// =============================================================================
+// Toolbar Component
+// =============================================================================
+
+const Toolbar = memo(function ChatInputToolbar({
+  children,
+  className,
+  style,
+  ...props
+}: ChatInputToolbarProps) {
+  const toolbarStyle = useMemo<CSSProperties>(
+    () => ({
+      display: "flex",
+      alignItems: "center",
+      gap: SPACE_SM,
+      ...style,
+    }),
+    [style],
+  );
+
+  return (
+    <div className={className} style={toolbarStyle} {...props}>
+      {children}
+    </div>
+  );
+});
+
+// =============================================================================
+// Compound Export
+// =============================================================================
+
+export const ChatInput = {
+  Root,
+  Badges,
+  Content,
+  Overlay,
+  Toolbar,
+};

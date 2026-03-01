@@ -163,10 +163,10 @@ export const CanvasGuideLayer = memo(function CanvasGuideLayer({
 
   // Handle drag
   useEffect(() => {
-    if (!dragState) return;
+    if (!dragState) {return;}
 
     const guide = guides.find((g) => g.id === dragState.guideId);
-    if (!guide || guide.locked) return;
+    if (!guide || guide.locked) {return;}
 
     const scale = viewport?.scale ?? 1;
 

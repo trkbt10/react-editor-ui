@@ -434,7 +434,7 @@ export const CanvasHorizontalRuler = memo(function CanvasHorizontalRuler({
 
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!onAddGuide) return;
+      if (!onAddGuide) {return;}
       const rect = e.currentTarget.getBoundingClientRect();
       const screenX = e.clientX - rect.left - rulerOffset;
       // Convert screen position to canvas position
@@ -554,7 +554,7 @@ export const CanvasVerticalRuler = memo(function CanvasVerticalRuler({
 
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!onAddGuide) return;
+      if (!onAddGuide) {return;}
       const rect = e.currentTarget.getBoundingClientRect();
       const screenY = e.clientY - rect.top;
       // Convert screen position to canvas position

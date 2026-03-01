@@ -2,19 +2,24 @@
  * @file ChatInput demo page
  */
 
-import { useState, useCallback, useMemo, useInsertionEffect } from "react";
-import type { CSSProperties } from "react";
-import { ChatInput } from "../../../chat/ChatInput/ChatInput";
-import { VoiceInput } from "../../../chat/VoiceInput/VoiceInput";
+import { useState, useCallback, useMemo, useRef } from "react";
+import type { CSSProperties, DragEvent, ChangeEvent } from "react";
+import { ChatInput, SendButton } from "../../../chat/ChatInput/ChatInput";
+import { ContextBadge } from "../../../chat/ChatInput/ContextBadge";
+import { FilePreview } from "../../../chat/ChatInput/FilePreview";
 import { IconButton } from "../../../components/IconButton/IconButton";
 import { Select, type SelectOption } from "../../../components/Select/Select";
 import {
   COLOR_SURFACE,
   COLOR_BORDER,
+  COLOR_PRIMARY,
+  COLOR_TEXT,
   RADIUS_MD,
+  RADIUS_LG,
   SPACE_MD,
   SPACE_LG,
   SIZE_FONT_SM,
+  SIZE_FONT_MD,
   COLOR_TEXT_MUTED,
 } from "../../../themes/styles";
 
@@ -61,10 +66,18 @@ const MicIcon = () => (
   </svg>
 );
 
-const RecordIcon = () => (
+const TerminalIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="12" cy="12" r="4" fill="currentColor" />
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <path d="M7 8l4 4-4 4" />
+    <path d="M13 16h4" />
+  </svg>
+);
+
+const FileIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
   </svg>
 );
 
@@ -88,9 +101,6 @@ const CodeIcon = () => (
   </svg>
 );
 
-/**
- * Model option preview component.
- */
 function ModelOptionPreview({ icon, name }: { icon: React.ReactNode; name: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -100,237 +110,64 @@ function ModelOptionPreview({ icon, name }: { icon: React.ReactNode; name: strin
   );
 }
 
-// Model options for the Select
 type ModelId = "5.2-thinking" | "5.2-fast" | "4.0-code" | "4.0-standard";
 
 const modelOptions: SelectOption<ModelId>[] = [
-  {
-    value: "5.2-thinking",
-    label: "5.2 Thinking",
-    preview: <ModelOptionPreview icon={<ThinkingIcon />} name="5.2 Thinking" />,
-  },
-  {
-    value: "5.2-fast",
-    label: "5.2 Fast",
-    preview: <ModelOptionPreview icon={<FastIcon />} name="5.2 Fast" />,
-  },
-  {
-    value: "4.0-code",
-    label: "4.0 Code",
-    preview: <ModelOptionPreview icon={<CodeIcon />} name="4.0 Code" />,
-  },
-  {
-    value: "4.0-standard",
-    label: "4.0 Standard",
-    preview: <ModelOptionPreview icon={<SparklesIcon />} name="4.0 Standard" />,
-  },
+  { value: "5.2-thinking", label: "5.2 Thinking", preview: <ModelOptionPreview icon={<ThinkingIcon />} name="5.2 Thinking" /> },
+  { value: "5.2-fast", label: "5.2 Fast", preview: <ModelOptionPreview icon={<FastIcon />} name="5.2 Fast" /> },
+  { value: "4.0-code", label: "4.0 Code", preview: <ModelOptionPreview icon={<CodeIcon />} name="4.0 Code" /> },
+  { value: "4.0-standard", label: "4.0 Standard", preview: <ModelOptionPreview icon={<SparklesIcon />} name="4.0 Standard" /> },
 ];
 
 // =============================================================================
-// View Transition CSS injection with reference counting
+// Shared textarea style
 // =============================================================================
 
-const viewTransitionStyleId = "chat-input-view-transition-styles";
-let styleRefCount = 0;
-
-function injectViewTransitionStyles(): () => void {
-  if (typeof document === "undefined") {
-    return () => {};
-  }
-
-  styleRefCount++;
-
-  if (!document.getElementById(viewTransitionStyleId)) {
-    const style = document.createElement("style");
-    style.id = viewTransitionStyleId;
-    style.textContent = `
-      @keyframes chat-input-fade-in {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-      }
-      @keyframes chat-input-fade-out {
-        from { opacity: 1; transform: scale(1); }
-        to { opacity: 0; transform: scale(0.95); }
-      }
-      ::view-transition-old(chat-input-container) {
-        animation: chat-input-fade-out 0.2s ease-out forwards;
-      }
-      ::view-transition-new(chat-input-container) {
-        animation: chat-input-fade-in 0.2s ease-out forwards;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  return () => {
-    styleRefCount--;
-    if (styleRefCount === 0) {
-      const style = document.getElementById(viewTransitionStyleId);
-      style?.remove();
-    }
-  };
-}
-
-// =============================================================================
-// VoiceTransitionDemo - Uses View Transition API for smooth switching
-// =============================================================================
-
-type VoiceTransitionDemoProps = {
-  isVoiceMode: boolean;
-  value: string;
-  model: ModelId;
-  isLoading: boolean;
-  onValueChange: (value: string) => void;
-  onModelChange: (model: ModelId) => void;
-  onSend: (text: string) => void;
-  onVoiceResult: (text: string) => void;
-  onVoiceCancel: () => void;
-  onMicClick: () => void;
+const textareaStyle: CSSProperties = {
+  width: "100%",
+  minHeight: 24,
+  maxHeight: 200,
+  padding: 0,
+  border: "none",
+  backgroundColor: "transparent",
+  color: COLOR_TEXT,
+  fontSize: SIZE_FONT_MD,
+  lineHeight: 1.5,
+  resize: "none",
+  outline: "none",
+  overflow: "auto",
+  fontFamily: "inherit",
 };
 
-function VoiceTransitionDemo({
-  isVoiceMode,
-  value,
-  model,
-  isLoading,
-  onValueChange,
-  onModelChange,
-  onSend,
-  onVoiceResult,
-  onVoiceCancel,
-  onMicClick,
-}: VoiceTransitionDemoProps) {
-  // Inject view transition styles before DOM mutations
-  useInsertionEffect(() => {
-    return injectViewTransitionStyles();
-  }, []);
+// =============================================================================
+// Main Demo
+// =============================================================================
 
-  const containerStyle = useMemo<CSSProperties>(
-    () => ({
-      position: "relative",
-      viewTransitionName: "chat-input-container",
-    }),
-    [],
-  );
-
-  if (isVoiceMode) {
-    return (
-      <div style={containerStyle}>
-        <VoiceInput
-          variant="ghost"
-          onResult={onVoiceResult}
-          onCancel={onVoiceCancel}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div style={containerStyle}>
-      <ChatInput
-        value={value}
-        onChange={onValueChange}
-        onSend={onSend}
-        isLoading={isLoading}
-        placeholder="Ask anything"
-        variant="ghost"
-        toolbar={
-          <>
-            <IconButton icon={<PlusIcon />} aria-label="Add attachment" variant="ghost" size="sm" />
-            <IconButton icon={<GlobeIcon />} aria-label="Web search" variant="ghost" size="sm" />
-            <IconButton icon={<ImageIcon />} aria-label="Add image" variant="ghost" size="sm" />
-            <IconButton icon={<SparklesIcon />} aria-label="AI features" variant="ghost" size="sm" />
-            <Select<ModelId>
-              value={model}
-              options={modelOptions}
-              onChange={onModelChange}
-              variant="ghost"
-              size="sm"
-              aria-label="Select AI model"
-            />
-            <div style={{ flex: 1 }} />
-            <IconButton icon={<RecordIcon />} aria-label="Record" variant="ghost" size="sm" />
-            <IconButton
-              icon={<MicIcon />}
-              aria-label="Voice input"
-              variant="ghost"
-              size="sm"
-              onClick={onMicClick}
-            />
-          </>
-        }
-      />
-    </div>
-  );
-}
+type ContextItem = {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  type: string;
+};
 
 export function ChatInputDemo() {
-  const [value, setValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [model, setModel] = useState<ModelId>("5.2-thinking");
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, role: "assistant", content: "Hello! How can I help you today?" },
   ]);
 
-  const handleSend = useCallback((text: string) => {
-    const userMessage: Message = {
-      id: Date.now(),
-      role: "user",
-      content: text,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setValue("");
-    setIsLoading(true);
-
-    // Simulate API response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: `[${model}] You said: "${text}"`,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsLoading(false);
-    }, 1000);
-  }, [model]);
-
-  // Use View Transition API for smooth mode switching
-  const startViewTransition = useCallback((callback: () => void) => {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => void };
-    if (doc.startViewTransition) {
-      doc.startViewTransition(callback);
-    } else {
-      callback();
-    }
-  }, []);
-
-  const handleVoiceResult = useCallback((text: string) => {
-    startViewTransition(() => setIsVoiceMode(false));
-    handleSend(text);
-  }, [handleSend, startViewTransition]);
-
-  const handleVoiceCancel = useCallback(() => {
-    startViewTransition(() => setIsVoiceMode(false));
-  }, [startViewTransition]);
-
-  const handleMicClick = useCallback(() => {
-    startViewTransition(() => setIsVoiceMode(true));
-  }, [startViewTransition]);
-
   return (
     <div style={{ padding: SPACE_LG, maxWidth: 700, margin: "0 auto" }}>
-      <h2 style={{ marginBottom: SPACE_MD }}>ChatInput</h2>
+      <h2 style={{ marginBottom: SPACE_MD }}>ChatInput (Compound Components)</h2>
       <p style={{ marginBottom: SPACE_LG, color: COLOR_TEXT_MUTED, fontSize: SIZE_FONT_SM }}>
-        Chat input with flexible toolbar. Use `toolbar` prop to render any content.
-        Use IconButton variant="ghost" and Select variant="ghost" for borderless controls.
+        Composable chat input built with ChatInput.Root, .Badges, .Content, .Overlay, .Toolbar.
       </p>
 
       {/* Message list */}
       <div
         style={{
-          minHeight: 300,
-          maxHeight: 400,
+          minHeight: 200,
+          maxHeight: 300,
           overflowY: "auto",
           marginBottom: SPACE_MD,
           padding: SPACE_MD,
@@ -349,122 +186,295 @@ export function ChatInputDemo() {
               borderRadius: RADIUS_MD,
             }}
           >
-            <div
-              style={{
-                fontSize: SIZE_FONT_SM,
-                fontWeight: 600,
-                marginBottom: 4,
-                color: msg.role === "user" ? "#3b82f6" : COLOR_TEXT_MUTED,
-              }}
-            >
+            <div style={{ fontSize: SIZE_FONT_SM, fontWeight: 600, marginBottom: 4, color: msg.role === "user" ? "#3b82f6" : COLOR_TEXT_MUTED }}>
               {msg.role === "user" ? "You" : "Assistant"}
             </div>
             <div style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
           </div>
         ))}
-        {isLoading && (
-          <div style={{ color: COLOR_TEXT_MUTED, fontSize: SIZE_FONT_SM }}>
-            Assistant is thinking...
-          </div>
-        )}
       </div>
 
-      {/* Voice Input Transition Demo */}
-      <h3 style={{ marginBottom: SPACE_MD }}>Voice Input (click mic to switch)</h3>
-      <VoiceTransitionDemo
-        isVoiceMode={isVoiceMode}
-        value={value}
-        model={model}
-        isLoading={isLoading}
-        onValueChange={setValue}
-        onModelChange={setModel}
-        onSend={handleSend}
-        onVoiceResult={handleVoiceResult}
-        onVoiceCancel={handleVoiceCancel}
-        onMicClick={handleMicClick}
-      />
+      {/* Basic Example */}
+      <h3 style={{ marginBottom: SPACE_MD }}>Basic</h3>
+      <BasicDemo model={model} setModel={setModel} setMessages={setMessages} />
 
-      {/* Static example: ghost variant with flexible toolbar */}
-      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>variant="ghost" + Select variant="ghost"</h3>
-      <ChatInput
-        value=""
-        onChange={() => {}}
-        placeholder="Static example..."
-        variant="ghost"
-        toolbar={
-          <>
-            <IconButton icon={<PlusIcon />} aria-label="Add attachment" variant="ghost" size="sm" />
-            <IconButton icon={<GlobeIcon />} aria-label="Web search" variant="ghost" size="sm" />
-            <IconButton icon={<ImageIcon />} aria-label="Add image" variant="ghost" size="sm" />
-            <IconButton icon={<SparklesIcon />} aria-label="AI features" variant="ghost" size="sm" />
-            <Select<ModelId>
-              value={model}
-              options={modelOptions}
-              onChange={setModel}
-              variant="ghost"
-              size="sm"
-              aria-label="Select AI model"
-            />
-            <div style={{ flex: 1 }} />
-            <IconButton icon={<RecordIcon />} aria-label="Record" variant="ghost" size="sm" />
-            <IconButton icon={<MicIcon />} aria-label="Voice input" variant="ghost" size="sm" />
-          </>
-        }
-      />
+      {/* With Context Badges */}
+      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>With Context Badges</h3>
+      <BadgesDemo />
 
-      {/* Default variant with default Select */}
-      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>variant="default" + Select default</h3>
-      <ChatInput
-        value=""
-        onChange={() => {}}
-        placeholder="Default variant with bordered select..."
-        variant="default"
-        toolbar={
-          <>
-            <IconButton icon={<PlusIcon />} aria-label="Add" variant="ghost" size="sm" />
-            <Select<ModelId>
-              value={model}
-              options={modelOptions}
-              onChange={setModel}
-              size="sm"
-              aria-label="Select model"
-            />
-            <div style={{ flex: 1 }} />
-          </>
-        }
-      />
+      {/* DnD + FilePreview */}
+      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>DnD + FilePreview</h3>
+      <DnDDemo />
 
-      {/* Minimal - no toolbar */}
-      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>Minimal (no toolbar)</h3>
-      <ChatInput
-        value=""
-        onChange={() => {}}
-        placeholder="Simple input, just send button..."
-        variant="ghost"
-      />
-
-      {/* Custom layout - anything goes */}
-      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>Custom toolbar layout</h3>
-      <ChatInput
-        value=""
-        onChange={() => {}}
-        placeholder="Toolbar is fully flexible..."
-        variant="ghost"
-        toolbar={
-          <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
-            <span style={{ fontSize: 12, color: "#888" }}>Custom:</span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              defaultValue={50}
-              style={{ flex: 1 }}
-            />
-            <span style={{ fontSize: 12, color: "#888" }}>50%</span>
-          </div>
-        }
-        hideSendButton
-      />
+      {/* Minimal */}
+      <h3 style={{ marginTop: SPACE_LG, marginBottom: SPACE_MD }}>Minimal</h3>
+      <MinimalDemo />
     </div>
+  );
+}
+
+// =============================================================================
+// Basic Demo
+// =============================================================================
+
+function BasicDemo({
+  model,
+  setModel,
+  setMessages,
+}: {
+  model: ModelId;
+  setModel: (m: ModelId) => void;
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+}) {
+  const [value, setValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const canSend = value.trim().length > 0 && !isLoading;
+
+  const handleSend = useCallback(() => {
+    if (!canSend) return;
+    setMessages((prev) => [...prev, { id: Date.now(), role: "user", content: value }]);
+    setValue("");
+    setIsLoading(true);
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { id: Date.now() + 1, role: "assistant", content: `[${model}] Echo: "${value}"` }]);
+      setIsLoading(false);
+    }, 1000);
+  }, [canSend, value, model, setMessages]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.nativeEvent.isComposing) return;
+      if (e.key === "Enter" && !e.shiftKey && canSend) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [canSend, handleSend],
+  );
+
+  return (
+    <ChatInput.Root variant="ghost">
+      <ChatInput.Content>
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask anything..."
+          style={textareaStyle}
+        />
+      </ChatInput.Content>
+      <ChatInput.Toolbar>
+        <IconButton icon={<PlusIcon />} aria-label="Add" variant="ghost" size="sm" />
+        <IconButton icon={<GlobeIcon />} aria-label="Search" variant="ghost" size="sm" />
+        <IconButton icon={<ImageIcon />} aria-label="Image" variant="ghost" size="sm" />
+        <Select<ModelId> value={model} options={modelOptions} onChange={setModel} variant="ghost" size="sm" />
+        <div style={{ flex: 1 }} />
+        <IconButton icon={<MicIcon />} aria-label="Voice" variant="ghost" size="sm" />
+        <SendButton canSend={canSend} isLoading={isLoading} onClick={handleSend} />
+      </ChatInput.Toolbar>
+    </ChatInput.Root>
+  );
+}
+
+// =============================================================================
+// Badges Demo
+// =============================================================================
+
+function BadgesDemo() {
+  const [value, setValue] = useState("");
+  const [contexts, setContexts] = useState<ContextItem[]>([
+    { id: "1", icon: <TerminalIcon />, label: "Work with iTerm2", type: "Tab" },
+    { id: "2", icon: <FileIcon />, label: "ChatInput.tsx", type: "File" },
+  ]);
+
+  const handleRemove = useCallback((id: string) => {
+    setContexts((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
+  const canSend = value.trim().length > 0;
+
+  const handleSend = useCallback(() => {
+    if (!canSend) return;
+    console.log("Send:", value, contexts);
+    setValue("");
+  }, [canSend, value, contexts]);
+
+  return (
+    <ChatInput.Root variant="ghost">
+      {contexts.length > 0 && (
+        <ChatInput.Badges>
+          {contexts.map((ctx) => (
+            <ContextBadge
+              key={ctx.id}
+              icon={ctx.icon}
+              label={ctx.label}
+              type={ctx.type}
+              onRemove={() => handleRemove(ctx.id)}
+            />
+          ))}
+        </ChatInput.Badges>
+      )}
+      <ChatInput.Content>
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.nativeEvent.isComposing) return;
+            if (e.key === "Enter" && !e.shiftKey && canSend) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          placeholder="Ask anything..."
+          style={textareaStyle}
+        />
+      </ChatInput.Content>
+      <ChatInput.Toolbar>
+        <IconButton icon={<PlusIcon />} aria-label="Add context" variant="ghost" size="sm" />
+        <div style={{ flex: 1 }} />
+        <SendButton canSend={canSend} isLoading={false} onClick={handleSend} />
+      </ChatInput.Toolbar>
+    </ChatInput.Root>
+  );
+}
+
+// =============================================================================
+// DnD Demo
+// =============================================================================
+
+function DnDDemo() {
+  const [value, setValue] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    setFiles((prev) => [...prev, ...Array.from(e.dataTransfer.files)]);
+  }, []);
+
+  const handleRemoveFile = useCallback((index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handleAddFileClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+      e.target.value = ""; // Reset to allow selecting the same file again
+    }
+  }, []);
+
+  const canSend = value.trim().length > 0 || files.length > 0;
+
+  const handleSend = useCallback(() => {
+    if (!canSend) return;
+    console.log("Send:", { value, files });
+    setValue("");
+    setFiles([]);
+  }, [canSend, value, files]);
+
+  const dropOverlayStyle = useMemo<CSSProperties>(
+    () => ({
+      backgroundColor: `${COLOR_PRIMARY}15`,
+      border: `2px dashed ${COLOR_PRIMARY}`,
+      borderRadius: RADIUS_LG,
+      color: COLOR_PRIMARY,
+      fontSize: SIZE_FONT_SM,
+      fontWeight: 500,
+    }),
+    [],
+  );
+
+  return (
+    <ChatInput.Root
+      variant="ghost"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {files.length > 0 && (
+        <ChatInput.Badges>
+          {files.map((file, index) => (
+            <FilePreview
+              key={`${file.name}-${index}`}
+              file={file}
+              onRemove={() => handleRemoveFile(index)}
+            />
+          ))}
+        </ChatInput.Badges>
+      )}
+      <ChatInput.Content>
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.nativeEvent.isComposing) return;
+            if (e.key === "Enter" && !e.shiftKey && canSend) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          placeholder="Drop files or type a message..."
+          style={textareaStyle}
+        />
+      </ChatInput.Content>
+      <ChatInput.Overlay visible={isDragging}>
+        <div style={dropOverlayStyle}>Drop files here</div>
+      </ChatInput.Overlay>
+      <ChatInput.Toolbar>
+        <IconButton icon={<PlusIcon />} aria-label="Add file" variant="ghost" size="sm" onClick={handleAddFileClick} />
+        <div style={{ flex: 1 }} />
+        <SendButton canSend={canSend} isLoading={false} onClick={handleSend} />
+      </ChatInput.Toolbar>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={handleFileInputChange}
+        style={{ display: "none" }}
+      />
+    </ChatInput.Root>
+  );
+}
+
+// =============================================================================
+// Minimal Demo
+// =============================================================================
+
+function MinimalDemo() {
+  const [value, setValue] = useState("");
+  const canSend = value.trim().length > 0;
+
+  return (
+    <ChatInput.Root variant="default">
+      <ChatInput.Content>
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Type here..."
+          style={textareaStyle}
+        />
+      </ChatInput.Content>
+      <ChatInput.Toolbar>
+        <div style={{ flex: 1 }} />
+        <SendButton canSend={canSend} isLoading={false} onClick={() => setValue("")} />
+      </ChatInput.Toolbar>
+    </ChatInput.Root>
   );
 }
